@@ -1,0 +1,100 @@
+﻿using Autodesk.Revit.UI;
+using System.Reflection;
+using System.Windows.Media.Imaging;
+using RibbonButton = Autodesk.Revit.UI.RibbonButton;
+
+
+namespace RevitBIMTool.Utils;
+public static class RibbonExtensions
+{
+    public static RibbonPanel CreatePanel(this UIControlledApplication application, string panelName, string tabName)
+    {
+        RibbonPanel resultPanel = null;
+        application.CreateRibbonTab(tabName);
+        foreach (RibbonPanel ribbonPanel in application.GetRibbonPanels(tabName))
+        {
+            if (ribbonPanel.Name.Equals(panelName))
+            {
+                resultPanel = ribbonPanel;
+                break;
+            }
+        }
+
+        return resultPanel ?? application.CreateRibbonPanel(tabName, panelName);
+    }
+
+
+    public static PushButton CreatePushButton(this RibbonPanel panel, Type command, string buttonText)
+    {
+        PushButtonData itemData = new PushButtonData(command.Name, buttonText, command.Assembly.Location, command.FullName);
+        return (PushButton)panel.AddItem(itemData);
+    }
+
+
+    public static PulldownButton AddPullDownButton(this RibbonPanel panel, string internalName, string buttonText)
+    {
+        PulldownButtonData itemData = new PulldownButtonData(internalName, buttonText);
+        return (PulldownButton)panel.AddItem(itemData);
+    }
+
+
+    public static SplitButton AddSplitButton(this RibbonPanel panel, string internalName, string buttonText)
+    {
+        SplitButtonData itemData = new SplitButtonData(internalName, buttonText);
+        return (SplitButton)panel.AddItem(itemData);
+    }
+
+
+    public static RadioButtonGroup AddRadioButtonGroup(this RibbonPanel panel, string internalName)
+    {
+        RadioButtonGroupData itemData = new RadioButtonGroupData(internalName);
+        return (RadioButtonGroup)panel.AddItem(itemData);
+    }
+
+
+    public static ComboBox AddComboBox(this RibbonPanel panel, string internalName)
+    {
+        ComboBoxData itemData = new ComboBoxData(internalName);
+        return (ComboBox)panel.AddItem(itemData);
+    }
+
+
+    public static TextBox AddTextBox(this RibbonPanel panel, string internalName)
+    {
+        TextBoxData itemData = new TextBoxData(internalName);
+        return (TextBox)panel.AddItem(itemData);
+    }
+
+
+    public static PushButton AddPushButton(this PulldownButton pullDownButton, Type command, string buttonText)
+    {
+        PushButtonData buttonData = new PushButtonData(command.FullName, buttonText, Assembly.GetAssembly(command).Location, command.FullName);
+        return pullDownButton.AddPushButton(buttonData);
+    }
+
+
+    public static PushButton AddPushButton<TCommand>(this PulldownButton pullDownButton, string buttonText) where TCommand : IExternalCommand, new()
+    {
+        Type typeFromHandle = typeof(TCommand);
+        PushButtonData buttonData = new PushButtonData(typeFromHandle.FullName, buttonText, Assembly.GetAssembly(typeFromHandle).Location, typeFromHandle.FullName);
+        return pullDownButton.AddPushButton(buttonData);
+    }
+
+
+    public static void SetImage(this RibbonButton button, string uri)
+    {
+        button.Image = new BitmapImage(new Uri(uri, UriKind.RelativeOrAbsolute));
+    }
+
+
+    public static void SetLargeImage(this RibbonButton button, string uri)
+    {
+        button.LargeImage = new BitmapImage(new Uri(uri, UriKind.RelativeOrAbsolute));
+    }
+
+
+    public static void SetAvailabilityController<T>(this PushButton button) where T : IExternalCommandAvailability, new()
+    {
+        button.AvailabilityClassName = typeof(T).FullName;
+    }
+}
