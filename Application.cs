@@ -8,15 +8,17 @@ namespace RevitBIMTool;
 [UsedImplicitly]
 internal sealed class Application : IExternalApplication
 {
+    public string VersionNumber {  get; set; }
     private RevitExternalEventHandler externalEventHandler;
     private long botChatId;
-
+    
 
     public Result OnStartup(UIControlledApplication application)
     {
         try
         {
             SetupUIPanel.Initialize(application);
+            VersionNumber = application.ControlledApplication.VersionNumber;
         }
         catch (Exception ex)
         {

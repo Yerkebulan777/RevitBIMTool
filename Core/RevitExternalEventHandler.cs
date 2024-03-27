@@ -3,8 +3,6 @@ using CommunicationService;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 
 
 namespace RevitBIMTool.Core
@@ -29,7 +27,7 @@ namespace RevitBIMTool.Core
             currentProcess.PriorityBoostEnabled = true;
             AutomationHandler autoHandler = new AutomationHandler(uiapp);
             Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-            
+
             while (TaskRequestContainer.Instance.PopTaskModel(taskBotChatId, out TaskRequest taskRequest))
             {
                 string revitName = Path.GetFileNameWithoutExtension(taskRequest.RevitFilePath);
