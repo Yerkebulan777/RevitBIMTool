@@ -1,5 +1,6 @@
 ﻿using Autodesk.Revit.UI;
 using CommunicationService;
+using CommunicationService.Models;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -9,44 +10,40 @@ namespace RevitBIMTool.Core
 {
     public sealed class RevitExternalEventHandler : IExternalEventHandler
     {
-        private readonly long taskBotChatId;
+        private readonly string versionNumber;
         private readonly ExternalEvent externalEvent;
-        private static readonly object syncLocker = new object();
+        private static readonly object syncLocker = new();
         private readonly Process currentProcess = Process.GetCurrentProcess();
 
-
-        public RevitExternalEventHandler(long botChatId)
+        public RevitExternalEventHandler(string version)
         {
             externalEvent = ExternalEvent.Create(this);
-            taskBotChatId = botChatId;
+            versionNumber = version;
         }
 
 
         public void Execute(UIApplication uiapp)
         {
             currentProcess.PriorityBoostEnabled = true;
-            AutomationHandler autoHandler = new AutomationHandler(uiapp);
-            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+            AutomationHandler autoHandler = new(uiapp);
 
-            while (TaskRequestContainer.Instance.PopTaskModel(taskBotChatId, out TaskRequest taskRequest))
+            while (TaskRequestContainer.Instance.PopTaskModel(versionNumber, out TaskRequest taskRequest))
             {
                 string revitName = Path.GetFileNameWithoutExtension(taskRequest.RevitFilePath);
 
                 lock (syncLocker)
                 {
                     Debug.WriteLine(revitName);
+                    long taskBotChatId = taskRequest.BotChatId;
+                    string output = autoHandler.ExecuteTask(taskRequest);
 
-                    if (taskBotChatId.Equals(taskRequest.BotChatId))
+                    Task task = new(async () =>
                     {
-                        string output = autoHandler.ExecuteTask(taskRequest);
+                        await RevitMessageManager.SendInfoAsync(taskBotChatId, output);
+                    });
 
-                        Task task = new Task(async () =>
-                        {
-                            await RevitMessageManager.SendInfoAsync(taskBotChatId, output);
-                        });
+                    task.RunSynchronously();
 
-                        task.RunSynchronously();
-                    }
                 }
             }
 

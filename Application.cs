@@ -1,6 +1,7 @@
 using Autodesk.Revit.UI;
-using CommunicationService;
+using CommunicationService.Models;
 using RevitBIMTool.Core;
+using System.Globalization;
 
 
 namespace RevitBIMTool;
@@ -8,17 +9,16 @@ namespace RevitBIMTool;
 [UsedImplicitly]
 internal sealed class Application : IExternalApplication
 {
-    public string VersionNumber {  get; set; }
     private RevitExternalEventHandler externalEventHandler;
-    private long botChatId;
-    
+    private string versionNumber { get; set; }
 
     public Result OnStartup(UIControlledApplication application)
     {
         try
         {
             SetupUIPanel.Initialize(application);
-            VersionNumber = application.ControlledApplication.VersionNumber;
+            versionNumber = application.ControlledApplication.VersionNumber;
+            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
         }
         catch (Exception ex)
         {
@@ -27,9 +27,9 @@ internal sealed class Application : IExternalApplication
         }
         finally
         {
-            if (TaskRequestContainer.Instance.GetBotChatIdInData(ref botChatId))
+            if (TaskRequestContainer.Instance.ValidateTaskData(versionNumber))
             {
-                externalEventHandler = new RevitExternalEventHandler(botChatId);
+                externalEventHandler = new RevitExternalEventHandler(versionNumber);
                 if (ExternalEventRequest.Denied != externalEventHandler.Raise())
                 {
 
