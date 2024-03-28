@@ -79,8 +79,6 @@ namespace RevitBIMTool.Core
             return externalEvent.Raise();
         }
 
-
-
     }
 
 }
