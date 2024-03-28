@@ -88,11 +88,11 @@ internal static class ExportHelper
     public static void ZipTheFolderWithSubfolders(string sourceFilePath, string directory)
     {
         string filename = Path.GetFileNameWithoutExtension(sourceFilePath);
-        string destinationFilePath = Path.Combine(directory, filename + ".zip");
+        string destinationPath = Path.Combine(directory, filename + ".zip");
 
-        RevitFileHelper.DeleteFileIfExists(destinationFilePath);
+        RevitFileHelper.DeleteFileIfExists(destinationPath);
 
-        using ZipArchive archive = ZipFile.Open(destinationFilePath, ZipArchiveMode.Create);
+        using ZipArchive archive = ZipFile.Open(destinationPath, ZipArchiveMode.Create);
 
         foreach (string filePath in Directory.EnumerateFiles(sourceFilePath, "*.*", SearchOption.TopDirectoryOnly))
         {
