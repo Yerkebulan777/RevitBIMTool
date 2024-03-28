@@ -28,21 +28,19 @@ namespace RevitBIMTool.Core
 
             while (TaskRequestContainer.Instance.PopTaskModel(versionNumber, out TaskRequest taskRequest))
             {
-                string revitName = Path.GetFileNameWithoutExtension(taskRequest.RevitFilePath);
-
                 lock (syncLocker)
                 {
-                    Debug.WriteLine(revitName);
-                    long taskBotChatId = taskRequest.BotChatId;
-                    string output = autoHandler.ExecuteTask(taskRequest);
-
-                    Task task = new(async () =>
+                    if (File.Exists(taskRequest.RevitFilePath))
                     {
-                        await RevitMessageManager.SendInfoAsync(taskBotChatId, output);
-                    });
+                        string result = autoHandler.ExecuteTask(taskRequest);
 
-                    task.RunSynchronously();
+                        Task task = new(async () =>
+                        {
+                            await RevitMessageManager.SendInfoAsync(taskRequest.BotChatId, result);
+                        });
 
+                        task.RunSynchronously();
+                    }
                 }
             }
 
