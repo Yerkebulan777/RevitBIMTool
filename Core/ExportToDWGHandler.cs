@@ -53,16 +53,11 @@ internal static class ExportToDWGHandler
                     sheetName = $"{revitFileName} - Лист - {sheetNum} - {sheetName}";
                     ICollection<ElementId> collection = new List<ElementId> { sheet.Id };
 
-                    string exportDwgPath = Path.Combine(exportFolderPath, sheetName + ".dwg");
-
-                    if (!ExportHelper.IsUpdatedFile(exportDwgPath, revitFilePath))
+                    if (!ExportHelper.IsUpdatedFile(Path.Combine(exportFolderPath, sheetName + ".dwg"), revitFilePath))
                     {
                         if (document.Export(exportFolderPath, sheetName, collection, exportOptions))
                         {
-                            if (new FileInfo(exportDwgPath).Length > 0)
-                            {
-                                printCount++;
-                            }
+                            printCount++;
                         }
                     }
                 }
@@ -73,7 +68,7 @@ internal static class ExportToDWGHandler
             }
         }
 
-        //ExportHelper.ZipTheFolderWithSubfolders(revitFilePath, exportFolderPath);
+        ExportHelper.ZipTheFolderWithSubfolders(revitFilePath, exportFolderPath);
 
         _ = sb.AppendLine($"Printed: {printCount} in {sheetList.Count}");
         _ = sb.AppendLine(exportDirectory);

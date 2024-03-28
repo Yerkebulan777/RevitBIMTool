@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 namespace RevitBIMTool.Utils;
 internal static class ExportHelper
 {
-    private static readonly Regex matchDigits = new Regex(@"(\d+\.\d+|\d+)");
+    private static readonly Regex matchDigits = new(@"(\d+\.\d+|\d+)");
     public static readonly string formatedDate = DateTime.Today.ToString("yyyy-MM-dd");
 
 
@@ -92,12 +92,13 @@ internal static class ExportHelper
 
         RevitFileHelper.DeleteFileIfExists(destinationFilePath);
 
-        using (ZipArchive archive = ZipFile.Open(destinationFilePath, ZipArchiveMode.Create))
+        using ZipArchive archive = ZipFile.Open(destinationFilePath, ZipArchiveMode.Create);
+
+        foreach (string filePath in Directory.EnumerateFiles(sourceFilePath, "*.*", SearchOption.TopDirectoryOnly).Where(s => s.EndsWith(".dwg") || s.EndsWith(".jpg")))
         {
-            foreach (string filePath in Directory.EnumerateFiles(sourceFilePath))
+            if (File.Exists(filePath) && new FileInfo(filePath).Length > 0)
             {
-                string entryName = Path.GetFileName(filePath);
-                _ = archive.CreateEntryFromFile(filePath, entryName);
+                _ = archive.CreateEntryFromFile(filePath, Path.GetFileName(filePath));
             }
         }
     }
