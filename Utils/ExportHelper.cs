@@ -94,9 +94,9 @@ internal static class ExportHelper
 
         using ZipArchive archive = ZipFile.Open(destinationFilePath, ZipArchiveMode.Create);
 
-        foreach (string filePath in Directory.EnumerateFiles(sourceFilePath, "*.*", SearchOption.TopDirectoryOnly).Where(s => s.EndsWith(".dwg") || s.EndsWith(".jpg")))
+        foreach (string filePath in Directory.EnumerateFiles(sourceFilePath, "*.*", SearchOption.TopDirectoryOnly))
         {
-            if (File.Exists(filePath) && new FileInfo(filePath).Length > 0)
+            if ((filePath.EndsWith(".dwg") || filePath.EndsWith(".jpg")) && new FileInfo(filePath).Length > 0)
             {
                 _ = archive.CreateEntryFromFile(filePath, Path.GetFileName(filePath));
             }
