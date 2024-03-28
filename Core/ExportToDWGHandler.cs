@@ -19,8 +19,8 @@ internal static class ExportToDWGHandler
 
         IEnumerable<ViewSheet> sheets = new FilteredElementCollector(document).OfClass(typeof(ViewSheet)).Cast<ViewSheet>();
         List<ViewSheet> sheetList = sheets.OrderBy(x => x.SheetNumber.Length).ThenBy(x => x.SheetNumber).ToList();
-
-        string exportFullPath = Path.Combine(exportDirectory, revitFileName);
+        string exportFolderPath = Path.Combine(exportDirectory, revitFileName);
+        RevitPathHelper.EnsureDirectory(exportFolderPath);
 
         DWGExportOptions exportOptions = new DWGExportOptions
         {
@@ -54,11 +54,11 @@ internal static class ExportToDWGHandler
                     sheetName = $"{revitFileName} - Лист - {sheetNum} - {sheetName}";
                     ICollection<ElementId> collection = new List<ElementId> { sheet.Id };
 
-                    string exportDwgPath = Path.Combine(exportFullPath, sheetName + ".dwg");
+                    string exportDwgPath = Path.Combine(exportFolderPath, sheetName + ".dwg");
 
                     if (!ExportHelper.IsUpdatedFile(exportDwgPath, revitFilePath))
                     {
-                        if (document.Export(exportFullPath, sheetName, collection, exportOptions))
+                        if (document.Export(exportFolderPath, sheetName, collection, exportOptions))
                         {
                             if (new FileInfo(exportDwgPath).Length > 0)
                             {
@@ -74,7 +74,7 @@ internal static class ExportToDWGHandler
             }
         }
 
-        ExportHelper.ZipTheFolderWithSubfolders(revitFilePath, exportFullPath);
+        //ExportHelper.ZipTheFolderWithSubfolders(revitFilePath, exportFolderPath);
 
         _ = sb.AppendLine($"Printed: {printCount} in {sheetList.Count}");
         _ = sb.AppendLine(exportDirectory);
