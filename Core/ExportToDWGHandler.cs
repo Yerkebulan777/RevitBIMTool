@@ -17,8 +17,9 @@ internal static class ExportToDWGHandler
         string exportDirectory = ExportHelper.ExportDirectory(revitFilePath, "02_DWG", true);
 
         IEnumerable<ViewSheet> sheets = new FilteredElementCollector(document).OfClass(typeof(ViewSheet)).Cast<ViewSheet>();
-        List<ViewSheet> sheetList = sheets.OrderBy(x => x.SheetNumber.Length).ThenBy(x => x.SheetNumber).ToList();
+        List<ViewSheet> sheetList = sheets.Where(s => s.CanBePrinted).OrderBy(s => s.SheetNumber.Length).ThenBy(s => s.SheetNumber).ToList();
         string exportFolderPath = Path.Combine(exportDirectory, revitFileName);
+
         RevitPathHelper.EnsureDirectory(exportFolderPath);
 
         DWGExportOptions exportOptions = new DWGExportOptions

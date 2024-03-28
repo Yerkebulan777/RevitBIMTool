@@ -39,14 +39,13 @@ internal static class ExportHelper
         }
 
         string exportDirectory = RevitPathHelper.DetermineDirectory(revitFilePath, folderName);
-        bool result = !string.IsNullOrEmpty(exportDirectory);
-        Debug.WriteLine(exportDirectory);
 
-        if (result)
+        if (!string.IsNullOrEmpty(exportDirectory))
         {
-            exportDirectory = folderDate
-                ? Path.Combine(exportDirectory, formatedDate)
-                : exportDirectory;
+            if (folderDate)
+            {
+                exportDirectory = Path.Combine(exportDirectory, formatedDate);
+            }
 
             RevitPathHelper.EnsureDirectory(exportDirectory);
         }
@@ -82,6 +81,20 @@ internal static class ExportHelper
         }
 
         return result;
+    }
+
+
+    public static bool IsTargetFileUpdated(string targetFilePath, string sourceFilePath)
+    {
+        if (!File.Exists(targetFilePath))
+        {
+            return false;
+        }
+
+        DateTime targetFileDate = File.GetLastWriteTime(targetFilePath);
+        DateTime sourceFileDate = File.GetLastWriteTime(sourceFilePath);
+
+        return targetFileDate > sourceFileDate;
     }
 
 

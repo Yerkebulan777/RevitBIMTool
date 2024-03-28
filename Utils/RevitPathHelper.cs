@@ -117,11 +117,7 @@ public static class RevitPathHelper
         if (Directory.Exists(sectionDirectory))
         {
             sectionDirectory = Path.Combine(sectionDirectory, folderName);
-
-            if (!Directory.Exists(sectionDirectory))
-            {
-                _ = Directory.CreateDirectory(sectionDirectory);
-            }
+            EnsureDirectory(sectionDirectory);
         }
 
         return sectionDirectory;
