@@ -52,12 +52,12 @@ internal static class ExportToDWGHandler
                     ICollection<ElementId> collection = [sheet.Id];
                     string sheetNum = ExportHelper.GetSheetNumber(sheet);
                     string sheetName = StringHelper.NormalizeText(sheet.Name);
-                    sheetName = $"{revitFileName} - Лист - {sheetNum} - {sheetName}";
-                    string sheetFullName = Path.Combine(exportFolderPath, sheetName + ".dwg");
+                    string sheetFullName = $"{revitFileName} - Лист - {sheetNum} - {sheetName}";
+                    string sheetFullPath = Path.Combine(exportFolderPath, sheetFullName + ".dwg");
 
-                    if (!ExportHelper.IsTargetFileUpdated(sheetFullName, revitFilePath))
+                    if (!ExportHelper.IsTargetFileUpdated(sheetFullPath, revitFilePath))
                     {
-                        if (document.Export(exportFolderPath, sheetName, collection, exportOptions))
+                        if (document.Export(exportFolderPath, sheetFullName, collection, exportOptions))
                         {
                             printCount++;
                         }
