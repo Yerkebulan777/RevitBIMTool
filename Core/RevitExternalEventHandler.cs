@@ -2,7 +2,6 @@
 using CommunicationService;
 using CommunicationService.Models;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 
 
