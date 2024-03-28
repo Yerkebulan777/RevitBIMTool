@@ -1,4 +1,5 @@
 ﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.UI;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
@@ -54,47 +55,31 @@ internal static class ExportHelper
     }
 
 
-    public static bool IsUpdatedFile(string targetPath, string sourcePath)
+    public static bool IsTargetFileUpdated(string targetFilePath, string sourceFilePath)
     {
-        bool result = false;
-
-        if (File.Exists(targetPath))
+        if (File.Exists(targetFilePath) && File.Exists(sourceFilePath))
         {
-            DateTime targetDate = File.GetLastWriteTime(targetPath);
-            DateTime sourceDate = File.GetLastWriteTime(sourcePath);
+            DateTime targetFileDate = File.GetLastWriteTime(targetFilePath);
+            DateTime sourceFileDate = File.GetLastWriteTime(sourceFilePath);
 
-            if (targetDate > sourceDate)
-            {
-                result = true;
-            }
-            else
+            bool result = targetFileDate > sourceFileDate;
+
+            if (!result)
             {
                 try
                 {
-                    File.Delete(targetPath);
+                    File.Delete(targetFilePath);
                 }
                 catch (IOException exc)
                 {
                     Debug.WriteLine(exc.Message);
                 }
             }
+
+            return result;
         }
 
-        return result;
-    }
-
-
-    public static bool IsTargetFileUpdated(string targetFilePath, string sourceFilePath)
-    {
-        if (!File.Exists(targetFilePath))
-        {
-            return false;
-        }
-
-        DateTime targetFileDate = File.GetLastWriteTime(targetFilePath);
-        DateTime sourceFileDate = File.GetLastWriteTime(sourceFilePath);
-
-        return targetFileDate > sourceFileDate;
+        return false;
     }
 
 

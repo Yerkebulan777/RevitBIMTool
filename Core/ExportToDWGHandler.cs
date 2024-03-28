@@ -11,7 +11,7 @@ internal static class ExportToDWGHandler
     {
         int printCount = 0;
 
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new();
 
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
         string exportDirectory = ExportHelper.ExportDirectory(revitFilePath, "02_DWG", true);
@@ -22,7 +22,7 @@ internal static class ExportToDWGHandler
 
         RevitPathHelper.EnsureDirectory(exportFolderPath);
 
-        DWGExportOptions exportOptions = new DWGExportOptions
+        DWGExportOptions exportOptions = new()
         {
             Colors = ExportColorMode.TrueColorPerView,
             PropOverrides = PropOverrideMode.ByEntity,
@@ -49,12 +49,13 @@ internal static class ExportToDWGHandler
             {
                 try
                 {
+                    ICollection<ElementId> collection = [sheet.Id];
                     string sheetNum = ExportHelper.GetSheetNumber(sheet);
                     string sheetName = StringHelper.NormalizeText(sheet.Name);
                     sheetName = $"{revitFileName} - Лист - {sheetNum} - {sheetName}";
-                    ICollection<ElementId> collection = new List<ElementId> { sheet.Id };
+                    string fullName = Path.Combine(exportFolderPath, sheetName + ".dwg");
 
-                    if (!ExportHelper.IsUpdatedFile(Path.Combine(exportFolderPath, sheetName + ".dwg"), revitFilePath))
+                    if (!ExportHelper.IsTargetFileUpdated(fullName, revitFilePath))
                     {
                         if (document.Export(exportFolderPath, sheetName, collection, exportOptions))
                         {

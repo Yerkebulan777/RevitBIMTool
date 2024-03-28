@@ -16,7 +16,7 @@ internal static class ExportToNWCHandler
 
         StringBuilder sb = new StringBuilder();
 
-        if (!ExportHelper.IsUpdatedFile(exportFullPath, revitFilePath))
+        if (!ExportHelper.IsTargetFileUpdated(exportFullPath, revitFilePath))
         {
             ICollection<ElementId> cadImportIds = RevitPurginqHelper.GetLinkedAndImportedCADIds(doc);
 

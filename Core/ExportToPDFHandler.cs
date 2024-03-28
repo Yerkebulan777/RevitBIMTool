@@ -23,7 +23,7 @@ internal static class ExportToPDFHandler
         RevitPathHelper.EnsureDirectory(tempPath);
         RevitPathHelper.ClearDirectory(tempPath);
 
-        if (!ExportHelper.IsUpdatedFile(exportFullPath, revitFilePath))
+        if (!ExportHelper.IsTargetFileUpdated(exportFullPath, revitFilePath))
         {
             RegistryHelper.ActivateSettingsForPDFCreator(tempPath);
             MainPrintHandler.ResetPrintSettings(document, printerName);
