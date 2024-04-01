@@ -1,6 +1,4 @@
 ﻿using Autodesk.Revit.DB;
-using System.Diagnostics;
-using System.IO;
 
 
 namespace RevitBIMTool.Utils;
@@ -26,40 +24,6 @@ internal static class RevitFileHelper
         doc.SaveAs(modelPathObj, saveAsOptions);
     }
 
-
-    public static void DeleteFileIfExists(string filePath)
-    {
-        if (File.Exists(filePath))
-        {
-            File.Delete(filePath);
-        }
-    }
-
-
-    public static void OpenFolder(string folderPath)
-    {
-        Process[] processes = Process.GetProcessesByName("explorer");
-
-        foreach (Process process in processes)
-        {
-            IntPtr handle = process.MainWindowHandle;
-            string folderTitle = process.MainWindowTitle;
-            if (handle == IntPtr.Zero || folderTitle.Contains(folderPath))
-            {
-                return;
-            }
-        }
-
-        ProcessStartInfo startInfo = new ProcessStartInfo
-        {
-            FileName = "explorer.exe",
-            Arguments = folderPath,
-            UseShellExecute = true,
-            Verb = "open"
-        };
-
-        _ = Process.Start(startInfo);
-    }
 
 
 }

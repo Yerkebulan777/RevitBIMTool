@@ -11,8 +11,8 @@ internal static class ExportToNWCHandler
     public static string ExportToNWC(Document doc, string revitFilePath)
     {
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
-        string exportDirectory = ExportHelper.ExportDirectory(revitFilePath, "05_NWC");
-        string exportFullPath = Path.Combine(exportDirectory, revitFileName + ".nwc");
+        string exportBaseDirectory = ExportHelper.ExportDirectory(revitFilePath, "05_NWC");
+        string exportFullPath = Path.Combine(exportBaseDirectory, revitFileName + ".nwc");
 
         StringBuilder sb = new StringBuilder();
 
@@ -69,9 +69,9 @@ internal static class ExportToNWCHandler
 
                 try
                 {
-                    doc.Export(exportDirectory, revitFileName, options);
-                    RevitFileHelper.OpenFolder(exportDirectory);
-                    _ = sb.AppendLine(exportDirectory);
+                    doc.Export(exportBaseDirectory, revitFileName, options);
+                    SystemFolderOpener.OpenFolder(exportBaseDirectory);
+                    _ = sb.AppendLine(exportBaseDirectory);
                 }
                 catch (Exception ex)
                 {

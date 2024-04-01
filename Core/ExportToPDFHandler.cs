@@ -13,9 +13,9 @@ internal static class ExportToPDFHandler
     public static string ExportToPDF(Document document, string revitFilePath)
     {
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
-        string exportDirectory = ExportHelper.ExportDirectory(revitFilePath, "03_PDF", true);
+        string exportBaseDirectory = ExportHelper.ExportDirectory(revitFilePath, "03_PDF", true);
         string tempPath = Environment.GetEnvironmentVariable("TEMP", EnvironmentVariableTarget.User);
-        string exportFullPath = Path.Combine(exportDirectory, revitFileName + ".pdf");
+        string exportFullPath = Path.Combine(exportBaseDirectory, revitFileName + ".pdf");
 
         string printerName = "PDFCreator";
         StringBuilder sb = new StringBuilder();
@@ -42,8 +42,8 @@ internal static class ExportToPDFHandler
             if (sheetModels.Count > 0)
             {
                 PdfMergeHandler.CombinePDFsFromFolder(sheetModels, tempPath, exportFullPath);
-                string directory = Path.GetDirectoryName(exportDirectory);
-                RevitFileHelper.OpenFolder(directory);
+                string directory = Path.GetDirectoryName(exportBaseDirectory);
+                SystemFolderOpener.OpenFolder(exportBaseDirectory);
                 _ = sb.AppendLine(directory);
             }
 
