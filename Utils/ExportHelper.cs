@@ -107,9 +107,9 @@ internal static class ExportHelper
         {
             try
             {
-                string entryName = GetRelativePath(sourceDir, filePath);
                 string extension = Path.GetExtension(filePath);
-
+                string entryName = GetRelativePath(sourceDir, filePath);
+                
                 if (extension.EndsWith("dwg", comparison) || extension.EndsWith("jpg", comparison))
                 {
                     if (new FileInfo(filePath).Length > 0)
@@ -120,10 +120,11 @@ internal static class ExportHelper
             }
             catch (Exception ex)
             {
-                throw new Exception($"An error occurred while processing the file '{filePath}': {ex.Message}");
+                throw new Exception($"Failed convert to zip: '{filePath}': {ex.Message}");
             }
         }
     }
+
 
 
 }
