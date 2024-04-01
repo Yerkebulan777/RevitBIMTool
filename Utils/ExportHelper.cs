@@ -116,7 +116,13 @@ internal static class ExportHelper
                 // Проверяем, есть ли доступ к targetDir
                 FileIOPermission writePermission = new(FileIOPermissionAccess.Write, targetDir);
                 writePermission.Demand();
-
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Нет доступа: {ex.Message}");
+            }
+            finally
+            {
                 using ZipArchive archive = ZipFile.Open(destinationPath, ZipArchiveMode.Create);
                 StringComparison comparison = StringComparison.OrdinalIgnoreCase;
 
@@ -131,21 +137,20 @@ internal static class ExportHelper
 
                         if (extension.EndsWith("dwg", comparison) || extension.EndsWith("jpg", comparison))
                         {
-                            _ = archive.CreateEntryFromFile(filePath, entryName, CompressionLevel.Fastest);
+                            try
+                            {
+                                _ = archive.CreateEntryFromFile(filePath, entryName, CompressionLevel.Fastest);
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug.WriteLine($"Failed: {entryName} {ex.Message}");
+                            }
                         }
                     }
                 }
             }
-            catch (UnauthorizedAccessException ex)
-            {
-                throw new Exception($"Нет доступа к директории: {ex.Message}");
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Не удалось создать zip-архив: {ex.Message}");
-            }
         }
-        
+
     }
 
 
