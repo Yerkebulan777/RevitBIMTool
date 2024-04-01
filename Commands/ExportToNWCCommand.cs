@@ -21,9 +21,17 @@ internal sealed class ExportToNWCCommand : IExternalCommand, IExternalCommandAva
         UIDocument uidoc = uiapp.ActiveUIDocument;
         Document document = uidoc.Document;
 
-        string revitFilePath = RevitPathHelper.GetRevitFilePath(document);
-        message = ExportToNWCHandler.ExportToNWC(document, revitFilePath);
-
+        try
+        {
+            string revitFilePath = RevitPathHelper.GetRevitFilePath(document);
+            message = ExportToNWCHandler.ExportToNWC(document, revitFilePath);
+        }
+        catch (Exception ex)
+        {
+            TaskDialog.Show("Exception", "Exception: " + ex);
+            return Result.Failed;
+        }
+        
         RevitMessageManager.ShowInfo(message);
 
         return Result.Succeeded;

@@ -21,8 +21,16 @@ internal sealed class ExportToDWGCommand : IExternalCommand, IExternalCommandAva
         UIDocument uidoc = uiapp.ActiveUIDocument;
         Document document = uidoc.Document;
 
-        string revitFilePath = RevitPathHelper.GetRevitFilePath(document);
-        message = ExportToDWGHandler.ExportToDWG(document, revitFilePath);
+        try
+        {
+            string revitFilePath = RevitPathHelper.GetRevitFilePath(document);
+            message = ExportToDWGHandler.ExportToDWG(document, revitFilePath);
+        }
+        catch (Exception ex)
+        {
+            TaskDialog.Show("Exception", "Exception: " + ex);
+            return Result.Failed;
+        }
 
         RevitMessageManager.ShowInfo(message);
 
