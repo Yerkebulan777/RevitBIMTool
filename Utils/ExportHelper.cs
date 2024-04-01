@@ -41,15 +41,17 @@ internal static class ExportHelper
 
         string exportDirectory = RevitPathHelper.DetermineDirectory(revitFilePath, folderName);
 
-        if (!string.IsNullOrEmpty(exportDirectory))
+        if (string.IsNullOrEmpty(exportDirectory))
         {
-            if (folderDate)
-            {
-                exportDirectory = Path.Combine(exportDirectory, formatedDate);
-            }
-
-            RevitPathHelper.EnsureDirectory(exportDirectory);
+            exportDirectory = Path.Combine(Path.GetDirectoryName(revitFilePath), folderName);
         }
+
+        if (folderDate)
+        {
+            exportDirectory = Path.Combine(exportDirectory, formatedDate);
+        }
+
+        RevitPathHelper.EnsureDirectory(exportDirectory);
 
         return exportDirectory;
     }

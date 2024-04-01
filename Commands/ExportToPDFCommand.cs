@@ -4,6 +4,7 @@ using Autodesk.Revit.UI;
 using RevitBIMTool.Core;
 using RevitBIMTool.Utils;
 using System.Globalization;
+using System.Windows;
 
 
 namespace RevitBIMTool.Commands;
@@ -29,7 +30,8 @@ internal sealed class ExportToPDFCommand : IExternalCommand, IExternalCommandAva
         }
         catch (Exception ex)
         {
-            TaskDialog.Show("Exception", "Exception: " + ex);
+            TaskDialog.Show("Exception", "Exception: \n" + ex);
+            Clipboard.SetText(ex.ToString());
             return Result.Failed;
         }
 

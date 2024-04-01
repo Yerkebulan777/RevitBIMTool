@@ -10,15 +10,22 @@ using System.Text;
 namespace RevitBIMTool.Core;
 internal static class ExportToPDFHandler
 {
+    const string printerName = "PDFCreator";
+
     public static string ExportToPDF(Document document, string revitFilePath)
     {
+        StringBuilder sb = new();
+
+        if (string.IsNullOrEmpty(revitFilePath))
+        {
+            throw new ArgumentNullException(nameof(revitFilePath));
+        }
+
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
         string exportBaseDirectory = ExportHelper.ExportDirectory(revitFilePath, "03_PDF", true);
         string tempPath = Environment.GetEnvironmentVariable("TEMP", EnvironmentVariableTarget.User);
         string exportFullPath = Path.Combine(exportBaseDirectory, revitFileName + ".pdf");
 
-        string printerName = "PDFCreator";
-        StringBuilder sb = new StringBuilder();
         tempPath = Path.Combine(tempPath, revitFileName);
         RevitPathHelper.EnsureDirectory(tempPath);
         RevitPathHelper.ClearDirectory(tempPath);

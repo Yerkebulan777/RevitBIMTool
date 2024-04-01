@@ -13,6 +13,11 @@ internal static class ExportToDWGHandler
 
         StringBuilder sb = new();
 
+        if (string.IsNullOrEmpty(revitFilePath))
+        {
+            throw new ArgumentNullException(nameof(revitFilePath));
+        }
+
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
         string exportBaseDirectory = ExportHelper.ExportDirectory(revitFilePath, "02_DWG", true);
 
