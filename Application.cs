@@ -12,13 +12,12 @@ internal sealed class Application : IExternalApplication
     private RevitExternalEventHandler externalEventHandler;
     private string versionNumber { get; set; }
 
+
     public Result OnStartup(UIControlledApplication application)
     {
         try
         {
             SetupUIPanel.Initialize(application);
-            versionNumber = application.ControlledApplication.VersionNumber;
-            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
         }
         catch (Exception ex)
         {
@@ -29,6 +28,8 @@ internal sealed class Application : IExternalApplication
         {
             if (TaskRequestContainer.Instance.ValidateTaskData(versionNumber))
             {
+                versionNumber = application.ControlledApplication.VersionNumber;
+                Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
                 externalEventHandler = new RevitExternalEventHandler(versionNumber);
                 if (ExternalEventRequest.Denied != externalEventHandler.Raise())
                 {
@@ -45,7 +46,6 @@ internal sealed class Application : IExternalApplication
     {
         return Result.Succeeded;
     }
-
 
 
 }
