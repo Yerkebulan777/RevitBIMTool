@@ -109,21 +109,22 @@ internal static class ExportHelper
 
             try
             {
-                // Проверяем, есть ли доступ к sourceDir
+                // Check if there is access to sourceDir
                 FileIOPermission readPermission = new(FileIOPermissionAccess.Read, sourceDir);
                 readPermission.Demand();
 
-                // Проверяем, есть ли доступ к targetDir
+                // Check if there is access to targetDir
                 FileIOPermission writePermission = new(FileIOPermissionAccess.Write, targetDir);
                 writePermission.Demand();
             }
             catch (Exception ex)
             {
-                throw new Exception($"Нет доступа: {ex.Message}");
+                throw new Exception($"No access to the folder: {ex.Message}");
             }
             finally
             {
                 using ZipArchive archive = ZipFile.Open(destinationPath, ZipArchiveMode.Create);
+
                 StringComparison comparison = StringComparison.OrdinalIgnoreCase;
 
                 foreach (string filePath in Directory.GetFiles(sourceDir))

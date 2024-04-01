@@ -75,6 +75,8 @@ internal static class ExportToDWGHandler
         _ = sb.AppendLine($"Printed: {printCount} in {sheetList.Count}");
         _ = sb.AppendLine(exportBaseDirectory);
 
+        SystemFolderOpener.OpenFolder(exportBaseDirectory);
+
         return sb.ToString();
     }
 }
