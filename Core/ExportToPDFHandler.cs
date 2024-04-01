@@ -23,7 +23,6 @@ internal static class ExportToPDFHandler
         RevitPathHelper.EnsureDirectory(tempPath);
         RevitPathHelper.ClearDirectory(tempPath);
 
-
         if (!ExportHelper.IsTargetFileUpdated(exportFullPath, revitFilePath))
         {
             RegistryHelper.ActivateSettingsForPDFCreator(tempPath);
@@ -49,7 +48,6 @@ internal static class ExportToPDFHandler
 
             return sb.ToString();
         }
-
 
         return sb.ToString();
     }
