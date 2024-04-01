@@ -14,9 +14,9 @@ internal sealed class ExportToDWGCommand : IExternalCommand, IExternalCommandAva
 {
     public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
     {
-        if (commandData.Application == null) { return Result.Cancelled; }
         Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-
+        if (commandData.Application == null) { return Result.Cancelled; }
+        
         UIApplication uiapp = commandData.Application;
         UIDocument uidoc = uiapp.ActiveUIDocument;
         Document document = uidoc.Document;
