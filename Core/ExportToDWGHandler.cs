@@ -14,11 +14,11 @@ internal static class ExportToDWGHandler
         StringBuilder sb = new();
 
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
-        string exportDirectory = ExportHelper.ExportDirectory(revitFilePath, "02_DWG", true);
+        string exportBaseDirectory = ExportHelper.ExportDirectory(revitFilePath, "02_DWG", true);
 
         IEnumerable<ViewSheet> sheets = new FilteredElementCollector(document).OfClass(typeof(ViewSheet)).Cast<ViewSheet>();
         List<ViewSheet> sheetList = sheets.Where(s => s.CanBePrinted).OrderBy(s => s.SheetNumber.Length).ThenBy(s => s.SheetNumber).ToList();
-        string exportFolderPath = Path.Combine(exportDirectory, revitFileName);
+        string exportFolderPath = Path.Combine(exportBaseDirectory, revitFileName);
 
         RevitPathHelper.EnsureDirectory(exportFolderPath);
 
@@ -70,10 +70,10 @@ internal static class ExportToDWGHandler
             }
         }
 
-        ExportHelper.ZipTheFolder(revitFilePath, exportFolderPath);
+        ExportHelper.ZipTheFolder(exportFolderPath, exportBaseDirectory);
 
         _ = sb.AppendLine($"Printed: {printCount} in {sheetList.Count}");
-        _ = sb.AppendLine(exportDirectory);
+        _ = sb.AppendLine(exportBaseDirectory);
 
         return sb.ToString();
     }
