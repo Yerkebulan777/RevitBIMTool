@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Security.Permissions;
 using System.Text.RegularExpressions;
 
 
@@ -94,35 +95,57 @@ internal static class ExportHelper
     }
 
 
-    public static void ZipTheFolderWithSubfolders(string sourceDir, string targetDir)
+    public static void ZipTheFolder(string sourceDir, string targetDir)
     {
         string filename = Path.GetFileNameWithoutExtension(sourceDir);
         string destinationPath = Path.Combine(targetDir, filename + ".zip");
 
-        RevitFileHelper.DeleteFileIfExists(destinationPath);
-
-        using ZipArchive archive = ZipFile.Open(destinationPath, ZipArchiveMode.Create);
-        StringComparison comparison = StringComparison.OrdinalIgnoreCase;
-        foreach (string filePath in Directory.EnumerateFiles(sourceDir))
+        if (Directory.Exists(sourceDir))
         {
+            if (File.Exists(destinationPath))
+            {
+                File.Delete(destinationPath);
+            }
+
             try
             {
-                string extension = Path.GetExtension(filePath);
-                string entryName = GetRelativePath(sourceDir, filePath);
-                
-                if (extension.EndsWith("dwg", comparison) || extension.EndsWith("jpg", comparison))
+                // Проверяем, есть ли доступ к sourceDir
+                FileIOPermission readPermission = new(FileIOPermissionAccess.Read, sourceDir);
+                readPermission.Demand();
+
+                // Проверяем, есть ли доступ к targetDir
+                FileIOPermission writePermission = new(FileIOPermissionAccess.Write, targetDir);
+                writePermission.Demand();
+
+                using ZipArchive archive = ZipFile.Open(destinationPath, ZipArchiveMode.Create);
+                StringComparison comparison = StringComparison.OrdinalIgnoreCase;
+
+                foreach (string filePath in Directory.GetFiles(sourceDir))
                 {
-                    if (new FileInfo(filePath).Length > 0)
+                    FileInfo info = new(filePath);
+
+                    if (info.Length > 0)
                     {
-                        _ = archive.CreateEntryFromFile(filePath, entryName, CompressionLevel.Fastest);
+                        string entryName = info.Name;
+                        string extension = info.Extension;
+
+                        if (extension.EndsWith("dwg", comparison) || extension.EndsWith("jpg", comparison))
+                        {
+                            _ = archive.CreateEntryFromFile(filePath, entryName, CompressionLevel.Fastest);
+                        }
                     }
                 }
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                throw new Exception($"Нет доступа к директории: {ex.Message}");
+            }
             catch (Exception ex)
             {
-                throw new Exception($"Failed convert to zip: '{filePath}': {ex.Message}");
+                throw new Exception($"Не удалось создать zip-архив: {ex.Message}");
             }
         }
+        
     }
 
 

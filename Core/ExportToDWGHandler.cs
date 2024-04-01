@@ -70,7 +70,7 @@ internal static class ExportToDWGHandler
             }
         }
 
-        ExportHelper.ZipTheFolderWithSubfolders(revitFilePath, exportFolderPath);
+        ExportHelper.ZipTheFolder(revitFilePath, exportFolderPath);
 
         _ = sb.AppendLine($"Printed: {printCount} in {sheetList.Count}");
         _ = sb.AppendLine(exportDirectory);
