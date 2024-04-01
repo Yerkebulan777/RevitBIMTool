@@ -1,5 +1,4 @@
 ﻿using Autodesk.Revit.DB;
-using Autodesk.Revit.UI;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
@@ -83,24 +82,48 @@ internal static class ExportHelper
     }
 
 
-    public static void ZipTheFolderWithSubfolders(string sourceFilePath, string directory)
+    public static string GetRelativePath(string fromPath, string toPath)
     {
-        string filename = Path.GetFileNameWithoutExtension(sourceFilePath);
-        string destinationPath = Path.Combine(directory, filename + ".zip");
+        Uri fromUri = new(fromPath);
+        Uri toUri = new(toPath);
+
+        Uri relativeUri = fromUri.MakeRelativeUri(toUri);
+        string relativePath = Uri.UnescapeDataString(relativeUri.ToString());
+
+        return relativePath.Replace('/', Path.DirectorySeparatorChar);
+    }
+
+
+    public static void ZipTheFolderWithSubfolders(string sourceDir, string targetDir)
+    {
+        string filename = Path.GetFileNameWithoutExtension(sourceDir);
+        string destinationPath = Path.Combine(targetDir, filename + ".zip");
 
         RevitFileHelper.DeleteFileIfExists(destinationPath);
 
         using ZipArchive archive = ZipFile.Open(destinationPath, ZipArchiveMode.Create);
-
-        foreach (string filePath in Directory.EnumerateFiles(sourceFilePath, "*.*", SearchOption.TopDirectoryOnly))
+        StringComparison comparison = StringComparison.OrdinalIgnoreCase;
+        foreach (string filePath in Directory.EnumerateFiles(sourceDir))
         {
-            if ((filePath.EndsWith(".dwg") || filePath.EndsWith(".jpg")) && new FileInfo(filePath).Length > 0)
+            try
             {
-                _ = archive.CreateEntryFromFile(filePath, Path.GetFileName(filePath));
+                string entryName = GetRelativePath(sourceDir, filePath);
+                string extension = Path.GetExtension(filePath);
+
+                if (extension.EndsWith("dwg", comparison) || extension.EndsWith("jpg", comparison))
+                {
+                    if (new FileInfo(filePath).Length > 0)
+                    {
+                        _ = archive.CreateEntryFromFile(filePath, entryName, CompressionLevel.Fastest);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"An error occurred while processing the file '{filePath}': {ex.Message}");
             }
         }
     }
-
 
 
 }

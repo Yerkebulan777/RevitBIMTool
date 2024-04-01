@@ -10,7 +10,6 @@ namespace RevitBIMTool;
 internal sealed class Application : IExternalApplication
 {
     private RevitExternalEventHandler externalEventHandler;
-    private string versionNumber { get; set; }
 
 
     public Result OnStartup(UIControlledApplication application)
@@ -26,9 +25,9 @@ internal sealed class Application : IExternalApplication
         }
         finally
         {
+            string versionNumber = application.ControlledApplication.VersionNumber;
             if (TaskRequestContainer.Instance.ValidateTaskData(versionNumber))
             {
-                versionNumber = application.ControlledApplication.VersionNumber;
                 Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
                 externalEventHandler = new RevitExternalEventHandler(versionNumber);
                 if (ExternalEventRequest.Denied != externalEventHandler.Raise())
