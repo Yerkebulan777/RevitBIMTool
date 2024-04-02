@@ -17,7 +17,7 @@ public sealed class RevitViewHelper
         ViewFamilyType vft = new FilteredElementCollector(doc)
         .OfClass(typeof(ViewFamilyType)).Cast<ViewFamilyType>()
         .First(q => q.ViewFamily == ViewFamily.ThreeDimensional);
-        using (Transaction trx = new Transaction(doc, "Create3DView"))
+        using (Transaction trx = new(doc, "Create3DView"))
         {
             TransactionStatus status = trx.Start();
             if (status == TransactionStatus.Started)
@@ -104,7 +104,7 @@ public sealed class RevitViewHelper
 
     public static void SetViewSettings(Document doc, View view, ViewDiscipline discipline, DisplayStyle style, ViewDetailLevel detail)
     {
-        using (Transaction trans = new Transaction(doc))
+        using (Transaction trans = new(doc))
         {
             TransactionStatus status = trans.Start("SetViewSettings");
             if (status == TransactionStatus.Started && view is View3D view3D)
@@ -137,8 +137,8 @@ public sealed class RevitViewHelper
     #region BoundingBox
     public static BoundingBoxXYZ CreateBoundingBox(XYZ centroid, double offset = 7)
     {
-        BoundingBoxXYZ bbox = new BoundingBoxXYZ();
-        XYZ vector = new XYZ(offset, offset, offset);
+        BoundingBoxXYZ bbox = new();
+        XYZ vector = new(offset, offset, offset);
         bbox.Min = centroid - vector;
         bbox.Max = centroid + vector;
         bbox.Enabled = true;
@@ -171,28 +171,26 @@ public sealed class RevitViewHelper
     public static void SetCategoriesToVisible(Document docunent, View view, IList<BuiltInCategory> catsToHide = null)
     {
         bool shouldBeHidden = catsToHide != null;
-        using (Transaction trx = new Transaction(docunent))
+        using Transaction trx = new(docunent);
+        TransactionStatus status = trx.Start("SetCategoriesVisible");
+
+        foreach (ElementId catId in ParameterFilterUtilities.GetAllFilterableCategories())
         {
-            TransactionStatus status = trx.Start("SetCategoriesVisible");
+            Category cat = Category.GetCategory(docunent, (BuiltInCategory)catId.IntegerValue);
 
-            foreach (ElementId catId in ParameterFilterUtilities.GetAllFilterableCategories())
+            if (cat is Category category && view.CanCategoryBeHidden(category.Id))
             {
-                Category category = Category.GetCategory(docunent, (BuiltInCategory)catId.IntegerValue);
-
-                if (view.CanCategoryBeHidden(category.Id))
+                if (shouldBeHidden && catsToHide.Contains((BuiltInCategory)catId.IntegerValue))
                 {
-                    if (shouldBeHidden && catsToHide.Contains((BuiltInCategory)catId.IntegerValue))
-                    {
-                        view.SetCategoryHidden(category.Id, true);
-                    }
-                    else if (category.SubCategories.Size > 0)
-                    {
-                        view.SetCategoryHidden(category.Id, false);
-                    }
+                    view.SetCategoryHidden(catId, true);
+                }
+                else if (cat.SubCategories.Size > 0)
+                {
+                    view.SetCategoryHidden(catId, false);
                 }
             }
-            _ = trx.Commit();
         }
+        _ = trx.Commit();
     }
 
 
@@ -314,7 +312,7 @@ public sealed class RevitViewHelper
     public static void CreateViewFilter(Document doc, View view, Element elem, ElementFilter filter)
     {
         string filterName = "Filter" + elem.Name;
-        OverrideGraphicSettings ogSettings = new OverrideGraphicSettings();
+        OverrideGraphicSettings ogSettings = new();
         IList<ElementId> categories = CheckFilterableCategoryByElement(elem);
         ParameterFilterElement prmFilter = ParameterFilterElement.Create(doc, filterName, categories, filter);
         ogSettings = ogSettings.SetProjectionLineColor(new Color(255, 0, 0));
@@ -325,7 +323,7 @@ public sealed class RevitViewHelper
     private static IList<ElementId> CheckFilterableCategoryByElement(Element elem)
     {
         ICollection<ElementId> catIds = ParameterFilterUtilities.GetAllFilterableCategories();
-        IList<ElementId> categories = new List<ElementId>();
+        IList<ElementId> categories = [];
         foreach (ElementId catId in catIds)
         {
             if (elem.Category.Id == catId)
@@ -345,28 +343,26 @@ public sealed class RevitViewHelper
 
     public static void SetWorksetsVisible(Document doc, View view)
     {
-        using (Transaction trans = new Transaction(doc))
+        using Transaction trans = new(doc);
+        TransactionStatus status = trans.Start("Workset Visible modify");
+        WorksetDefaultVisibilitySettings defaultVisibility = WorksetDefaultVisibilitySettings.GetWorksetDefaultVisibilitySettings(doc);
+        foreach (Workset workset in new FilteredWorksetCollector(doc).OfKind(WorksetKind.UserWorkset).OfType<Workset>())
         {
-            TransactionStatus status = trans.Start("Workset Visible modify");
-            WorksetDefaultVisibilitySettings defaultVisibility = WorksetDefaultVisibilitySettings.GetWorksetDefaultVisibilitySettings(doc);
-            foreach (Workset workset in new FilteredWorksetCollector(doc).OfKind(WorksetKind.UserWorkset).OfType<Workset>())
+            if (status == TransactionStatus.Started && workset.IsValidObject)
             {
-                if (status == TransactionStatus.Started && workset.IsValidObject)
+                WorksetId wid = new(workset.Id.IntegerValue);
+                WorksetVisibility visibility = view.GetWorksetVisibility(wid);
+                if (!defaultVisibility.IsWorksetVisible(wid))
                 {
-                    WorksetId wid = new WorksetId(workset.Id.IntegerValue);
-                    WorksetVisibility visibility = view.GetWorksetVisibility(wid);
-                    if (!defaultVisibility.IsWorksetVisible(wid))
-                    {
-                        defaultVisibility.SetWorksetVisibility(wid, true);
-                    }
-                    if (visibility == WorksetVisibility.Hidden)
-                    {
-                        view.SetWorksetVisibility(wid, WorksetVisibility.Visible);
-                    }
+                    defaultVisibility.SetWorksetVisibility(wid, true);
+                }
+                if (visibility == WorksetVisibility.Hidden)
+                {
+                    view.SetWorksetVisibility(wid, WorksetVisibility.Visible);
                 }
             }
-            _ = trans.Commit();
         }
+        _ = trans.Commit();
     }
 
     #endregion
