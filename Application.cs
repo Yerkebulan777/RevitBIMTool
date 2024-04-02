@@ -11,7 +11,6 @@ internal sealed class Application : IExternalApplication
 {
     private RevitExternalEventHandler externalEventHandler;
 
-
     public Result OnStartup(UIControlledApplication application)
     {
         try
