@@ -6,6 +6,7 @@ using System.Text;
 
 
 namespace RevitBIMTool.Core;
+
 internal static class ExportToNWCHandler
 {
     public static string ExportToNWC(Document doc, string revitFilePath)
