@@ -58,8 +58,9 @@ public sealed class AutomationHandler
             1 => sb.AppendLine(ExportToPDFHandler.ExportToPDF(doc, sourceFilePath)),
             2 => sb.AppendLine(ExportToDWGHandler.ExportToDWG(doc, sourceFilePath)),
             3 => sb.AppendLine(ExportToNWCHandler.ExportToNWC(doc, sourceFilePath)),
-            _ => sb.AppendLine("Failed..."),
+            _ => sb.AppendLine("Failed command"),
         };
+
         return sb.ToString();
     }
 
