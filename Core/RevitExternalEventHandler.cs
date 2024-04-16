@@ -37,6 +37,7 @@ namespace RevitBIMTool.Core
                         Task task = new(async () =>
                         {
                             await RevitMessageManager.SendInfoAsync(taskRequest.BotChatId, result);
+                            await Task.Delay(1000);
                         });
 
                         task.RunSynchronously();
