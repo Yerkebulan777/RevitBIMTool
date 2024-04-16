@@ -1,6 +1,6 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using CommunicationService;
+using CommunicationService.Models;
 using RevitBIMTool.Utils;
 using System.IO;
 using System.Text;
@@ -13,8 +13,8 @@ public sealed class AutomationHandler
     private Document document;
     private const int waitTimeout = 1000;
     private readonly UIApplication uiapp;
-    private StringBuilder builder = new StringBuilder();
-    private static readonly object syncLocker = new object();
+    private StringBuilder builder = new();
+    private static readonly object syncLocker = new();
 
 
     public AutomationHandler(UIApplication application)
@@ -38,9 +38,8 @@ public sealed class AutomationHandler
             {
                 TimeSpan elapsedTime = DateTime.Now - startedTime;
                 string fileName = Path.GetFileNameWithoutExtension(sourceFilePath);
-                string elasped = $"{elapsedTime.Hours} hours {elapsedTime.Minutes} minutes";
-                _ = builder.AppendLine(fileName);
-                _ = builder.AppendLine(elasped);
+                string formattedTime = elapsedTime.ToString(@"h\:mm\:ss");
+                _ = builder.AppendLine($"{fileName}  [{formattedTime}]");
                 _ = builder.AppendLine(output);
             }
         }
@@ -51,25 +50,16 @@ public sealed class AutomationHandler
 
     private string RunTaskByNumber(Document doc, TaskRequest taskModel)
     {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new();
         string sourceFilePath = taskModel.RevitFilePath;
 
-        switch (taskModel.CommandNumber)
+        sb = taskModel.CommandNumber switch
         {
-            case 1:
-                sb = sb.AppendLine(ExportToPDFHandler.ExportToPDF(doc, sourceFilePath));
-                break;
-            case 2:
-                sb = sb.AppendLine(ExportToDWGHandler.ExportToDWG(doc, sourceFilePath));
-                break;
-            case 3:
-                sb = sb.AppendLine(ExportToNWCHandler.ExportToNWC(doc, sourceFilePath));
-                break;
-            default:
-                sb = sb.AppendLine("Failed...");
-                break;
-        }
-
+            1 => sb.AppendLine(ExportToPDFHandler.ExportToPDF(doc, sourceFilePath)),
+            2 => sb.AppendLine(ExportToDWGHandler.ExportToDWG(doc, sourceFilePath)),
+            3 => sb.AppendLine(ExportToNWCHandler.ExportToNWC(doc, sourceFilePath)),
+            _ => sb.AppendLine("Failed..."),
+        };
         return sb.ToString();
     }
 
@@ -88,8 +78,8 @@ public sealed class AutomationHandler
     private string WithOpenedDocument(UIApplication uiapp, TaskRequest taskModel, Func<Document, TaskRequest, string> revitAction)
     {
         UIDocument uidoc = null;
-        StringBuilder output = new StringBuilder();
-        OpenOptions openOptions = new OpenOptions
+        StringBuilder output = new();
+        OpenOptions openOptions = new()
         {
             DetachFromCentralOption = DetachFromCentralOption.DetachAndPreserveWorksets,
             Audit = true,

@@ -1,5 +1,5 @@
 ﻿using Autodesk.Revit.UI;
-using CommunicationService;
+using CommunicationService.Core;
 using System.Diagnostics;
 using System.ServiceModel;
 using System.Windows;
