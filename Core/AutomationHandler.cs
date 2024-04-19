@@ -51,6 +51,7 @@ public sealed class AutomationHandler
     private string RunTaskByNumber(Document doc, TaskRequest taskModel)
     {
         StringBuilder sb = new();
+
         string sourceFilePath = taskModel.RevitFilePath;
 
         sb = taskModel.CommandNumber switch
