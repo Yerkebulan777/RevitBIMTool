@@ -40,6 +40,7 @@ namespace RevitBIMTool.Core
                         });
 
                         task.RunSynchronously();
+                        Thread.Sleep(1000);
                     }
                 }
             }
