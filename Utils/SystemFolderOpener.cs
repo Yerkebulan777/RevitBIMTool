@@ -9,9 +9,6 @@ namespace RevitBIMTool.Utils;
 internal static class SystemFolderOpener
 {
     [DllImport("user32.dll")]
-    private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
-
-    [DllImport("user32.dll")]
     private static extern bool SetForegroundWindow(IntPtr hWnd);
 
 
