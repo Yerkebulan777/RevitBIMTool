@@ -141,11 +141,11 @@ internal static class MainPrintHandler
 
     private static Element GetViewSheetByNumber(ref Document document, string sheetNumber)
     {
-#if R19
+#if R19 || R21
         ParameterValueProvider pvp = new ParameterValueProvider(new ElementId(BuiltInParameter.SHEET_NUMBER));
         FilterStringRule filterRule = new FilterStringRule(pvp, new FilterStringEquals(), sheetNumber, false);
 #else
-        ParameterValueProvider pvp = new ParameterValueProvider(new ElementId(BuiltInParameter.SHEET_NUMBER));  
+        ParameterValueProvider pvp = new ParameterValueProvider(new ElementId(BuiltInParameter.SHEET_NUMBER));
         FilterStringRule filterRule = new FilterStringRule(pvp, new FilterStringEquals(), sheetNumber);
 #endif
 
