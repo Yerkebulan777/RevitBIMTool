@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using SHDocVw;
+using Shell32;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 
@@ -19,16 +21,16 @@ internal static class SystemFolderOpener
         {
             try
             {
-                string folderName = Path.GetFileName(directoryPath);
+                Shell shell = new();
+                ShellWindows shellWindows = shell.Windows();
 
-                foreach (Process proc in Process.GetProcessesByName("explorer"))
+                foreach (InternetExplorer window in shellWindows)
                 {
-                    if (proc.MainWindowTitle.Contains(folderName))
+                    string path = Path.GetFullPath(window.FullName).ToLower();
+                    if (path == directoryPath.ToLower())
                     {
-                        if (SetForegroundWindow(proc.MainWindowHandle))
-                        {
-                            return;
-                        }
+                        _ = SetForegroundWindow((IntPtr)window.HWND);
+                        return;
                     }
                 }
 
@@ -40,7 +42,4 @@ internal static class SystemFolderOpener
             }
         }
     }
-
-
-
 }
