@@ -37,15 +37,16 @@ namespace RevitBIMTool.Core
                     if (File.Exists(taskRequest.RevitFilePath))
                     {
                         string result = autoHandler.ExecuteTask(taskRequest);
-                        
+
                         Task task = new(async () =>
                         {
-                            Log.Information(result);
                             await Task.Delay(taskRequest.CommandNumber * 1000);
                             await RevitMessageManager.SendInfoAsync(taskRequest.BotChatId, result);
                         });
 
                         task.RunSynchronously();
+
+                        Log.Warning(result);
                     }
                 }
             }
