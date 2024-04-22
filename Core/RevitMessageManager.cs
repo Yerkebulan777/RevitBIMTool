@@ -12,7 +12,6 @@ public static class RevitMessageManager
     private const string serviceUrlTcp = "net.tcp://localhost:9000/RevitExternalService";
     private static ChannelFactory<IRevitHostService> factory;
 
-
     public static async Task SendInfoAsync(long chatId, string text)
     {
         try
@@ -67,7 +66,7 @@ public static class RevitMessageManager
     {
         if (!string.IsNullOrEmpty(text))
         {
-            Debug.WriteLine(text);
+            Log.Information(text);
             Clipboard.SetText(text);
             TaskDialog dialog = new("Revit")
             {

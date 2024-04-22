@@ -29,6 +29,7 @@ namespace RevitBIMTool.Core
             AutomationHandler autoHandler = new(uiapp);
 
             Log.Logger = new LoggerConfiguration().WriteTo.File(logFilePath).CreateLogger();
+
             while (TaskRequestContainer.Instance.PopTaskModel(versionNumber, out TaskRequest taskRequest))
             {
                 lock (syncLocker)
@@ -37,13 +38,14 @@ namespace RevitBIMTool.Core
                     {
                         string result = autoHandler.ExecuteTask(taskRequest);
 
+                        Thread.Sleep(taskRequest.CommandNumber * 1000);
+
                         Task task = new(async () =>
                         {
                             await RevitMessageManager.SendInfoAsync(taskRequest.BotChatId, result);
                         });
 
                         task.RunSynchronously();
-                        Thread.Sleep(1000);
                     }
                 }
             }
