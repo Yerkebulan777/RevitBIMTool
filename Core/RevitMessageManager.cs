@@ -14,31 +14,30 @@ public static class RevitMessageManager
 
     public static async Task SendInfoAsync(long chatId, string text)
     {
-        EndpointAddress endpoint = new EndpointAddress(serviceUrlTcp);
-        NetTcpBinding tspBinding = new NetTcpBinding(SecurityMode.Message);
-        using (factory = new ChannelFactory<IRevitHostService>(tspBinding))
+        try
         {
-            IRevitHostService proxyService = factory.CreateChannel(endpoint);
-
-            if (proxyService is IClientChannel channel)
+            EndpointAddress endpoint = new(serviceUrlTcp);
+            NetTcpBinding tspBinding = new(SecurityMode.Message);
+            using (factory = new ChannelFactory<IRevitHostService>(tspBinding))
             {
-                CloseIfFaultedChannel(channel);
+                IRevitHostService proxyService = factory.CreateChannel(endpoint);
 
-                try
+                if (proxyService is IClientChannel channel)
                 {
+                    CloseIfFaultedChannel(channel);
                     await proxyService.SendMessageAsync(chatId, text);
                     await Task.Delay(5000);
                     channel.Dispose();
                 }
-                catch (Exception ex)
-                {
-                    ShowInfo(ex.Message);
-                }
-                finally
-                {
-                    await Task.Yield();
-                }
             }
+        }
+        catch (Exception ex)
+        {
+            ShowInfo(ex.Message);
+        }
+        finally
+        {
+            await Task.Yield();
         }
     }
 
@@ -47,11 +46,15 @@ public static class RevitMessageManager
     {
         if (channel.State == CommunicationState.Faulted)
         {
+            channel.Abort();
+        }
+        else
+        {
             try
             {
                 channel.Close();
             }
-            finally
+            catch
             {
                 channel.Abort();
             }
@@ -65,7 +68,7 @@ public static class RevitMessageManager
         {
             Debug.WriteLine(text);
             Clipboard.SetText(text);
-            TaskDialog dialog = new TaskDialog("Revit")
+            TaskDialog dialog = new("Revit")
             {
                 MainContent = text,
                 MainInstruction = "Information: ",
