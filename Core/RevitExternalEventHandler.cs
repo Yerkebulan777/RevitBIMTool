@@ -1,6 +1,6 @@
 ﻿using Autodesk.Revit.UI;
-using CommunicationService;
 using CommunicationService.Models;
+using Serilog;
 using System.Diagnostics;
 using System.IO;
 
@@ -13,6 +13,8 @@ namespace RevitBIMTool.Core
         private readonly ExternalEvent externalEvent;
         private static readonly object syncLocker = new();
         private readonly Process currentProcess = Process.GetCurrentProcess();
+        private static readonly string myDocumentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        private static readonly string logFilePath = Path.Combine(myDocumentsPath, "RevitBIMToolLog.txt");
 
         public RevitExternalEventHandler(string version)
         {
@@ -26,6 +28,7 @@ namespace RevitBIMTool.Core
             currentProcess.PriorityBoostEnabled = true;
             AutomationHandler autoHandler = new(uiapp);
 
+            Log.Logger = new LoggerConfiguration().WriteTo.File(logFilePath).CreateLogger();
             while (TaskRequestContainer.Instance.PopTaskModel(versionNumber, out TaskRequest taskRequest))
             {
                 lock (syncLocker)

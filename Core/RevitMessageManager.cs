@@ -1,5 +1,6 @@
 ﻿using Autodesk.Revit.UI;
 using CommunicationService.Core;
+using Serilog;
 using System.Diagnostics;
 using System.ServiceModel;
 using System.Windows;
@@ -33,7 +34,7 @@ public static class RevitMessageManager
         }
         catch (Exception ex)
         {
-            ShowInfo(ex.Message);
+            Log.Error(ex, ex.ToString());
         }
         finally
         {
