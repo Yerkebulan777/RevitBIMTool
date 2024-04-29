@@ -16,6 +16,7 @@ namespace RevitBIMTool.Core
         private static readonly string myDocumentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
         private static readonly string logFilePath = Path.Combine(myDocumentsPath, "RevitBIMToolLog.txt");
 
+
         public RevitExternalEventHandler(string version)
         {
             externalEvent = ExternalEvent.Create(this);
