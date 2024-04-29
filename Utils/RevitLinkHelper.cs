@@ -7,6 +7,8 @@ namespace RevitBIMTool.Utils
     internal static class RevitLinkHelper
     {
 
+
+
         public static void CheckAndRemoveUnloadedLinks(Document doc)
         {
             FilteredElementCollector collector = new FilteredElementCollector(doc);
