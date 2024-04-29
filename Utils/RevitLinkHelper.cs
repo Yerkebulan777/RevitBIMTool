@@ -8,6 +8,7 @@ namespace RevitBIMTool.Utils
     {
 
 
+
         public static void CheckAndRemoveUnloadedLinks(Document doc)
         {
             FilteredElementCollector collector = new FilteredElementCollector(doc);
