@@ -24,10 +24,13 @@ internal static class SystemFolderOpener
                 foreach (InternetExplorer window in shellWindows)
                 {
                     string path = Path.GetFullPath(window.FullName).ToLower();
+
                     if (path == directoryPath.ToLower())
                     {
-                        _ = SetForegroundWindow((IntPtr)window.HWND);
-                        return;
+                        if (SetForegroundWindow((IntPtr)window.HWND))
+                        {
+                            return;
+                        }
                     }
                 }
 
