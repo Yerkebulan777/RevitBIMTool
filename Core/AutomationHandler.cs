@@ -52,6 +52,7 @@ public sealed class AutomationHandler
     {
         StringBuilder sb = new();
 
+        RevitLinkHelper.CheckAndRemoveUnloadedLinks(doc);
         string sourceFilePath = taskModel.RevitFilePath;
 
         sb = taskModel.CommandNumber switch

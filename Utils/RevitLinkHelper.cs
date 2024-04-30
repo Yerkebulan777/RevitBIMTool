@@ -7,13 +7,11 @@ namespace RevitBIMTool.Utils
     internal static class RevitLinkHelper
     {
 
-
-
         public static void CheckAndRemoveUnloadedLinks(Document doc)
         {
+            Debug.WriteLine("\nStart checking and removing unloaded links ...");
             FilteredElementCollector collector = new FilteredElementCollector(doc);
             collector = collector.OfClass(typeof(RevitLinkType)).WhereElementIsNotElementType();
-            Debug.WriteLine("\nStart checking and removing unloaded links ...");
             using Transaction trans = new(doc, "Check Links");
             Dictionary<string, RevitLinkType> linkNames = [];
             if (TransactionStatus.Started == trans.Start())
@@ -45,7 +43,7 @@ namespace RevitBIMTool.Utils
                                 }
                                 catch (Exception ex)
                                 {
-                                    Debug.WriteLine("Error in processing link: {0}", ex);
+                                    Debug.WriteLine("Error: {0}", ex);
                                 }
                             }
                         }
