@@ -46,7 +46,7 @@ internal static class ExportToPDFHandler
 
             Dictionary<string, List<SheetModel>> sheetData = MainPrintHandler.GetSheetPrintedData(ref document);
             List<SheetModel> sheetModels = MainPrintHandler.PrintSheetData(ref document, sheetData, tempPath);
-            Debug.Print($"Total sheet count: ({sheetModels.Count})");
+            Log.Information($"Total valid sheet count: ({sheetModels.Count})");
 
             if (sheetModels.Count > 0)
             {
