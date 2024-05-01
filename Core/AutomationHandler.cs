@@ -53,14 +53,13 @@ public sealed class AutomationHandler
         StringBuilder sb = new();
 
         RevitLinkHelper.CheckAndRemoveUnloadedLinks(doc);
-        string sourceFilePath = taskModel.RevitFilePath;
 
         sb = taskModel.CommandNumber switch
         {
-            1 => sb.AppendLine(ExportToPDFHandler.ExportToPDF(doc, sourceFilePath)),
-            2 => sb.AppendLine(ExportToDWGHandler.ExportToDWG(doc, sourceFilePath)),
-            3 => sb.AppendLine(ExportToNWCHandler.ExportToNWC(doc, sourceFilePath)),
-            _ => sb.AppendLine("Failed command"),
+            1 => sb.AppendLine(ExportToPDFHandler.ExportToPDF(doc, taskModel.RevitFilePath)),
+            2 => sb.AppendLine(ExportToDWGHandler.ExportToDWGAsync(doc, taskModel.RevitFilePath)),
+            3 => sb.AppendLine(ExportToNWCHandler.ExportToNWC(doc, taskModel.RevitFilePath)),
+            _ => sb.AppendLine($"Failed command: {taskModel.CommandNumber}"),
         };
 
         return sb.ToString();

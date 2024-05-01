@@ -7,7 +7,7 @@ using System.Text;
 namespace RevitBIMTool.Core;
 internal static class ExportToDWGHandler
 {
-    public static string ExportToDWG(Document document, string revitFilePath)
+    public static async Task<string> ExportToDWGAsync(Document document, string revitFilePath)
     {
         int printCount = 0;
 
@@ -20,7 +20,6 @@ internal static class ExportToDWGHandler
 
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
         string exportBaseDirectory = ExportHelper.ExportDirectory(revitFilePath, "02_DWG", true);
-
         IEnumerable<ViewSheet> sheets = new FilteredElementCollector(document).OfClass(typeof(ViewSheet)).Cast<ViewSheet>();
         List<ViewSheet> sheetList = sheets.Where(s => s.CanBePrinted).OrderBy(s => s.SheetNumber.Length).ThenBy(s => s.SheetNumber).ToList();
         string exportFolder = Path.Combine(exportBaseDirectory, revitFileName);
@@ -64,6 +63,7 @@ internal static class ExportToDWGHandler
                     {
                         if (document.Export(exportFolder, sheetFullName, collection, exportOptions))
                         {
+                            await Task.Delay(1000);
                             printCount++;
                         }
                     }
