@@ -39,6 +39,8 @@ namespace RevitBIMTool.Core
                     {
                         string result = autoHandler.ExecuteTask(taskRequest);
 
+                        Log.Information(result);
+
                         Task task = new(async () =>
                         {
                             await Task.Delay(taskRequest.CommandNumber * 1000);
@@ -46,8 +48,6 @@ namespace RevitBIMTool.Core
                         });
 
                         task.RunSynchronously();
-
-                        Log.Warning(result);
                     }
                 }
             }
