@@ -24,6 +24,7 @@ namespace RevitBIMTool.Core
 
         public void Execute(UIApplication uiapp)
         {
+            Log.Information("Start execute ... ");
             currentProcess.PriorityBoostEnabled = true;
             AutomationHandler autoHandler = new(uiapp);
 
