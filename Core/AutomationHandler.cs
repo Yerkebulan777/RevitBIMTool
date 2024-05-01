@@ -2,6 +2,7 @@
 using Autodesk.Revit.UI;
 using CommunicationService.Models;
 using RevitBIMTool.Utils;
+using Serilog;
 using System.IO;
 using System.Text;
 using Document = Autodesk.Revit.DB.Document;
@@ -23,7 +24,6 @@ public sealed class AutomationHandler
     }
 
 
-    [STAThread]
     public string ExecuteTask(TaskRequest taskRequest)
     {
         builder = new StringBuilder();
@@ -53,6 +53,8 @@ public sealed class AutomationHandler
         StringBuilder sb = new();
 
         RevitLinkHelper.CheckAndRemoveUnloadedLinks(doc);
+
+        Log.Information($"Run command {taskModel.CommandNumber}");
 
         sb = taskModel.CommandNumber switch
         {
