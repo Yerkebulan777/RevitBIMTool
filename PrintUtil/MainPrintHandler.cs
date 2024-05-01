@@ -17,13 +17,12 @@ namespace RevitBIMTool.PrintUtil;
 internal static class MainPrintHandler
 {
     private static string defaultPrinterName;
-    private static readonly object syncLocker = new object();
-
+    private static readonly object syncLocker = new();
 
     public static string OrganizationGroupName(ref Document doc, ViewSheet viewSheet)
     {
-        StringBuilder stringBuilder = new StringBuilder();
-        Regex matchPrefix = new Regex(@"^(\d\s)|(\.\w+)|(\s*)");
+        StringBuilder stringBuilder = new();
+        Regex matchPrefix = new(@"^(\d\s)|(\.\w+)|(\s*)");
         BrowserOrganization organization = BrowserOrganization.GetCurrentBrowserOrganizationForSheets(doc);
         foreach (FolderItemInfo folderInfo in organization.GetFolderItems(viewSheet.Id))
         {
@@ -45,29 +44,27 @@ internal static class MainPrintHandler
         PrintManager printManager = doc.PrintManager;
         PrinterApiUtility.ResetDefaultPrinter(printerName);
         List<PrintSetting> printSettings = RevitPrinterUtil.GetPrintSettings(doc);
-        using (Transaction trx = new Transaction(doc, "ResetPrintSetting"))
+        using Transaction trx = new(doc, "ResetPrintSetting");
+        if (TransactionStatus.Started == trx.Start())
         {
-            if (TransactionStatus.Started == trx.Start())
+            try
             {
-                try
+                printSettings.ForEach(set => doc.Delete(set.Id));
+                printManager.SelectNewPrintDriver(printerName);
+                printManager.PrintRange = PrintRange.Visible;
+                printManager.PrintToFile = true;
+            }
+            catch (Exception ex)
+            {
+                _ = trx.RollBack();
+                throw new Exception("ResetPrintSettings", ex);
+            }
+            finally
+            {
+                printManager.Apply();
+                if (!trx.HasEnded())
                 {
-                    printSettings.ForEach(set => doc.Delete(set.Id));
-                    printManager.SelectNewPrintDriver(printerName);
-                    printManager.PrintRange = PrintRange.Visible;
-                    printManager.PrintToFile = true;
-                }
-                catch (Exception ex)
-                {
-                    _ = trx.RollBack();
-                    throw new Exception("ResetPrintSettings", ex);
-                }
-                finally
-                {
-                    printManager.Apply();
-                    if (!trx.HasEnded())
-                    {
-                        _ = trx.Commit();
-                    }
+                    _ = trx.Commit();
                 }
             }
         }
@@ -76,8 +73,8 @@ internal static class MainPrintHandler
 
     public static Dictionary<string, List<SheetModel>> GetSheetPrintedData(ref Document doc)
     {
-        Dictionary<string, List<SheetModel>> sheetPrintData = new Dictionary<string, List<SheetModel>>();
-        FilteredElementCollector collector = new FilteredElementCollector(doc);
+        Dictionary<string, List<SheetModel>> sheetPrintData = [];
+        FilteredElementCollector collector = new(doc);
         collector = collector.OfCategory(BuiltInCategory.OST_TitleBlocks);
         collector = collector.OfClass(typeof(FamilyInstance));
         collector = collector.WhereElementIsNotElementType();
@@ -101,11 +98,7 @@ internal static class MainPrintHandler
                 {
                     string groupName = OrganizationGroupName(ref doc, viewSheet);
 
-                    if (string.IsNullOrWhiteSpace(groupName) || groupName.StartsWith("#"))
-                    {
-                        Log.Error($"Sheet section group not specified: {viewSheet.Name}!");
-                        continue;
-                    }
+                    if (groupName.StartsWith("#")) { continue; }
 
                     if (!PrinterApiUtility.GetPaperSize(widthInMm, heighInMm, out _))
                     {
@@ -115,13 +108,13 @@ internal static class MainPrintHandler
                     if (PrinterApiUtility.GetPaperSize(widthInMm, heighInMm, out PaperSize papeSize))
                     {
                         PageOrientationType orientType = RevitPrinterUtil.GetOrientation(widthInMm, heighInMm);
-                        SheetModel sheetModel = new SheetModel(viewSheet, papeSize, orientType, groupName);
+                        SheetModel sheetModel = new(viewSheet, papeSize, orientType, groupName);
                         string formatName = sheetModel.GetFormatNameWithSheetOrientation();
 
                         if (!sheetPrintData.TryGetValue(formatName, out List<SheetModel> sheetList))
                         {
                             RevitPrinterUtil.SetPrintSettings(doc, sheetModel, formatName);
-                            sheetList = new List<SheetModel> { sheetModel };
+                            sheetList = [sheetModel];
                         }
                         else
                         {
@@ -149,8 +142,8 @@ internal static class MainPrintHandler
         ParameterValueProvider pvp = new ParameterValueProvider(new ElementId(BuiltInParameter.SHEET_NUMBER));
         FilterStringRule filterRule = new FilterStringRule(pvp, new FilterStringEquals(), sheetNumber, false);
 #else
-        ParameterValueProvider pvp = new ParameterValueProvider(new ElementId(BuiltInParameter.SHEET_NUMBER));
-        FilterStringRule filterRule = new FilterStringRule(pvp, new FilterStringEquals(), sheetNumber);
+        ParameterValueProvider pvp = new(new ElementId(BuiltInParameter.SHEET_NUMBER));
+        FilterStringRule filterRule = new(pvp, new FilterStringEquals(), sheetNumber);
 #endif
 
         FilteredElementCollector collector = new FilteredElementCollector(document).OfClass(typeof(ViewSheet));
@@ -161,11 +154,11 @@ internal static class MainPrintHandler
 
     public static List<SheetModel> PrintSheetData(ref Document doc, Dictionary<string, List<SheetModel>> sheetDict, string tempDirectory)
     {
-        List<SheetModel> resultFilePaths = new List<SheetModel>(sheetDict.Values.Count);
+        List<SheetModel> resultFilePaths = new(sheetDict.Values.Count);
 
         List<PrintSetting> printAllSettings = RevitPrinterUtil.GetPrintSettings(doc);
 
-        using (Mutex mutex = new Mutex(false, "Global\\{{{PrintMutex}}}"))
+        using (Mutex mutex = new(false, "Global\\{{{PrintMutex}}}"))
         {
             PrintManager printManager = doc.PrintManager;
 
@@ -175,50 +168,48 @@ internal static class MainPrintHandler
 
                 if (printSetting != null && sheetDict.TryGetValue(settingName, out List<SheetModel> sheetModels))
                 {
-                    using (Transaction trx = new Transaction(doc, settingName))
+                    using Transaction trx = new(doc, settingName);
+                    if (TransactionStatus.Started == trx.Start())
                     {
-                        if (TransactionStatus.Started == trx.Start())
+                        printManager.PrintSetup.CurrentPrintSetting = printSetting;
+                        printManager.Apply(); // Set print settings
+
+                        for (int idx = 0; idx < sheetModels.Count; idx++)
                         {
-                            printManager.PrintSetup.CurrentPrintSetting = printSetting;
-                            printManager.Apply(); // Set print settings
+                            SheetModel currentModel = sheetModels[idx];
 
-                            for (int idx = 0; idx < sheetModels.Count; idx++)
+                            if (mutex.WaitOne(Timeout.Infinite))
                             {
-                                SheetModel currentModel = sheetModels[idx];
-
-                                if (mutex.WaitOne(Timeout.Infinite))
+                                try
                                 {
-                                    try
-                                    {
-                                        string fileName = currentModel.GetSheetNameWithExtension();
-                                        string filePath = Path.Combine(tempDirectory, fileName);
-                                        ViewSheet viewSheet = currentModel.ViewSheet;
-                                        printManager.PrintToFileName = filePath;
+                                    string fileName = currentModel.GetSheetNameWithExtension();
+                                    string filePath = Path.Combine(tempDirectory, fileName);
+                                    ViewSheet viewSheet = currentModel.ViewSheet;
+                                    printManager.PrintToFileName = filePath;
 
-                                        if (File.Exists(filePath))
-                                        {
-                                            File.Delete(filePath);
-                                        }
+                                    if (File.Exists(filePath))
+                                    {
+                                        File.Delete(filePath);
+                                    }
 
-                                        if (printManager.SubmitPrint(viewSheet))
-                                        {
-                                            resultFilePaths.Add(currentModel);
-                                            Debug.WriteLine(fileName);
-                                        }
-                                    }
-                                    catch (Exception ex)
+                                    if (printManager.SubmitPrint(viewSheet))
                                     {
-                                        throw new Exception(ex.Message);
-                                    }
-                                    finally
-                                    {
-                                        mutex.ReleaseMutex();
+                                        resultFilePaths.Add(currentModel);
+                                        Debug.WriteLine(fileName);
                                     }
                                 }
+                                catch (Exception ex)
+                                {
+                                    throw new Exception(ex.Message);
+                                }
+                                finally
+                                {
+                                    mutex.ReleaseMutex();
+                                }
                             }
-
-                            _ = trx.RollBack();
                         }
+
+                        _ = trx.RollBack();
                     }
                 }
             }
