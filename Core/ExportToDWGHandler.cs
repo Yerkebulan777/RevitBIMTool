@@ -7,7 +7,7 @@ using System.Text;
 namespace RevitBIMTool.Core;
 internal static class ExportToDWGHandler
 {
-    public static async Task<string> ExportToDWGAsync(Document document, string revitFilePath)
+    public static string ExportToDWG(Document document, string revitFilePath)
     {
         int printCount = 0;
 
@@ -63,7 +63,6 @@ internal static class ExportToDWGHandler
                     {
                         if (document.Export(exportFolder, sheetFullName, collection, exportOptions))
                         {
-                            await Task.Delay(1000);
                             printCount++;
                         }
                     }

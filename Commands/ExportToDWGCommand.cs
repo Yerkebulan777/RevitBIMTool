@@ -17,7 +17,7 @@ internal sealed class ExportToDWGCommand : IExternalCommand, IExternalCommandAva
     {
         Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
         if (commandData.Application == null) { return Result.Cancelled; }
-        
+
         UIApplication uiapp = commandData.Application;
         UIDocument uidoc = uiapp.ActiveUIDocument;
         Document document = uidoc.Document;
@@ -25,11 +25,11 @@ internal sealed class ExportToDWGCommand : IExternalCommand, IExternalCommandAva
         try
         {
             string revitFilePath = RevitPathHelper.GetRevitFilePath(document);
-            message = ExportToDWGHandler.ExportToDWGAsync(document, revitFilePath);
+            message = ExportToDWGHandler.ExportToDWG(document, revitFilePath);
         }
         catch (Exception ex)
         {
-            TaskDialog.Show("Exception", "Exception: \n" + ex);
+            _ = TaskDialog.Show("Exception", "Exception: \n" + ex);
             Clipboard.SetText(ex.ToString());
             return Result.Failed;
         }
