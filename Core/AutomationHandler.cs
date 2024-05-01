@@ -54,7 +54,7 @@ public sealed class AutomationHandler
 
         RevitLinkHelper.CheckAndRemoveUnloadedLinks(doc);
 
-        Log.Information($"Run command: {taskModel.CommandNumber}");
+        Log.Information($"Command number: {taskModel.CommandNumber}");
 
         sb = taskModel.CommandNumber switch
         {

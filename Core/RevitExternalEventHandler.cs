@@ -30,15 +30,12 @@ namespace RevitBIMTool.Core
 
             while (TaskRequestContainer.Instance.PopTaskModel(versionNumber, out TaskRequest taskRequest))
             {
-                Log.Information("Start while " + taskRequest.RevitFilePath);
-
                 lock (syncLocker)
                 {
                     if (File.Exists(taskRequest.RevitFilePath))
                     {
+                        Log.Information($"Run {taskRequest.RevitFilePath}");
                         string result = autoHandler.ExecuteTask(taskRequest);
-
-                        Log.Information(result);
 
                         Task task = new(async () =>
                         {
