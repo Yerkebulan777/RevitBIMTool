@@ -2,6 +2,7 @@
 using RevitBIMTool.Model;
 using RevitBIMTool.PrintUtil;
 using RevitBIMTool.Utils;
+using Serilog;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -29,6 +30,8 @@ internal static class ExportToPDFHandler
         tempPath = Path.Combine(tempPath, revitFileName);
         RevitPathHelper.EnsureDirectory(tempPath);
         RevitPathHelper.ClearDirectory(tempPath);
+
+        Log.Information("Start export to PDF...");
 
         if (!ExportHelper.IsTargetFileUpdated(exportFullPath, revitFilePath))
         {

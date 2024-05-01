@@ -1,6 +1,7 @@
 ﻿using Autodesk.Revit.DB;
 using RevitBIMTool.Model;
 using RevitBIMTool.Utils;
+using Serilog;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -81,6 +82,8 @@ internal static class MainPrintHandler
         collector = collector.OfClass(typeof(FamilyInstance));
         collector = collector.WhereElementIsNotElementType();
 
+        Log.Information($"Found {collector.GetElementCount()} sheets");
+
         foreach (FamilyInstance titleBlock in collector.Cast<FamilyInstance>())
         {
             lock (syncLocker)
@@ -100,6 +103,7 @@ internal static class MainPrintHandler
 
                     if (string.IsNullOrWhiteSpace(groupName) || groupName.StartsWith("#"))
                     {
+                        Log.Error($"Sheet section group not specified: {viewSheet.Name}!");
                         continue;
                     }
 
