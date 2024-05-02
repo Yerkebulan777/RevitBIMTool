@@ -15,8 +15,9 @@
         <DebugSymbols>true</DebugSymbols>
         <DefineConstants>$(DefineConstants);DEBUG</DefineConstants>
     </PropertyGroup>
+	
     <PropertyGroup Condition="$(Configuration.Contains('Release'))">
-        <Optimize>True</Optimize>
+        <Optimize>true</Optimize>
         <DebugType>none</DebugType>
         <DefineConstants>$(DefineConstants);RELEASE</DefineConstants>
     </PropertyGroup>
