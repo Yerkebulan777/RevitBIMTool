@@ -1,4 +1,5 @@
 ﻿using Autodesk.Revit.DB;
+using RevitBIMTool.Utils;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
@@ -6,7 +7,7 @@ using System.Security.Permissions;
 using System.Text.RegularExpressions;
 
 
-namespace RevitBIMTool.Utils;
+namespace RevitBIMTool.ExportHandlers;
 internal static class ExportHelper
 {
     private static readonly Regex matchDigits = new(@"(\d+\.\d+|\d+)");

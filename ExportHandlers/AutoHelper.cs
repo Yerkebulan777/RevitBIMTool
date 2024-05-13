@@ -1,9 +1,10 @@
 ﻿using Autodesk.Revit.DB;
+using RevitBIMTool.Utils;
 using System.IO;
 
 
-namespace RevitBIMTool.Utils;
-internal class AutomationHelper
+namespace RevitBIMTool.ExportHandlers;
+internal class AutoHelper
 {
     public void SaveAsBIM(Document doc, string filePath)
     {

@@ -33,6 +33,7 @@ internal sealed class Application : IExternalApplication
         finally
         {
             string versionNumber = application.ControlledApplication.VersionNumber;
+
             if (TaskRequestContainer.Instance.ValidateTaskData(versionNumber))
             {
                 Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;

@@ -8,7 +8,7 @@ using System.IO;
 using System.Text;
 
 
-namespace RevitBIMTool.Core;
+namespace RevitBIMTool.ExportHandlers;
 internal static class ExportToPDFHandler
 {
     const string printerName = "PDFCreator";

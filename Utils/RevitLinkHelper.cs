@@ -7,6 +7,7 @@ namespace RevitBIMTool.Utils
     internal static class RevitLinkHelper
     {
 
+
         public static void CheckAndRemoveUnloadedLinks(Document doc)
         {
             Debug.WriteLine("\nStart checking and removing unloaded links ...");
@@ -64,7 +65,6 @@ namespace RevitBIMTool.Utils
 
             _ = trans.Commit();
         }
-
 
 
     }
