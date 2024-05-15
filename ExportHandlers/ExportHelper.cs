@@ -5,13 +5,11 @@ using System.IO;
 using System.IO.Compression;
 using System.Security.Permissions;
 using System.Text.RegularExpressions;
-using System.Windows.Media.TextFormatting;
 
 
 namespace RevitBIMTool.ExportHandlers;
 internal static class ExportHelper
 {
-    private static readonly Regex matchDigits = new(@"(\d+\.\d+|\d+)");
     public static readonly string formatedDate = DateTime.Today.ToString("yyyy-MM-dd");
 
 
@@ -21,20 +19,13 @@ internal static class ExportHelper
 
         if (!string.IsNullOrEmpty(stringNumber))
         {
-            var invalidChars = new string(Path.GetInvalidFileNameChars());
-            var escapedInvalidChars = Regex.Escape(invalidChars);
-            var regex = new Regex($"(?<=\\d){escapedInvalidChars}");
-            stringNumber = regex.Replace(stringNumber.Trim(), ".");
-
-            MatchCollection matches = matchDigits.Matches(stringNumber);
-
-            if (matches.Count > 0)
-            {
-                stringNumber = string.Join(string.Empty, matches.Cast<Match>().Select(m => m.Value));
-            }
+            string invalidChars = new(Path.GetInvalidFileNameChars());
+            string escapedInvalidChars = Regex.Escape(invalidChars);
+            Regex regex = new($"(?<=\\d){escapedInvalidChars}");
+            stringNumber = regex.Replace(stringNumber, ".");
         }
 
-        return stringNumber;
+        return stringNumber.Trim();
     }
 
 
