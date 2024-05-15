@@ -35,6 +35,7 @@ namespace RevitBIMTool.Core
                     if (File.Exists(taskRequest.RevitFilePath))
                     {
                         string result = autoHandler.ExecuteTask(taskRequest);
+                        Log.Information($"Task result:  {result}");
 
                         Task task = new(async () =>
                         {

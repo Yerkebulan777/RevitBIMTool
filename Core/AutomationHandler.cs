@@ -136,6 +136,7 @@ public sealed class AutomationHandler
                 {
                     if (uidoc.Document is Document doc)
                     {
+                        Thread.Sleep(1000);
                         document = doc;
                     }
                 }
