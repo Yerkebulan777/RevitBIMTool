@@ -1,5 +1,6 @@
 ﻿using Autodesk.Revit.DB;
 using RevitBIMTool.Utils;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 
@@ -63,6 +64,7 @@ internal static class ExportToDWGHandler
                     {
                         if (document.Export(exportFolder, sheetFullName, collection, exportOptions))
                         {
+                            Debug.WriteLine("SheetFullName: " + sheetFullName);
                             printCount++;
                         }
                     }
