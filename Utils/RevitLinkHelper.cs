@@ -10,7 +10,8 @@ namespace RevitBIMTool.Utils
 
         public static void CheckAndRemoveUnloadedLinks(Document doc)
         {
-            FilteredElementCollector collector = new FilteredElementCollector(doc).OfClass(typeof(RevitLinkType));
+            FilteredElementCollector collector = new(doc);
+            collector = collector.OfClass(typeof(RevitLinkType));
             using Transaction trans = new(doc, "Check Links");
             Dictionary<string, RevitLinkType> linkNames = [];
             if (TransactionStatus.Started == trans.Start())
