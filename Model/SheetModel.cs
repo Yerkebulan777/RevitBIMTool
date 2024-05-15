@@ -34,8 +34,10 @@ internal class SheetModel : IDisposable
         string sheetName = ViewSheet.get_Parameter(BuiltInParameter.SHEET_NAME).AsString();
         string sheetNumber = ViewSheet.get_Parameter(BuiltInParameter.SHEET_NUMBER).AsString();
 
-        sheetNumber = Regex.Replace(sheetNumber.TrimStart('0'), @"[^0-9.]", string.Empty);
         SheetFileName = StringHelper.NormalizeText($"Лист - {groupName}-{sheetNumber} - {sheetName}.pdf");
+
+        sheetNumber = Regex.Replace(sheetNumber.TrimStart('0'), @"[^0-9.]", string.Empty);
+
         if (double.TryParse(sheetNumber, out double number))
         {
             SheetNumber = number;

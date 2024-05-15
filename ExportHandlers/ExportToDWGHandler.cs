@@ -56,7 +56,8 @@ internal static class ExportToDWGHandler
                     ICollection<ElementId> collection = [sheet.Id];
                     string sheetNum = ExportHelper.GetSheetNumber(sheet);
                     string sheetName = StringHelper.NormalizeText(sheet.Name);
-                    string sheetFullName = $"{revitFileName} - Лист - {sheetNum} - {sheetName}";
+                    string sheetFullName = StringHelper.ReplaceInvalidChars($"{revitFileName} - Лист - {sheetNum} - {sheetName}");
+
                     string sheetFullPath = Path.Combine(exportFolder, sheetFullName + ".dwg");
 
                     if (!ExportHelper.IsTargetFileUpdated(sheetFullPath, revitFilePath))

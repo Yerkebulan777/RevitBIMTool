@@ -9,6 +9,7 @@ internal static class StringHelper
         if (!string.IsNullOrEmpty(textLine))
         {
             textLine = string.Join(string.Empty, textLine.Split(Path.GetInvalidFileNameChars()));
+            textLine = textLine.TrimEnd('_');
             textLine = textLine.Normalize();
             textLine = textLine.Trim();
         }

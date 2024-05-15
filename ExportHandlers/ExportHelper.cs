@@ -5,6 +5,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Security.Permissions;
 using System.Text.RegularExpressions;
+using System.Windows.Media.TextFormatting;
 
 
 namespace RevitBIMTool.ExportHandlers;
@@ -16,11 +17,15 @@ internal static class ExportHelper
 
     public static string GetSheetNumber(ViewSheet sequenceSheet)
     {
-        string stringNumber = sequenceSheet?.SheetNumber.Trim();
+        string stringNumber = sequenceSheet?.SheetNumber;
 
         if (!string.IsNullOrEmpty(stringNumber))
         {
-            stringNumber = StringHelper.ReplaceInvalidChars(stringNumber);
+            var invalidChars = new string(Path.GetInvalidFileNameChars());
+            var escapedInvalidChars = Regex.Escape(invalidChars);
+            var regex = new Regex($"(?<=\\d){escapedInvalidChars}");
+            stringNumber = regex.Replace(stringNumber.Trim(), ".");
+
             MatchCollection matches = matchDigits.Matches(stringNumber);
 
             if (matches.Count > 0)
