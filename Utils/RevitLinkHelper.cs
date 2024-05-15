@@ -20,29 +20,35 @@ namespace RevitBIMTool.Utils
                 int count = collector.GetElementCount();
                 Debug.WriteLine("All links counts: " + count);
                 Log.Information("All links counts: " + count);
-                foreach (RevitLinkType linkType in collector)
+
+                foreach (ElementId id in collector.ToElementIds())
                 {
-                    string linkTypeName = linkType.Name;
+                    Element element = doc.GetElement(id);
 
-                    if (!linkNames.ContainsKey(linkTypeName))
+                    if (element is RevitLinkType linkType)
                     {
-                        linkNames.Add(linkTypeName, linkType);
-                        bool isLoaded = RevitLinkType.IsLoaded(doc, linkType.Id);
-                        Debug.WriteLine($"Link: {linkTypeName} is loaded: {isLoaded}");
-                        Log.Information($"Link: {linkTypeName} is loaded: {isLoaded}");
+                        string linkTypeName = linkType.Name;
 
-                        if (!isLoaded && linkType.AttachmentType == AttachmentType.Attachment)
+                        if (!linkNames.ContainsKey(linkTypeName))
                         {
-                            TryReloadLink(linkType, linkTypeName);
+                            linkNames.Add(linkTypeName, linkType);
+                            bool isLoaded = RevitLinkType.IsLoaded(doc, linkType.Id);
+                            Debug.WriteLine($"Link: {linkTypeName} is loaded: {isLoaded}");
+                            Log.Information($"Link: {linkTypeName} is loaded: {isLoaded}");
+
+                            if (!isLoaded && linkType.AttachmentType == AttachmentType.Attachment)
+                            {
+                                TryReloadLink(linkType, linkTypeName);
+                            }
+                            else if (!isLoaded && linkType.AttachmentType != AttachmentType.Attachment)
+                            {
+                                TryDeleteLink(doc, id, linkTypeName);
+                            }
                         }
-                        else if (!isLoaded && linkType.AttachmentType != AttachmentType.Attachment)
+                        else
                         {
-                            TryDeleteLink(doc, linkType, linkTypeName);
+                            TryDeleteLink(doc, id, linkTypeName);
                         }
-                    }
-                    else
-                    {
-                        TryDeleteLink(doc, linkType, linkTypeName);
                     }
                 }
 
@@ -72,11 +78,11 @@ namespace RevitBIMTool.Utils
         }
 
 
-        private static void TryDeleteLink(Document doc, RevitLinkType linkType, string linkTypeName)
+        private static void TryDeleteLink(Document doc, ElementId id, string linkTypeName)
         {
             try
             {
-                _ = doc.Delete(linkType.Id);
+                _ = doc.Delete(id);
             }
             catch (Exception ex)
             {
