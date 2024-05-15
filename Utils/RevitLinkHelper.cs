@@ -19,9 +19,6 @@ namespace RevitBIMTool.Utils
 
                 if (count > 0)
                 {
-                    Debug.WriteLine("All links counts: " + count);
-                    Log.Information("All links counts: " + count);
-
                     foreach (ElementId id in collector.ToElementIds())
                     {
                         Element element = doc.GetElement(id);
