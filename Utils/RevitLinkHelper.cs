@@ -15,7 +15,7 @@ namespace RevitBIMTool.Utils
             Dictionary<string, RevitLinkType> linkNames = [];
             if (TransactionStatus.Started == trans.Start())
             {
-                if (collector.GetElementCount() > 0)
+                if (0 < collector.GetElementCount())
                 {
                     foreach (ElementId id in collector.ToElementIds())
                     {
