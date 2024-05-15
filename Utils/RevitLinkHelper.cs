@@ -10,8 +10,6 @@ namespace RevitBIMTool.Utils
 
         public static void CheckAndRemoveUnloadedLinks(Document doc)
         {
-            Debug.WriteLine("Start checking and removing unloaded links ...");
-            Log.Information("Start checking and removing unloaded links ...");
             FilteredElementCollector collector = new FilteredElementCollector(doc).OfClass(typeof(RevitLinkType));
             using Transaction trans = new(doc, "Check Links");
             Dictionary<string, RevitLinkType> linkNames = [];
@@ -19,42 +17,45 @@ namespace RevitBIMTool.Utils
             {
                 int count = collector.GetElementCount();
 
-                Debug.WriteLine("All links counts: " + count);
-                Log.Information("All links counts: " + count);
-
-                foreach (ElementId id in collector.ToElementIds())
+                if (count > 0)
                 {
-                    Element element = doc.GetElement(id);
+                    Debug.WriteLine("All links counts: " + count);
+                    Log.Information("All links counts: " + count);
 
-                    if (element is RevitLinkType linkType)
+                    foreach (ElementId id in collector.ToElementIds())
                     {
-                        string linkTypeName = linkType.Name;
+                        Element element = doc.GetElement(id);
 
-                        if (!linkNames.ContainsKey(linkTypeName))
+                        if (element is RevitLinkType linkType)
                         {
-                            linkNames.Add(linkTypeName, linkType);
-                            bool isLoaded = RevitLinkType.IsLoaded(doc, linkType.Id);
-                            Debug.WriteLine($"Link: {linkTypeName} is loaded: {isLoaded}");
-                            Log.Information($"Link: {linkTypeName} is loaded: {isLoaded}");
+                            string linkTypeName = linkType.Name;
 
-                            if (!isLoaded && linkType.AttachmentType == AttachmentType.Attachment)
+                            if (!linkNames.ContainsKey(linkTypeName))
                             {
-                                TryReloadLink(linkType, linkTypeName);
+                                linkNames.Add(linkTypeName, linkType);
+                                bool isLoaded = RevitLinkType.IsLoaded(doc, linkType.Id);
+                                Debug.WriteLine($"Link: {linkTypeName} is loaded: {isLoaded}");
+                                Log.Information($"Link: {linkTypeName} is loaded: {isLoaded}");
+
+                                if (!isLoaded && linkType.AttachmentType == AttachmentType.Attachment)
+                                {
+                                    TryReloadLink(linkType, linkTypeName);
+                                }
+                                else if (!isLoaded && linkType.AttachmentType != AttachmentType.Attachment)
+                                {
+                                    TryDeleteLink(doc, id, linkTypeName);
+                                }
                             }
-                            else if (!isLoaded && linkType.AttachmentType != AttachmentType.Attachment)
+                            else
                             {
                                 TryDeleteLink(doc, id, linkTypeName);
                             }
                         }
-                        else
-                        {
-                            TryDeleteLink(doc, id, linkTypeName);
-                        }
                     }
-                }
 
-                TransactionStatus status = trans.Commit();
-                Debug.WriteLine($"Transaction status: {status}");
+                    TransactionStatus status = trans.Commit();
+                    Debug.WriteLine($"Transaction status: {status}");
+                }
             }
 
         }
