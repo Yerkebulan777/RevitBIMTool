@@ -134,11 +134,8 @@ public sealed class AutomationHandler
                 }
                 finally
                 {
-                    if (uidoc.Document is Document doc)
-                    {
-                        Thread.Sleep(1000);
-                        document = doc;
-                    }
+                    document = uidoc.Document;
+                    Thread.Sleep(1000);
                 }
             }
         }
