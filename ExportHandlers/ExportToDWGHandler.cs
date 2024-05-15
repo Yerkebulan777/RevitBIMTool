@@ -1,5 +1,6 @@
 ﻿using Autodesk.Revit.DB;
 using RevitBIMTool.Utils;
+using Serilog;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -21,11 +22,8 @@ internal static class ExportToDWGHandler
 
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
         string exportBaseDirectory = ExportHelper.ExportDirectory(revitFilePath, "02_DWG", true);
-        IEnumerable<ViewSheet> sheets = new FilteredElementCollector(document).OfClass(typeof(ViewSheet)).Cast<ViewSheet>();
-        List<ViewSheet> sheetList = sheets.Where(s => s.CanBePrinted).OrderBy(s => s.SheetNumber.Length).ThenBy(s => s.SheetNumber).ToList();
+        FilteredElementCollector collector = new FilteredElementCollector(document).OfClass(typeof(ViewSheet)).WhereElementIsNotElementType();
         string exportFolder = Path.Combine(exportBaseDirectory, revitFileName);
-
-        RevitPathHelper.EnsureDirectory(exportFolder);
 
         DWGExportOptions exportOptions = new()
         {
@@ -48,38 +46,47 @@ internal static class ExportToDWGHandler
             PreserveCoincidentLines = false
         };
 
-        foreach (ViewSheet sheet in sheetList)
-        {
-            if (sheet.CanBePrinted)
-            {
-                try
-                {
-                    ICollection<ElementId> collection = [sheet.Id];
-                    string sheetNum = ExportHelper.GetSheetNumber(sheet);
-                    string sheetName = StringHelper.NormalizeText(sheet.Name);
-                    string sheetFullName = $"{revitFileName} - Лист - {sheetNum} - {sheetName}.dwg";
-                    string sheetFullPath = Path.Combine(exportFolder, StringHelper.ReplaceInvalidChars(sheetFullName));
+        int sheetCount = collector.GetElementCount();
+        Log.Information($"All sheets => {sheetCount}");
 
-                    if (!ExportHelper.IsTargetFileUpdated(sheetFullPath, revitFilePath))
+        if (sheetCount > 0)
+        {
+            RevitPathHelper.EnsureDirectory(exportFolder);
+
+            foreach (ViewSheet sheet in collector.Cast<ViewSheet>())
+            {
+                if (sheet.CanBePrinted)
+                {
+                    try
                     {
-                        if (document.Export(exportFolder, sheetFullName, collection, exportOptions))
+                        ICollection<ElementId> collection = [sheet.Id];
+                        string sheetNum = ExportHelper.GetSheetNumber(sheet);
+                        string sheetName = StringHelper.NormalizeText(sheet.Name);
+                        string sheetFullName = $"{revitFileName} - Лист - {sheetNum} - {sheetName}.dwg";
+                        string sheetFullPath = Path.Combine(exportFolder, StringHelper.ReplaceInvalidChars(sheetFullName));
+
+                        if (!ExportHelper.IsTargetFileUpdated(sheetFullPath, revitFilePath))
                         {
-                            Debug.WriteLine("SheetFullName: " + sheetFullName);
-                            printCount++;
+                            if (document.Export(exportFolder, sheetFullName, collection, exportOptions))
+                            {
+                                Debug.WriteLine($"SheetFullName: {sheetFullName} printed");
+                                printCount++;
+                            }
                         }
                     }
-                }
-                catch (Exception ex)
-                {
-                    _ = sb.AppendLine($"SheetNumber ({sheet.SheetNumber}) error: " + ex.Message);
+                    catch (Exception ex)
+                    {
+                        _ = sb.AppendLine($"Sheet: {sheet.SheetNumber} failed: {ex.Message}");
+                        Log.Information($"Sheet: {sheet.SheetNumber} failed: {ex.Message}");
+                    }
                 }
             }
-        }
 
-        _ = sb.AppendLine(exportBaseDirectory);
-        _ = sb.AppendLine($"Printed: {printCount} in {sheetList.Count}");
-        ExportHelper.ZipTheFolder(exportFolder, exportBaseDirectory);
-        SystemFolderOpener.OpenFolder(exportBaseDirectory);
+            _ = sb.AppendLine(exportBaseDirectory);
+            _ = sb.AppendLine($"Printed: {printCount} in {sheetCount}");
+            ExportHelper.ZipTheFolder(exportFolder, exportBaseDirectory);
+            SystemFolderOpener.OpenFolder(exportBaseDirectory);
+        }
 
         return sb.ToString();
     }

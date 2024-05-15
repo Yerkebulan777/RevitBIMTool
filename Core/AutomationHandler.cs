@@ -166,7 +166,7 @@ public sealed class AutomationHandler
             }
             catch (Exception ex)
             {
-                result = $"Error: {ex.InnerException}\nMessage: {ex.Message}\n{ex.StackTrace}";
+                result = $"\nError: {ex.Source} {ex.Message}\n{ex.StackTrace}";
             }
             finally
             {
