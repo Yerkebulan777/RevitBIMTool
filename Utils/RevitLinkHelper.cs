@@ -18,6 +18,7 @@ namespace RevitBIMTool.Utils
             if (TransactionStatus.Started == trans.Start())
             {
                 int count = collector.GetElementCount();
+
                 Debug.WriteLine("All links counts: " + count);
                 Log.Information("All links counts: " + count);
 
