@@ -45,9 +45,11 @@ namespace RevitBIMTool.Utils
                         TryDeleteLink(doc, linkType, linkTypeName);
                     }
                 }
+
+                TransactionStatus status = trans.Commit();
+                Debug.WriteLine($"Transaction status: {status}");
             }
 
-            _ = trans.Commit();
         }
 
 
@@ -56,6 +58,11 @@ namespace RevitBIMTool.Utils
             try
             {
                 _ = linkType.Reload();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Failed Reload: " + ex.Message);
+                Log.Information("Failed Reload: " + ex.Message);
             }
             finally
             {
@@ -71,12 +78,18 @@ namespace RevitBIMTool.Utils
             {
                 _ = doc.Delete(linkType.Id);
             }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Failed Delete: " + ex.Message);
+                Log.Information("Failed Delete: " + ex.Message);
+            }
             finally
             {
                 Debug.WriteLine("Deleted: " + linkTypeName);
                 Log.Information("Deleted: " + linkTypeName);
             }
         }
+
 
 
     }
