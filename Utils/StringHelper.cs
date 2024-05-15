@@ -20,8 +20,6 @@ internal static class StringHelper
 
     public static string NormalizeText(string textLine, int maxLenght = 100)
     {
-        textLine = ReplaceInvalidChars(textLine);
-
         if (!string.IsNullOrEmpty(textLine) && textLine.Length > maxLenght)
         {
             int strIndex = textLine.LastIndexOf(' ', maxLenght);

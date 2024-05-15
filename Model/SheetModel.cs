@@ -1,5 +1,6 @@
 ﻿using Autodesk.Revit.DB;
 using RevitBIMTool.Utils;
+using Shell32;
 using System.IO;
 using System.Text.RegularExpressions;
 using PaperSize = System.Drawing.Printing.PaperSize;
@@ -31,10 +32,10 @@ internal class SheetModel : IDisposable
     public string GetSheetNameWithExtension()
     {
         string groupName = OrganizationGroupName;
-        string sheetName = ViewSheet.get_Parameter(BuiltInParameter.SHEET_NAME).AsString();
-        string sheetNumber = ViewSheet.get_Parameter(BuiltInParameter.SHEET_NUMBER).AsString();
+        string sheetName = StringHelper.NormalizeText(ViewSheet.get_Parameter(BuiltInParameter.SHEET_NAME).AsString());
+        string sheetNumber = StringHelper.NormalizeText(ViewSheet.get_Parameter(BuiltInParameter.SHEET_NUMBER).AsString());
 
-        SheetFileName = StringHelper.NormalizeText($"Лист - {groupName}-{sheetNumber} - {sheetName}.pdf");
+        SheetFileName = StringHelper.ReplaceInvalidChars($"Лист - {groupName}-{sheetNumber} - {sheetName}.pdf");
 
         sheetNumber = Regex.Replace(sheetNumber.TrimStart('0'), @"[^0-9.]", string.Empty);
 
