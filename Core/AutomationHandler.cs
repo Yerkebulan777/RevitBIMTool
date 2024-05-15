@@ -33,6 +33,7 @@ public sealed class AutomationHandler
 
         if (File.Exists(sourceFilePath))
         {
+            Log.Information($"Run file: {Path.GetFileName(sourceFilePath)}");
             string output = RunDocumentAction(uiapp, taskRequest, RunTaskByNumber);
 
             lock (syncLocker)
