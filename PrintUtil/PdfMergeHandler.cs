@@ -16,6 +16,7 @@ internal static class PdfMergeHandler
         if (File.Exists(outputFullName)) { File.Delete(outputFullName); }
 
         using FileStream stream = new(outputFullName, FileMode.Create);
+
         Document outputDocument = new();
 
         PdfCopy copy = new PdfSmartCopy(outputDocument, stream);
