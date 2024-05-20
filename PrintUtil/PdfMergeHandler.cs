@@ -10,7 +10,6 @@ namespace RevitBIMTool.PrintUtil;
 internal static class PdfMergeHandler
 {
 
-
     public static void CombinePDFsFromFolder(List<SheetModel> sheetModels, string directory, string outputFullName, bool deleted = true)
     {
         if (File.Exists(outputFullName)) { File.Delete(outputFullName); }

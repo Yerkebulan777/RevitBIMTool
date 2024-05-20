@@ -3,7 +3,6 @@ using RevitBIMTool.Model;
 using RevitBIMTool.PrintUtil;
 using RevitBIMTool.Utils;
 using Serilog;
-using System.Diagnostics;
 using System.IO;
 using System.Text;
 
