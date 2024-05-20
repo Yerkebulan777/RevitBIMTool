@@ -49,15 +49,16 @@ internal static class MainPrintHandler
         {
             try
             {
-                printSettings.ForEach(set => doc.Delete(set.Id));
                 printManager.SelectNewPrintDriver(printerName);
+                printSettings.ForEach(set => doc.Delete(set.Id));
                 printManager.PrintRange = PrintRange.Visible;
                 printManager.PrintToFile = true;
             }
             catch (Exception ex)
             {
                 _ = trx.RollBack();
-                throw new Exception("ResetPrintSettings", ex);
+                Log.Error($"Reset settings: {ex.Message}", ex);
+                throw new Exception($"Reset settings: {ex.Message}", ex);
             }
             finally
             {
