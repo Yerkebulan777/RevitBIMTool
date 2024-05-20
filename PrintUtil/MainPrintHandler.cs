@@ -74,13 +74,18 @@ internal static class MainPrintHandler
 
     public static Dictionary<string, List<SheetModel>> GetSheetPrintedData(ref Document doc)
     {
-        Dictionary<string, List<SheetModel>> sheetPrintData = [];
+        int sequenceNumber = 0;
+
         FilteredElementCollector collector = new(doc);
         collector = collector.OfCategory(BuiltInCategory.OST_TitleBlocks);
         collector = collector.OfClass(typeof(FamilyInstance));
         collector = collector.WhereElementIsNotElementType();
 
-        Log.Information($"Found {collector.GetElementCount()} sheets");
+        int sheetCount = collector.GetElementCount();
+
+        Log.Information($"Found {sheetCount} sheets");
+
+        Dictionary<string, List<SheetModel>> sheetPrintData = new Dictionary<string, List<SheetModel>>(sheetCount);
 
         foreach (FamilyInstance titleBlock in collector.Cast<FamilyInstance>())
         {
@@ -99,35 +104,40 @@ internal static class MainPrintHandler
                 {
                     string groupName = OrganizationGroupName(ref doc, viewSheet);
 
-                    if (groupName.StartsWith("#")) { continue; }
-
-                    if (!PrinterApiUtility.GetPaperSize(widthInMm, heighInMm, out _))
+                    if (!groupName.StartsWith("#"))
                     {
-                        PrinterApiUtility.AddFormat(defaultPrinterName, widthInMm, heighInMm);
-                    }
+                        sequenceNumber++;
 
-                    if (PrinterApiUtility.GetPaperSize(widthInMm, heighInMm, out PaperSize papeSize))
-                    {
-                        PageOrientationType orientType = RevitPrinterUtil.GetOrientation(widthInMm, heighInMm);
-                        SheetModel sheetModel = new(viewSheet, papeSize, orientType, groupName);
-                        string formatName = sheetModel.GetFormatNameWithSheetOrientation();
-
-                        if (!sheetPrintData.TryGetValue(formatName, out List<SheetModel> sheetList))
+                        if (!PrinterApiUtility.GetPaperSize(widthInMm, heighInMm, out _))
                         {
-                            RevitPrinterUtil.SetPrintSettings(doc, sheetModel, formatName);
-                            sheetList = [sheetModel];
+                            PrinterApiUtility.AddFormat(defaultPrinterName, widthInMm, heighInMm);
+                        }
+
+                        if (PrinterApiUtility.GetPaperSize(widthInMm, heighInMm, out PaperSize papeSize))
+                        {
+                            PageOrientationType orientType = RevitPrinterUtil.GetOrientation(widthInMm, heighInMm);
+
+                            SheetModel sheetModel = new(viewSheet, papeSize, orientType, groupName, sequenceNumber);
+
+                            string formatName = sheetModel.GetFormatNameWithSheetOrientation();
+
+                            if (!sheetPrintData.TryGetValue(formatName, out List<SheetModel> sheetList))
+                            {
+                                RevitPrinterUtil.SetPrintSettings(doc, sheetModel, formatName);
+                                sheetList = [sheetModel];
+                            }
+                            else
+                            {
+                                sheetList.Add(sheetModel);
+                            }
+
+                            sheetPrintData[formatName] = sheetList;
+
                         }
                         else
                         {
-                            sheetList.Add(sheetModel);
+                            throw new Exception($"Not defined: " + viewSheet.Name);
                         }
-
-                        sheetPrintData[formatName] = sheetList;
-
-                    }
-                    else
-                    {
-                        throw new Exception($"Not defined: " + viewSheet.Name);
                     }
                 }
             }

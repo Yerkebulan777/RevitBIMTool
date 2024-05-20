@@ -1,6 +1,5 @@
 ﻿using Autodesk.Revit.DB;
 using RevitBIMTool.Utils;
-using Shell32;
 using System.IO;
 using System.Text.RegularExpressions;
 using PaperSize = System.Drawing.Printing.PaperSize;
@@ -10,16 +9,18 @@ namespace RevitBIMTool.Model;
 internal class SheetModel : IDisposable
 {
     public readonly ViewSheet ViewSheet;
+    public readonly int SequenceNumber;
     public readonly PaperSize SheetPapeSize;
     public readonly string OrganizationGroupName;
     public readonly PageOrientationType SheetOrientation;
 
 
-    public SheetModel(ViewSheet sheet, PaperSize papeSize, PageOrientationType orientType, string groupName)
+    public SheetModel(ViewSheet sheet, PaperSize papeSize, PageOrientationType orientType, string groupName, int sequenceNumber)
     {
         ViewSheet = sheet;
         SheetPapeSize = papeSize;
         SheetOrientation = orientType;
+        SequenceNumber = sequenceNumber;
         OrganizationGroupName = groupName;
     }
 
