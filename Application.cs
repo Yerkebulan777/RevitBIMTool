@@ -22,8 +22,8 @@ internal sealed class Application : IExternalApplication
         {
             SetupUIPanel.Initialize(application);
             Log.Logger = new LoggerConfiguration()
-            .WriteTo.File(logFilePath)
-            .CreateLogger();
+                .WriteTo.File(logFilePath, rollOnFileSizeLimit: true)
+                .CreateLogger();
         }
         catch (Exception ex)
         {
@@ -51,9 +51,7 @@ internal sealed class Application : IExternalApplication
 
     public Result OnShutdown(UIControlledApplication application)
     {
+        Log.CloseAndFlush();
         return Result.Succeeded;
     }
-
-
-
 }
