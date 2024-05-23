@@ -1,5 +1,6 @@
 ﻿using Autodesk.Revit.DB;
 using RevitBIMTool.Utils;
+using Serilog;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
@@ -58,24 +59,30 @@ internal static class ExportHelper
     {
         if (File.Exists(targetFilePath) && File.Exists(sourceFilePath))
         {
+            long targetFileSize = new FileInfo(targetFilePath).Length;
+
             DateTime targetFileDate = File.GetLastWriteTime(targetFilePath);
             DateTime sourceFileDate = File.GetLastWriteTime(sourceFilePath);
 
-            bool result = targetFileDate > sourceFileDate;
+            Log.Information($"target last date: {targetFileDate:dd.MM.yyyy HH:mm}");
+            Log.Information($"source last date: {sourceFileDate:dd.MM.yyyy HH:mm}");
 
-            if (!result)
+            bool updated = targetFileSize > 0 && targetFileDate > sourceFileDate;
+
+            if (!updated)
             {
                 try
                 {
                     File.Delete(targetFilePath);
+                    Log.Information($"Deleted");
                 }
-                catch (IOException exc)
+                catch (IOException ex)
                 {
-                    Debug.WriteLine(exc.Message);
+                    Log.Error(ex, ex.Message);
                 }
             }
 
-            return result;
+            return updated;
         }
 
         return false;
