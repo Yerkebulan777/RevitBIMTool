@@ -1,6 +1,5 @@
 ﻿using Autodesk.Revit.DB;
 using RevitBIMTool.Model;
-using RevitBIMTool.Utils;
 using Serilog;
 using System.Diagnostics;
 using System.IO;
@@ -85,7 +84,7 @@ internal static class MainPrintHandler
 
         Log.Information($"Found {sheetCount} sheets");
 
-        Dictionary<string, List<SheetModel>> sheetPrintData = new Dictionary<string, List<SheetModel>>(sheetCount);
+        Dictionary<string, List<SheetModel>> sheetPrintData = new(sheetCount);
 
         foreach (FamilyInstance titleBlock in collector.Cast<FamilyInstance>())
         {
@@ -150,8 +149,8 @@ internal static class MainPrintHandler
     private static Element GetViewSheetByNumber(ref Document document, string sheetNumber)
     {
 #if R19 || R21
-        ParameterValueProvider pvp = new ParameterValueProvider(new ElementId(BuiltInParameter.SHEET_NUMBER));
-        FilterStringRule filterRule = new FilterStringRule(pvp, new FilterStringEquals(), sheetNumber, false);
+        ParameterValueProvider pvp = new(new ElementId(BuiltInParameter.SHEET_NUMBER));
+        FilterStringRule filterRule = new(pvp, new FilterStringEquals(), sheetNumber, false);
 #else
         ParameterValueProvider pvp = new(new ElementId(BuiltInParameter.SHEET_NUMBER));
         FilterStringRule filterRule = new(pvp, new FilterStringEquals(), sheetNumber);
