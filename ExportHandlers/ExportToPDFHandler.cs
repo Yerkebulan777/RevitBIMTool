@@ -36,7 +36,7 @@ internal static class ExportToPDFHandler
         if (!ExportHelper.IsTargetFileUpdated(exportFullPath, revitFilePath))
         {
             RegistryHelper.ActivateSettingsForPDFCreator(tempPath);
-            MainPrintHandler.ResetPrintSettings(document, printerName);
+            PrintPdfHandler.ResetPrintSettings(document, printerName);
             string defaultPrinter = PrinterApiUtility.GetDefaultPrinter();
 
             if (!defaultPrinter.Equals(printerName))
@@ -44,8 +44,8 @@ internal static class ExportToPDFHandler
                 throw new ArgumentException(printerName + "is not defined");
             }
 
-            Dictionary<string, List<SheetModel>> sheetData = MainPrintHandler.GetSheetPrintedData(ref document);
-            List<SheetModel> sheetModels = MainPrintHandler.PrintSheetData(ref document, sheetData, tempPath);
+            Dictionary<string, List<SheetModel>> sheetData = PrintPdfHandler.GetSheetPrintedData(ref document);
+            List<SheetModel> sheetModels = PrintPdfHandler.PrintSheetData(ref document, sheetData, tempPath);
             Log.Information($"Total valid sheet count: ({sheetModels.Count})");
 
             if (sheetModels.Count > 0)

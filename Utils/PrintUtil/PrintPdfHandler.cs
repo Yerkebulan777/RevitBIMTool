@@ -13,7 +13,7 @@ using PrintRange = Autodesk.Revit.DB.PrintRange;
 
 
 namespace RevitBIMTool.Utils.PrintUtil;
-internal static class MainPrintHandler
+internal static class PrintPdfHandler
 {
     private static string defaultPrinterName;
     private static readonly object syncLocker = new();
