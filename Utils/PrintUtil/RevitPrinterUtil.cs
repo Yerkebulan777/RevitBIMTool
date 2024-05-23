@@ -2,7 +2,7 @@
 using RevitBIMTool.Model;
 
 
-namespace RevitBIMTool.PrintUtil;
+namespace RevitBIMTool.Utils.PrintUtil;
 internal static class RevitPrinterUtil
 {
     public static PageOrientationType GetOrientation(double width, double height)

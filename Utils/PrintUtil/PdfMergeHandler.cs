@@ -5,7 +5,7 @@ using System.IO;
 using Document = iTextSharp.text.Document;
 
 
-namespace RevitBIMTool.PrintUtil;
+namespace RevitBIMTool.Utils.PrintUtil;
 internal static class PdfMergeHandler
 {
 

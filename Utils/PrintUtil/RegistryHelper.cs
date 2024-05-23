@@ -3,7 +3,7 @@ using Autodesk.Revit.UI;
 using Microsoft.Win32;
 
 
-namespace RevitBIMTool.PrintUtil;
+namespace RevitBIMTool.Utils.PrintUtil;
 internal static class RegistryHelper
 {
     private const string registryPDFCreatorPath = "SOFTWARE\\pdfforge\\PDFCreator\\Settings\\ConversionProfiles\\0";

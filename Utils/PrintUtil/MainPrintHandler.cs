@@ -13,7 +13,7 @@ using PrintRange = Autodesk.Revit.DB.PrintRange;
 
 
 
-namespace RevitBIMTool.PrintUtil;
+namespace RevitBIMTool.Utils.PrintUtil;
 internal static class MainPrintHandler
 {
     private static string defaultPrinterName;

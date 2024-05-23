@@ -2,7 +2,7 @@
 using System.Security;
 
 
-namespace RevitBIMTool.PrintUtil;
+namespace RevitBIMTool.Utils.PrintUtil;
 
 using static System.Runtime.InteropServices.CallingConvention;
 using static System.Runtime.InteropServices.CharSet;
