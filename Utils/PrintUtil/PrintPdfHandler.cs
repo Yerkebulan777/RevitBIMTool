@@ -101,6 +101,8 @@ internal static class PrintPdfHandler
                 {
                     string groupName = OrganizationGroupName(ref doc, viewSheet);
 
+                    Log.Information($"Group name: {groupName}");
+
                     if (!groupName.StartsWith("#"))
                     {
                         if (!PrinterApiUtility.GetPaperSize(widthInMm, heighInMm, out _))
