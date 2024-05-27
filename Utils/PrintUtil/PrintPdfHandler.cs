@@ -73,8 +73,6 @@ internal static class PrintPdfHandler
 
     public static Dictionary<string, List<SheetModel>> GetSheetPrintedData(ref Document doc)
     {
-        int sequenceNumber = 0;
-
         FilteredElementCollector collector = new(doc);
         collector = collector.OfCategory(BuiltInCategory.OST_TitleBlocks);
         collector = collector.OfClass(typeof(FamilyInstance));
@@ -105,8 +103,6 @@ internal static class PrintPdfHandler
 
                     if (!groupName.StartsWith("#"))
                     {
-                        sequenceNumber++;
-
                         if (!PrinterApiUtility.GetPaperSize(widthInMm, heighInMm, out _))
                         {
                             PrinterApiUtility.AddFormat(defaultPrinterName, widthInMm, heighInMm);
@@ -116,7 +112,7 @@ internal static class PrintPdfHandler
                         {
                             PageOrientationType orientType = RevitPrinterUtil.GetOrientation(widthInMm, heighInMm);
 
-                            SheetModel sheetModel = new(viewSheet, papeSize, orientType, groupName, sequenceNumber);
+                            SheetModel sheetModel = new(viewSheet, papeSize, orientType, groupName);
 
                             string formatName = sheetModel.GetFormatNameWithSheetOrientation();
 

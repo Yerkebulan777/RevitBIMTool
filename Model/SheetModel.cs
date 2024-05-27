@@ -15,12 +15,11 @@ internal class SheetModel : IDisposable
     public readonly PageOrientationType SheetOrientation;
 
 
-    public SheetModel(ViewSheet sheet, PaperSize papeSize, PageOrientationType orientType, string groupName, int sequenceNumber)
+    public SheetModel(ViewSheet sheet, PaperSize papeSize, PageOrientationType orientType, string groupName)
     {
         ViewSheet = sheet;
         SheetPapeSize = papeSize;
         SheetOrientation = orientType;
-        SequenceNumber = sequenceNumber;
         OrganizationGroupName = groupName;
     }
 
