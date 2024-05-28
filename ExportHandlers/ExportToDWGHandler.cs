@@ -63,7 +63,7 @@ internal static class ExportToDWGHandler
                     {
                         ICollection<ElementId> collection = [sheet.Id];
                         string sheetNum = ExportHelper.GetSheetNumber(sheet);
-                        string sheetName = StringHelper.NormalizeText(sheet.Name);
+                        string sheetName = StringHelper.NormalizeLength(sheet.Name);
                         string sheetFullName = $"{revitFileName} - Лист - {sheetNum} - {sheetName}.dwg";
                         string sheetFullPath = Path.Combine(exportFolder, StringHelper.ReplaceInvalidChars(sheetFullName));
 

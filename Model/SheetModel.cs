@@ -1,5 +1,6 @@
 ﻿using Autodesk.Revit.DB;
 using RevitBIMTool.Utils;
+using Serilog;
 using System.IO;
 using System.Text.RegularExpressions;
 using PaperSize = System.Drawing.Printing.PaperSize;
@@ -24,24 +25,27 @@ internal class SheetModel : IDisposable
     }
 
 
-    public double SheetNumber { get; private set; }
+    public double SheetDigit { get; private set; }
+    public string SheetNumber { get; private set; }
     public string SheetFileName { get; private set; }
     public string PaperName => SheetPapeSize.PaperName;
 
 
     public string GetSheetNameWithExtension()
     {
-        string groupName = OrganizationGroupName;
-        string sheetName = StringHelper.NormalizeText(ViewSheet.get_Parameter(BuiltInParameter.SHEET_NAME).AsString());
-        string sheetNumber = StringHelper.NormalizeText(ViewSheet.get_Parameter(BuiltInParameter.SHEET_NUMBER).AsString());
+        string groupName = StringHelper.ReplaceInvalidChars(OrganizationGroupName);
+        string sheetName = StringHelper.ReplaceInvalidChars(ViewSheet.get_Parameter(BuiltInParameter.SHEET_NAME).AsString());
+        string sheetNumber = StringHelper.ReplaceInvalidChars(ViewSheet.get_Parameter(BuiltInParameter.SHEET_NUMBER).AsString());
 
-        SheetFileName = StringHelper.ReplaceInvalidChars($"Лист - {groupName}-{sheetNumber} - {sheetName}.pdf");
+        SheetFileName = StringHelper.NormalizeLength($"Лист - {groupName}-{sheetNumber} - {sheetName}.pdf");
 
-        sheetNumber = Regex.Replace(sheetNumber.TrimStart('0'), @"[^0-9.]", string.Empty);
+        string sheetDigits = Regex.Replace(sheetNumber.TrimStart('0'), @"[^0-9.]", string.Empty);
 
-        if (double.TryParse(sheetNumber, out double number))
+        if (double.TryParse(sheetDigits, out double number))
         {
-            SheetNumber = number;
+            Log.Information($"{SheetFileName} ({number})");
+            SheetNumber = sheetNumber;
+            SheetDigit = number;
         }
 
         return SheetFileName;

@@ -1,5 +1,6 @@
 ﻿using Autodesk.Revit.DB;
 using RevitBIMTool.Model;
+using Serilog;
 
 
 namespace RevitBIMTool.Utils.PrintUtil;
@@ -63,7 +64,8 @@ internal static class RevitPrinterUtil
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception(ex.Source);
+                    Log.Error(ex, ex.Message);
+                    throw new Exception(ex.Message);
                 }
                 finally
                 {

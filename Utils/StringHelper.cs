@@ -18,7 +18,7 @@ internal static class StringHelper
     }
 
 
-    public static string NormalizeText(string textLine, int maxLenght = 100)
+    public static string NormalizeLength(string textLine, int maxLenght = 100)
     {
         if (!string.IsNullOrEmpty(textLine) && textLine.Length > maxLenght)
         {
