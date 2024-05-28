@@ -130,13 +130,13 @@ public sealed class AutomationHandler
                     else if (document.IsValidObject)
                     {
                         result = document.Close(false);
+                        Log.Information("Closed document");
                         uiapp.Application.PurgeReleasedAPIObjects();
                     }
                 }
                 finally
                 {
                     document = uidoc.Document;
-                    Thread.Sleep(1000);
                 }
             }
         }
