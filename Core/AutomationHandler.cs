@@ -130,6 +130,7 @@ public sealed class AutomationHandler
                     else if (document.IsValidObject)
                     {
                         result = document.Close(false);
+                        uiapp.Application.PurgeReleasedAPIObjects();
                     }
                 }
                 finally
@@ -186,6 +187,7 @@ public sealed class AutomationHandler
 
         return FailuresHanding.WithFailuresProcessingHandler(uiapp.Application, revitTaskAction);
     }
+
 
 
 }

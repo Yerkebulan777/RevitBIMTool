@@ -74,7 +74,7 @@ internal static class ExportToDWGHandler
                         {
                             if (document.Export(exportFolder, sheetFullName, collection, exportOptions))
                             {
-                                Log.Information($"Sheet: {sheetFullName} printed");
+                                Log.Debug($"{sheetFullName} printed");
                                 printCount++;
                             }
                         }
