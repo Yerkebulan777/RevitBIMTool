@@ -39,12 +39,12 @@ internal class SheetModel : IDisposable
 
         SheetFileName = StringHelper.NormalizeLength($"Лист - {groupName}-{sheetNumber} - {sheetName}.pdf");
 
-        string sheetDigits = Regex.Replace(sheetNumber.TrimStart('0'), @"[^0-9.]", string.Empty);
+        string sheetDigits = Regex.Replace(sheetNumber, @"[^0-9.]", string.Empty);
 
         if (double.TryParse(sheetDigits, out double number))
         {
             Log.Information($"{SheetFileName} ({number})");
-            SheetNumber = sheetNumber;
+            SheetNumber = sheetNumber.TrimStart('0');
             SheetDigit = number;
         }
 

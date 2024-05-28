@@ -71,7 +71,9 @@ internal static class PdfMergeHandler
 
     private static List<SheetModel> SortSheetModels(List<SheetModel> sheetModels)
     {
-        return sheetModels.OrderBy(sm => sm.OrganizationGroupName).ThenBy(sm => sm.SheetNumber).ToList();
+        return sheetModels
+            .OrderBy(sm => sm.OrganizationGroupName).ThenBy(sm => sm.SheetNumber.Length)
+            .ThenBy(sm => sm.SheetNumber, StringComparer.OrdinalIgnoreCase).ToList();
     }
 
 
