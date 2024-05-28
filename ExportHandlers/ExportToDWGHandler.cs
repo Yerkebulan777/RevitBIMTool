@@ -2,7 +2,6 @@
 using RevitBIMTool.Utils;
 using RevitBIMTool.Utils.SystemUtil;
 using Serilog;
-using System.Diagnostics;
 using System.IO;
 using System.Text;
 
@@ -53,6 +52,7 @@ internal static class ExportToDWGHandler
 
         if (sheetCount > 0)
         {
+            string sheetFullName = string.Empty;
             RevitPathHelper.EnsureDirectory(exportFolder);
 
             foreach (ViewSheet sheet in collector.Cast<ViewSheet>())
@@ -64,22 +64,25 @@ internal static class ExportToDWGHandler
                         ICollection<ElementId> collection = [sheet.Id];
                         string sheetNum = ExportHelper.GetSheetNumber(sheet);
                         string sheetName = StringHelper.NormalizeLength(sheet.Name);
-                        string sheetFullName = $"{revitFileName} - Лист - {sheetNum} - {sheetName}.dwg";
-                        string sheetFullPath = Path.Combine(exportFolder, StringHelper.ReplaceInvalidChars(sheetFullName));
+
+                        sheetFullName = $"{revitFileName} - Лист - {sheetNum} - {sheetName}";
+                        sheetFullName = StringHelper.ReplaceInvalidChars(sheetFullName);
+
+                        string sheetFullPath = Path.Combine(exportFolder, $"{sheetFullName}.dwg");
 
                         if (!ExportHelper.IsTargetFileUpdated(sheetFullPath, revitFilePath))
                         {
                             if (document.Export(exportFolder, sheetFullName, collection, exportOptions))
                             {
-                                Debug.WriteLine($"SheetFullName: {sheetFullName} printed");
+                                Log.Information($"Sheet: {sheetFullName} printed");
                                 printCount++;
                             }
                         }
                     }
                     catch (Exception ex)
                     {
-                        _ = sb.AppendLine($"Sheet: {sheet.SheetNumber} failed: {ex.Message}");
-                        Log.Information($"Sheet: {sheet.SheetNumber} failed: {ex.Message}");
+                        Log.Information($"Sheet: {sheetFullName} failed: {ex.Message}");
+                        _ = sb.AppendLine($"Sheet: {sheetFullName} failed: {ex.Message}");
                     }
                 }
             }
