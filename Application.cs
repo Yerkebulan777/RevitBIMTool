@@ -13,7 +13,7 @@ internal sealed class Application : IExternalApplication
 {
     private RevitExternalEventHandler externalEventHandler;
     private static readonly string myDocumentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-    private static readonly string logFilePath = Path.Combine(myDocumentsPath, "RevitBIMToolLog.txt");
+    private static readonly string logerPath = Path.Combine(myDocumentsPath, "RevitBIMToolLog.txt");
 
 
     public Result OnStartup(UIControlledApplication application)
@@ -21,8 +21,9 @@ internal sealed class Application : IExternalApplication
         try
         {
             SetupUIPanel.Initialize(application);
+
             Log.Logger = new LoggerConfiguration()
-                .WriteTo.File(logFilePath, rollOnFileSizeLimit: true)
+                .WriteTo.Async(a => a.File(logerPath, rollOnFileSizeLimit: true))
                 .CreateLogger();
         }
         catch (Exception ex)
