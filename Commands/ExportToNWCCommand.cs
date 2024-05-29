@@ -25,6 +25,7 @@ internal sealed class ExportToNWCCommand : IExternalCommand, IExternalCommandAva
 
         try
         {
+            RevitLinkHelper.CheckAndRemoveUnloadedLinks(document);
             string revitFilePath = RevitPathHelper.GetRevitFilePath(document);
             message = ExportToNWCHandler.ExportToNWC(document, revitFilePath);
         }

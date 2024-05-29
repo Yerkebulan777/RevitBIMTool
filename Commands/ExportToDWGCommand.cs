@@ -6,6 +6,7 @@ using RevitBIMTool.ExportHandlers;
 using RevitBIMTool.Utils;
 using System.Globalization;
 using System.Windows;
+using System.Windows.Controls;
 
 
 namespace RevitBIMTool.Commands;
@@ -25,6 +26,7 @@ internal sealed class ExportToDWGCommand : IExternalCommand, IExternalCommandAva
 
         try
         {
+            RevitLinkHelper.CheckAndRemoveUnloadedLinks(document);
             string revitFilePath = RevitPathHelper.GetRevitFilePath(document);
             message = ExportToDWGHandler.ExportToDWG(document, revitFilePath);
         }
