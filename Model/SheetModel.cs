@@ -10,7 +10,6 @@ namespace RevitBIMTool.Model;
 internal class SheetModel : IDisposable
 {
     public readonly ViewSheet ViewSheet;
-    public readonly int SequenceNumber;
     public readonly PaperSize SheetPapeSize;
     public readonly string OrganizationGroupName;
     public readonly PageOrientationType SheetOrientation;
