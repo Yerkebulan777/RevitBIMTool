@@ -8,8 +8,6 @@ namespace RevitBIMTool.Utils
     internal static class RevitLinkHelper
     {
 
-
-
         public static void CheckAndRemoveUnloadedLinks(Document doc)
         {
             FilteredElementCollector collector = new(doc);
@@ -33,16 +31,19 @@ namespace RevitBIMTool.Utils
                                 linkNames.Add(linkTypeName, linkType);
 
                                 bool isLoaded = RevitLinkType.IsLoaded(doc, linkType.Id);
+
                                 Debug.WriteLine($"Link: {linkTypeName} is loaded: {isLoaded}");
                                 Log.Information($"Link: {linkTypeName} is loaded: {isLoaded}");
 
-                                if (!isLoaded && linkType.AttachmentType == AttachmentType.Attachment)
+                                if (!isLoaded && linkType.AttachmentType == AttachmentType.Overlay)
                                 {
-                                    TryReloadLink(linkType, linkTypeName);
-                                }
-                                else if (!isLoaded && linkType.AttachmentType != AttachmentType.Attachment)
-                                {
+                                    // Если тип наложение удалить
                                     TryDeleteLink(doc, id, linkTypeName);
+                                }
+                                else if (!isLoaded && linkType.AttachmentType == AttachmentType.Attachment)
+                                {
+                                    // Если тип прикрепление загрузить
+                                    TryReloadLink(linkType, linkTypeName);
                                 }
                             }
                             else
