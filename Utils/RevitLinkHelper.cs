@@ -31,6 +31,7 @@ namespace RevitBIMTool.Utils
                             if (!linkNames.ContainsKey(linkTypeName))
                             {
                                 linkNames.Add(linkTypeName, linkType);
+
                                 bool isLoaded = RevitLinkType.IsLoaded(doc, linkType.Id);
                                 Debug.WriteLine($"Link: {linkTypeName} is loaded: {isLoaded}");
                                 Log.Information($"Link: {linkTypeName} is loaded: {isLoaded}");
