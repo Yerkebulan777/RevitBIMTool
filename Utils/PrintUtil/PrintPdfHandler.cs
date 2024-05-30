@@ -146,7 +146,7 @@ internal static class PrintPdfHandler
 
         PrintManager printManager = doc.PrintManager;
 
-        Log.Debug($"Temp directory; {tempDirectory}");
+        Log.Debug($"Temp directory: {tempDirectory}");
 
         foreach (string settingName in sheetDict.Keys)
         {
@@ -180,7 +180,7 @@ internal static class PrintPdfHandler
                             }
                             catch (Exception ex)
                             {
-                                throw new Exception(ex.Message);
+                                Log.Error(ex, ex.Message);
                             }
                             finally
                             {
