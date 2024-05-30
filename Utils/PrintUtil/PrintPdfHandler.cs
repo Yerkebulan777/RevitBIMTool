@@ -146,6 +146,8 @@ internal static class PrintPdfHandler
 
         PrintManager printManager = doc.PrintManager;
 
+        Log.Debug($"Temp directory; {tempDirectory}");
+
         foreach (string settingName in sheetDict.Keys)
         {
             PrintSetting printSetting = printAllSettings.FirstOrDefault(set => set.Name == settingName);
