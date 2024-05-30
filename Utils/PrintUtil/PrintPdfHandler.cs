@@ -164,6 +164,7 @@ internal static class PrintPdfHandler
                     for (int idx = 0; idx < sheetModels.Count; idx++)
                     {
                         SheetModel model = sheetModels[idx];
+                        
                         string sheetTempPath = Path.Combine(tempDirectory, model.SheetFullName);
                         RevitPathHelper.DeleteExistsFile(sheetTempPath);
 
@@ -171,10 +172,10 @@ internal static class PrintPdfHandler
                         {
                             try
                             {
+                                Log.Debug(model.SheetFullName);
                                 printManager.PrintToFileName = sheetTempPath;
                                 if (printManager.SubmitPrint(model.ViewSheet))
                                 {
-                                    Log.Debug(model.SheetFullName);
                                     resultFilePaths.Add(model);
                                 }
                             }
