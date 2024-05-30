@@ -63,7 +63,11 @@ internal static class ExportToDWGHandler
             {
                 if (sheet.CanBePrinted)
                 {
-                    sheetModels.Add(new SheetModel(sheet));
+                    SheetModel model = new(sheet);
+                    if (model.IsValid)
+                    {
+                        sheetModels.Add(model);
+                    }
                 }
             }
 

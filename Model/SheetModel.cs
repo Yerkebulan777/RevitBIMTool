@@ -18,16 +18,18 @@ internal class SheetModel : IDisposable
 
     public readonly PaperSize SheetPapeSize;
     public readonly PageOrientationType SheetOrientation;
-    public SheetModel(ViewSheet sheet, PaperSize papeSize, PageOrientationType orientType)
+    public SheetModel(ViewSheet sheet, PaperSize size, PageOrientationType orientation)
     {
         ViewSheet = sheet;
-        SheetPapeSize = papeSize;
-        SheetOrientation = orientType;
+        SheetPapeSize = size;
+        SheetOrientation = orientation;
     }
 
+
+    public bool IsValid { get; private set; }
     public double SheetDigit { get; private set; }
     public string SheetNumber { get; private set; }
-    public string SheetFileName { get; private set; }
+    public string SheetFullName { get; private set; }
     public string PaperName => SheetPapeSize.PaperName;
     public object OrganizationGroupName { get; internal set; }
 
@@ -71,21 +73,27 @@ internal class SheetModel : IDisposable
     {
         string sheetNumber = GetSheetNumber(ViewSheet);
         string groupName = GetOrganizationGroupName(doc, ViewSheet);
-        string sheetName = StringHelper.ReplaceInvalidChars(ViewSheet.get_Parameter(BuiltInParameter.SHEET_NAME).AsString());
+        string sheetName = StringHelper.ReplaceInvalidChars(ViewSheet?.Name);
 
-        SheetFileName = StringHelper.NormalizeLength($"Лист - {groupName}-{sheetNumber} - {sheetName}.{extension}");
+        var sheetFullName = StringHelper.NormalizeLength($"Лист - {groupName}-{sheetNumber} - {sheetName}.{extension}");
 
         string sheetDigits = Regex.Replace(sheetNumber, @"[^0-9.]", string.Empty);
 
         if (double.TryParse(sheetDigits, out double number))
         {
-            Log.Information($"{SheetFileName} ({number})");
+            Log.Information($"{sheetFullName} ({number})");
             SheetNumber = sheetNumber.TrimStart('0');
             OrganizationGroupName = groupName;
-            SheetDigit = number;
+            SheetFullName = sheetFullName;
+
+            if (!groupName.StartsWith("#"))
+            {
+                SheetDigit = number;
+                IsValid = true;
+            }
         }
 
-        return SheetFileName;
+        return sheetFullName;
     }
 
 
@@ -98,14 +106,14 @@ internal class SheetModel : IDisposable
     }
 
 
-    public string FindFileInDirectory(string directory)
+    public static string FindFileInDirectory(string directory , string sheetName)
     {
         string foundFile = null;
 
         if (Directory.Exists(directory))
         {
             IEnumerable<string> files = Directory.EnumerateFiles(directory);
-            foundFile = files.FirstOrDefault(file => file.Contains(SheetFileName));
+            foundFile = files.FirstOrDefault(file => file.Contains(sheetName));
         }
 
         return foundFile;
@@ -115,8 +123,9 @@ internal class SheetModel : IDisposable
     public static List<SheetModel> SortSheetModels(List<SheetModel> sheetModels)
     {
         return sheetModels
-            .OrderBy(sm => sm.OrganizationGroupName).ThenBy(sm => sm.SheetNumber.Length)
-            .ThenBy(sm => sm.SheetNumber, StringComparer.OrdinalIgnoreCase).ToList();
+        .OrderBy(sm => sm.OrganizationGroupName).ThenBy(sm => sm.SheetNumber.Length)
+        .ThenBy(sm => sm.SheetNumber, StringComparer.OrdinalIgnoreCase)
+        .Where(sm => sm.IsValid).ToList();
     }
 
 
@@ -124,6 +133,7 @@ internal class SheetModel : IDisposable
     {
         ViewSheet.Dispose();
     }
+
 
 
 }

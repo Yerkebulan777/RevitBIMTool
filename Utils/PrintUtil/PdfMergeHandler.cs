@@ -23,7 +23,7 @@ internal static class PdfMergeHandler
 
         foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
         {
-            string filePath = model.FindFileInDirectory(directory);
+            string filePath = SheetModel.FindFileInDirectory(directory, model.SheetFullName);
 
             if (!string.IsNullOrEmpty(filePath))
             {
