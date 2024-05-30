@@ -144,8 +144,6 @@ internal static class PrintPdfHandler
 
         List<PrintSetting> printAllSettings = RevitPrinterUtil.GetPrintSettings(doc);
 
-
-
         PrintManager printManager = doc.PrintManager;
 
         foreach (string settingName in sheetDict.Keys)
@@ -174,7 +172,7 @@ internal static class PrintPdfHandler
                                 printManager.PrintToFileName = sheetTempPath;
                                 if (printManager.SubmitPrint(model.ViewSheet))
                                 {
-                                    Log.Debug("Printed: " + model.SheetFullName);
+                                    Log.Debug(model.SheetFullName);
                                     resultFilePaths.Add(model);
                                 }
                             }

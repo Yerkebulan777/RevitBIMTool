@@ -83,7 +83,6 @@ internal class SheetModel : IDisposable
 
         if (double.TryParse(sheetDigits, out double number))
         {
-            Log.Information($"{SheetFullName} ({number})");
             SheetNumber = sheetNumber.TrimStart('0');
             OrganizationGroupName = groupName;
             if (!groupName.StartsWith("#"))
