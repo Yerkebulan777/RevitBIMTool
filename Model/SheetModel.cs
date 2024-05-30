@@ -69,31 +69,29 @@ internal class SheetModel : IDisposable
     }
 
 
-    public string GetSheetNameWithExtension(Document doc, string extension)
+    public void SetSheetNameWithExtension(Document doc, string extension)
     {
         string sheetNumber = GetSheetNumber(ViewSheet);
         string groupName = GetOrganizationGroupName(doc, ViewSheet);
         string sheetName = StringHelper.ReplaceInvalidChars(ViewSheet?.Name);
 
-        var sheetFullName = StringHelper.NormalizeLength($"Лист - {groupName}-{sheetNumber} - {sheetName}.{extension}");
+        SheetFullName = string.IsNullOrEmpty(groupName)
+            ? StringHelper.NormalizeLength($"Лист - {sheetNumber} - {sheetName}.{extension}")
+            : StringHelper.NormalizeLength($"Лист - {groupName}-{sheetNumber} - {sheetName}.{extension}");
 
         string sheetDigits = Regex.Replace(sheetNumber, @"[^0-9.]", string.Empty);
 
         if (double.TryParse(sheetDigits, out double number))
         {
-            Log.Information($"{sheetFullName} ({number})");
+            Log.Information($"{SheetFullName} ({number})");
             SheetNumber = sheetNumber.TrimStart('0');
             OrganizationGroupName = groupName;
-            SheetFullName = sheetFullName;
-
             if (!groupName.StartsWith("#"))
             {
                 SheetDigit = number;
                 IsValid = true;
             }
         }
-
-        return sheetFullName;
     }
 
 
@@ -106,7 +104,7 @@ internal class SheetModel : IDisposable
     }
 
 
-    public static string FindFileInDirectory(string directory , string sheetName)
+    public static string FindFileInDirectory(string directory, string sheetName)
     {
         string foundFile = null;
 

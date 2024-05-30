@@ -53,8 +53,6 @@ internal static class ExportToDWGHandler
 
         if (sheetCount > 0)
         {
-            string sheetName = string.Empty;
-
             RevitPathHelper.EnsureDirectory(exportFolder);
 
             List<SheetModel> sheetModels = [];
@@ -64,6 +62,8 @@ internal static class ExportToDWGHandler
                 if (sheet.CanBePrinted)
                 {
                     SheetModel model = new(sheet);
+                    model.SetSheetNameWithExtension(document, "dwg");
+
                     if (model.IsValid)
                     {
                         sheetModels.Add(model);
@@ -75,12 +75,14 @@ internal static class ExportToDWGHandler
             {
                 using Mutex mutex = new(false, "Global\\{{{ExportDWGMutex}}}");
 
+                string sheetName = model.SheetFullName;
+                Log.Debug($"Start print: {sheetName}");
+
                 if (mutex.WaitOne(Timeout.Infinite))
                 {
                     try
                     {
                         ICollection<ElementId> collection = [model.ViewSheet.Id];
-                        sheetName = model.GetSheetNameWithExtension(document, "dwg");
                         string sheetFullPath = Path.Combine(exportFolder, sheetName);
 
                         if (!ExportHelper.IsTargetFileUpdated(sheetFullPath, revitFilePath))

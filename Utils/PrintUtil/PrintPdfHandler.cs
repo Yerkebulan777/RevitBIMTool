@@ -1,7 +1,6 @@
 ﻿using Autodesk.Revit.DB;
 using RevitBIMTool.Model;
 using Serilog;
-using System.Diagnostics;
 using System.IO;
 using Document = Autodesk.Revit.DB.Document;
 using Element = Autodesk.Revit.DB.Element;
@@ -89,22 +88,24 @@ internal static class PrintPdfHandler
                     {
                         PageOrientationType orientType = RevitPrinterUtil.GetOrientation(widthInMm, heighInMm);
 
-                        SheetModel sheetModel = new SheetModel(viewSheet, papeSize, orientType);
-
-                        string formatName = sheetModel.GetFormatNameWithSheetOrientation();
-
-                        if (!sheetPrintData.TryGetValue(formatName, out List<SheetModel> sheetList))
+                        SheetModel model = new(viewSheet, papeSize, orientType);
+                        model.SetSheetNameWithExtension(doc, "pdf");
+                        if (model.IsValid)
                         {
-                            RevitPrinterUtil.SetPrintSettings(doc, sheetModel, formatName);
-                            sheetList = [sheetModel];
-                        }
-                        else
-                        {
-                            sheetList.Add(sheetModel);
-                        }
+                            string formatName = model.GetFormatNameWithSheetOrientation();
 
-                        sheetPrintData[formatName] = sheetList;
+                            if (!sheetPrintData.TryGetValue(formatName, out List<SheetModel> sheetList))
+                            {
+                                RevitPrinterUtil.SetPrintSettings(doc, model, formatName);
+                                sheetList = [model];
+                            }
+                            else
+                            {
+                                sheetList.Add(model);
+                            }
 
+                            sheetPrintData[formatName] = sheetList;
+                        }
                     }
                     else
                     {
@@ -159,15 +160,15 @@ internal static class PrintPdfHandler
 
                         for (int idx = 0; idx < sheetModels.Count; idx++)
                         {
-                            SheetModel currentModel = sheetModels[idx];
+                            SheetModel model = sheetModels[idx];
 
                             if (mutex.WaitOne(Timeout.Infinite))
                             {
                                 try
                                 {
-                                    string sheetName = currentModel.GetSheetNameWithExtension(doc, "pdf");
+                                    string sheetName = model.SheetFullName;
                                     string sheetFullPath = Path.Combine(tempDirectory, sheetName);
-                                    ViewSheet viewSheet = currentModel.ViewSheet;
+                                    ViewSheet viewSheet = model.ViewSheet;
                                     printManager.PrintToFileName = sheetFullPath;
 
                                     if (File.Exists(sheetFullPath))
@@ -177,8 +178,8 @@ internal static class PrintPdfHandler
 
                                     if (printManager.SubmitPrint(viewSheet))
                                     {
-                                        resultFilePaths.Add(currentModel);
-                                        Debug.WriteLine(sheetName);
+                                        resultFilePaths.Add(model);
+                                        Log.Debug(sheetName);
                                     }
                                 }
                                 catch (Exception ex)
