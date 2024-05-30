@@ -89,7 +89,9 @@ internal static class PrintPdfHandler
                         PageOrientationType orientType = RevitPrinterUtil.GetOrientation(widthInMm, heighInMm);
 
                         SheetModel model = new(viewSheet, papeSize, orientType);
+
                         model.SetSheetNameWithExtension(doc, "pdf");
+
                         if (model.IsValid)
                         {
                             string formatName = model.GetFormatNameWithSheetOrientation();
