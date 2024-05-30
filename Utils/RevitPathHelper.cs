@@ -176,9 +176,17 @@ public static class RevitPathHelper
     {
         if (!Directory.Exists(directoryPath))
         {
-            _ = Directory.CreateDirectory(directoryPath);
+            try
+            {
+                _ = Directory.CreateDirectory(directoryPath);
+            }
+            finally
+            {
+                Log.Debug($"Create directory: {directoryPath}");
+            }
         }
     }
+
 
 
 }

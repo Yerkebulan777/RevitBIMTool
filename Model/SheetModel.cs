@@ -36,17 +36,18 @@ internal class SheetModel : IDisposable
 
     public static string GetSheetNumber(ViewSheet sequenceSheet)
     {
-        string stringNumber = sequenceSheet?.SheetNumber;
+        string stringNumber = sequenceSheet?.SheetNumber.TrimStart('0');
 
         if (!string.IsNullOrEmpty(stringNumber))
         {
-            string invalidChars = new(Path.GetInvalidFileNameChars());
+            string invalidChars = new(Path.GetInvalidFileNameChars().Concat(Path.GetInvalidPathChars()).ToArray());
             string escapedInvalidChars = Regex.Escape(invalidChars);
             Regex regex = new($"(?<=\\d){escapedInvalidChars}");
             stringNumber = regex.Replace(stringNumber, ".");
+            
         }
 
-        return stringNumber.Trim();
+        return stringNumber;
     }
 
 
@@ -81,12 +82,19 @@ internal class SheetModel : IDisposable
 
         string sheetDigits = Regex.Replace(sheetNumber, @"[^0-9.]", string.Empty);
 
+        OrganizationGroupName = groupName;
+
+        if (string.IsNullOrWhiteSpace(groupName))
+        {
+            OrganizationGroupName = Regex.Replace(sheetNumber, @"[0-9.]", string.Empty);
+        }
+
         if (double.TryParse(sheetDigits, out double number))
         {
-            SheetNumber = sheetNumber.TrimStart('0');
-            OrganizationGroupName = groupName;
+            Log.Debug($"SheetNumber: {sheetNumber} {number}");
             if (!groupName.StartsWith("#"))
             {
+                SheetNumber = sheetNumber;
                 SheetDigit = number;
                 IsValid = true;
             }
@@ -120,9 +128,9 @@ internal class SheetModel : IDisposable
     public static List<SheetModel> SortSheetModels(List<SheetModel> sheetModels)
     {
         return sheetModels
-        .OrderBy(sm => sm.OrganizationGroupName).ThenBy(sm => sm.SheetNumber.Length)
-        .ThenBy(sm => sm.SheetNumber, StringComparer.OrdinalIgnoreCase)
-        .Where(sm => sm.IsValid).ToList();
+            .Where(sm => sm.IsValid)
+            .OrderBy(sm => sm.OrganizationGroupName)
+            .ThenBy(sm => sm.SheetDigit).ToList();
     }
 
 

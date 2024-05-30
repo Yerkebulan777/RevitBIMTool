@@ -146,7 +146,7 @@ internal static class PrintPdfHandler
 
         PrintManager printManager = doc.PrintManager;
 
-        Log.Debug($"Temp directory: {tempDirectory}");
+        RevitPathHelper.EnsureDirectory(tempDirectory);
 
         foreach (string settingName in sheetDict.Keys)
         {
@@ -172,10 +172,10 @@ internal static class PrintPdfHandler
                         {
                             try
                             {
-                                Log.Debug(model.SheetFullName);
                                 printManager.PrintToFileName = sheetTempPath;
                                 if (printManager.SubmitPrint(model.ViewSheet))
                                 {
+                                    Log.Debug(model.SheetFullName);
                                     resultFilePaths.Add(model);
                                 }
                             }
