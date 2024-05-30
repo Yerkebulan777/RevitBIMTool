@@ -3,8 +3,6 @@ using RevitBIMTool.Model;
 using Serilog;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
-using System.Text.RegularExpressions;
 using Document = Autodesk.Revit.DB.Document;
 using Element = Autodesk.Revit.DB.Element;
 using PaperSize = System.Drawing.Printing.PaperSize;
@@ -17,24 +15,6 @@ internal static class PrintPdfHandler
 {
     private static string defaultPrinterName;
     private static readonly object syncLocker = new();
-
-    public static string OrganizationGroupName(ref Document doc, ViewSheet viewSheet)
-    {
-        StringBuilder stringBuilder = new();
-        Regex matchPrefix = new(@"^(\d\s)|(\.\w+)|(\s*)");
-        BrowserOrganization organization = BrowserOrganization.GetCurrentBrowserOrganizationForSheets(doc);
-        foreach (FolderItemInfo folderInfo in organization.GetFolderItems(viewSheet.Id))
-        {
-            if (folderInfo.IsValidObject)
-            {
-                string folderName = StringHelper.ReplaceInvalidChars(folderInfo.Name);
-                folderName = matchPrefix.Replace(folderName, string.Empty);
-                _ = stringBuilder.Append(folderName);
-            }
-        }
-
-        return stringBuilder.ToString();
-    }
 
 
     public static void ResetPrintSettings(Document doc, string printerName)
@@ -99,43 +79,38 @@ internal static class PrintPdfHandler
 
                 if (sheetElem is ViewSheet viewSheet && viewSheet.CanBePrinted)
                 {
-                    string groupName = OrganizationGroupName(ref doc, viewSheet);
 
-                    Log.Information($"Group name: {groupName}");
-
-                    if (!groupName.StartsWith("#"))
+                    if (!PrinterApiUtility.GetPaperSize(widthInMm, heighInMm, out _))
                     {
-                        if (!PrinterApiUtility.GetPaperSize(widthInMm, heighInMm, out _))
+                        PrinterApiUtility.AddFormat(defaultPrinterName, widthInMm, heighInMm);
+                    }
+
+                    if (PrinterApiUtility.GetPaperSize(widthInMm, heighInMm, out PaperSize papeSize))
+                    {
+                        PageOrientationType orientType = RevitPrinterUtil.GetOrientation(widthInMm, heighInMm);
+
+                        SheetModel sheetModel = new SheetModel(viewSheet, papeSize, orientType);
+
+                        string formatName = sheetModel.GetFormatNameWithSheetOrientation();
+
+                        if (!sheetPrintData.TryGetValue(formatName, out List<SheetModel> sheetList))
                         {
-                            PrinterApiUtility.AddFormat(defaultPrinterName, widthInMm, heighInMm);
-                        }
-
-                        if (PrinterApiUtility.GetPaperSize(widthInMm, heighInMm, out PaperSize papeSize))
-                        {
-                            PageOrientationType orientType = RevitPrinterUtil.GetOrientation(widthInMm, heighInMm);
-
-                            SheetModel sheetModel = new(viewSheet, papeSize, orientType, groupName);
-
-                            string formatName = sheetModel.GetFormatNameWithSheetOrientation();
-
-                            if (!sheetPrintData.TryGetValue(formatName, out List<SheetModel> sheetList))
-                            {
-                                RevitPrinterUtil.SetPrintSettings(doc, sheetModel, formatName);
-                                sheetList = [sheetModel];
-                            }
-                            else
-                            {
-                                sheetList.Add(sheetModel);
-                            }
-
-                            sheetPrintData[formatName] = sheetList;
-
+                            RevitPrinterUtil.SetPrintSettings(doc, sheetModel, formatName);
+                            sheetList = [sheetModel];
                         }
                         else
                         {
-                            throw new Exception($"Not defined: " + viewSheet.Name);
+                            sheetList.Add(sheetModel);
                         }
+
+                        sheetPrintData[formatName] = sheetList;
+
                     }
+                    else
+                    {
+                        throw new Exception($"Not defined: " + viewSheet.Name);
+                    }
+
                 }
             }
         }
@@ -166,7 +141,7 @@ internal static class PrintPdfHandler
 
         List<PrintSetting> printAllSettings = RevitPrinterUtil.GetPrintSettings(doc);
 
-        using (Mutex mutex = new(false, "Global\\{{{PrintMutex}}}"))
+        using (Mutex mutex = new(false, "Global\\{{{ExportPDFMutex}}}"))
         {
             PrintManager printManager = doc.PrintManager;
 
@@ -190,20 +165,20 @@ internal static class PrintPdfHandler
                             {
                                 try
                                 {
-                                    string fileName = currentModel.GetSheetNameWithExtension();
-                                    string filePath = Path.Combine(tempDirectory, fileName);
+                                    string sheetName = currentModel.GetSheetNameWithExtension(doc, "pdf");
+                                    string sheetFullPath = Path.Combine(tempDirectory, sheetName);
                                     ViewSheet viewSheet = currentModel.ViewSheet;
-                                    printManager.PrintToFileName = filePath;
+                                    printManager.PrintToFileName = sheetFullPath;
 
-                                    if (File.Exists(filePath))
+                                    if (File.Exists(sheetFullPath))
                                     {
-                                        File.Delete(filePath);
+                                        File.Delete(sheetFullPath);
                                     }
 
                                     if (printManager.SubmitPrint(viewSheet))
                                     {
                                         resultFilePaths.Add(currentModel);
-                                        Debug.WriteLine(fileName);
+                                        Debug.WriteLine(sheetName);
                                     }
                                 }
                                 catch (Exception ex)

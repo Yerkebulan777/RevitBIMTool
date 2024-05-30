@@ -1,33 +1,16 @@
-﻿using Autodesk.Revit.DB;
-using RevitBIMTool.Utils;
+﻿using RevitBIMTool.Utils;
 using Serilog;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Security.Permissions;
-using System.Text.RegularExpressions;
 
 
 namespace RevitBIMTool.ExportHandlers;
 internal static class ExportHelper
 {
+
     public static readonly string formatedDate = DateTime.Today.ToString("yyyy-MM-dd");
-
-
-    public static string GetSheetNumber(ViewSheet sequenceSheet)
-    {
-        string stringNumber = sequenceSheet?.SheetNumber;
-
-        if (!string.IsNullOrEmpty(stringNumber))
-        {
-            string invalidChars = new(Path.GetInvalidFileNameChars());
-            string escapedInvalidChars = Regex.Escape(invalidChars);
-            Regex regex = new($"(?<=\\d){escapedInvalidChars}");
-            stringNumber = regex.Replace(stringNumber, ".");
-        }
-
-        return stringNumber.Trim();
-    }
 
 
     public static string ExportDirectory(string revitFilePath, string folderName, bool folderDate = false)
@@ -159,7 +142,6 @@ internal static class ExportHelper
         }
 
     }
-
 
 
 }

@@ -21,9 +21,7 @@ internal static class PdfMergeHandler
 
         outputDocument.Open();
 
-        List<SheetModel> sheetModelList = SortSheetModels(sheetModels);
-
-        foreach (SheetModel model in sheetModelList)
+        foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
         {
             string filePath = model.FindFileInDirectory(directory);
 
@@ -69,12 +67,6 @@ internal static class PdfMergeHandler
     }
 
 
-    private static List<SheetModel> SortSheetModels(List<SheetModel> sheetModels)
-    {
-        return sheetModels
-            .OrderBy(sm => sm.OrganizationGroupName).ThenBy(sm => sm.SheetNumber.Length)
-            .ThenBy(sm => sm.SheetNumber, StringComparer.OrdinalIgnoreCase).ToList();
-    }
 
 
 

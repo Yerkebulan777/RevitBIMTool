@@ -2,6 +2,7 @@
 using RevitBIMTool.Utils;
 using Serilog;
 using System.IO;
+using System.Text;
 using System.Text.RegularExpressions;
 using PaperSize = System.Drawing.Printing.PaperSize;
 
@@ -10,33 +11,69 @@ namespace RevitBIMTool.Model;
 internal class SheetModel : IDisposable
 {
     public readonly ViewSheet ViewSheet;
+    public SheetModel(ViewSheet sheet)
+    {
+        ViewSheet = sheet;
+    }
+
     public readonly PaperSize SheetPapeSize;
-    public readonly string OrganizationGroupName;
     public readonly PageOrientationType SheetOrientation;
-
-
-    public SheetModel(ViewSheet sheet, PaperSize papeSize, PageOrientationType orientType, string groupName)
+    public SheetModel(ViewSheet sheet, PaperSize papeSize, PageOrientationType orientType)
     {
         ViewSheet = sheet;
         SheetPapeSize = papeSize;
         SheetOrientation = orientType;
-        OrganizationGroupName = groupName;
     }
-
 
     public double SheetDigit { get; private set; }
     public string SheetNumber { get; private set; }
     public string SheetFileName { get; private set; }
     public string PaperName => SheetPapeSize.PaperName;
+    public object OrganizationGroupName { get; internal set; }
 
 
-    public string GetSheetNameWithExtension()
+    public static string GetSheetNumber(ViewSheet sequenceSheet)
     {
-        string groupName = StringHelper.ReplaceInvalidChars(OrganizationGroupName);
-        string sheetName = StringHelper.ReplaceInvalidChars(ViewSheet.get_Parameter(BuiltInParameter.SHEET_NAME).AsString());
-        string sheetNumber = StringHelper.ReplaceInvalidChars(ViewSheet.get_Parameter(BuiltInParameter.SHEET_NUMBER).AsString());
+        string stringNumber = sequenceSheet?.SheetNumber;
 
-        SheetFileName = StringHelper.NormalizeLength($"Лист - {groupName}-{sheetNumber} - {sheetName}.pdf");
+        if (!string.IsNullOrEmpty(stringNumber))
+        {
+            string invalidChars = new(Path.GetInvalidFileNameChars());
+            string escapedInvalidChars = Regex.Escape(invalidChars);
+            Regex regex = new($"(?<=\\d){escapedInvalidChars}");
+            stringNumber = regex.Replace(stringNumber, ".");
+        }
+
+        return stringNumber.Trim();
+    }
+
+
+    public static string GetOrganizationGroupName(Document doc, ViewSheet viewSheet)
+    {
+        StringBuilder stringBuilder = new();
+        Regex matchPrefix = new(@"^(\d\s)|(\.\w+)|(\s*)");
+        BrowserOrganization organization = BrowserOrganization.GetCurrentBrowserOrganizationForSheets(doc);
+        foreach (FolderItemInfo folderInfo in organization.GetFolderItems(viewSheet.Id))
+        {
+            if (folderInfo.IsValidObject)
+            {
+                string folderName = StringHelper.ReplaceInvalidChars(folderInfo.Name);
+                folderName = matchPrefix.Replace(folderName, string.Empty);
+                _ = stringBuilder.Append(folderName);
+            }
+        }
+
+        return stringBuilder.ToString();
+    }
+
+
+    public string GetSheetNameWithExtension(Document doc, string extension)
+    {
+        string sheetNumber = GetSheetNumber(ViewSheet);
+        string groupName = GetOrganizationGroupName(doc, ViewSheet);
+        string sheetName = StringHelper.ReplaceInvalidChars(ViewSheet.get_Parameter(BuiltInParameter.SHEET_NAME).AsString());
+
+        SheetFileName = StringHelper.NormalizeLength($"Лист - {groupName}-{sheetNumber} - {sheetName}.{extension}");
 
         string sheetDigits = Regex.Replace(sheetNumber, @"[^0-9.]", string.Empty);
 
@@ -44,6 +81,7 @@ internal class SheetModel : IDisposable
         {
             Log.Information($"{SheetFileName} ({number})");
             SheetNumber = sheetNumber.TrimStart('0');
+            OrganizationGroupName = groupName;
             SheetDigit = number;
         }
 
@@ -71,6 +109,14 @@ internal class SheetModel : IDisposable
         }
 
         return foundFile;
+    }
+
+
+    public static List<SheetModel> SortSheetModels(List<SheetModel> sheetModels)
+    {
+        return sheetModels
+            .OrderBy(sm => sm.OrganizationGroupName).ThenBy(sm => sm.SheetNumber.Length)
+            .ThenBy(sm => sm.SheetNumber, StringComparer.OrdinalIgnoreCase).ToList();
     }
 
 

@@ -1,4 +1,5 @@
 ﻿using Autodesk.Revit.DB;
+using RevitBIMTool.Model;
 using RevitBIMTool.Utils;
 using RevitBIMTool.Utils.SystemUtil;
 using Serilog;
@@ -9,7 +10,6 @@ using System.Text;
 namespace RevitBIMTool.ExportHandlers;
 internal static class ExportToDWGHandler
 {
-
     public static string ExportToDWG(Document document, string revitFilePath)
     {
         int printCount = 0;
@@ -25,6 +25,7 @@ internal static class ExportToDWGHandler
         string exportBaseDirectory = ExportHelper.ExportDirectory(revitFilePath, "02_DWG", true);
         FilteredElementCollector collector = new FilteredElementCollector(document).OfClass(typeof(ViewSheet)).WhereElementIsNotElementType();
         string exportFolder = Path.Combine(exportBaseDirectory, revitFileName);
+
 
         DWGExportOptions exportOptions = new()
         {
@@ -52,37 +53,49 @@ internal static class ExportToDWGHandler
 
         if (sheetCount > 0)
         {
-            string sheetFullName = string.Empty;
+            string sheetName = string.Empty;
+
             RevitPathHelper.EnsureDirectory(exportFolder);
+
+            List<SheetModel> sheetModels = [];
 
             foreach (ViewSheet sheet in collector.Cast<ViewSheet>())
             {
                 if (sheet.CanBePrinted)
                 {
+                    sheetModels.Add(new SheetModel(sheet));
+                }
+            }
+
+            foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
+            {
+                using Mutex mutex = new(false, "Global\\{{{ExportDWGMutex}}}");
+
+                if (mutex.WaitOne(Timeout.Infinite))
+                {
                     try
                     {
-                        ICollection<ElementId> collection = [sheet.Id];
-                        string sheetNum = ExportHelper.GetSheetNumber(sheet);
-                        string sheetName = StringHelper.NormalizeLength(sheet.Name);
-
-                        sheetFullName = $"{revitFileName} - Лист - {sheetNum} - {sheetName}";
-                        sheetFullName = StringHelper.ReplaceInvalidChars(sheetFullName);
-
-                        string sheetFullPath = Path.Combine(exportFolder, $"{sheetFullName}.dwg");
+                        ICollection<ElementId> collection = [model.ViewSheet.Id];
+                        sheetName = model.GetSheetNameWithExtension(document, "dwg");
+                        string sheetFullPath = Path.Combine(exportFolder, sheetName);
 
                         if (!ExportHelper.IsTargetFileUpdated(sheetFullPath, revitFilePath))
                         {
-                            if (document.Export(exportFolder, sheetFullName, collection, exportOptions))
+                            if (document.Export(exportFolder, sheetName, collection, exportOptions))
                             {
-                                Log.Debug($"{sheetFullName} printed");
+                                Log.Debug($"{sheetName} printed");
                                 printCount++;
                             }
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Information($"Sheet: {sheetFullName} failed: {ex.Message}");
-                        _ = sb.AppendLine($"Sheet: {sheetFullName} failed: {ex.Message}");
+                        Log.Information($"Sheet: {sheetName} failed: {ex.Message}");
+                        _ = sb.AppendLine($"Sheet: {sheetName} failed: {ex.Message}");
+                    }
+                    finally
+                    {
+                        mutex.ReleaseMutex();
                     }
                 }
             }
