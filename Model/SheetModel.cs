@@ -76,7 +76,7 @@ internal class SheetModel : IDisposable
         string groupName = GetOrganizationGroupName(doc, ViewSheet);
         string sheetName = StringHelper.ReplaceInvalidChars(ViewSheet?.Name);
 
-        SheetFullName = string.IsNullOrEmpty(groupName)
+        SheetFullName = string.IsNullOrWhiteSpace(groupName)
             ? StringHelper.NormalizeLength($"Лист - {sheetNumber} - {sheetName}.{extension}")
             : StringHelper.NormalizeLength($"Лист - {groupName}-{sheetNumber} - {sheetName}.{extension}");
 
