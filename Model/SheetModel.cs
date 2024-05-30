@@ -91,7 +91,9 @@ internal class SheetModel : IDisposable
 
         if (double.TryParse(sheetDigits, out double number))
         {
+            Log.Debug($"GroupName : {OrganizationGroupName}");
             Log.Debug($"SheetNumber: {sheetNumber} {number}");
+            
             if (!groupName.StartsWith("#"))
             {
                 SheetNumber = sheetNumber;
