@@ -1,5 +1,6 @@
 ﻿using Autodesk.Revit.DB;
 using Microsoft.Win32;
+using Serilog;
 using System.IO;
 using System.Text.RegularExpressions;
 using Path = System.IO.Path;
@@ -28,7 +29,7 @@ public static class RevitPathHelper
     public static List<string> GetRevitFilePaths(string inputpath)
     {
         string seachRvtPattern = $"*.rvt";
-        List<string> output = new List<string>(10);
+        List<string> output = new(10);
         SearchOption allFiles = SearchOption.AllDirectories;
         SearchOption topFiles = SearchOption.TopDirectoryOnly;
         string backupPattern = "\\.\\d\\d\\d\\d\\.(rvt|rfa)$";
@@ -50,8 +51,8 @@ public static class RevitPathHelper
 
     public static List<string> GetProjectSectionPaths(string inputpath)
     {
-        List<string> output = new List<string>();
-        DirectoryInfo inputDirectoryInfo = new DirectoryInfo(inputpath);
+        List<string> output = [];
+        DirectoryInfo inputDirectoryInfo = new(inputpath);
         foreach (DirectoryInfo dirInfo in inputDirectoryInfo.GetDirectories())
         {
             for (int idx = 0; idx < sectionAcronyms.Length; idx++)
@@ -69,7 +70,7 @@ public static class RevitPathHelper
 
     public static string GetDirectoryFromRoot(string filepath, string searchName)
     {
-        DirectoryInfo dirInfo = new DirectoryInfo(filepath);
+        DirectoryInfo dirInfo = new(filepath);
 
         while (dirInfo != null)
         {
@@ -139,7 +140,7 @@ public static class RevitPathHelper
     {
         if (Directory.Exists(directoryPath))
         {
-            DirectoryInfo directory = new DirectoryInfo(directoryPath);
+            DirectoryInfo directory = new(directoryPath);
             foreach (FileInfo file in directory.EnumerateFiles())
             {
                 try
@@ -150,6 +151,22 @@ public static class RevitPathHelper
                 {
                     Console.WriteLine(ex.Message);
                 }
+            }
+        }
+    }
+
+
+    public static void DeleteExistsFile(string sheetFullPath)
+    {
+        if (File.Exists(sheetFullPath))
+        {
+            try
+            {
+                File.Delete(sheetFullPath);
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Error deleting file: {ex.Message}");
             }
         }
     }

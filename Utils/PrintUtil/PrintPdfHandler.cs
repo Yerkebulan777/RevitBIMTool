@@ -144,61 +144,56 @@ internal static class PrintPdfHandler
 
         List<PrintSetting> printAllSettings = RevitPrinterUtil.GetPrintSettings(doc);
 
-        using (Mutex mutex = new(false, "Global\\{{{ExportPDFMutex}}}"))
+
+
+        PrintManager printManager = doc.PrintManager;
+
+        foreach (string settingName in sheetDict.Keys)
         {
-            PrintManager printManager = doc.PrintManager;
+            PrintSetting printSetting = printAllSettings.FirstOrDefault(set => set.Name == settingName);
 
-            foreach (string settingName in sheetDict.Keys)
+            if (printSetting != null && sheetDict.TryGetValue(settingName, out List<SheetModel> sheetModels))
             {
-                PrintSetting printSetting = printAllSettings.FirstOrDefault(set => set.Name == settingName);
-
-                if (printSetting != null && sheetDict.TryGetValue(settingName, out List<SheetModel> sheetModels))
+                using Mutex mutex = new(false, "Global\\{{{ExportPDFMutex}}}");
+                using Transaction trx = new(doc, settingName);
+                if (TransactionStatus.Started == trx.Start())
                 {
-                    using Transaction trx = new(doc, settingName);
-                    if (TransactionStatus.Started == trx.Start())
+                    printManager.PrintSetup.CurrentPrintSetting = printSetting;
+                    printManager.Apply(); // Set print settings
+
+                    for (int idx = 0; idx < sheetModels.Count; idx++)
                     {
-                        printManager.PrintSetup.CurrentPrintSetting = printSetting;
-                        printManager.Apply(); // Set print settings
+                        SheetModel model = sheetModels[idx];
+                        string sheetTempPath = Path.Combine(tempDirectory, model.SheetFullName);
+                        RevitPathHelper.DeleteExistsFile(sheetTempPath);
 
-                        for (int idx = 0; idx < sheetModels.Count; idx++)
+                        if (mutex.WaitOne(Timeout.Infinite))
                         {
-                            SheetModel model = sheetModels[idx];
-
-                            if (mutex.WaitOne(Timeout.Infinite))
+                            try
                             {
-                                try
+                                printManager.PrintToFileName = sheetTempPath;
+                                if (printManager.SubmitPrint(model.ViewSheet))
                                 {
-                                    string sheetName = model.SheetFullName;
-                                    string sheetFullPath = Path.Combine(tempDirectory, sheetName);
-                                    ViewSheet viewSheet = model.ViewSheet;
-                                    printManager.PrintToFileName = sheetFullPath;
-
-                                    if (File.Exists(sheetFullPath))
-                                    {
-                                        File.Delete(sheetFullPath);
-                                    }
-
-                                    if (printManager.SubmitPrint(viewSheet))
-                                    {
-                                        resultFilePaths.Add(model);
-                                        Log.Debug(sheetName);
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    throw new Exception(ex.Message);
-                                }
-                                finally
-                                {
-                                    mutex.ReleaseMutex();
+                                    Log.Debug("Printed: " + model.SheetFullName);
+                                    resultFilePaths.Add(model);
                                 }
                             }
+                            catch (Exception ex)
+                            {
+                                throw new Exception(ex.Message);
+                            }
+                            finally
+                            {
+                                mutex.ReleaseMutex();
+                            }
                         }
-
-                        _ = trx.RollBack();
                     }
+
+                    _ = trx.RollBack();
                 }
+
             }
+
         }
 
         return resultFilePaths;

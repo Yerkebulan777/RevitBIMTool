@@ -63,7 +63,6 @@ internal static class ExportToDWGHandler
                 {
                     SheetModel model = new(sheet);
                     model.SetSheetNameWithExtension(document, "dwg");
-
                     if (model.IsValid)
                     {
                         sheetModels.Add(model);
@@ -75,29 +74,28 @@ internal static class ExportToDWGHandler
             {
                 using Mutex mutex = new(false, "Global\\{{{ExportDWGMutex}}}");
 
-                string sheetName = model.SheetFullName;
-                Log.Debug($"Start print: {sheetName}");
+                string sheetFullName = model.SheetFullName;
 
                 if (mutex.WaitOne(Timeout.Infinite))
                 {
                     try
                     {
                         ICollection<ElementId> collection = [model.ViewSheet.Id];
-                        string sheetFullPath = Path.Combine(exportFolder, sheetName);
+                        string sheetFullPath = Path.Combine(exportFolder, sheetFullName);
 
                         if (!ExportHelper.IsTargetFileUpdated(sheetFullPath, revitFilePath))
                         {
-                            if (document.Export(exportFolder, sheetName, collection, exportOptions))
+                            if (document.Export(exportFolder, sheetFullName, collection, exportOptions))
                             {
-                                Log.Debug($"{sheetName} printed");
+                                Log.Debug("Printed: " + sheetFullName);
                                 printCount++;
                             }
                         }
                     }
                     catch (Exception ex)
                     {
-                        Log.Information($"Sheet: {sheetName} failed: {ex.Message}");
-                        _ = sb.AppendLine($"Sheet: {sheetName} failed: {ex.Message}");
+                        Log.Information($"Sheet: {sheetFullName} failed: {ex.Message}");
+                        _ = sb.AppendLine($"Sheet: {sheetFullName} failed: {ex.Message}");
                     }
                     finally
                     {
