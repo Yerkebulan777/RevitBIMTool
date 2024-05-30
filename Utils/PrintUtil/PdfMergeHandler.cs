@@ -1,5 +1,6 @@
 ﻿using iTextSharp.text.pdf;
 using RevitBIMTool.Model;
+using Serilog;
 using System.Diagnostics;
 using System.IO;
 using Document = iTextSharp.text.Document;
@@ -47,7 +48,7 @@ internal static class PdfMergeHandler
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine(ex);
+                    Log.Error(ex, ex.Message);
                 }
                 finally
                 {
