@@ -53,8 +53,8 @@ internal class SheetModel : IDisposable
 
     public static string GetOrganizationGroupName(Document doc, ViewSheet viewSheet)
     {
+        Regex matchPrefix = new(@"^(\s*)");
         StringBuilder stringBuilder = new();
-        Regex matchPrefix = new(@"^(\d\s)|(\.\w+)|(\s*)");
         BrowserOrganization organization = BrowserOrganization.GetCurrentBrowserOrganizationForSheets(doc);
         foreach (FolderItemInfo folderInfo in organization.GetFolderItems(viewSheet.Id))
         {
