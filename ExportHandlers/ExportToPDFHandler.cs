@@ -40,7 +40,7 @@ internal static class ExportToPDFHandler
 
             string defaultPrinter = PrinterApiUtility.GetDefaultPrinter();
 
-            Log.Information($"Directory: {tempFolder}");
+            Log.Debug($"TEMP directory: {tempFolder}");
 
             if (!defaultPrinter.Equals(printerName))
             {
