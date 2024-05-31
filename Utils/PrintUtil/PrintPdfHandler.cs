@@ -186,6 +186,7 @@ internal static class PrintPdfHandler
                             finally
                             {
                                 mutex.ReleaseMutex();
+                                Thread.Sleep(1000);
                             }
                         }
                     }

@@ -23,9 +23,10 @@ internal sealed class Application : IExternalApplication
             SetupUIPanel.Initialize(application);
 
             Log.Logger = new LoggerConfiguration()
-                .WriteTo.File(logerPath, 
-                rollingInterval: RollingInterval.Infinite, 
-                rollOnFileSizeLimit: true)
+                .WriteTo.File(logerPath,
+                    rollingInterval: RollingInterval.Infinite,
+                    retainedFileCountLimit: 7,
+                    rollOnFileSizeLimit: true)
                 .MinimumLevel.Verbose()
                 .CreateLogger();
         }
