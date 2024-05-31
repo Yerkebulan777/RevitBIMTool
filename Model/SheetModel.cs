@@ -60,7 +60,7 @@ internal class SheetModel : IDisposable
         {
             if (folderInfo.IsValidObject)
             {
-                string folderName = StringHelper.ReplaceInvalidChars(folderInfo.Name);
+                string folderName = folderInfo.Name;
                 folderName = matchPrefix.Replace(folderName, string.Empty);
                 _ = stringBuilder.Append(folderName);
             }
