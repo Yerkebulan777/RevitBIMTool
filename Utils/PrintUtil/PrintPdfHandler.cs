@@ -148,6 +148,8 @@ internal static class PrintPdfHandler
 
         RevitPathHelper.EnsureDirectory(tempDirectory);
 
+        TimeSpan interval = TimeSpan.FromSeconds(100);
+
         foreach (string settingName in sheetDict.Keys)
         {
             PrintSetting printSetting = printAllSettings.FirstOrDefault(set => set.Name == settingName);
@@ -164,17 +166,18 @@ internal static class PrintPdfHandler
                     for (int idx = 0; idx < sheetModels.Count; idx++)
                     {
                         SheetModel model = sheetModels[idx];
-                        
-                        string sheetTempPath = Path.Combine(tempDirectory, model.SheetFullName);
-                        RevitPathHelper.DeleteExistsFile(sheetTempPath);
 
+                        string sheetTempPath = Path.Combine(tempDirectory, model.SheetFullName);
+                        
                         if (mutex.WaitOne(Timeout.Infinite))
                         {
                             try
                             {
                                 printManager.PrintToFileName = sheetTempPath;
+                                RevitPathHelper.DeleteExistsFile(sheetTempPath);
                                 if (printManager.SubmitPrint(model.ViewSheet))
                                 {
+                                    RevitPathHelper.CheckFile(sheetTempPath, interval);
                                     Log.Debug(model.SheetFullName);
                                     resultFilePaths.Add(model);
                                 }
@@ -186,7 +189,6 @@ internal static class PrintPdfHandler
                             finally
                             {
                                 mutex.ReleaseMutex();
-                                Thread.Sleep(1000);
                             }
                         }
                     }
