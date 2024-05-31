@@ -42,22 +42,22 @@ internal static class ExportHelper
     {
         if (File.Exists(targetFilePath) && File.Exists(sourceFilePath))
         {
-            long targetFileSize = new FileInfo(targetFilePath).Length;
-
             DateTime targetFileDate = File.GetLastWriteTime(targetFilePath);
             DateTime sourceFileDate = File.GetLastWriteTime(sourceFilePath);
             TimeSpan timeDifference = targetFileDate - sourceFileDate;
-
+            long targetFileSize = new FileInfo(targetFilePath).Length;
+            
             Log.Debug($"target last date: {targetFileDate:dd.MM.yyyy HH:mm}");
             Log.Debug($"source last date: {sourceFileDate:dd.MM.yyyy HH:mm}");
 
             bool isUpdated = timeDifference.TotalSeconds > minimum;
             bool isOutdated = timeDifference.TotalDays > minimum;
+            bool isModifiedValid = isUpdated && !isOutdated;
             bool isFileSizeValid = targetFileSize > minimum;
 
-            if (isUpdated && isOutdated && isFileSizeValid)
+            if (isModifiedValid && isFileSizeValid)
             {
-                Log.Debug($"Target file updated and valid");
+                Log.Debug($"Target file valid");
                 return true;
             }
             else
