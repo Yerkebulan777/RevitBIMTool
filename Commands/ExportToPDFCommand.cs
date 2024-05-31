@@ -26,7 +26,6 @@ internal sealed class ExportToPDFCommand : IExternalCommand, IExternalCommandAva
 
         try
         {
-            RevitLinkHelper.CheckAndRemoveUnloadedLinks(document);
             string revitFilePath = RevitPathHelper.GetRevitFilePath(document);
             message = ExportToPDFHandler.ExportToPDF(document, revitFilePath);
         }

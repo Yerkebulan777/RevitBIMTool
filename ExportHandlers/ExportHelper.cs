@@ -38,7 +38,7 @@ internal static class ExportHelper
     }
 
 
-    public static bool IsTargetFileUpdated(string targetFilePath, string sourceFilePath)
+    public static bool IsTargetFileUpdated(string targetFilePath, string sourceFilePath, int minimum = 30)
     {
         if (File.Exists(targetFilePath) && File.Exists(sourceFilePath))
         {
@@ -46,26 +46,24 @@ internal static class ExportHelper
 
             DateTime targetFileDate = File.GetLastWriteTime(targetFilePath);
             DateTime sourceFileDate = File.GetLastWriteTime(sourceFilePath);
+            TimeSpan timeDifference = targetFileDate - sourceFileDate;
 
-            Log.Information($"target last date: {targetFileDate:dd.MM.yyyy HH:mm}");
-            Log.Information($"source last date: {sourceFileDate:dd.MM.yyyy HH:mm}");
+            Log.Debug($"target last date: {targetFileDate:dd.MM.yyyy HH:mm}");
+            Log.Debug($"source last date: {sourceFileDate:dd.MM.yyyy HH:mm}");
 
-            bool updated = targetFileSize > 0 && targetFileDate > sourceFileDate;
+            bool isUpdated = timeDifference.TotalSeconds > minimum;
+            bool isOutdated = timeDifference.TotalDays > minimum;
+            bool isFileSizeValid = targetFileSize > minimum;
 
-            if (!updated)
+            if (isUpdated && isOutdated && isFileSizeValid)
             {
-                try
-                {
-                    File.Delete(targetFilePath);
-                    Log.Information($"Deleted");
-                }
-                catch (IOException ex)
-                {
-                    Log.Error(ex, ex.Message);
-                }
+                Log.Debug($"Target file updated and valid");
+                return true;
             }
-
-            return updated;
+            else
+            {
+                RevitPathHelper.DeleteExistsFile(targetFilePath);
+            }
         }
 
         return false;
