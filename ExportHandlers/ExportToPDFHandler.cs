@@ -24,20 +24,23 @@ internal static class ExportToPDFHandler
 
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
         string exportBaseDirectory = ExportHelper.ExportDirectory(revitFilePath, "03_PDF", true);
-        string tempPath = Environment.GetEnvironmentVariable("TEMP", EnvironmentVariableTarget.User);
+        string tempFolder = Environment.GetEnvironmentVariable("TEMP", EnvironmentVariableTarget.User);
         string exportFullPath = Path.Combine(exportBaseDirectory, revitFileName + ".pdf");
 
-        tempPath = Path.Combine(tempPath, revitFileName);
-        RevitPathHelper.EnsureDirectory(tempPath);
-        RevitPathHelper.ClearDirectory(tempPath);
+        tempFolder = Path.Combine(tempFolder, revitFileName);
+        RevitPathHelper.EnsureDirectory(tempFolder);
+        RevitPathHelper.ClearDirectory(tempFolder);
 
         Log.Information("Start export to PDF...");
-
+        
         if (!ExportHelper.IsTargetFileUpdated(exportFullPath, revitFilePath))
         {
-            RegistryHelper.ActivateSettingsForPDFCreator(tempPath);
+            RegistryHelper.ActivateSettingsForPDFCreator(tempFolder);
             PrintPdfHandler.ResetPrintSettings(document, printerName);
+
             string defaultPrinter = PrinterApiUtility.GetDefaultPrinter();
+
+            Log.Information($"Directory: {tempFolder}");
 
             if (!defaultPrinter.Equals(printerName))
             {
@@ -45,12 +48,12 @@ internal static class ExportToPDFHandler
             }
 
             Dictionary<string, List<SheetModel>> sheetData = PrintPdfHandler.GetSheetPrintedData(ref document);
-            List<SheetModel> sheetModels = PrintPdfHandler.PrintSheetData(ref document, sheetData, tempPath);
+            List<SheetModel> sheetModels = PrintPdfHandler.PrintSheetData(ref document, sheetData, tempFolder);
             Log.Information($"Total valid sheet count: ({sheetModels.Count})");
 
             if (sheetModels.Count > 0)
             {
-                PdfMergeHandler.CombinePDFsFromFolder(sheetModels, tempPath, exportFullPath);
+                PdfMergeHandler.CombinePDFsFromFolder(sheetModels, tempFolder, exportFullPath);
                 string directory = Path.GetDirectoryName(exportBaseDirectory);
                 SystemFolderOpener.OpenFolder(exportBaseDirectory);
                 _ = sb.AppendLine(directory);
