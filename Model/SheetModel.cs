@@ -27,8 +27,8 @@ internal class SheetModel : IDisposable
 
 
     public bool IsValid { get; private set; }
-    public double SheetDigit { get; private set; }
-    public string SheetNumber { get; private set; }
+    public double DigitNumber { get; private set; }
+    public string StringNumber { get; private set; }
     public string SheetFullName { get; private set; }
     public string PaperName => SheetPapeSize.PaperName;
     public object OrganizationGroupName { get; internal set; }
@@ -91,13 +91,10 @@ internal class SheetModel : IDisposable
 
         if (double.TryParse(sheetDigits, out double number))
         {
-            Log.Debug($"GroupName : {OrganizationGroupName}");
-            Log.Debug($"SheetNumber: {sheetNumber} {number}");
-            
             if (!groupName.StartsWith("#"))
             {
-                SheetNumber = sheetNumber;
-                SheetDigit = number;
+                StringNumber = sheetNumber;
+                DigitNumber = number;
                 IsValid = true;
             }
         }
@@ -132,7 +129,7 @@ internal class SheetModel : IDisposable
         return sheetModels
             .Where(sm => sm.IsValid)
             .OrderBy(sm => sm.OrganizationGroupName)
-            .ThenBy(sm => sm.SheetDigit).ToList();
+            .ThenBy(sm => sm.DigitNumber).ToList();
     }
 
 

@@ -1,7 +1,6 @@
 ﻿using iTextSharp.text.pdf;
 using RevitBIMTool.Model;
 using Serilog;
-using System.Diagnostics;
 using System.IO;
 using Document = iTextSharp.text.Document;
 
@@ -24,6 +23,10 @@ internal static class PdfMergeHandler
 
         foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
         {
+            Log.Debug($"Sheet name: {model.SheetFullName} in {directory}");
+            Log.Debug($"Organization group name: {model.OrganizationGroupName}");
+            Log.Debug($"Sheet number: {model.StringNumber} ({model.DigitNumber})");
+
             string filePath = SheetModel.FindFileInDirectory(directory, model.SheetFullName);
 
             if (!string.IsNullOrEmpty(filePath))
