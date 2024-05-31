@@ -23,7 +23,7 @@ internal static class PdfMergeHandler
 
         foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
         {
-            Log.Debug($"Sheet name: {model.SheetFullName} in {directory}");
+            Log.Debug($"Sheet name: {model.SheetFullName}");
             Log.Debug($"Organization group name: {model.OrganizationGroupName}");
             Log.Debug($"Sheet number: {model.StringNumber} ({model.DigitNumber})");
 
