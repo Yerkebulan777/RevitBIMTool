@@ -154,6 +154,7 @@ public static class FailuresHanding
         string result = default;
 
         app.FailuresProcessing += new EventHandler<FailuresProcessingEventArgs>(FailuresProcessingHandler);
+
         try
         {
             result = action();

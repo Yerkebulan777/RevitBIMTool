@@ -6,6 +6,7 @@ using RevitBIMTool.Utils;
 using Serilog;
 using System.IO;
 using System.Text;
+using static System.Net.Mime.MediaTypeNames;
 using Document = Autodesk.Revit.DB.Document;
 
 
@@ -168,6 +169,7 @@ public sealed class AutomationHandler
             catch (Exception ex)
             {
                 result = $"\nError: {ex.Source} {ex.Message}\n{ex.StackTrace}";
+                Log.Error(result);
             }
             finally
             {

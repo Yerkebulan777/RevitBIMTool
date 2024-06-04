@@ -16,7 +16,7 @@ public static class RevitMessageManager
     {
         try
         {
-            Log.Information(text);
+            Log.Information("Send: " + text);
             EndpointAddress endpoint = new(serviceUrlTcp);
             NetTcpBinding tspBinding = new(SecurityMode.Message);
             using (factory = new ChannelFactory<IRevitHostService>(tspBinding))
