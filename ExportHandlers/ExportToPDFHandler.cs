@@ -54,8 +54,9 @@ internal static class ExportToPDFHandler
             if (sheetModels.Count > 0)
             {
                 PdfMergeHandler.CombinePDFsFromFolder(sheetModels, tempFolder, exportFullPath);
+                SystemFolderOpener.OpenFolderInExplorerIfNeeded(exportBaseDirectory);
                 string directory = Path.GetDirectoryName(exportBaseDirectory);
-                SystemFolderOpener.OpenFolder(exportBaseDirectory);
+                
                 _ = sb.AppendLine(directory);
             }
 
