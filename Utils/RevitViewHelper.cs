@@ -369,44 +369,45 @@ public sealed class RevitViewHelper
     #endregion
 
 
-    public static void OpenViewSheet(UIDocument uidoc, ViewSheet viewSheet)
+    public static void OpenAndActivateView(UIDocument uidoc, View view)
     {
-        if (viewSheet != null && viewSheet.IsValidObject)
+        if (view != null && view.IsValidObject)
         {
-            if (!viewSheet.IsTemplate)
+            try
             {
-                try
+                if (!view.IsTemplate)
                 {
-                    uidoc.RequestViewChange(viewSheet);
-                    uidoc.ActiveView = viewSheet;
+                    uidoc.RequestViewChange(view);
+                    uidoc.ActiveView = view;
                 }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, ex.Message);
-                }
+            }
+            finally
+            {
+                uidoc.RefreshActiveView();
             }
         }
     }
 
 
-    public static void CloseView(UIDocument uidoc, View view)
+    public static void CloseAllViews(UIDocument uidoc, View view)
     {
-        ElementId activeId = uidoc.ActiveGraphicalView.Id;
+        IList<UIView> allviews = uidoc.GetOpenUIViews();
 
-        if (view.IsValidObject && activeId != view.Id)
+        if (view.IsValidObject && allviews.Count > 1)
         {
-            foreach (UIView uv in uidoc.GetOpenUIViews())
+            OpenAndActivateView(uidoc, view);
+
+            foreach (UIView uv in allviews)
             {
-                if (activeId != uv.ViewId)
+                if (view.Id != uv.ViewId)
                 {
                     try
                     {
                         uv.Close();
-                        uv.Dispose();
                     }
-                    catch (Exception ex)
+                    finally
                     {
-                        Log.Error(ex, ex.Message);
+                        uv.Dispose();
                     }
                 }
             }

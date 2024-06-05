@@ -86,7 +86,7 @@ internal static class ExportToDWGHandler
                     {
                         if (sheet.AreGraphicsOverridesAllowed())
                         {
-                            RevitViewHelper.OpenViewSheet(uidoc, sheet);
+                            RevitViewHelper.OpenAndActivateView(uidoc, sheet);
 
                             ICollection<ElementId> collection = [sheet.Id];
 
@@ -97,7 +97,7 @@ internal static class ExportToDWGHandler
                                 if (doc.Export(exportFolder, sheetFullName, collection, exportOptions))
                                 {
                                     RevitPathHelper.CheckFile(sheetFullPath, interval);
-                                    RevitViewHelper.CloseView(uidoc, sheet);
+                                    RevitViewHelper.CloseAllViews(uidoc, sheet);
                                     Log.Debug("Printed: " + sheetFullName);
                                     printCount++;
                                 }
