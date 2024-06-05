@@ -1,6 +1,5 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using Serilog;
 using System.Diagnostics;
 using Color = Autodesk.Revit.DB.Color;
 using Level = Autodesk.Revit.DB.Level;
@@ -371,15 +370,12 @@ public sealed class RevitViewHelper
 
     public static void OpenAndActivateView(UIDocument uidoc, View view)
     {
-        if (view != null && view.IsValidObject)
+        if (view != null && view.IsValidObject && !view.IsTemplate)
         {
             try
             {
-                if (!view.IsTemplate)
-                {
-                    uidoc.RequestViewChange(view);
-                    uidoc.ActiveView = view;
-                }
+                uidoc.RequestViewChange(view);
+                uidoc.ActiveView = view;
             }
             finally
             {
