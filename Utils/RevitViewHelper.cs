@@ -399,6 +399,7 @@ public sealed class RevitViewHelper
             foreach (UIView uv in allviews)
             {
                 Element elem = uidoc.Document.GetElement(uv.ViewId);
+
                 if (view.Id != uv.ViewId && elem is View seqview)
                 {
                     try
