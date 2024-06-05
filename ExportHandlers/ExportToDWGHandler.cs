@@ -1,4 +1,5 @@
 ﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.UI;
 using RevitBIMTool.Model;
 using RevitBIMTool.Utils;
 using RevitBIMTool.Utils.SystemUtil;
@@ -10,11 +11,13 @@ using System.Text;
 namespace RevitBIMTool.ExportHandlers;
 internal static class ExportToDWGHandler
 {
-    public static string ExportToDWG(Document document, string revitFilePath)
+    public static string ExportToDWG(UIDocument uidoc, string revitFilePath)
     {
         int printCount = 0;
 
         StringBuilder sb = new();
+
+        var doc = uidoc.Document;
 
         if (string.IsNullOrEmpty(revitFilePath))
         {
@@ -23,30 +26,27 @@ internal static class ExportToDWGHandler
 
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
         string exportBaseDirectory = ExportHelper.ExportDirectory(revitFilePath, "02_DWG", true);
-        FilteredElementCollector collector = new FilteredElementCollector(document).OfClass(typeof(ViewSheet)).WhereElementIsNotElementType();
+        FilteredElementCollector collector = new FilteredElementCollector(doc).OfClass(typeof(ViewSheet)).WhereElementIsNotElementType();
         string exportFolder = Path.Combine(exportBaseDirectory, revitFileName);
 
+        ExportDWGSettings dwgSettings = ExportDWGSettings.Create(doc, "exportToDwg");
+        DWGExportOptions exportOptions = dwgSettings.GetDWGExportOptions();
 
-        DWGExportOptions exportOptions = new()
-        {
-            Colors = ExportColorMode.TrueColorPerView,
-            PropOverrides = PropOverrideMode.ByEntity,
-            ACAPreference = ACAObjectPreference.Object,
-            LineScaling = LineScaling.PaperSpace,
-            ExportOfSolids = SolidGeometry.ACIS,
-            TextTreatment = TextTreatment.Exact,
-            TargetUnit = ExportUnit.Millimeter,
-            FileVersion = ACADVersion.R2007,
-            HideUnreferenceViewTags = true,
-            HideReferencePlane = true,
-            NonplotSuffix = "NPLT",
-            LayerMapping = "AIA",
-            HideScopeBox = true,
-            MergedViews = true,
-            SharedCoords = false,
-            MarkNonplotLayers = false,
-            PreserveCoincidentLines = false
-        };
+        exportOptions.Colors = ExportColorMode.TrueColorPerView;
+        exportOptions.PropOverrides = PropOverrideMode.ByEntity;
+        exportOptions.ACAPreference = ACAObjectPreference.Object;
+        exportOptions.LineScaling = LineScaling.PaperSpace;
+        exportOptions.ExportOfSolids = SolidGeometry.ACIS;
+        exportOptions.TextTreatment = TextTreatment.Exact;
+        exportOptions.TargetUnit = ExportUnit.Millimeter;
+        exportOptions.FileVersion = ACADVersion.R2010;
+        exportOptions.HideUnreferenceViewTags = true;
+        exportOptions.HideReferencePlane = true;
+        exportOptions.NonplotSuffix = "NPLT";
+        exportOptions.LayerMapping = "AIA";
+        exportOptions.HideScopeBox = true;
+        exportOptions.MergedViews = true;
+        exportOptions.SharedCoords = false;
 
         int sheetCount = collector.GetElementCount();
         Log.Information($"All sheets => {sheetCount}");
@@ -64,7 +64,7 @@ internal static class ExportToDWGHandler
                 if (sheet.CanBePrinted)
                 {
                     SheetModel model = new(sheet);
-                    model.SetSheetNameWithExtension(document, "dwg");
+                    model.SetSheetNameWithExtension(doc, "dwg");
                     if (model.IsValid)
                     {
                         sheetModels.Add(model);
@@ -78,29 +78,37 @@ internal static class ExportToDWGHandler
 
                 string sheetFullName = model.SheetFullName;
 
+                ViewSheet sheet = model.ViewSheet;
+
                 if (mutex.WaitOne(Timeout.Infinite))
                 {
                     try
                     {
-                        ICollection<ElementId> collection = [model.ViewSheet.Id];
-                        string sheetFullPath = Path.Combine(exportFolder, sheetFullName);
-
-                        if (!ExportHelper.IsTargetFileUpdated(sheetFullPath, revitFilePath))
+                        if (sheet.AreGraphicsOverridesAllowed())
                         {
-                            if (document.Export(exportFolder, sheetFullName, collection, exportOptions))
+                            RevitViewHelper.OpenViewSheet(uidoc, sheet);
+
+                            ICollection<ElementId> collection = [sheet.Id];
+
+                            string sheetFullPath = Path.Combine(exportFolder, sheetFullName);
+
+                            if (!ExportHelper.IsTargetFileUpdated(sheetFullPath, revitFilePath))
                             {
-                                RevitPathHelper.CheckFile(sheetFullPath, interval);
-                                Log.Debug("Printed: " + sheetFullName);
-                                printCount++;
+                                if (doc.Export(exportFolder, sheetFullName, collection, exportOptions))
+                                {
+                                    RevitPathHelper.CheckFile(sheetFullPath, interval);
+                                    RevitViewHelper.CloseView(uidoc, sheet);
+                                    Log.Debug("Printed: " + sheetFullName);
+                                    printCount++;
+                                }
                             }
                         }
                     }
                     catch (Exception ex)
                     {
-                        var msg = $"Sheet: {sheetFullName} failed: {ex.Message}";
+                        string msg = $"Sheet: {sheetFullName} failed: {ex.Message}";
                         _ = sb.AppendLine(msg);
                         Log.Error(msg);
-
                     }
                     finally
                     {
@@ -108,6 +116,7 @@ internal static class ExportToDWGHandler
                     }
                 }
             }
+
 
             _ = sb.AppendLine(exportBaseDirectory);
             _ = sb.AppendLine($"Printed: {printCount} in {sheetCount}");

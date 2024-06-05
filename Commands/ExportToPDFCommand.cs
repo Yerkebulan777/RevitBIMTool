@@ -22,12 +22,12 @@ internal sealed class ExportToPDFCommand : IExternalCommand, IExternalCommandAva
 
         UIApplication uiapp = commandData.Application;
         UIDocument uidoc = uiapp.ActiveUIDocument;
-        Document document = uidoc.Document;
+        Document doc = uidoc.Document;
 
         try
         {
-            string revitFilePath = RevitPathHelper.GetRevitFilePath(document);
-            message = ExportToPDFHandler.ExportToPDF(document, revitFilePath);
+            string revitFilePath = RevitPathHelper.GetRevitFilePath(doc);
+            message = ExportToPDFHandler.ExportToPDF(uidoc, revitFilePath);
         }
         catch (Exception ex)
         {

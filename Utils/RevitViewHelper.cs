@@ -1,5 +1,6 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
+using Serilog;
 using System.Diagnostics;
 using Color = Autodesk.Revit.DB.Color;
 using Level = Autodesk.Revit.DB.Level;
@@ -368,14 +369,47 @@ public sealed class RevitViewHelper
     #endregion
 
 
-    public void OpenViewSheet(UIDocument uidoc, ViewSheet viewSheet)
+    public static void OpenViewSheet(UIDocument uidoc, ViewSheet viewSheet)
     {
-        IEnumerable<View> sheets = new FilteredElementCollector(uidoc.Document).OfClass(typeof(View)).Cast<View>();
-        View view = sheets.FirstOrDefault(v => v.ViewType == ViewType.DrawingSheet && v.OwnerViewId == viewSheet.Id);
-
-        if (view != null)
+        if (viewSheet != null && viewSheet.IsValidObject)
         {
-            uidoc.RequestViewChange(viewSheet);
+            if (!viewSheet.IsTemplate)
+            {
+                try
+                {
+                    uidoc.RequestViewChange(viewSheet);
+                    uidoc.ActiveView = viewSheet;
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, ex.Message);
+                }
+            }
+        }
+    }
+
+
+    public static void CloseView(UIDocument uidoc, View view)
+    {
+        ElementId activeId = uidoc.ActiveGraphicalView.Id;
+
+        if (view.IsValidObject && activeId != view.Id)
+        {
+            foreach (UIView uv in uidoc.GetOpenUIViews())
+            {
+                if (activeId != uv.ViewId)
+                {
+                    try
+                    {
+                        uv.Close();
+                        uv.Dispose();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, ex.Message);
+                    }
+                }
+            }
         }
     }
 

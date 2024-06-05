@@ -21,12 +21,12 @@ internal sealed class ExportToNWCCommand : IExternalCommand, IExternalCommandAva
 
         UIApplication uiapp = commandData.Application;
         UIDocument uidoc = uiapp.ActiveUIDocument;
-        Document document = uidoc.Document;
+        Document doc = uidoc.Document;
 
         try
         {
-            string revitFilePath = RevitPathHelper.GetRevitFilePath(document);
-            message = ExportToNWCHandler.ExportToNWC(document, revitFilePath);
+            string revitFilePath = RevitPathHelper.GetRevitFilePath(doc);
+            message = ExportToNWCHandler.ExportToNWC(uidoc, revitFilePath);
         }
         catch (Exception ex)
         {

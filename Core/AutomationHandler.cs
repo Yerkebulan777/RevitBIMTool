@@ -50,19 +50,19 @@ public sealed class AutomationHandler
     }
 
 
-    private string RunTaskByNumber(Document doc, TaskRequest taskModel)
+    private string RunTaskByNumber(UIDocument uidoc, TaskRequest taskModel)
     {
         StringBuilder sb = new();
-
-        RevitLinkHelper.CheckAndRemoveUnloadedLinks(doc);
+ 
+        RevitLinkHelper.CheckAndRemoveUnloadedLinks(uidoc.Document);
 
         Log.Information($"Command number: {taskModel.CommandNumber}");
 
         sb = taskModel.CommandNumber switch
         {
-            1 => sb.AppendLine(ExportToPDFHandler.ExportToPDF(doc, taskModel.RevitFilePath)),
-            2 => sb.AppendLine(ExportToDWGHandler.ExportToDWG(doc, taskModel.RevitFilePath)),
-            3 => sb.AppendLine(ExportToNWCHandler.ExportToNWC(doc, taskModel.RevitFilePath)),
+            1 => sb.AppendLine(ExportToPDFHandler.ExportToPDF(uidoc, taskModel.RevitFilePath)),
+            2 => sb.AppendLine(ExportToDWGHandler.ExportToDWG(uidoc, taskModel.RevitFilePath)),
+            3 => sb.AppendLine(ExportToNWCHandler.ExportToNWC(uidoc, taskModel.RevitFilePath)),
             _ => sb.AppendLine($"Failed command: {taskModel.CommandNumber}"),
         };
 
@@ -70,7 +70,7 @@ public sealed class AutomationHandler
     }
 
 
-    private string RunDocumentAction(UIApplication uiapp, TaskRequest taskModel, Func<Document, TaskRequest, string> revitAction)
+    private string RunDocumentAction(UIApplication uiapp, TaskRequest taskModel, Func<UIDocument, TaskRequest, string> revitAction)
     {
         string revitTaskAction()
         {
@@ -81,7 +81,7 @@ public sealed class AutomationHandler
     }
 
 
-    private string WithOpenedDocument(UIApplication uiapp, TaskRequest taskModel, Func<Document, TaskRequest, string> revitAction)
+    private string WithOpenedDocument(UIApplication uiapp, TaskRequest taskModel, Func<UIDocument, TaskRequest, string> revitAction)
     {
         UIDocument uidoc = null;
         StringBuilder output = new();
@@ -103,9 +103,9 @@ public sealed class AutomationHandler
         }
         finally
         {
-            if (ClosePreviousDocument(uidoc, ref document))
+            if (ClosePreviousDocument(uidoc))
             {
-                output = output.AppendLine(revitAction(document, taskModel));
+                output = output.AppendLine(revitAction(uidoc, taskModel));
             }
         }
 
@@ -113,7 +113,7 @@ public sealed class AutomationHandler
     }
 
 
-    private bool ClosePreviousDocument(UIDocument uidoc, ref Document document)
+    private bool ClosePreviousDocument(UIDocument uidoc)
     {
         bool result = false;
 
@@ -130,13 +130,14 @@ public sealed class AutomationHandler
                     else if (document.IsValidObject)
                     {
                         result = document.Close(false);
-                        Log.Information("Closed document");
                         uiapp.Application.PurgeReleasedAPIObjects();
                     }
                 }
                 finally
                 {
+                    document?.Dispose();
                     document = uidoc.Document;
+                    Log.Information("Closed document");
                 }
             }
         }

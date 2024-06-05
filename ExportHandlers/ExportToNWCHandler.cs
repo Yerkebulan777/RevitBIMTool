@@ -10,9 +10,10 @@ namespace RevitBIMTool.ExportHandlers;
 
 internal static class ExportToNWCHandler
 {
-    public static string ExportToNWC(Document doc, string revitFilePath)
+    public static string ExportToNWC(UIDocument uidoc, string revitFilePath)
     {
         StringBuilder sb = new();
+        Document doc = uidoc.Document;
 
         if (string.IsNullOrEmpty(revitFilePath))
         {
@@ -43,7 +44,6 @@ internal static class ExportToNWCHandler
             };
 
             View3D view3d = RevitViewHelper.Get3dView(doc, "3DNavisView");
-            UIDocument uidoc = new(doc);
 
             if (view3d is View activeView)
             {
