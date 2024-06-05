@@ -86,6 +86,7 @@ internal static class ExportToDWGHandler
                     {
                         if (sheet.AreGraphicsOverridesAllowed())
                         {
+                            SchedulesRefresh.Start(doc, sheet);
                             ICollection<ElementId> collection = [sheet.Id];
                             RevitViewHelper.OpenAndActivateView(uidoc, sheet);
                             string sheetFullPath = Path.Combine(exportFolder, sheetFullName);
