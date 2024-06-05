@@ -53,9 +53,11 @@ internal static class ExportToDWGHandler
 
         if (sheetCount > 0)
         {
+            List<SheetModel> sheetModels = [];
+
             RevitPathHelper.EnsureDirectory(exportFolder);
 
-            List<SheetModel> sheetModels = [];
+            TimeSpan interval = TimeSpan.FromSeconds(100);
 
             foreach (ViewSheet sheet in collector.Cast<ViewSheet>())
             {
@@ -87,6 +89,7 @@ internal static class ExportToDWGHandler
                         {
                             if (document.Export(exportFolder, sheetFullName, collection, exportOptions))
                             {
+                                RevitPathHelper.CheckFile(sheetFullPath, interval);
                                 Log.Debug("Printed: " + sheetFullName);
                                 printCount++;
                             }
@@ -94,7 +97,7 @@ internal static class ExportToDWGHandler
                     }
                     catch (Exception ex)
                     {
-                        Log.Information($"Sheet: {sheetFullName} failed: {ex.Message}");
+                        Log.Error($"Sheet: {sheetFullName} failed: {ex.Message}");
                         _ = sb.AppendLine($"Sheet: {sheetFullName} failed: {ex.Message}");
                     }
                     finally

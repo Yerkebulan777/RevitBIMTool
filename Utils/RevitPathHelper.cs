@@ -188,13 +188,13 @@ public static class RevitPathHelper
     }
 
 
-    public static void CheckFile(string path, TimeSpan timeout)
+    public static void CheckFile(string path, TimeSpan maximum)
     {
         DateTime startTime = DateTime.Now;
         TimeSpan elapsed = TimeSpan.Zero;
         const int checkInterval = 100;
 
-        while (elapsed < timeout)
+        while (elapsed < maximum)
         {
             Thread.Sleep(checkInterval);
             elapsed = DateTime.Now - startTime;
