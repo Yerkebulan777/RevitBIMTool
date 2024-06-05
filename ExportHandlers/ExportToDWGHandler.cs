@@ -97,8 +97,10 @@ internal static class ExportToDWGHandler
                     }
                     catch (Exception ex)
                     {
-                        Log.Error($"Sheet: {sheetFullName} failed: {ex.Message}");
-                        _ = sb.AppendLine($"Sheet: {sheetFullName} failed: {ex.Message}");
+                        var msg = $"Sheet: {sheetFullName} failed: {ex.Message}";
+                        _ = sb.AppendLine(msg);
+                        Log.Error(msg);
+
                     }
                     finally
                     {
