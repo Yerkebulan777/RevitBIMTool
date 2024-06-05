@@ -102,6 +102,10 @@ internal static class ExportToDWGHandler
                                 }
                             }
                         }
+                        else
+                        {
+                            Log.Warning(model.SheetFullName); 
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -115,7 +119,6 @@ internal static class ExportToDWGHandler
                     }
                 }
             }
-
 
             _ = sb.AppendLine(exportBaseDirectory);
             _ = sb.AppendLine($"Printed: {printCount} in {sheetCount}");

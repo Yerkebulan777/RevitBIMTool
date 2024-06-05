@@ -24,8 +24,8 @@ internal sealed class Application : IExternalApplication
 
             Log.Logger = new LoggerConfiguration()
                 .WriteTo.File(logerPath,
-                    rollingInterval: RollingInterval.Infinite,
-                    retainedFileCountLimit: 7,
+                    rollingInterval: RollingInterval.Day,
+                    retainedFileCountLimit: 3,
                     rollOnFileSizeLimit: true)
                 .MinimumLevel.Verbose()
                 .CreateLogger();
