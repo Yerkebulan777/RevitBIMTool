@@ -374,7 +374,6 @@ public sealed class RevitViewHelper
         {
             try
             {
-                uidoc.RequestViewChange(view);
                 uidoc.ActiveView = view;
             }
             finally
@@ -387,12 +386,14 @@ public sealed class RevitViewHelper
 
     public static void CloseAllViews(UIDocument uidoc, View view)
     {
+        uidoc.UpdateAllOpenViews();
+
         IList<UIView> allviews = uidoc.GetOpenUIViews();
 
         if (view.IsValidObject && allviews.Count > 1)
         {
             OpenAndActivateView(uidoc, view);
-
+            
             foreach (UIView uv in allviews)
             {
                 if (view.Id != uv.ViewId)

@@ -17,7 +17,7 @@ internal static class ExportToDWGHandler
 
         StringBuilder sb = new();
 
-        var doc = uidoc.Document;
+        Document doc = uidoc.Document;
 
         if (string.IsNullOrEmpty(revitFilePath))
         {
@@ -29,24 +29,24 @@ internal static class ExportToDWGHandler
         FilteredElementCollector collector = new FilteredElementCollector(doc).OfClass(typeof(ViewSheet)).WhereElementIsNotElementType();
         string exportFolder = Path.Combine(exportBaseDirectory, revitFileName);
 
-        ExportDWGSettings dwgSettings = ExportDWGSettings.Create(doc, "exportToDwg");
-        DWGExportOptions exportOptions = dwgSettings.GetDWGExportOptions();
-
-        exportOptions.Colors = ExportColorMode.TrueColorPerView;
-        exportOptions.PropOverrides = PropOverrideMode.ByEntity;
-        exportOptions.ACAPreference = ACAObjectPreference.Object;
-        exportOptions.LineScaling = LineScaling.PaperSpace;
-        exportOptions.ExportOfSolids = SolidGeometry.ACIS;
-        exportOptions.TextTreatment = TextTreatment.Exact;
-        exportOptions.TargetUnit = ExportUnit.Millimeter;
-        exportOptions.FileVersion = ACADVersion.R2010;
-        exportOptions.HideUnreferenceViewTags = true;
-        exportOptions.HideReferencePlane = true;
-        exportOptions.NonplotSuffix = "NPLT";
-        exportOptions.LayerMapping = "AIA";
-        exportOptions.HideScopeBox = true;
-        exportOptions.MergedViews = true;
-        exportOptions.SharedCoords = false;
+        DWGExportOptions exportOptions = new()
+        {
+            Colors = ExportColorMode.TrueColorPerView,
+            PropOverrides = PropOverrideMode.ByEntity,
+            ACAPreference = ACAObjectPreference.Object,
+            LineScaling = LineScaling.PaperSpace,
+            ExportOfSolids = SolidGeometry.ACIS,
+            TextTreatment = TextTreatment.Exact,
+            TargetUnit = ExportUnit.Millimeter,
+            FileVersion = ACADVersion.R2010,
+            HideUnreferenceViewTags = true,
+            HideReferencePlane = true,
+            NonplotSuffix = "NPLT",
+            LayerMapping = "AIA",
+            HideScopeBox = true,
+            MergedViews = true,
+            SharedCoords = false
+        };
 
         int sheetCount = collector.GetElementCount();
         Log.Information($"All sheets => {sheetCount}");
@@ -86,10 +86,8 @@ internal static class ExportToDWGHandler
                     {
                         if (sheet.AreGraphicsOverridesAllowed())
                         {
-                            RevitViewHelper.OpenAndActivateView(uidoc, sheet);
-
                             ICollection<ElementId> collection = [sheet.Id];
-
+                            RevitViewHelper.OpenAndActivateView(uidoc, sheet);
                             string sheetFullPath = Path.Combine(exportFolder, sheetFullName);
 
                             if (!ExportHelper.IsTargetFileUpdated(sheetFullPath, revitFilePath))
