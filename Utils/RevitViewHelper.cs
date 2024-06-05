@@ -1,5 +1,6 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
+using Serilog;
 using System.Diagnostics;
 using Color = Autodesk.Revit.DB.Color;
 using Level = Autodesk.Revit.DB.Level;
@@ -375,6 +376,7 @@ public sealed class RevitViewHelper
             try
             {
                 uidoc.ActiveView = view;
+                Log.Debug($"Activated view {view.Name}");
             }
             finally
             {
@@ -393,14 +395,16 @@ public sealed class RevitViewHelper
         if (view.IsValidObject && allviews.Count > 1)
         {
             OpenAndActivateView(uidoc, view);
-            
+
             foreach (UIView uv in allviews)
             {
-                if (view.Id != uv.ViewId)
+                Element elem = uidoc.Document.GetElement(uv.ViewId);
+                if (view.Id != uv.ViewId && elem is View seqview)
                 {
                     try
                     {
                         uv.Close();
+                        Log.Debug($"Closed view: {seqview.Name}");
                     }
                     finally
                     {
