@@ -1,6 +1,6 @@
 ﻿using Autodesk.Revit.DB;
+using RevitBIMTool.ExportHandlers;
 using RevitBIMTool.Utils;
-using Serilog;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -44,7 +44,7 @@ internal class SheetModel : IDisposable
             string escapedInvalidChars = Regex.Escape(invalidChars);
             Regex regex = new($"(?<=\\d){escapedInvalidChars}");
             stringNumber = regex.Replace(stringNumber, ".");
-            
+
         }
 
         return stringNumber;
@@ -80,8 +80,6 @@ internal class SheetModel : IDisposable
             ? StringHelper.NormalizeLength($"Лист - {sheetNumber} - {sheetName}.{extension}")
             : StringHelper.NormalizeLength($"Лист - {groupName}-{sheetNumber} - {sheetName}.{extension}");
 
-        string sheetDigits = Regex.Replace(sheetNumber, @"[^0-9.]", string.Empty);
-
         OrganizationGroupName = groupName;
 
         if (string.IsNullOrWhiteSpace(groupName))
@@ -89,14 +87,14 @@ internal class SheetModel : IDisposable
             OrganizationGroupName = Regex.Replace(sheetNumber, @"[0-9.]", string.Empty);
         }
 
-        if (double.TryParse(sheetDigits, out double number))
+        string sheetDigits = Regex.Replace(sheetNumber, @"[^0-9.]", string.Empty);
+
+        if (double.TryParse(sheetDigits, out double number) && !groupName.StartsWith("#"))
         {
-            if (!groupName.StartsWith("#"))
-            {
-                StringNumber = sheetNumber;
-                DigitNumber = number;
-                IsValid = true;
-            }
+            SchedulesRefresh.Start(doc, ViewSheet);
+            StringNumber = sheetNumber;
+            DigitNumber = number;
+            IsValid = true;
         }
     }
 

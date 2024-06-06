@@ -82,15 +82,13 @@ internal static class ExportToDWGHandler
 
                 if (mutex.WaitOne(Timeout.Infinite))
                 {
-                    try
+                    if (sheet.AreGraphicsOverridesAllowed())
                     {
-                        if (sheet.AreGraphicsOverridesAllowed())
+                        try
                         {
-                            SchedulesRefresh.Start(doc, sheet);
                             ICollection<ElementId> collection = [sheet.Id];
                             RevitViewHelper.OpenAndActivateView(uidoc, sheet);
                             string sheetFullPath = Path.Combine(exportFolder, sheetFullName);
-
                             if (!ExportHelper.IsTargetFileUpdated(sheetFullPath, revitFilePath))
                             {
                                 if (doc.Export(exportFolder, sheetFullName, collection, exportOptions))
@@ -102,20 +100,16 @@ internal static class ExportToDWGHandler
                                 }
                             }
                         }
-                        else
+                        catch (Exception ex)
                         {
-                            Log.Warning(model.SheetFullName); 
+                            string msg = $"Sheet: {sheetFullName} failed: {ex.Message}";
+                            _ = sb.AppendLine(msg);
+                            Log.Error(msg);
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        string msg = $"Sheet: {sheetFullName} failed: {ex.Message}";
-                        _ = sb.AppendLine(msg);
-                        Log.Error(msg);
-                    }
-                    finally
-                    {
-                        mutex.ReleaseMutex();
+                        finally
+                        {
+                            mutex.ReleaseMutex();
+                        }
                     }
                 }
             }

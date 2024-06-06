@@ -29,6 +29,8 @@ namespace RevitBIMTool.ExportHandlers
                 .Where(i => !i.IsTitleblockRevisionSchedule)
                 .ToList();
 
+            if (instances.Count == 0 ) { return; }
+
             List<ScheduleSheetInstance> pinnedSchedules = [];
 
             using (Transaction trx1 = new(doc, "SchedulesRefresh1"))
@@ -42,6 +44,7 @@ namespace RevitBIMTool.ExportHandlers
                             ssi.Pinned = false;
                             pinnedSchedules.Add(ssi);
                         }
+
                         MoveScheduleOrGroup(doc, ssi, 0.1);
                     }
                     _ = trx1.Commit();

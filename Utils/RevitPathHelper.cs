@@ -192,21 +192,28 @@ public static class RevitPathHelper
     {
         DateTime startTime = DateTime.Now;
         TimeSpan elapsed = TimeSpan.Zero;
-        const int checkInterval = 100;
+        const int checkInterval = 1000;
 
         while (elapsed < maximum)
         {
-            Thread.Sleep(checkInterval);
             elapsed = DateTime.Now - startTime;
+
+            Thread.Sleep(checkInterval);
 
             if (File.Exists(path))
             {
-                double seconds = elapsed.TotalSeconds;
-                Log.Verbose($"Elapsed: {seconds}");
-                return;
+                FileInfo fileInfo = new(path);
+                long size = fileInfo.Length;
+                if (size > 0)
+                {
+                    double sec = elapsed.TotalSeconds;
+                    Log.Debug($"Size: {size} [{sec}]");
+                    break;
+                }
             }
         }
     }
+
 
 
 }
