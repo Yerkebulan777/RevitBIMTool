@@ -46,7 +46,7 @@ internal static class ExportHelper
             DateTime sourceFileDate = File.GetLastWriteTime(sourceFilePath);
             TimeSpan timeDifference = targetFileDate - sourceFileDate;
             long targetFileSize = new FileInfo(targetFilePath).Length;
-            
+
             Log.Debug($"target last date: {targetFileDate:dd.MM.yyyy HH:mm}");
             Log.Debug($"source last date: {sourceFileDate:dd.MM.yyyy HH:mm}");
 
@@ -60,10 +60,9 @@ internal static class ExportHelper
                 Log.Debug($"Target file valid");
                 return true;
             }
-            else
-            {
-                RevitPathHelper.DeleteExistsFile(targetFilePath);
-            }
+
+            RevitPathHelper.DeleteExistsFile(targetFilePath);
+
         }
 
         return false;

@@ -7,7 +7,6 @@ namespace RevitBIMTool.Utils
 {
     internal static class RevitLinkHelper
     {
-
         public static void CheckAndRemoveUnloadedLinks(Document doc)
         {
             FilteredElementCollector collector = new(doc);
@@ -32,8 +31,7 @@ namespace RevitBIMTool.Utils
 
                                 bool isLoaded = RevitLinkType.IsLoaded(doc, linkType.Id);
 
-                                Debug.WriteLine($"Link: {linkTypeName} is loaded: {isLoaded}");
-                                Log.Information($"Link: {linkTypeName} is loaded: {isLoaded}");
+                                Log.Debug($"Link: {linkTypeName} is loaded: {isLoaded}");
 
                                 if (!isLoaded && linkType.AttachmentType == AttachmentType.Overlay)
                                 {
@@ -54,7 +52,7 @@ namespace RevitBIMTool.Utils
                     }
 
                     TransactionStatus status = trans.Commit();
-                    Debug.WriteLine($"Transaction status: {status}");
+                    Debug.WriteLine($"status: {status}");
                 }
             }
 
@@ -69,13 +67,11 @@ namespace RevitBIMTool.Utils
             }
             catch (Exception ex)
             {
-                Debug.WriteLine("Failed Reload: " + ex.Message);
-                Log.Information("Failed Reload: " + ex.Message);
+                Log.Debug("Failed Reload: " + ex.Message);
             }
             finally
             {
-                Debug.WriteLine("Reload: " + linkTypeName);
-                Log.Information("Reload: " + linkTypeName);
+                Log.Debug("Reload: " + linkTypeName);
             }
         }
 
@@ -84,19 +80,18 @@ namespace RevitBIMTool.Utils
         {
             try
             {
-                _ = doc.Delete(id);
+                doc.Delete(id);
             }
             catch (Exception ex)
             {
-                Debug.WriteLine("Failed Delete: " + ex.Message);
-                Log.Information("Failed Delete: " + ex.Message);
+                Log.Debug("Failed Delete: " + ex.Message);
             }
             finally
             {
-                Debug.WriteLine("Deleted: " + linkTypeName);
-                Log.Information("Deleted: " + linkTypeName);
+                Log.Debug("Deleted: " + linkTypeName);
             }
         }
+
 
 
     }
