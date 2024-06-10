@@ -43,7 +43,7 @@ internal sealed class Application : IExternalApplication
                 externalEventHandler = new RevitExternalEventHandler(versionNumber);
                 if (ExternalEventRequest.Denied != externalEventHandler.Raise())
                 {
-
+                    Log.Information($"Revit {versionNumber} handler started...");
                 }
             }
         }
