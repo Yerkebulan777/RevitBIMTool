@@ -23,15 +23,12 @@ internal sealed class Application : IExternalApplication
             SetupUIPanel.Initialize(application);
 
             Log.Logger = new LoggerConfiguration()
-                .WriteTo.File(logerPath,
-                    rollingInterval: RollingInterval.Day,
-                    retainedFileCountLimit: 3,
-                    rollOnFileSizeLimit: true)
-                .MinimumLevel.Verbose()
+                .WriteTo.File(logerPath)
                 .CreateLogger();
         }
         catch (Exception ex)
         {
+            System.Windows.Clipboard.SetText(ex.Message);
             application.ControlledApplication.WriteJournalComment(ex.Message, true);
             return Result.Failed;
         }
