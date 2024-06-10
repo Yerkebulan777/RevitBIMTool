@@ -57,6 +57,7 @@ namespace RevitBIMTool.Core
             {
                 try
                 {
+                    Log.Warning("Start closing the Revit ...");
                     uiapp.Application.PurgeReleasedAPIObjects();
                 }
                 finally

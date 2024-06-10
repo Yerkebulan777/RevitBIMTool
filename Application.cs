@@ -21,6 +21,11 @@ internal sealed class Application : IExternalApplication
         try
         {
             SetupUIPanel.Initialize(application);
+
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Verbose()
+                .WriteTo.File(logerPath)
+                .CreateLogger();
         }
         catch (Exception ex)
         {
@@ -38,9 +43,7 @@ internal sealed class Application : IExternalApplication
                 externalEventHandler = new RevitExternalEventHandler(versionNumber);
                 if (ExternalEventRequest.Denied != externalEventHandler.Raise())
                 {
-                    Log.Logger = new LoggerConfiguration()
-                        .WriteTo.File(logerPath)
-                        .CreateLogger();
+
                 }
             }
         }
