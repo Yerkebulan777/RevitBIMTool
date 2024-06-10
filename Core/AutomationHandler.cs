@@ -130,7 +130,7 @@ public sealed class AutomationHandler
                     else if (document.IsValidObject)
                     {
                         result = document.Close(false);
-                        Log.Warning("Start purge objects ...");
+                        Log.Warning("Start purge api objects ...");
                         uiapp.Application.PurgeReleasedAPIObjects();
                     }
                 }
