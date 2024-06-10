@@ -12,8 +12,8 @@ namespace RevitBIMTool;
 internal sealed class Application : IExternalApplication
 {
     private RevitExternalEventHandler externalEventHandler;
-    private static readonly string myDocumentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-    private static readonly string logerPath = Path.Combine(myDocumentsPath, "RevitBIMToolLog.txt");
+    private static readonly string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+    private static readonly string logerPath = Path.Combine(docPath, "RevitBIMToolLog.txt");
 
 
     public Result OnStartup(UIControlledApplication application)
