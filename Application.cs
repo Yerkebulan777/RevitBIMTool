@@ -22,9 +22,9 @@ internal sealed class Application : IExternalApplication
         {
             SetupUIPanel.Initialize(application);
 
-            Log.Logger = new LoggerConfiguration()
-                .WriteTo.File(logerPath)
-                .CreateLogger();
+            //Log.Logger = new LoggerConfiguration()
+            //    .WriteTo.File(logerPath)
+            //    .CreateLogger();
         }
         catch (Exception ex)
         {
