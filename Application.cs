@@ -21,10 +21,6 @@ internal sealed class Application : IExternalApplication
         try
         {
             SetupUIPanel.Initialize(application);
-
-            //Log.Logger = new LoggerConfiguration()
-            //    .WriteTo.File(logerPath)
-            //    .CreateLogger();
         }
         catch (Exception ex)
         {
@@ -42,7 +38,9 @@ internal sealed class Application : IExternalApplication
                 externalEventHandler = new RevitExternalEventHandler(versionNumber);
                 if (ExternalEventRequest.Denied != externalEventHandler.Raise())
                 {
-                    Log.Information("Started task in Revit" + versionNumber);
+                    Log.Logger = new LoggerConfiguration()
+                        .WriteTo.File(logerPath)
+                        .CreateLogger();
                 }
             }
         }
