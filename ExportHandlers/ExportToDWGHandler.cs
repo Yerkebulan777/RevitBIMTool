@@ -60,6 +60,8 @@ internal static class ExportToDWGHandler
                 RevitPathHelper.EnsureDirectory(tempFolder);
                 RevitPathHelper.EnsureDirectory(exportFolder);
 
+                List<ElementId> views = new List<ElementId>();
+
                 TimeSpan interval = TimeSpan.FromSeconds(100);
 
                 foreach (ViewSheet sheet in collector.Cast<ViewSheet>())
@@ -73,6 +75,7 @@ internal static class ExportToDWGHandler
                             if (model.IsValid)
                             {
                                 sheetModels.Add(model);
+                                views.Add(model.ViewSheet.Id);
                             }
                         }
                     }
@@ -80,42 +83,48 @@ internal static class ExportToDWGHandler
 
                 Log.Information($"Total valid sheet count: ({sheetModels.Count})");
 
-                foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
+                if (doc.Export(tempFolder, revitFileName, views, dwgOptions))
                 {
-                    using Mutex mutex = new(false, "Global\\{{{ExportDWGMutex}}}");
-
-                    string sheetFullName = model.SheetFullName;
-
-                    ViewSheet sheet = model.ViewSheet;
-
-                    if (mutex.WaitOne(Timeout.Infinite))
-                    {
-                        try
-                        {
-                            ICollection<ElementId> collection = [sheet.Id];
-                            Log.Verbose("Start export file: " + sheetFullName);
-                            string sheetTempPath = Path.Combine(tempFolder, sheetFullName);
-
-                            RevitPathHelper.DeleteExistsFile(sheetTempPath);
-
-                            if (doc.Export(tempFolder, sheetFullName, collection, dwgOptions))
-                            {
-                                RevitPathHelper.CheckFile(sheetTempPath, interval);
-                                Log.Verbose("Exported dwg: " + sheetFullName);
-                                printCount++;
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            _ = sb.AppendLine(ex.Message);
-                            Log.Error(ex, ex.Message);
-                        }
-                        finally
-                        {
-                            mutex.ReleaseMutex();
-                        }
-                    }
+                    printCount++;
                 }
+
+
+                //foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
+                //{
+                //    using Mutex mutex = new(false, "Global\\{{{ExportDWGMutex}}}");
+
+                //    string sheetFullName = model.SheetFullName;
+
+                //    ViewSheet sheet = model.ViewSheet;
+
+                //    if (mutex.WaitOne(Timeout.Infinite))
+                //    {
+                //        try
+                //        {
+                //            ICollection<ElementId> collection = [sheet.Id];
+                //            Log.Verbose("Start export file: " + sheetFullName);
+                //            string sheetTempPath = Path.Combine(tempFolder, sheetFullName);
+
+                //            RevitPathHelper.DeleteExistsFile(sheetTempPath);
+
+                //            if (doc.Export(tempFolder, sheetFullName, collection, dwgOptions))
+                //            {
+                //                RevitPathHelper.CheckFile(sheetTempPath, interval);
+                //                Log.Verbose("Exported dwg: " + sheetFullName);
+                //                printCount++;
+                //            }
+                //        }
+                //        catch (Exception ex)
+                //        {
+                //            _ = sb.AppendLine(ex.Message);
+                //            Log.Error(ex, ex.Message);
+                //        }
+                //        finally
+                //        {
+                //            mutex.ReleaseMutex();
+                //        }
+                //    }
+                //}
 
                 //foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
                 //{
