@@ -88,7 +88,6 @@ internal static class ExportToDWGHandler
                     printCount++;
                 }
 
-
                 //foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
                 //{
                 //    using Mutex mutex = new(false, "Global\\{{{ExportDWGMutex}}}");
