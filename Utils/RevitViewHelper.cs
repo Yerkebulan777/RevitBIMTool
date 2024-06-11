@@ -388,7 +388,7 @@ public sealed class RevitViewHelper
     }
 
 
-    public static async Task ActivateViewAndCloseOthersAsync(UIDocument uidoc, View view)
+    public static async Task ActivateAndCloseViewsAsync(UIDocument uidoc, View view)
     {
         IList<UIView> allviews = uidoc.GetOpenUIViews();
 

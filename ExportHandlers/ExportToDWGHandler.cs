@@ -11,7 +11,7 @@ using System.Text;
 namespace RevitBIMTool.ExportHandlers;
 internal static class ExportToDWGHandler
 {
-    static int printCount = 0;
+    private static int printCount = 0;
 
     public static string ExportToDWG(UIDocument uidoc, string revitFilePath)
     {
@@ -58,12 +58,12 @@ internal static class ExportToDWGHandler
                     }
                 }
 
-                ExportExecuteAsync(uidoc, exportFolder, sheetModels).Wait();
+                ExecuteExportToDWG(uidoc, exportFolder, sheetModels);
                 ExportHelper.ZipTheFolder(exportFolder, exportBaseDirectory);
                 SystemFolderOpener.OpenFolderInExplorerIfNeeded(exportFolder);
 
                 Log.Information($"Printed: {printCount} in {sheetModels.Count}");
-                sb.AppendLine($"Printed: {printCount} in {sheetModels.Count}");
+                _ = sb.AppendLine($"Printed: {printCount} in {sheetModels.Count}");
             }
         }
 
@@ -71,7 +71,7 @@ internal static class ExportToDWGHandler
     }
 
 
-    private static async Task ExportExecuteAsync(UIDocument uidoc, string exportFolder, List<SheetModel> sheetModels)
+    private static void ExecuteExportToDWG(UIDocument uidoc, string exportFolder, List<SheetModel> sheetModels)
     {
         DWGExportOptions dwgOptions = new()
         {
@@ -92,7 +92,7 @@ internal static class ExportToDWGHandler
 
         foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
         {
-            await RevitViewHelper.ActivateViewAndCloseOthersAsync(uidoc, model.ViewSheet);
+            RevitViewHelper.ActivateAndCloseViewsAsync(uidoc, model.ViewSheet).RunSynchronously();
 
             using Mutex mutex = new(false, "Global\\{{{ExportDWGMutex}}}");
 
