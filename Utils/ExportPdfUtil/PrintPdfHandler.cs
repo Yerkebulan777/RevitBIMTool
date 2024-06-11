@@ -79,7 +79,6 @@ internal static class PrintPdfHandler
 
                 if (sheetElem is ViewSheet viewSheet && viewSheet.CanBePrinted)
                 {
-
                     if (!PrinterApiUtility.GetPaperSize(widthInMm, heighInMm, out _))
                     {
                         PrinterApiUtility.AddFormat(defaultPrinterName, widthInMm, heighInMm);
@@ -175,9 +174,9 @@ internal static class PrintPdfHandler
 
                                 if (printManager.SubmitPrint(model.ViewSheet))
                                 {
-                                    bool fileExists = Task.Run(() => RevitPathHelper.IsFileExistsAsync(sheetTempPath)).Result;
+                                    Task<bool> taskExists = Task.Run(() => RevitPathHelper.IsFileExistsAsync(sheetTempPath));
 
-                                    if (fileExists)
+                                    if (taskExists.Result)
                                     {
                                         Log.Verbose("Exported sheet: " + sheetFullName);
                                         resultFilePaths.Add(model);

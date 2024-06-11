@@ -94,9 +94,9 @@ internal static class ExportToDWGHandler
                             string sheetTempPath = Path.Combine(tempFolder, sheetFullName);
                             if (doc.Export(tempFolder, sheetFullName, collection, dwgOptions))
                             {
-                                bool fileExists = Task.Run(() => RevitPathHelper.IsFileExistsAsync(sheetTempPath)).Result;
+                                Task<bool> taskExists = Task.Run(() => RevitPathHelper.IsFileExistsAsync(sheetTempPath));
 
-                                if (fileExists)
+                                if (taskExists.Result)
                                 {
                                     RevitViewHelper.CloseAllViews(uidoc, model.ViewSheet);
                                     Log.Verbose("Exported sheet: " + sheetFullName);
