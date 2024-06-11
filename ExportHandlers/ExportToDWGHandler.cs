@@ -58,7 +58,6 @@ internal static class ExportToDWGHandler
                 List<SheetModel> sheetModels = [];
 
                 RevitPathHelper.EnsureDirectory(tempFolder);
-                RevitPathHelper.EnsureDirectory(exportFolder);
 
                 List<ElementId> views = new List<ElementId>();
 
@@ -83,9 +82,16 @@ internal static class ExportToDWGHandler
 
                 Log.Information($"Total valid sheet count: ({sheetModels.Count})");
 
-                if (doc.Export(tempFolder, revitFileName, views, dwgOptions))
+                try
                 {
-                    printCount++;
+                    if (doc.Export(tempFolder, revitFileName, views, dwgOptions))
+                    {
+                        Log.Information("Printed all sheets completed");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, ex.Message);
                 }
 
                 //foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
