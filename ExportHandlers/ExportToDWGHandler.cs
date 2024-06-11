@@ -59,8 +59,6 @@ internal static class ExportToDWGHandler
 
                 RevitPathHelper.EnsureDirectory(tempFolder);
 
-                List<ElementId> views = [];
-
                 TimeSpan interval = TimeSpan.FromSeconds(100);
 
                 foreach (ViewSheet sheet in collector.Cast<ViewSheet>())
@@ -74,7 +72,6 @@ internal static class ExportToDWGHandler
                             if (model.IsValid)
                             {
                                 sheetModels.Add(model);
-                                views.Add(model.ViewSheet.Id);
                             }
                         }
                     }
