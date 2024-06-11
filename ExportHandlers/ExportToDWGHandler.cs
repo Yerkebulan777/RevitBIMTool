@@ -33,8 +33,6 @@ internal static class ExportToDWGHandler
         {
             Colors = ExportColorMode.TrueColorPerView,
             PropOverrides = PropOverrideMode.ByEntity,
-            ACAPreference = ACAObjectPreference.Object,
-            LineScaling = LineScaling.PaperSpace,
             ExportOfSolids = SolidGeometry.ACIS,
             TextTreatment = TextTreatment.Exact,
             TargetUnit = ExportUnit.Millimeter,

@@ -135,7 +135,7 @@ internal static class PrintPdfHandler
 
     public static List<SheetModel> PrintSheetData(ref Document doc, Dictionary<string, List<SheetModel>> sheetDict, string tempDirectory)
     {
-        List<SheetModel> resultFilePaths = new(sheetDict.Values.Count);
+        List<SheetModel> resultFilePaths = new List<SheetModel>(sheetDict.Values.Count);
 
         List<PrintSetting> printAllSettings = RevitPrinterUtil.GetPrintSettings(doc);
 
