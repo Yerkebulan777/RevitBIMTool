@@ -2,7 +2,6 @@
 using Autodesk.Revit.UI;
 using Serilog;
 using System.Diagnostics;
-using System.Windows.Controls;
 using Color = Autodesk.Revit.DB.Color;
 using Level = Autodesk.Revit.DB.Level;
 using View = Autodesk.Revit.DB.View;
@@ -370,7 +369,7 @@ public sealed class RevitViewHelper
     #endregion
 
 
-    public static async Task ActivateViewAsync(UIDocument uidoc, View view)
+    public static void ActivateView(UIDocument uidoc, View view)
     {
         if (view != null && !view.IsTemplate)
         {
@@ -382,15 +381,15 @@ public sealed class RevitViewHelper
             }
             finally
             {
-                await Task.Delay(3000);
+                Task.Delay(1000);
             }
         }
     }
 
 
-    public static async Task OpenViewAsync(UIDocument uidoc, View view)
+    public static void OpenView(UIDocument uidoc, View view)
     {
-        await ActivateViewAsync(uidoc, view);
+        ActivateView(uidoc, view);
 
         IList<UIView> allviews = uidoc.GetOpenUIViews();
 
