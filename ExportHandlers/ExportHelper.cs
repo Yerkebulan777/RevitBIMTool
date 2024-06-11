@@ -38,7 +38,7 @@ internal static class ExportHelper
     }
 
 
-    public static bool IsTargetFileUpdated(string targetFilePath, string sourceFilePath, int minimum = 30)
+    public static bool IsTargetFileUpdated(string targetFilePath, string sourceFilePath, int minimum = 100)
     {
         if (File.Exists(targetFilePath) && File.Exists(sourceFilePath))
         {

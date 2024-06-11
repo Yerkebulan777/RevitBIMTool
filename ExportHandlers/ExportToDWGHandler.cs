@@ -38,14 +38,13 @@ internal static class ExportToDWGHandler
             ExportOfSolids = SolidGeometry.ACIS,
             TextTreatment = TextTreatment.Exact,
             TargetUnit = ExportUnit.Millimeter,
-            FileVersion = ACADVersion.R2010,
+            FileVersion = ACADVersion.R2007,
             HideUnreferenceViewTags = true,
             HideReferencePlane = true,
             NonplotSuffix = "NPLT",
             LayerMapping = "AIA",
             HideScopeBox = true,
             MergedViews = true,
-            SharedCoords = false
         };
 
         int sheetCount = collector.GetElementCount();
