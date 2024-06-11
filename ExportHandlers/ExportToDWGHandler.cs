@@ -92,7 +92,7 @@ internal static class ExportToDWGHandler
 
         foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
         {
-            RevitViewHelper.ActivateViewAndCloseOthersAsync(uidoc, model.ViewSheet);
+            await RevitViewHelper.ActivateViewAndCloseOthersAsync(uidoc, model.ViewSheet);
 
             using Mutex mutex = new(false, "Global\\{{{ExportDWGMutex}}}");
 
