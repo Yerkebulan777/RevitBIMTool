@@ -174,13 +174,8 @@ internal static class PrintPdfHandler
 
                                 if (printManager.SubmitPrint(model.ViewSheet))
                                 {
-                                    Task<bool> taskExists = Task.Run(() => RevitPathHelper.IsFileExistsAsync(sheetTempPath));
-
-                                    if (taskExists.Result)
-                                    {
-                                        Log.Verbose("Exported sheet: " + sheetFullName);
-                                        resultFilePaths.Add(model);
-                                    }
+                                    Log.Verbose("Exported sheet: " + sheetFullName);
+                                    resultFilePaths.Add(model);
                                 }
                             }
                             catch (Exception ex)
