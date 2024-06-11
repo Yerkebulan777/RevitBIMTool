@@ -370,7 +370,7 @@ public sealed class RevitViewHelper
     #endregion
 
 
-    public static void OpenAndActivateView(UIDocument uidoc, View view)
+    public static async Task OpenAndActivateViewAsync(UIDocument uidoc, View view)
     {
         if (view != null && !view.IsTemplate)
         {
@@ -382,19 +382,19 @@ public sealed class RevitViewHelper
             }
             finally
             {
-                Log.Debug($"Active view: {uidoc.ActiveGraphicalView.Name}");
+                await Task.Delay(3000);
             }
         }
     }
 
 
-    public static void CloseAllViews(UIDocument uidoc, View view)
+    public static async Task ActivateViewAndCloseOthersAsync(UIDocument uidoc, View view)
     {
         IList<UIView> allviews = uidoc.GetOpenUIViews();
 
         if (view.IsValidObject && allviews.Count > 1)
         {
-            OpenAndActivateView(uidoc, view);
+            await OpenAndActivateViewAsync(uidoc, view);
 
             foreach (UIView uv in allviews)
             {
@@ -403,7 +403,6 @@ public sealed class RevitViewHelper
                     if (view.Id == uv.ViewId)
                     {
                         uv.ZoomSheetSize();
-                        Thread.Sleep(1000);
                     }
                     else
                     {
