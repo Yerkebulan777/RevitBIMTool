@@ -82,54 +82,39 @@ internal static class ExportToDWGHandler
 
                 Log.Information($"Total valid sheet count: ({sheetModels.Count})");
 
-                try
+                foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
                 {
-                    if (doc.Export(tempFolder, revitFileName, views, dwgOptions))
+                    using Mutex mutex = new(false, "Global\\{{{ExportDWGMutex}}}");
+
+                    RevitViewHelper.OpenAndActivateView(uidoc, model.ViewSheet);
+
+                    string sheetFullName = model.SheetFullName;
+
+                    if (mutex.WaitOne(Timeout.Infinite))
                     {
-                        Log.Information("Printed all sheets completed");
+                        try
+                        {
+                            Log.Verbose("Start export file: " + sheetFullName);
+                            ICollection<ElementId> collection = [model.ViewSheet.Id];
+                            string sheetTempPath = Path.Combine(tempFolder, sheetFullName);
+                            if (doc.Export(tempFolder, sheetFullName, collection, dwgOptions))
+                            {
+                                RevitPathHelper.CheckFile(sheetTempPath, interval);
+                                Log.Verbose("Exported sheet: " + sheetFullName);
+                                printCount++;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error(ex, ex.Message);
+                            _ = sb.AppendLine(ex.Message);
+                        }
+                        finally
+                        {
+                            mutex.ReleaseMutex();
+                        }
                     }
                 }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, ex.Message);
-                }
-
-                //foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
-                //{
-                //    using Mutex mutex = new(false, "Global\\{{{ExportDWGMutex}}}");
-
-                //    string sheetFullName = model.SheetFullName;
-
-                //    ViewSheet sheet = model.ViewSheet;
-
-                //    if (mutex.WaitOne(Timeout.Infinite))
-                //    {
-                //        try
-                //        {
-                //            ICollection<ElementId> collection = [sheet.Id];
-                //            Log.Verbose("Start export file: " + sheetFullName);
-                //            string sheetTempPath = Path.Combine(tempFolder, sheetFullName);
-
-                //            RevitPathHelper.DeleteExistsFile(sheetTempPath);
-
-                //            if (doc.Export(tempFolder, sheetFullName, collection, dwgOptions))
-                //            {
-                //                RevitPathHelper.CheckFile(sheetTempPath, interval);
-                //                Log.Verbose("Exported dwg: " + sheetFullName);
-                //                printCount++;
-                //            }
-                //        }
-                //        catch (Exception ex)
-                //        {
-                //            _ = sb.AppendLine(ex.Message);
-                //            Log.Error(ex, ex.Message);
-                //        }
-                //        finally
-                //        {
-                //            mutex.ReleaseMutex();
-                //        }
-                //    }
-                //}
 
                 //foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
                 //{
