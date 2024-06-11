@@ -370,7 +370,7 @@ public sealed class RevitViewHelper
     #endregion
 
 
-    public static async Task OpenAndActivateViewAsync(UIDocument uidoc, View view)
+    public static async Task ActivateViewAsync(UIDocument uidoc, View view)
     {
         if (view != null && !view.IsTemplate)
         {
@@ -388,11 +388,11 @@ public sealed class RevitViewHelper
     }
 
 
-    public static async Task ActivateAndCloseViewsAsync(UIDocument uidoc, View view)
+    public static async Task OpenViewAsync(UIDocument uidoc, View view)
     {
-        IList<UIView> allviews = uidoc.GetOpenUIViews();
+        await ActivateViewAsync(uidoc, view);
 
-        await OpenAndActivateViewAsync(uidoc, view);
+        IList<UIView> allviews = uidoc.GetOpenUIViews();
 
         if (view.IsValidObject && allviews.Count > 1)
         {

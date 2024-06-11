@@ -90,9 +90,10 @@ internal static class ExportToDWGHandler
             MergedViews = true,
         };
 
+
         foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
         {
-            RevitViewHelper.ActivateAndCloseViewsAsync(uidoc, model.ViewSheet).RunSynchronously();
+            RevitViewHelper.OpenViewAsync(uidoc, model.ViewSheet).Wait();
 
             using Mutex mutex = new(false, "Global\\{{{ExportDWGMutex}}}");
 
