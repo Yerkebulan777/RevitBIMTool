@@ -59,7 +59,7 @@ internal static class ExportToDWGHandler
 
                 RevitPathHelper.EnsureDirectory(tempFolder);
 
-                List<ElementId> views = new List<ElementId>();
+                List<ElementId> views = [];
 
                 TimeSpan interval = TimeSpan.FromSeconds(100);
 
@@ -99,9 +99,12 @@ internal static class ExportToDWGHandler
                             string sheetTempPath = Path.Combine(tempFolder, sheetFullName);
                             if (doc.Export(tempFolder, sheetFullName, collection, dwgOptions))
                             {
-                                RevitPathHelper.CheckFile(sheetTempPath, interval);
-                                Log.Verbose("Exported sheet: " + sheetFullName);
-                                printCount++;
+                                if (RevitPathHelper.IsFileExists(sheetTempPath, interval))
+                                {
+                                    RevitViewHelper.CloseAllViews(uidoc, model.ViewSheet);
+                                    Log.Verbose("Exported sheet: " + sheetFullName);
+                                    printCount++;
+                                }
                             }
                         }
                         catch (Exception ex)

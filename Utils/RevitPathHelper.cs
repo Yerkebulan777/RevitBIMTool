@@ -204,7 +204,7 @@ public static class RevitPathHelper
     }
 
 
-    public static void CheckFile(string path, TimeSpan maximum)
+    public static bool IsFileExists(string path, TimeSpan maximum)
     {
         DateTime startTime = DateTime.Now;
         TimeSpan elapsed = TimeSpan.Zero;
@@ -222,12 +222,15 @@ public static class RevitPathHelper
                 long size = fileInfo.Length;
                 if (size > 0)
                 {
+                    Thread.Sleep(checkInterval);
                     double sec = elapsed.TotalSeconds;
                     Log.Debug($"Size: {size} [{sec}]");
-                    break;
+                    return true;
                 }
             }
         }
+
+        return false;
     }
 
 

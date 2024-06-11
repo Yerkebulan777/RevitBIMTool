@@ -175,7 +175,7 @@ internal static class PrintPdfHandler
                                 Log.Verbose("Start export file: " + sheetFullName);
                                 if (printManager.SubmitPrint(model.ViewSheet))
                                 {
-                                    RevitPathHelper.CheckFile(sheetTempPath, interval);
+                                    RevitPathHelper.IsFileExists(sheetTempPath, interval);
                                     Log.Verbose("Exported sheet: " + sheetFullName);
                                     resultFilePaths.Add(model);
                                 }

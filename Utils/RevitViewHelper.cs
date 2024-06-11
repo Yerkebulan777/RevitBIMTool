@@ -389,8 +389,6 @@ public sealed class RevitViewHelper
 
     public static void CloseAllViews(UIDocument uidoc, View view)
     {
-        uidoc.UpdateAllOpenViews();
-
         IList<UIView> allviews = uidoc.GetOpenUIViews();
 
         if (view.IsValidObject && allviews.Count > 1)
