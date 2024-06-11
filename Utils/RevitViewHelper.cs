@@ -381,7 +381,7 @@ public sealed class RevitViewHelper
             }
             finally
             {
-                Thread.Sleep(1000);
+                uidoc.Document.Regenerate();
             }
         }
     }
