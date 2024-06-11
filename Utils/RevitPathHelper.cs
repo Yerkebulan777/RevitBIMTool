@@ -149,11 +149,12 @@ public static class RevitPathHelper
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.Message);
+                    Log.Error(ex.Message);
                 }
             }
         }
     }
+
 
 
     public static void DeleteExistsFile(string sheetFullPath)
@@ -182,7 +183,23 @@ public static class RevitPathHelper
             }
             finally
             {
-                Log.Debug($"Create directory: {directoryPath}");
+                Log.Debug($"Created directory: {directoryPath}");
+            }
+        }
+    }
+
+
+    public static void DeleteDirectory(string dirPath)
+    {
+        if (Directory.Exists(dirPath))
+        {
+            try
+            {
+                Directory.Delete(dirPath, true);
+            }
+            finally
+            {
+                Log.Debug($"Deleted directory: {dirPath}");
             }
         }
     }

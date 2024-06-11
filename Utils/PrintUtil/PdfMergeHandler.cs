@@ -1,4 +1,5 @@
-﻿using iTextSharp.text.pdf;
+﻿using CommunicationService.Helpers;
+using iTextSharp.text.pdf;
 using RevitBIMTool.Model;
 using Serilog;
 using System.IO;
@@ -29,7 +30,7 @@ internal static class PdfMergeHandler
 
             string filePath = SheetModel.FindFileInDirectory(directory, model.SheetFullName);
 
-            if (!string.IsNullOrEmpty(filePath))
+            if (File.Exists(filePath))
             {
                 PdfReader reader = new(filePath);
                 reader.ConsolidateNamedDestinations();
@@ -68,6 +69,7 @@ internal static class PdfMergeHandler
 
         copy.Close();
         outputDocument.Close();
+        //PathHelper.DeleteDirectory(directory);
     }
 
 

@@ -26,8 +26,9 @@ internal static class ExportToDWGHandler
 
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
         string exportBaseDirectory = ExportHelper.ExportDirectory(revitFilePath, "02_DWG", true);
-        FilteredElementCollector collector = new FilteredElementCollector(doc).OfClass(typeof(ViewSheet)).WhereElementIsNotElementType();
+        string tempDirectory = Environment.GetEnvironmentVariable("TEMP", EnvironmentVariableTarget.User);
         string exportFolder = Path.Combine(exportBaseDirectory, revitFileName);
+        string tempFolder = Path.Combine(tempDirectory, revitFileName);
 
         DWGExportOptions exportOptions = new()
         {
@@ -45,6 +46,8 @@ internal static class ExportToDWGHandler
             MergedViews = true,
         };
 
+        FilteredElementCollector collector = new FilteredElementCollector(doc).OfClass(typeof(ViewSheet)).WhereElementIsNotElementType();
+        
         int sheetCount = collector.GetElementCount();
         Log.Information($"All sheets => {sheetCount}");
 
@@ -84,15 +87,12 @@ internal static class ExportToDWGHandler
                         try
                         {
                             ICollection<ElementId> collection = [sheet.Id];
-                            RevitViewHelper.OpenAndActivateView(uidoc, sheet);
-                            string sheetFullPath = Path.Combine(exportFolder, sheetFullName);
-                            if (!ExportHelper.IsTargetFileUpdated(sheetFullPath, revitFilePath))
+                            string sheetTempPath = Path.Combine(tempFolder, sheetFullName);
+                            if (!ExportHelper.IsTargetFileUpdated(sheetTempPath, revitFilePath))
                             {
-                                if (doc.Export(exportFolder, sheetFullName, collection, exportOptions))
+                                if (doc.Export(tempFolder, sheetFullName, collection, exportOptions))
                                 {
-                                    RevitPathHelper.CheckFile(sheetFullPath, interval);
-                                    RevitViewHelper.CloseAllViews(uidoc, sheet);
-                                    Log.Debug("Printed: " + sheetFullName);
+                                    RevitPathHelper.CheckFile(sheetTempPath, interval);
                                     printCount++;
                                 }
                             }
@@ -111,10 +111,37 @@ internal static class ExportToDWGHandler
                 }
             }
 
+            RevitPathHelper.EnsureDirectory(exportFolder);
+            RevitPathHelper.ClearDirectory(exportFolder);
+
+            foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
+            {
+                Log.Debug($"Sheet name: {model.SheetFullName}");
+                Log.Debug($"Organization group name: {model.OrganizationGroupName}");
+                Log.Debug($"Sheet number: {model.StringNumber} ({model.DigitNumber})");
+
+                string filePath = SheetModel.FindFileInDirectory(tempFolder, model.SheetFullName);
+                string sheetFullPath = Path.Combine(exportFolder, model.SheetFullName);
+
+                if (File.Exists(filePath))
+                {
+                    try
+                    {
+                        File.Copy(filePath, sheetFullPath, true);
+                        File.Delete(filePath);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error($"Failed copy: {ex.Message}");
+                    }
+                }
+            }
+
             _ = sb.AppendLine(exportBaseDirectory);
             _ = sb.AppendLine($"Printed: {printCount} in {sheetCount}");
             ExportHelper.ZipTheFolder(exportFolder, exportBaseDirectory);
             SystemFolderOpener.OpenFolderInExplorerIfNeeded(exportBaseDirectory);
+
         }
 
         return sb.ToString();
