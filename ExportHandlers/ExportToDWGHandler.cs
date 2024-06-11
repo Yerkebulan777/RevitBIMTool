@@ -97,21 +97,17 @@ internal static class ExportToDWGHandler
             try
             {
                 RevitViewHelper.OpenView(uidoc, model.ViewSheet);
-                Log.Verbose("Start export file: " + model.SheetFullName);
                 ICollection<ElementId> collection = [model.ViewSheet.Id];
-
+                Log.Verbose("Start export dwg file: " + model.SheetFullName);
                 if (doc.Export(exportFolder, model.SheetFullName, collection, dwgOptions))
                 {
+                    Log.Verbose("Exported sheet: " + model.SheetFullName);
                     printCount++;
                 }
             }
             catch (Exception ex)
             {
                 Log.Error(ex, ex.Message);
-            }
-            finally
-            {
-                Log.Verbose("Exported sheet: " + model.SheetFullName);
             }
         }
     }

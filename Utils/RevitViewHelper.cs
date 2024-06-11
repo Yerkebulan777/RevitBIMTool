@@ -237,9 +237,9 @@ public sealed class RevitViewHelper
 
     #region Colorize
 
-    //public static void ColorizeElements(Document docunent, Transform trf, ViewElement view, ICollection<ElementId> ids, string styleName)
+    //public static void ColorizeElements(Document docunent, Transform trf, ViewElement sheet, ICollection<ElementId> ids, string styleName)
     //{
-    //    SpatialFieldManager sfm = SpatialFieldManager.GetSpatialFieldManager(view) ?? SpatialFieldManager.CreateSpatialFieldManager(view, 1);
+    //    SpatialFieldManager sfm = SpatialFieldManager.GetSpatialFieldManager(sheet) ?? SpatialFieldManager.CreateSpatialFieldManager(sheet, 1);
     //    AnalysisResultSchema resultSchema = new AnalysisResultSchema(styleName, "Changes analisis");
     //    foreach (ElementId changedId in ids)
     //    {
@@ -285,7 +285,7 @@ public sealed class RevitViewHelper
     //}
 
 
-    //public static void CreateAVFDisplayStyle(Document docunent, ViewElement view, string styleName)
+    //public static void CreateAVFDisplayStyle(Document docunent, ViewElement sheet, string styleName)
     //{
     //    FilteredElementCollector collector = new FilteredElementCollector(docunent).OfClass(typeof(AnalysisDisplayStyle));
 
@@ -301,7 +301,7 @@ public sealed class RevitViewHelper
 
     //        AnalysisDisplayStyle displayStyle = AnalysisDisplayStyle.CreateAnalysisDisplayStyle(docunent, styleName, markerSettings, colorSettings, legendSettings);
 
-    //        view.AnalysisDisplayStyleId = displayStyle.Id;
+    //        sheet.AnalysisDisplayStyleId = displayStyle.Id;
     //    }
     //}
 
@@ -369,19 +369,18 @@ public sealed class RevitViewHelper
     #endregion
 
 
-    public static void ActivateView(UIDocument uidoc, View view)
+    public static void ActivateSheet(UIDocument uidoc, View view)
     {
-        if (view != null && !view.IsTemplate)
+        if (view is ViewSheet sheet)
         {
             try
             {
                 uidoc.ActiveView = view;
                 uidoc.RefreshActiveView();
-                uidoc.Document.Regenerate();
             }
-            finally
+            catch (Exception ex)
             {
-                Log.Debug(uidoc.Document.ActiveView.Name);
+                Log.Error(ex, ex.Message);
             }
         }
     }
@@ -389,7 +388,7 @@ public sealed class RevitViewHelper
 
     public static void OpenView(UIDocument uidoc, View view)
     {
-        ActivateView(uidoc, view);
+        ActivateSheet(uidoc, view);
 
         IList<UIView> allviews = uidoc.GetOpenUIViews();
 
