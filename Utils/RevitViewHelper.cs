@@ -404,7 +404,7 @@ public sealed class RevitViewHelper
                     try
                     {
                         uv.Close();
-                        Log.Debug($"Closed view: {seqview.Name}");
+                        Log.Debug($"Closed view");
                     }
                     finally
                     {

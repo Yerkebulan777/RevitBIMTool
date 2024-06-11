@@ -1,5 +1,6 @@
 ﻿using Autodesk.Revit.DB;
 using RevitBIMTool.Model;
+using RevitBIMTool.Utils.PrintUtil;
 using Serilog;
 using System.IO;
 using Document = Autodesk.Revit.DB.Document;
@@ -9,7 +10,7 @@ using PrintRange = Autodesk.Revit.DB.PrintRange;
 
 
 
-namespace RevitBIMTool.Utils.PrintUtil;
+namespace RevitBIMTool.Utils.ExportPdfUtil;
 internal static class PrintPdfHandler
 {
     private static string defaultPrinterName;
@@ -135,7 +136,7 @@ internal static class PrintPdfHandler
 
     public static List<SheetModel> PrintSheetData(ref Document doc, Dictionary<string, List<SheetModel>> sheetDict, string tempDirectory)
     {
-        List<SheetModel> resultFilePaths = new List<SheetModel>(sheetDict.Values.Count);
+        List<SheetModel> resultFilePaths = new(sheetDict.Values.Count);
 
         List<PrintSetting> printAllSettings = RevitPrinterUtil.GetPrintSettings(doc);
 
@@ -165,7 +166,7 @@ internal static class PrintPdfHandler
                         string sheetFullName = model.SheetFullName;
 
                         string sheetTempPath = Path.Combine(tempDirectory, sheetFullName);
-                        
+
                         if (mutex.WaitOne(Timeout.Infinite))
                         {
                             try
@@ -173,11 +174,14 @@ internal static class PrintPdfHandler
                                 printManager.PrintToFileName = sheetTempPath;
                                 RevitPathHelper.DeleteExistsFile(sheetTempPath);
                                 Log.Verbose("Start export file: " + sheetFullName);
+
                                 if (printManager.SubmitPrint(model.ViewSheet))
                                 {
-                                    RevitPathHelper.IsFileExists(sheetTempPath, interval);
-                                    Log.Verbose("Exported sheet: " + sheetFullName);
-                                    resultFilePaths.Add(model);
+                                    if (RevitPathHelper.IsFileExists(sheetTempPath, interval))
+                                    {
+                                        Log.Verbose("Exported sheet: " + sheetFullName);
+                                        resultFilePaths.Add(model);
+                                    }
                                 }
                             }
                             catch (Exception ex)
