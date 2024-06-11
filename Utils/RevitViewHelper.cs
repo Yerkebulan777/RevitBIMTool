@@ -376,12 +376,12 @@ public sealed class RevitViewHelper
             try
             {
                 uidoc.ActiveView = view;
-                uidoc.RequestViewChange(view);
                 uidoc.RefreshActiveView();
+                uidoc.Document.Regenerate();
             }
             finally
             {
-                uidoc.Document.Regenerate();
+                Log.Debug(uidoc.Document.ActiveView.Name);
             }
         }
     }
