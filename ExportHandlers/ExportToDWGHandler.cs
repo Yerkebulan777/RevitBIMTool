@@ -76,9 +76,7 @@ internal static class ExportToDWGHandler
                     }
                 }
 
-
                 Log.Information($"Total valid sheet count: ({sheetModels.Count})");
-
 
                 foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
                 {
@@ -117,7 +115,6 @@ internal static class ExportToDWGHandler
                     }
                 }
 
-
                 foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
                 {
                     Log.Debug($"Sheet name: {model.SheetFullName}");
@@ -141,7 +138,6 @@ internal static class ExportToDWGHandler
                         }
                     }
                 }
-
 
                 _ = sb.AppendLine(exportBaseDirectory);
                 _ = sb.AppendLine($"Printed: {printCount} in {sheetCount}");
