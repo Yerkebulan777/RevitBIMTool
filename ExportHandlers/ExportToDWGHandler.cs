@@ -115,35 +115,35 @@ internal static class ExportToDWGHandler
                     }
                 }
 
-                foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
-                {
-                    Log.Debug($"Sheet name: {model.SheetFullName}");
-                    Log.Debug($"Organization group name: {model.OrganizationGroupName}");
-                    Log.Debug($"Sheet number: {model.StringNumber} ({model.DigitNumber})");
+                //foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
+                //{
+                //    Log.Debug($"Sheet name: {model.SheetFullName}");
+                //    Log.Debug($"Organization group name: {model.OrganizationGroupName}");
+                //    Log.Debug($"Sheet number: {model.StringNumber} ({model.DigitNumber})");
 
-                    string filePath = SheetModel.FindFileInDirectory(tempFolder, model.SheetFullName);
-                    string sheetFullPath = Path.Combine(exportFolder, model.SheetFullName);
-                    RevitPathHelper.DeleteExistsFile(sheetFullPath);
+                //    string filePath = SheetModel.FindFileInDirectory(tempFolder, model.SheetFullName);
+                //    string sheetFullPath = Path.Combine(exportFolder, model.SheetFullName);
+                //    RevitPathHelper.DeleteExistsFile(sheetFullPath);
 
-                    if (File.Exists(filePath))
-                    {
-                        try
-                        {
-                            File.Copy(filePath, sheetFullPath, true);
-                            File.Delete(filePath);
-                        }
-                        catch (Exception ex)
-                        {
-                            Log.Error($"Failed copy: {ex.Message}");
-                        }
-                    }
-                }
+                //    if (File.Exists(filePath))
+                //    {
+                //        try
+                //        {
+                //            File.Copy(filePath, sheetFullPath, true);
+                //            File.Delete(filePath);
+                //        }
+                //        catch (Exception ex)
+                //        {
+                //            Log.Error($"Failed copy: {ex.Message}");
+                //        }
+                //    }
+                //}
 
                 _ = sb.AppendLine(exportBaseDirectory);
                 _ = sb.AppendLine($"Printed: {printCount} in {sheetCount}");
                 ExportHelper.ZipTheFolder(exportFolder, exportBaseDirectory);
-                SystemFolderOpener.OpenFolderInExplorerIfNeeded(exportBaseDirectory);
-                RevitPathHelper.DeleteDirectory(tempFolder);
+                SystemFolderOpener.OpenFolderInExplorerIfNeeded(tempFolder);
+                //RevitPathHelper.DeleteDirectory(tempFolder);
             }
         }
 
