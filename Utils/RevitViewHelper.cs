@@ -392,10 +392,10 @@ public sealed class RevitViewHelper
     {
         IList<UIView> allviews = uidoc.GetOpenUIViews();
 
+        await OpenAndActivateViewAsync(uidoc, view);
+
         if (view.IsValidObject && allviews.Count > 1)
         {
-            await OpenAndActivateViewAsync(uidoc, view);
-
             foreach (UIView uv in allviews)
             {
                 try
