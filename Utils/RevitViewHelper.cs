@@ -371,15 +371,17 @@ public sealed class RevitViewHelper
 
     public static void OpenAndActivateView(UIDocument uidoc, View view)
     {
-        if (view != null && view.IsValidObject && !view.IsTemplate)
+        if (view != null && !view.IsTemplate)
         {
             try
             {
+                Thread.Sleep(1000);
                 uidoc.ActiveView = view;
+                uidoc.RefreshActiveView();
             }
             finally
             {
-                uidoc.RefreshActiveView();
+                Log.Debug($"Active view: {uidoc.ActiveView.Name}");
             }
         }
     }

@@ -33,12 +33,12 @@ internal static class ExportToDWGHandler
 
         if (!ExportHelper.IsTargetFileUpdated(exportZipPath, revitFilePath))
         {
-            FilteredElementCollector collector = new FilteredElementCollector(doc).OfClass(typeof(ViewSheet)).WhereElementIsNotElementType();
+            FilteredElementCollector collector = new FilteredElementCollector(doc).OfClass(typeof(ViewSheet));
 
             Log.Information("Start export to DWG...");
             int sheetCount = collector.GetElementCount();
-            
-            DWGExportOptions exportOptions = new()
+
+            DWGExportOptions dwgOptions = new()
             {
                 Colors = ExportColorMode.TrueColorPerView,
                 PropOverrides = PropOverrideMode.ByEntity,
@@ -48,8 +48,7 @@ internal static class ExportToDWGHandler
                 FileVersion = ACADVersion.R2007,
                 HideUnreferenceViewTags = true,
                 HideReferencePlane = true,
-                NonplotSuffix = "NPLT",
-                LayerMapping = "AIA",
+                SharedCoords = true,
                 HideScopeBox = true,
                 MergedViews = true,
             };
@@ -67,11 +66,14 @@ internal static class ExportToDWGHandler
                 {
                     if (sheet.CanBePrinted)
                     {
-                        SheetModel model = new(sheet);
-                        model.SetSheetNameWithExtension(doc, "dwg");
-                        if (model.IsValid)
+                        if (!sheet.IsPlaceholder)
                         {
-                            sheetModels.Add(model);
+                            SheetModel model = new(sheet);
+                            model.SetSheetNameWithExtension(doc, "dwg");
+                            if (model.IsValid)
+                            {
+                                sheetModels.Add(model);
+                            }
                         }
                     }
                 }
@@ -96,7 +98,7 @@ internal static class ExportToDWGHandler
 
                             RevitPathHelper.DeleteExistsFile(sheetTempPath);
 
-                            if (doc.Export(tempFolder, sheetFullName, collection, exportOptions))
+                            if (doc.Export(tempFolder, sheetFullName, collection, dwgOptions))
                             {
                                 RevitPathHelper.CheckFile(sheetTempPath, interval);
                                 Log.Verbose("Exported dwg: " + sheetFullName);
