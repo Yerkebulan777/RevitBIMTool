@@ -59,8 +59,6 @@ internal static class ExportToDWGHandler
 
                 RevitPathHelper.EnsureDirectory(tempFolder);
 
-                TimeSpan interval = TimeSpan.FromSeconds(100);
-
                 foreach (ViewSheet sheet in collector.Cast<ViewSheet>())
                 {
                     if (sheet.CanBePrinted)
@@ -96,7 +94,9 @@ internal static class ExportToDWGHandler
                             string sheetTempPath = Path.Combine(tempFolder, sheetFullName);
                             if (doc.Export(tempFolder, sheetFullName, collection, dwgOptions))
                             {
-                                if (RevitPathHelper.IsFileExists(sheetTempPath, interval))
+                                bool fileExists = Task.Run(() => RevitPathHelper.IsFileExistsAsync(sheetTempPath)).Result;
+
+                                if (fileExists)
                                 {
                                     RevitViewHelper.CloseAllViews(uidoc, model.ViewSheet);
                                     Log.Verbose("Exported sheet: " + sheetFullName);

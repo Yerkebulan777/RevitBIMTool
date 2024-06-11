@@ -144,8 +144,6 @@ internal static class PrintPdfHandler
 
         RevitPathHelper.EnsureDirectory(tempDirectory);
 
-        TimeSpan interval = TimeSpan.FromSeconds(100);
-
         foreach (string settingName in sheetDict.Keys)
         {
             PrintSetting printSetting = printAllSettings.FirstOrDefault(set => set.Name == settingName);
@@ -177,7 +175,9 @@ internal static class PrintPdfHandler
 
                                 if (printManager.SubmitPrint(model.ViewSheet))
                                 {
-                                    if (RevitPathHelper.IsFileExists(sheetTempPath, interval))
+                                    bool fileExists = Task.Run(() => RevitPathHelper.IsFileExistsAsync(sheetTempPath)).Result;
+
+                                    if (fileExists)
                                     {
                                         Log.Verbose("Exported sheet: " + sheetFullName);
                                         resultFilePaths.Add(model);
