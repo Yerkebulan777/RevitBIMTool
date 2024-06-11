@@ -90,6 +90,7 @@ internal static class ExportToDWGHandler
             MergedViews = true,
         };
 
+        Document doc = uidoc.Document;
 
         foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
         {
@@ -98,8 +99,8 @@ internal static class ExportToDWGHandler
                 RevitViewHelper.OpenView(uidoc, model.ViewSheet);
                 Log.Verbose("Start export file: " + model.SheetFullName);
                 ICollection<ElementId> collection = [model.ViewSheet.Id];
-                
-                if (uidoc.Document.Export(exportFolder, model.SheetFullName, collection, dwgOptions))
+
+                if (doc.Export(exportFolder, model.SheetFullName, collection, dwgOptions))
                 {
                     printCount++;
                 }
