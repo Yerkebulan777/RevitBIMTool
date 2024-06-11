@@ -2,6 +2,7 @@
 using Autodesk.Revit.UI;
 using RevitBIMTool.Model;
 using RevitBIMTool.Utils;
+using RevitBIMTool.Utils.ExportPdfUtil;
 using RevitBIMTool.Utils.PrintUtil;
 using RevitBIMTool.Utils.SystemUtil;
 using Serilog;

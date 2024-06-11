@@ -162,7 +162,9 @@ internal static class PrintPdfHandler
                     {
                         SheetModel model = sheetModels[idx];
 
-                        string sheetTempPath = Path.Combine(tempDirectory, model.SheetFullName);
+                        string sheetFullName = model.SheetFullName;
+
+                        string sheetTempPath = Path.Combine(tempDirectory, sheetFullName);
                         
                         if (mutex.WaitOne(Timeout.Infinite))
                         {
@@ -170,10 +172,11 @@ internal static class PrintPdfHandler
                             {
                                 printManager.PrintToFileName = sheetTempPath;
                                 RevitPathHelper.DeleteExistsFile(sheetTempPath);
+                                Log.Verbose("Start export file: " + sheetFullName);
                                 if (printManager.SubmitPrint(model.ViewSheet))
                                 {
                                     RevitPathHelper.CheckFile(sheetTempPath, interval);
-                                    Log.Debug(model.SheetFullName);
+                                    Log.Verbose("Exported pdf: " + sheetTempPath);
                                     resultFilePaths.Add(model);
                                 }
                             }

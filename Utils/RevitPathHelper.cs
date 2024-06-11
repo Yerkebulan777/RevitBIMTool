@@ -156,7 +156,6 @@ public static class RevitPathHelper
     }
 
 
-
     public static void DeleteExistsFile(string sheetFullPath)
     {
         if (File.Exists(sheetFullPath))

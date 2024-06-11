@@ -1,18 +1,16 @@
-﻿using CommunicationService.Helpers;
-using iTextSharp.text.pdf;
+﻿using iTextSharp.text.pdf;
 using RevitBIMTool.Model;
 using Serilog;
 using System.IO;
 using Document = iTextSharp.text.Document;
 
 
-namespace RevitBIMTool.Utils.PrintUtil;
+namespace RevitBIMTool.Utils.ExportPdfUtil;
 internal static class PdfMergeHandler
 {
-
     public static void CombinePDFsFromFolder(List<SheetModel> sheetModels, string directory, string outputFullName, bool deleted = true)
     {
-        if (File.Exists(outputFullName)) { File.Delete(outputFullName); }
+        RevitPathHelper.DeleteExistsFile(outputFullName);
 
         using FileStream stream = new(outputFullName, FileMode.Create);
 

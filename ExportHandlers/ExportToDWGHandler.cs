@@ -31,33 +31,34 @@ internal static class ExportToDWGHandler
         string exportFolder = Path.Combine(exportBaseDirectory, revitFileName);
         string tempFolder = Path.Combine(tempDirectory, revitFileName);
 
-        DWGExportOptions exportOptions = new()
-        {
-            Colors = ExportColorMode.TrueColorPerView,
-            PropOverrides = PropOverrideMode.ByEntity,
-            ExportOfSolids = SolidGeometry.ACIS,
-            TextTreatment = TextTreatment.Exact,
-            TargetUnit = ExportUnit.Millimeter,
-            FileVersion = ACADVersion.R2007,
-            HideUnreferenceViewTags = true,
-            HideReferencePlane = true,
-            NonplotSuffix = "NPLT",
-            LayerMapping = "AIA",
-            HideScopeBox = true,
-            MergedViews = true,
-        };
-
         if (!ExportHelper.IsTargetFileUpdated(exportZipPath, revitFilePath))
         {
             FilteredElementCollector collector = new FilteredElementCollector(doc).OfClass(typeof(ViewSheet)).WhereElementIsNotElementType();
 
+            Log.Information("Start export to DWG...");
             int sheetCount = collector.GetElementCount();
-            Log.Information($"All sheets => {sheetCount}");
+            
+            DWGExportOptions exportOptions = new()
+            {
+                Colors = ExportColorMode.TrueColorPerView,
+                PropOverrides = PropOverrideMode.ByEntity,
+                ExportOfSolids = SolidGeometry.ACIS,
+                TextTreatment = TextTreatment.Exact,
+                TargetUnit = ExportUnit.Millimeter,
+                FileVersion = ACADVersion.R2007,
+                HideUnreferenceViewTags = true,
+                HideReferencePlane = true,
+                NonplotSuffix = "NPLT",
+                LayerMapping = "AIA",
+                HideScopeBox = true,
+                MergedViews = true,
+            };
 
             if (sheetCount > 0)
             {
                 List<SheetModel> sheetModels = [];
 
+                RevitPathHelper.EnsureDirectory(tempFolder);
                 RevitPathHelper.EnsureDirectory(exportFolder);
 
                 TimeSpan interval = TimeSpan.FromSeconds(100);
@@ -75,6 +76,8 @@ internal static class ExportToDWGHandler
                     }
                 }
 
+                Log.Information($"Total valid sheet count: ({sheetModels.Count})");
+
                 foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
                 {
                     using Mutex mutex = new(false, "Global\\{{{ExportDWGMutex}}}");
@@ -85,33 +88,32 @@ internal static class ExportToDWGHandler
 
                     if (mutex.WaitOne(Timeout.Infinite))
                     {
-                        if (sheet.AreGraphicsOverridesAllowed())
+                        try
                         {
-                            try
+                            ICollection<ElementId> collection = [sheet.Id];
+                            Log.Verbose("Start export file: " + sheetFullName);
+                            string sheetTempPath = Path.Combine(tempFolder, sheetFullName);
+
+                            RevitPathHelper.DeleteExistsFile(sheetTempPath);
+
+                            if (doc.Export(tempFolder, sheetFullName, collection, exportOptions))
                             {
-                                ICollection<ElementId> collection = [sheet.Id];
-                                string sheetTempPath = Path.Combine(tempFolder, sheetFullName);
-                                if (doc.Export(tempFolder, sheetFullName, collection, exportOptions))
-                                {
-                                    RevitPathHelper.CheckFile(sheetTempPath, interval);
-                                    printCount++;
-                                }
+                                RevitPathHelper.CheckFile(sheetTempPath, interval);
+                                Log.Verbose("Exported dwg: " + sheetFullName);
+                                printCount++;
                             }
-                            catch (Exception ex)
-                            {
-                                string msg = $"Sheet: {sheetFullName} failed: {ex.Message}";
-                                _ = sb.AppendLine(msg);
-                                Log.Error(msg);
-                            }
-                            finally
-                            {
-                                mutex.ReleaseMutex();
-                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _ = sb.AppendLine(ex.Message);
+                            Log.Error(ex, ex.Message);
+                        }
+                        finally
+                        {
+                            mutex.ReleaseMutex();
                         }
                     }
                 }
-
-                RevitPathHelper.EnsureDirectory(exportFolder);
 
                 foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
                 {
@@ -121,6 +123,7 @@ internal static class ExportToDWGHandler
 
                     string filePath = SheetModel.FindFileInDirectory(tempFolder, model.SheetFullName);
                     string sheetFullPath = Path.Combine(exportFolder, model.SheetFullName);
+                    RevitPathHelper.DeleteExistsFile(sheetFullPath);
 
                     if (File.Exists(filePath))
                     {
