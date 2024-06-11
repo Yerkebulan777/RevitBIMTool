@@ -2,6 +2,7 @@
 using Autodesk.Revit.UI;
 using Serilog;
 using System.Diagnostics;
+using System.Windows.Controls;
 using Color = Autodesk.Revit.DB.Color;
 using Level = Autodesk.Revit.DB.Level;
 using View = Autodesk.Revit.DB.View;
@@ -375,13 +376,13 @@ public sealed class RevitViewHelper
         {
             try
             {
-                Thread.Sleep(1000);
                 uidoc.ActiveView = view;
                 uidoc.RefreshActiveView();
+                uidoc.RequestViewChange(view);
             }
             finally
             {
-                Log.Debug($"Active view: {uidoc.ActiveView.Name}");
+                Log.Debug($"Active view: {uidoc.ActiveGraphicalView.Name}");
             }
         }
     }
@@ -397,19 +398,22 @@ public sealed class RevitViewHelper
 
             foreach (UIView uv in allviews)
             {
-                Element elem = uidoc.Document.GetElement(uv.ViewId);
-
-                if (view.Id != uv.ViewId && elem is View seqview)
+                try
                 {
-                    try
+                    if (view.Id == uv.ViewId)
+                    {
+                        uv.ZoomSheetSize();
+                        Thread.Sleep(1000);
+                    }
+                    else
                     {
                         uv.Close();
-                        Log.Debug($"Closed view");
-                    }
-                    finally
-                    {
                         uv.Dispose();
                     }
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, ex.Message);
                 }
             }
         }

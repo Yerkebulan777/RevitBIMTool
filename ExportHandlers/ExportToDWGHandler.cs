@@ -40,14 +40,17 @@ internal static class ExportToDWGHandler
 
             DWGExportOptions dwgOptions = new()
             {
+                ACAPreference = ACAObjectPreference.Geometry,
                 Colors = ExportColorMode.TrueColorPerView,
                 PropOverrides = PropOverrideMode.ByEntity,
                 ExportOfSolids = SolidGeometry.ACIS,
                 TextTreatment = TextTreatment.Exact,
                 TargetUnit = ExportUnit.Millimeter,
                 FileVersion = ACADVersion.R2007,
+                PreserveCoincidentLines = true,
                 HideUnreferenceViewTags = true,
                 HideReferencePlane = true,
+                LayerMapping = "AIA",
                 SharedCoords = true,
                 HideScopeBox = true,
                 MergedViews = true,
