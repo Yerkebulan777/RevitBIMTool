@@ -30,14 +30,13 @@ internal static class ExportToPDFHandler
         string tempFolder = Environment.GetEnvironmentVariable("TEMP", EnvironmentVariableTarget.User);
         string exportFullPath = Path.Combine(exportBaseDirectory, revitFileName + ".pdf");
 
-        tempFolder = Path.Combine(tempFolder, revitFileName);
-        RevitPathHelper.EnsureDirectory(tempFolder);
-        RevitPathHelper.ClearDirectory(tempFolder);
-
-        Log.Information("Start export to PDF...");
-
         if (!ExportHelper.IsTargetFileUpdated(exportFullPath, revitFilePath))
         {
+            tempFolder = Path.Combine(tempFolder, revitFileName);
+            RevitPathHelper.EnsureDirectory(tempFolder);
+
+            Log.Information("Start export to PDF...");
+
             RegistryHelper.ActivateSettingsForPDFCreator(tempFolder);
             PrintPdfHandler.ResetPrintSettings(doc, printerName);
 
@@ -50,17 +49,16 @@ internal static class ExportToPDFHandler
                 throw new ArgumentException(printerName + "is not defined");
             }
 
-            Dictionary<string, List<SheetModel>> sheetData = PrintPdfHandler.GetSheetPrintedData(ref doc);
+            Dictionary<string, List<SheetModel>> sheetData = PrintPdfHandler.GetSheetPrintedData(doc);
             List<SheetModel> sheetModels = PrintPdfHandler.PrintSheetData(ref doc, sheetData, tempFolder);
             Log.Information($"Total valid sheet count: ({sheetModels.Count})");
 
             if (sheetModels.Count > 0)
             {
+                sb.AppendLine(Path.GetDirectoryName(exportBaseDirectory));
                 PdfMergeHandler.CombinePDFsFromFolder(sheetModels, tempFolder, exportFullPath);
                 SystemFolderOpener.OpenFolderInExplorerIfNeeded(exportBaseDirectory);
-                string directory = Path.GetDirectoryName(exportBaseDirectory);
-
-                _ = sb.AppendLine(directory);
+                RevitPathHelper.DeleteDirectory(tempFolder);
             }
 
             return sb.ToString();

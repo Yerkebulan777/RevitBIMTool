@@ -69,7 +69,6 @@ internal static class PdfMergeHandler
 
         copy.Close();
         outputDocument.Close();
-        //PathHelper.DeleteDirectory(directory);
     }
 
 

@@ -50,7 +50,7 @@ internal static class PrintPdfHandler
     }
 
 
-    public static Dictionary<string, List<SheetModel>> GetSheetPrintedData(ref Document doc)
+    public static Dictionary<string, List<SheetModel>> GetSheetPrintedData(Document doc)
     {
         FilteredElementCollector collector = new(doc);
         collector = collector.OfCategory(BuiltInCategory.OST_TitleBlocks);

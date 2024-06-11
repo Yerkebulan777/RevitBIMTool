@@ -27,6 +27,7 @@ internal static class ExportToDWGHandler
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
         string exportBaseDirectory = ExportHelper.ExportDirectory(revitFilePath, "02_DWG", true);
         string tempDirectory = Environment.GetEnvironmentVariable("TEMP", EnvironmentVariableTarget.User);
+        string exportZipPath = Path.Combine(exportBaseDirectory, revitFileName + ".zip");
         string exportFolder = Path.Combine(exportBaseDirectory, revitFileName);
         string tempFolder = Path.Combine(tempDirectory, revitFileName);
 
@@ -46,102 +47,101 @@ internal static class ExportToDWGHandler
             MergedViews = true,
         };
 
-        FilteredElementCollector collector = new FilteredElementCollector(doc).OfClass(typeof(ViewSheet)).WhereElementIsNotElementType();
-        
-        int sheetCount = collector.GetElementCount();
-        Log.Information($"All sheets => {sheetCount}");
-
-        if (sheetCount > 0)
+        if (!ExportHelper.IsTargetFileUpdated(exportZipPath, revitFilePath))
         {
-            List<SheetModel> sheetModels = [];
+            FilteredElementCollector collector = new FilteredElementCollector(doc).OfClass(typeof(ViewSheet)).WhereElementIsNotElementType();
 
-            RevitPathHelper.EnsureDirectory(exportFolder);
+            int sheetCount = collector.GetElementCount();
+            Log.Information($"All sheets => {sheetCount}");
 
-            TimeSpan interval = TimeSpan.FromSeconds(100);
-
-            foreach (ViewSheet sheet in collector.Cast<ViewSheet>())
+            if (sheetCount > 0)
             {
-                if (sheet.CanBePrinted)
+                List<SheetModel> sheetModels = [];
+
+                RevitPathHelper.EnsureDirectory(exportFolder);
+
+                TimeSpan interval = TimeSpan.FromSeconds(100);
+
+                foreach (ViewSheet sheet in collector.Cast<ViewSheet>())
                 {
-                    SheetModel model = new(sheet);
-                    model.SetSheetNameWithExtension(doc, "dwg");
-                    if (model.IsValid)
+                    if (sheet.CanBePrinted)
                     {
-                        sheetModels.Add(model);
+                        SheetModel model = new(sheet);
+                        model.SetSheetNameWithExtension(doc, "dwg");
+                        if (model.IsValid)
+                        {
+                            sheetModels.Add(model);
+                        }
                     }
                 }
-            }
 
-            foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
-            {
-                using Mutex mutex = new(false, "Global\\{{{ExportDWGMutex}}}");
-
-                string sheetFullName = model.SheetFullName;
-
-                ViewSheet sheet = model.ViewSheet;
-
-                if (mutex.WaitOne(Timeout.Infinite))
+                foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
                 {
-                    if (sheet.AreGraphicsOverridesAllowed())
+                    using Mutex mutex = new(false, "Global\\{{{ExportDWGMutex}}}");
+
+                    string sheetFullName = model.SheetFullName;
+
+                    ViewSheet sheet = model.ViewSheet;
+
+                    if (mutex.WaitOne(Timeout.Infinite))
                     {
-                        try
+                        if (sheet.AreGraphicsOverridesAllowed())
                         {
-                            ICollection<ElementId> collection = [sheet.Id];
-                            string sheetTempPath = Path.Combine(tempFolder, sheetFullName);
-                            if (!ExportHelper.IsTargetFileUpdated(sheetTempPath, revitFilePath))
+                            try
                             {
+                                ICollection<ElementId> collection = [sheet.Id];
+                                string sheetTempPath = Path.Combine(tempFolder, sheetFullName);
                                 if (doc.Export(tempFolder, sheetFullName, collection, exportOptions))
                                 {
                                     RevitPathHelper.CheckFile(sheetTempPath, interval);
                                     printCount++;
                                 }
                             }
+                            catch (Exception ex)
+                            {
+                                string msg = $"Sheet: {sheetFullName} failed: {ex.Message}";
+                                _ = sb.AppendLine(msg);
+                                Log.Error(msg);
+                            }
+                            finally
+                            {
+                                mutex.ReleaseMutex();
+                            }
+                        }
+                    }
+                }
+
+                RevitPathHelper.EnsureDirectory(exportFolder);
+
+                foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
+                {
+                    Log.Debug($"Sheet name: {model.SheetFullName}");
+                    Log.Debug($"Organization group name: {model.OrganizationGroupName}");
+                    Log.Debug($"Sheet number: {model.StringNumber} ({model.DigitNumber})");
+
+                    string filePath = SheetModel.FindFileInDirectory(tempFolder, model.SheetFullName);
+                    string sheetFullPath = Path.Combine(exportFolder, model.SheetFullName);
+
+                    if (File.Exists(filePath))
+                    {
+                        try
+                        {
+                            File.Copy(filePath, sheetFullPath, true);
+                            File.Delete(filePath);
                         }
                         catch (Exception ex)
                         {
-                            string msg = $"Sheet: {sheetFullName} failed: {ex.Message}";
-                            _ = sb.AppendLine(msg);
-                            Log.Error(msg);
-                        }
-                        finally
-                        {
-                            mutex.ReleaseMutex();
+                            Log.Error($"Failed copy: {ex.Message}");
                         }
                     }
                 }
+
+                _ = sb.AppendLine(exportBaseDirectory);
+                _ = sb.AppendLine($"Printed: {printCount} in {sheetCount}");
+                ExportHelper.ZipTheFolder(exportFolder, exportBaseDirectory);
+                SystemFolderOpener.OpenFolderInExplorerIfNeeded(exportBaseDirectory);
+                RevitPathHelper.DeleteDirectory(tempFolder);
             }
-
-            RevitPathHelper.EnsureDirectory(exportFolder);
-            RevitPathHelper.ClearDirectory(exportFolder);
-
-            foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
-            {
-                Log.Debug($"Sheet name: {model.SheetFullName}");
-                Log.Debug($"Organization group name: {model.OrganizationGroupName}");
-                Log.Debug($"Sheet number: {model.StringNumber} ({model.DigitNumber})");
-
-                string filePath = SheetModel.FindFileInDirectory(tempFolder, model.SheetFullName);
-                string sheetFullPath = Path.Combine(exportFolder, model.SheetFullName);
-
-                if (File.Exists(filePath))
-                {
-                    try
-                    {
-                        File.Copy(filePath, sheetFullPath, true);
-                        File.Delete(filePath);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error($"Failed copy: {ex.Message}");
-                    }
-                }
-            }
-
-            _ = sb.AppendLine(exportBaseDirectory);
-            _ = sb.AppendLine($"Printed: {printCount} in {sheetCount}");
-            ExportHelper.ZipTheFolder(exportFolder, exportBaseDirectory);
-            SystemFolderOpener.OpenFolderInExplorerIfNeeded(exportBaseDirectory);
-
         }
 
         return sb.ToString();
