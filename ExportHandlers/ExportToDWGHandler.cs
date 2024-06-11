@@ -93,32 +93,24 @@ internal static class ExportToDWGHandler
 
         foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
         {
-            RevitViewHelper.OpenView(uidoc, model.ViewSheet);
-
-            using Mutex mutex = new(false, "Global\\{{{ExportDWGMutex}}}");
-
-            string sheetFullName = model.SheetFullName;
-
-            if (mutex.WaitOne(Timeout.Infinite))
+            try
             {
-                try
+                RevitViewHelper.OpenView(uidoc, model.ViewSheet);
+                Log.Verbose("Start export file: " + model.SheetFullName);
+                ICollection<ElementId> collection = [model.ViewSheet.Id];
+                
+                if (uidoc.Document.Export(exportFolder, model.SheetFullName, collection, dwgOptions))
                 {
-                    Log.Verbose("Start export file: " + sheetFullName);
-                    ICollection<ElementId> collection = [model.ViewSheet.Id];
-                    if (uidoc.Document.Export(exportFolder, sheetFullName, collection, dwgOptions))
-                    {
-                        Log.Verbose("Exported sheet: " + sheetFullName);
-                        printCount++;
-                    }
+                    printCount++;
                 }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, ex.Message);
-                }
-                finally
-                {
-                    mutex.ReleaseMutex();
-                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+            }
+            finally
+            {
+                Log.Verbose("Exported sheet: " + model.SheetFullName);
             }
         }
     }
