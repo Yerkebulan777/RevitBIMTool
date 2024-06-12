@@ -11,7 +11,7 @@ using System.Text;
 namespace RevitBIMTool.ExportHandlers;
 internal static class ExportToDWGHandler
 {
-    private static readonly int printCount = 0;
+    private static string output;
 
     public static string Execute(UIDocument uidoc, string revitFilePath)
     {
@@ -56,8 +56,8 @@ internal static class ExportToDWGHandler
                 ExportHelper.ZipTheFolder(exportFolder, exportBaseDirectory);
                 SystemFolderOpener.OpenFolderInExplorerIfNeeded(exportFolder);
 
-                Log.Information($"Printed: {printCount} in {sheetModels.Count}");
-                _ = sb.AppendLine($"Printed: {printCount} in {sheetModels.Count}");
+                Log.Information(output);
+                _ = sb.AppendLine(output);
             }
         }
 
@@ -85,27 +85,29 @@ internal static class ExportToDWGHandler
         };
 
         using Transaction trx = new(uidoc.Document);
-        if (TransactionStatus.Started == trx.Start("Export to DWG"))
+        if (TransactionStatus.Started == trx.Start("ExportToDWG"))
         {
             try
             {
+                ViewSet viewSet = new ViewSet();
                 Log.Verbose("Start export dwg file: " + revitFileName);
-
                 ICollection<ElementId> collection = sheetModels.Select(model => model.ViewSheet.Id).ToList();
                 if (uidoc.Document.Export(exportFolder, revitFileName, collection, dwgOptions))
                 {
-                    Log.Verbose("Exported all sheets");
+                    output = "Exported all sheets";
                 }
             }
             catch (Exception ex)
             {
-                Log.Error(ex, ex.Message);
+                output = ex.Message;
             }
             finally
             {
-                Thread.Sleep(1000);
                 _ = trx.Commit();
+                Thread.Sleep(1000);
             }
         }
     }
+
+
 }
