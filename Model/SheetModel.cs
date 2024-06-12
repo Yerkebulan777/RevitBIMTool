@@ -10,7 +10,7 @@ using PaperSize = System.Drawing.Printing.PaperSize;
 namespace RevitBIMTool.Model;
 internal class SheetModel : IDisposable
 {
-    public readonly ViewSheet ViewSheet;
+    public ViewSheet ViewSheet { get; }
     public SheetModel(ViewSheet sheet)
     {
         ViewSheet = sheet;
@@ -91,10 +91,10 @@ internal class SheetModel : IDisposable
 
         if (double.TryParse(sheetDigits, out double number) && !groupName.StartsWith("#"))
         {
+            IsValid = !ViewSheet.IsPlaceholder && ViewSheet.CanBePrinted;
             SchedulesRefresh.Start(doc, ViewSheet);
             StringNumber = sheetNumber;
             DigitNumber = number;
-            IsValid = true;
         }
     }
 

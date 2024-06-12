@@ -11,7 +11,7 @@ using System.Text;
 namespace RevitBIMTool.ExportHandlers;
 internal static class ExportToDWGHandler
 {
-    private static int printCount = 0;
+    private static readonly int printCount = 0;
 
     public static string Execute(UIDocument uidoc, string revitFilePath)
     {
@@ -44,17 +44,11 @@ internal static class ExportToDWGHandler
 
                 foreach (ViewSheet sheet in collector.Cast<ViewSheet>())
                 {
-                    if (sheet.CanBePrinted)
+                    SheetModel model = new(sheet);
+                    model.SetSheetNameWithExtension(doc, "dwg");
+                    if (model.IsValid)
                     {
-                        if (!sheet.IsPlaceholder)
-                        {
-                            SheetModel model = new(sheet);
-                            model.SetSheetNameWithExtension(doc, "dwg");
-                            if (model.IsValid)
-                            {
-                                sheetModels.Add(model);
-                            }
-                        }
+                        sheetModels.Add(model);
                     }
                 }
 
@@ -90,24 +84,28 @@ internal static class ExportToDWGHandler
             MergedViews = true,
         };
 
-        try
+        using Transaction trx = new(uidoc.Document);
+        if (TransactionStatus.Started == trx.Start("Export to DWG"))
         {
-            Log.Verbose("Start export dwg file: " + revitFileName);
-            ICollection<ElementId> collection = SheetModel.SortSheetModels(sheetModels).Select(model => model.ViewSheet.Id).ToList();
-            if (uidoc.Document.Export(exportFolder, revitFileName, collection, dwgOptions))
+            try
             {
-                Log.Verbose("Exported all sheets");
+                Log.Verbose("Start export dwg file: " + revitFileName);
+
+                ICollection<ElementId> collection = sheetModels.Select(model => model.ViewSheet.Id).ToList();
+                if (uidoc.Document.Export(exportFolder, revitFileName, collection, dwgOptions))
+                {
+                    Log.Verbose("Exported all sheets");
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+            }
+            finally
+            {
+                Thread.Sleep(1000);
+                _ = trx.Commit();
             }
         }
-        catch (Exception ex)
-        {
-            Log.Error(ex, ex.Message);
-        }
-        finally
-        {
-            Thread.Sleep(1000);
-        }
     }
-
-
 }
