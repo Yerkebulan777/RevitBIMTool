@@ -109,6 +109,10 @@ internal static class ExportToDWGHandler
             {
                 Log.Error(ex, ex.Message);
             }
+            finally
+            {
+                Thread.Sleep(1000);
+            }
         }
     }
 }
