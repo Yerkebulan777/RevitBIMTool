@@ -16,7 +16,6 @@ public sealed class AutomationHandler
     private const int waitTimeout = 1000;
     private readonly UIApplication uiapp;
     private StringBuilder builder = new();
-    private static readonly object syncLocker = new();
 
 
     public AutomationHandler(UIApplication application)
@@ -36,14 +35,11 @@ public sealed class AutomationHandler
             Log.Information($"Run file: {Path.GetFileName(sourceFilePath)}");
             string output = RunDocumentAction(uiapp, taskRequest, RunTaskByNumber);
 
-            lock (syncLocker)
-            {
-                TimeSpan elapsedTime = DateTime.Now - startedTime;
-                string fileName = Path.GetFileNameWithoutExtension(sourceFilePath);
-                string formattedTime = elapsedTime.ToString(@"h\:mm\:ss");
-                _ = builder.AppendLine($"{fileName}  [{formattedTime}]");
-                _ = builder.AppendLine(output);
-            }
+            TimeSpan elapsedTime = DateTime.Now - startedTime;
+            string fileName = Path.GetFileNameWithoutExtension(sourceFilePath);
+            string formattedTime = elapsedTime.ToString(@"h\:mm\:ss");
+            _ = builder.AppendLine($"{fileName}  [{formattedTime}]");
+            _ = builder.AppendLine(output);
         }
 
         return builder.ToString();
@@ -53,7 +49,7 @@ public sealed class AutomationHandler
     private string RunTaskByNumber(UIDocument uidoc, TaskRequest taskModel)
     {
         StringBuilder sb = new();
- 
+
         RevitLinkHelper.CheckAndRemoveUnloadedLinks(uidoc.Document);
 
         Log.Information($"Command number: {taskModel.CommandNumber}");
@@ -119,28 +115,25 @@ public sealed class AutomationHandler
 
         if (uidoc != null)
         {
-            lock (syncLocker)
+            try
             {
-                try
+                if (document is null)
                 {
-                    if (document is null)
-                    {
-                        result = true;
-                    }
-                    else if (document.IsValidObject)
-                    {
-                        result = document.Close(false);
-                        Log.Warning("Start purge api objects ...");
-                        uiapp.Application.PurgeReleasedAPIObjects();
-                    }
+                    result = true;
                 }
-                finally
+                else if (document.IsValidObject)
                 {
-                    Thread.Sleep(1000);
-                    document?.Dispose();
-                    document = uidoc.Document;
-                    Log.Information("Closed document");
+                    result = document.Close(false);
+                    Log.Warning("Start purge api objects ...");
+                    uiapp.Application.PurgeReleasedAPIObjects();
                 }
+            }
+            finally
+            {
+                Thread.Sleep(1000);
+                document?.Dispose();
+                document = uidoc.Document;
+                Log.Information("Closed document");
             }
         }
 
@@ -161,23 +154,18 @@ public sealed class AutomationHandler
 
     private string WithOpeningErrorReporting(Func<string> documentOpeningAction)
     {
-        string result = "Main thread context error";
-        if (Monitor.TryEnter(syncLocker, waitTimeout))
+        string result;
+
+        try
         {
-            try
-            {
-                result = documentOpeningAction();
-            }
-            catch (Exception ex)
-            {
-                result = $"\nError: {ex.Source} {ex.Message}\n{ex.StackTrace}";
-                Log.Error(result);
-            }
-            finally
-            {
-                Monitor.Exit(syncLocker);
-            }
+            result = documentOpeningAction();
         }
+        catch (Exception ex)
+        {
+            result = $"\nError: {ex.Source} {ex.Message}\n{ex.StackTrace}";
+            Log.Error(result);
+        }
+
         return result;
     }
 
