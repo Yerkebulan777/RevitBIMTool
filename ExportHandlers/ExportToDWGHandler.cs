@@ -13,7 +13,7 @@ internal static class ExportToDWGHandler
 {
     private static int printCount = 0;
 
-    public static string ExportToDWG(UIDocument uidoc, string revitFilePath)
+    public static string Execute(UIDocument uidoc, string revitFilePath)
     {
         StringBuilder sb = new();
 
@@ -58,7 +58,7 @@ internal static class ExportToDWGHandler
                     }
                 }
 
-                ExecuteExportToDWG(uidoc, exportFolder, sheetModels);
+                ExportToDWG(uidoc, revitFileName, exportFolder, sheetModels);
                 ExportHelper.ZipTheFolder(exportFolder, exportBaseDirectory);
                 SystemFolderOpener.OpenFolderInExplorerIfNeeded(exportFolder);
 
@@ -71,7 +71,7 @@ internal static class ExportToDWGHandler
     }
 
 
-    private static void ExecuteExportToDWG(UIDocument uidoc, string exportFolder, List<SheetModel> sheetModels)
+    private static void ExportToDWG(UIDocument uidoc, string revitFileName, string exportFolder, List<SheetModel> sheetModels)
     {
         DWGExportOptions dwgOptions = new()
         {
@@ -90,29 +90,22 @@ internal static class ExportToDWGHandler
             MergedViews = true,
         };
 
-        Document doc = uidoc.Document;
-
-        foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
+        try
         {
-            try
+            Log.Verbose("Start export dwg file: " + revitFileName);
+            ICollection<ElementId> collection = SheetModel.SortSheetModels(sheetModels).Select(model => model.ViewSheet.Id).ToList();
+            if (uidoc.Document.Export(exportFolder, revitFileName, collection, dwgOptions))
             {
-                RevitViewHelper.OpenView(uidoc, model.ViewSheet);
-                ICollection<ElementId> collection = [model.ViewSheet.Id];
-                Log.Verbose("Start export dwg file: " + model.SheetFullName);
-                if (doc.Export(exportFolder, model.SheetFullName, collection, dwgOptions))
-                {
-                    Log.Verbose("Exported sheet: " + model.SheetFullName);
-                    printCount++;
-                }
+                Log.Verbose("Exported all sheets");
             }
-            catch (Exception ex)
-            {
-                Log.Error(ex, ex.Message);
-            }
-            finally
-            {
-                Thread.Sleep(1000);
-            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, ex.Message);
+        }
+        finally
+        {
+            Thread.Sleep(1000);
         }
     }
 }

@@ -27,7 +27,7 @@ internal sealed class ExportToDWGCommand : IExternalCommand, IExternalCommandAva
         try
         {
             string revitFilePath = RevitPathHelper.GetRevitFilePath(doc);
-            message = ExportToDWGHandler.ExportToDWG(uidoc, revitFilePath);
+            message = ExportToDWGHandler.Execute(uidoc, revitFilePath);
         }
         catch (Exception ex)
         {
