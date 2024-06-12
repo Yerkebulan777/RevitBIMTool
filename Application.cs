@@ -11,7 +11,7 @@ using System.IO;
 namespace RevitBIMTool;
 
 [UsedImplicitly]
-internal sealed class Application : IExternalDBApplication
+internal sealed class Application : IExternalApplication
 {
     private RevitExternalEventHandler externalEventHandler;
     private static readonly string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
