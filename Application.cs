@@ -1,3 +1,5 @@
+using Autodesk.Revit.ApplicationServices;
+using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using CommunicationService.Models;
 using RevitBIMTool.Core;
@@ -9,11 +11,14 @@ using System.IO;
 namespace RevitBIMTool;
 
 [UsedImplicitly]
-internal sealed class Application : IExternalApplication
+internal sealed class Application : IExternalDBApplication
 {
     private RevitExternalEventHandler externalEventHandler;
     private static readonly string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
     private static readonly string logerPath = Path.Combine(docPath, "RevitBIMToolLog.txt");
+
+
+    #region IExternalApplication
 
 
     public Result OnStartup(UIControlledApplication application)
@@ -47,7 +52,6 @@ internal sealed class Application : IExternalApplication
                 }
             }
         }
-
         return Result.Succeeded;
     }
 
@@ -57,4 +61,55 @@ internal sealed class Application : IExternalApplication
         Log.CloseAndFlush();
         return Result.Succeeded;
     }
+
+
+    #endregion
+
+
+    #region IExternalDBApplication
+
+    public ExternalDBApplicationResult OnStartup(ControlledApplication application)
+    {
+        try
+        {
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Verbose()
+                .WriteTo.File(logerPath)
+                .CreateLogger();
+        }
+        catch (Exception ex)
+        {
+            System.Windows.Clipboard.SetText(ex.Message);
+            application.WriteJournalComment(ex.Message, true);
+            return ExternalDBApplicationResult.Failed;
+        }
+        finally
+        {
+            string versionNumber = application.VersionNumber;
+
+            if (TaskRequestContainer.Instance.ValidateTaskData(versionNumber))
+            {
+                Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+                externalEventHandler = new RevitExternalEventHandler(versionNumber);
+                if (ExternalEventRequest.Denied != externalEventHandler.Raise())
+                {
+                    Log.Information($"Revit {versionNumber} handler started...");
+                }
+            }
+        }
+
+        return ExternalDBApplicationResult.Succeeded;
+    }
+
+
+    public ExternalDBApplicationResult OnShutdown(ControlledApplication application)
+    {
+        Log.CloseAndFlush();
+
+        return ExternalDBApplicationResult.Succeeded;
+    }
+
+    #endregion
+
+
 }
