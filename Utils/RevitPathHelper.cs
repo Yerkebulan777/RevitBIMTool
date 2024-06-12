@@ -204,31 +204,5 @@ public static class RevitPathHelper
     }
 
 
-    public static async Task<bool> IsFileExistsAsync(string path, int maximum = 100)
-    {
-        int counter = 0;
-        const int checkInterval = 1000;
-        while (counter < maximum)
-        {
-            counter++;
-
-            await Task.Delay(checkInterval);
-
-            if (File.Exists(path))
-            {
-                FileInfo fileInfo = new(path);
-                long size = fileInfo.Length;
-                if (size > 0)
-                {
-                    Log.Debug($"Size: {size} [{counter}]");
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-
 
 }
