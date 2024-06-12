@@ -52,6 +52,7 @@ internal static class ExportHelper
 
             bool isUpdated = timeDifference.TotalSeconds > minimum;
             bool isOutdated = timeDifference.TotalDays > minimum;
+
             bool isModifiedValid = isUpdated && !isOutdated;
             bool isFileSizeValid = targetFileSize > minimum;
 
@@ -62,7 +63,6 @@ internal static class ExportHelper
             }
 
             RevitPathHelper.DeleteExistsFile(targetFilePath);
-
         }
 
         return false;
