@@ -85,6 +85,7 @@ internal static class ExportToDWGHandler
         };
 
         using Transaction trx = new(uidoc.Document);
+
         if (TransactionStatus.Started == trx.Start("ExportToDWG"))
         {
             try

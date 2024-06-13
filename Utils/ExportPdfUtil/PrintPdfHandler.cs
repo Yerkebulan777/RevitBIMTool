@@ -135,64 +135,70 @@ internal static class PrintPdfHandler
 
     public static List<SheetModel> PrintSheetData(ref Document doc, Dictionary<string, List<SheetModel>> sheetDict, string tempDirectory)
     {
-        List<SheetModel> resultFilePaths = new(sheetDict.Values.Count);
-
         List<PrintSetting> printAllSettings = RevitPrinterUtil.GetPrintSettings(doc);
 
-        PrintManager printManager = doc.PrintManager;
+        List<SheetModel> resultFilePaths = new(sheetDict.Values.Count);
+
+        using Mutex mutex = new(false, "Global\\{{{ExportToPDF}}}");
 
         RevitPathHelper.EnsureDirectory(tempDirectory);
 
-        foreach (string settingName in sheetDict.Keys)
+        using Transaction trx = new(doc, "ExportToPDF");
+
+        if (TransactionStatus.Started == trx.Start())
         {
-            PrintSetting printSetting = printAllSettings.FirstOrDefault(set => set.Name == settingName);
-
-            if (printSetting != null && sheetDict.TryGetValue(settingName, out List<SheetModel> sheetModels))
+            if (mutex.WaitOne(Timeout.Infinite))
             {
-                printManager.PrintSetup.CurrentPrintSetting = printSetting;
-
-                using Transaction trx = new(doc, settingName);
-
-                if (TransactionStatus.Started == trx.Start())
+                try
                 {
-                    try
+                    PrintManager printManager = doc.PrintManager;
+
+                    foreach (string settingName in sheetDict.Keys)
                     {
-                        printManager.Apply(); // Set print settings
+                        PrintSetting printSetting = printAllSettings.FirstOrDefault(set => set.Name == settingName);
 
-                        for (int idx = 0; idx < sheetModels.Count; idx++)
+                        if (printSetting != null && sheetDict.TryGetValue(settingName, out List<SheetModel> sheetModels))
                         {
-                            SheetModel model = sheetModels[idx];
+                            printManager.PrintSetup.CurrentPrintSetting = printSetting;
 
-                            string sheetFullName = model.SheetFullName;
+                            printManager.Apply(); // Set print settings
 
-                            string sheetTempPath = Path.Combine(tempDirectory, sheetFullName);
-
-                            printManager.PrintToFileName = sheetTempPath;
-
-                            RevitPathHelper.DeleteExistsFile(sheetTempPath);
-
-                            Log.Verbose("Start export file: " + sheetFullName);
-
-                            if (printManager.SubmitPrint(model.ViewSheet))
+                            for (int idx = 0; idx < sheetModels.Count; idx++)
                             {
-                                Log.Verbose("Exported sheet: " + sheetFullName);
+                                SheetModel model = sheetModels[idx];
 
-                                resultFilePaths.Add(model);
+                                string sheetFullName = model.SheetFullName;
+
+                                string sheetTempPath = Path.Combine(tempDirectory, sheetFullName);
+
+                                printManager.PrintToFileName = sheetTempPath;
+
+                                RevitPathHelper.DeleteExistsFile(sheetTempPath);
+
+                                if (printManager.SubmitPrint(model.ViewSheet))
+                                {
+                                    Log.Verbose($"Printed: {sheetFullName}");
+
+                                    resultFilePaths.Add(model);
+                                }
                             }
                         }
                     }
-                    catch (Exception ex)
+                }
+                catch (Exception ex)
+                {
+                    _ = trx.RollBack();
+                    Log.Error(ex, ex.Message);
+                }
+                finally
+                {
+                    mutex.ReleaseMutex();
+                    if (!trx.HasEnded())
                     {
-                        Log.Error(ex, ex.Message);
-                    }
-                    finally
-                    {
-                        _ = trx.RollBack();
+                        _ = trx.Commit();
                     }
                 }
-
             }
-
         }
 
         return resultFilePaths;
