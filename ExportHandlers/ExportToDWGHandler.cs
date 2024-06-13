@@ -25,16 +25,16 @@ internal static class ExportToDWGHandler
         }
 
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
-        string exportBaseDirectory = ExportHelper.ExportDirectory(revitFilePath, "02_DWG", true);
-        string exportZipPath = Path.Combine(exportBaseDirectory, revitFileName + ".zip");
-        string exportFolder = Path.Combine(exportBaseDirectory, revitFileName);
+        string baseDwgDirectory = ExportHelper.ExportDirectory(revitFilePath, "02_DWG", true);
+        string exportZipPath = Path.Combine(baseDwgDirectory, revitFileName + ".zip");
+        string exportFolder = Path.Combine(baseDwgDirectory, revitFileName);
 
         if (!ExportHelper.IsTargetFileUpdated(exportZipPath, revitFilePath))
         {
             FilteredElementCollector collector = new FilteredElementCollector(doc).OfClass(typeof(ViewSheet));
 
             Log.Information("Start export to DWG...");
-            _ = sb.AppendLine(exportBaseDirectory);
+            _ = sb.AppendLine(baseDwgDirectory);
 
             if (collector.GetElementCount() > 0)
             {
@@ -53,8 +53,8 @@ internal static class ExportToDWGHandler
                 }
 
                 ExportToDWG(uidoc, revitFileName, exportFolder, sheetModels);
-                ExportHelper.ZipTheFolder(exportFolder, exportBaseDirectory);
-                SystemFolderOpener.OpenFolderInExplorerIfNeeded(exportFolder);
+                ExportHelper.CreateZipTheFolder(exportFolder, baseDwgDirectory);
+                SystemFolderOpener.OpenFolderInExplorerIfNeeded(baseDwgDirectory);
 
                 Log.Information(output);
                 _ = sb.AppendLine(output);

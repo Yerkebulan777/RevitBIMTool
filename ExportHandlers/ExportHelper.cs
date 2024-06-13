@@ -81,7 +81,7 @@ internal static class ExportHelper
     }
 
 
-    public static void ZipTheFolder(string sourceDir, string targetDir)
+    public static void CreateZipTheFolder(string sourceDir, string targetDir)
     {
         string filename = Path.GetFileNameWithoutExtension(sourceDir);
         string destinationPath = Path.Combine(targetDir, filename + ".zip");
