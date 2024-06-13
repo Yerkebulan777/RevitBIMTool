@@ -102,39 +102,55 @@ internal static class ExportToDWGHandler
 
         string sheetName = string.Empty;
 
-        using Transaction trx = new(doc, "ExportToCAD");
+        int counter = sheetModels.Count;
 
-        if (TransactionStatus.Started == trx.Start())
+        if (counter > 0)
         {
-            try
-            {
-                foreach (SheetModel sheetModel in sheetModels)
-                {
-                    sheetName = sheetModel.SheetName;
-                    ViewSheet sheet = sheetModel.ViewSheet;
-                    RevitViewHelper.OpenSheet(uidoc, sheet);
-                    ICollection<ElementId> elementIds = [sheet.Id];
+            sheetModels = SheetModel.SortSheetModels(sheetModels);
 
-                    if (doc.Export(exportFolder, sheetName, elementIds, dxfOptions))
+            using Transaction trx = new(doc, "ExportToCAD");
+
+            if (TransactionStatus.Started == trx.Start())
+            {
+                try
+                {
+                    ViewSet viewSet = new();
+
+                    for (int idx = 0; idx < counter; idx++)
                     {
-                        Log.Verbose($"Exported sheet {sheetName} to DXF");
+                        SheetModel sheet = sheetModels[idx];
+                        _ = viewSet.Insert(sheet.ViewSheet);
                     }
 
-                    if (doc.Export(exportFolder, sheetName, elementIds, dwgOptions))
+                    if (doc.Export(exportFolder, sheetName, viewSet, new DWFExportOptions()))
                     {
-                        Log.Verbose($"Exported sheet {sheetName} to DWG");
+                        Log.Verbose($"Exported {Path.GetFileName(exportFolder)} to DWF");
+                    }
+
+                    foreach (SheetModel sheetModel in sheetModels)
+                    {
+                        sheetName = sheetModel.SheetName;
+                        ViewSheet sheet = sheetModel.ViewSheet;
+                        RevitViewHelper.OpenSheet(uidoc, sheet);
+                        ICollection<ElementId> elementIds = [sheet.Id];
+
+                        if (doc.Export(exportFolder, sheetName, elementIds, dwgOptions))
+                        {
+                            Log.Verbose($"Exported sheet {sheetName} to DWG");
+                        }
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, $"Failed {sheetName} {ex.Message}");
-            }
-            finally
-            {
-                _ = trx.Commit();
+                catch (Exception ex)
+                {
+                    Log.Error(ex, $"Failed {sheetName} {ex.Message}");
+                }
+                finally
+                {
+                    _ = trx.Commit();
+                }
             }
         }
+
     }
 
 
