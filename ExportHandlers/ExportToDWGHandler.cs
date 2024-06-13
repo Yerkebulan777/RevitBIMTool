@@ -13,6 +13,24 @@ internal static class ExportToDWGHandler
 {
     private static string output;
 
+    private static DWGExportOptions dwgOptions = new()
+    {
+        ACAPreference = ACAObjectPreference.Geometry,
+        Colors = ExportColorMode.TrueColorPerView,
+        PropOverrides = PropOverrideMode.ByEntity,
+        ExportOfSolids = SolidGeometry.ACIS,
+        TextTreatment = TextTreatment.Exact,
+        TargetUnit = ExportUnit.Millimeter,
+        FileVersion = ACADVersion.R2007,
+        PreserveCoincidentLines = true,
+        HideUnreferenceViewTags = true,
+        HideReferencePlane = true,
+        SharedCoords = true,
+        HideScopeBox = true,
+        MergedViews = true,
+    };
+
+
     public static string Execute(UIDocument uidoc, string revitFilePath)
     {
         StringBuilder sb = new();
@@ -45,14 +63,14 @@ internal static class ExportToDWGHandler
                 foreach (ViewSheet sheet in collector.Cast<ViewSheet>())
                 {
                     SheetModel model = new(sheet);
-                    model.SetSheetNameWithExtension(doc, "dwg");
+                    model.SetSheetName(doc, revitFileName);
                     if (model.IsValid)
                     {
                         sheetModels.Add(model);
                     }
                 }
 
-                ExportToDWG(uidoc, revitFileName, exportFolder, sheetModels);
+                ExportToDWG(uidoc, exportFolder, sheetModels);
                 ExportHelper.CreateZipTheFolder(exportFolder, baseDwgDirectory);
                 SystemFolderOpener.OpenFolderInExplorerIfNeeded(baseDwgDirectory);
 
@@ -65,37 +83,29 @@ internal static class ExportToDWGHandler
     }
 
 
-    private static void ExportToDWG(UIDocument uidoc, string revitFileName, string exportFolder, List<SheetModel> sheetModels)
+    private static void ExportToDWG(UIDocument uidoc, string exportFolder, List<SheetModel> sheetModels)
     {
-        DWGExportOptions dwgOptions = new()
-        {
-            ACAPreference = ACAObjectPreference.Geometry,
-            Colors = ExportColorMode.TrueColorPerView,
-            PropOverrides = PropOverrideMode.ByEntity,
-            ExportOfSolids = SolidGeometry.ACIS,
-            TextTreatment = TextTreatment.Exact,
-            TargetUnit = ExportUnit.Millimeter,
-            FileVersion = ACADVersion.R2007,
-            PreserveCoincidentLines = true,
-            HideUnreferenceViewTags = true,
-            HideReferencePlane = true,
-            SharedCoords = true,
-            HideScopeBox = true,
-            MergedViews = true,
-        };
+        var doc = uidoc.Document;
 
-        using Transaction trx = new(uidoc.Document);
+        using Transaction trx = new(doc, "ExportToDWG");
 
-        if (TransactionStatus.Started == trx.Start("ExportToDWG"))
+        if (TransactionStatus.Started == trx.Start())
         {
             try
             {
-                ViewSet viewSet = new ViewSet();
-                Log.Verbose("Start export dwg file: " + revitFileName);
-                ICollection<ElementId> collection = sheetModels.Select(model => model.ViewSheet.Id).ToList();
-                if (uidoc.Document.Export(exportFolder, revitFileName, collection, dwgOptions))
+                foreach (SheetModel sheetModel in sheetModels)
                 {
-                    output = "Exported all sheets";
+                    ICollection<ElementId> elementIds = new List<ElementId>(){ sheetModel.ViewSheet.Id };
+                    string revitFileName = sheetModel.ViewSheet.Name; // Имя файла может быть основано на имени листа
+                    string withoutExtension = Path.GetFileNameWithoutExtension(revitFileName);
+                    string directoryName = Path.Combine(exportFolder, withoutExtension);
+
+                    Log.Verbose("Start export dwg file: " + revitFileName);
+
+                    if (doc.Export(directoryName, withoutExtension, elementIds, dwgOptions))
+                    {
+                        output = "Exported sheet: " + revitFileName;
+                    }
                 }
             }
             catch (Exception ex)
@@ -109,6 +119,8 @@ internal static class ExportToDWGHandler
             }
         }
     }
+
+
 
 
 }

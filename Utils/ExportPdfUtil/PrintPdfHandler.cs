@@ -51,7 +51,7 @@ internal static class PrintPdfHandler
     }
 
 
-    public static Dictionary<string, List<SheetModel>> GetSheetPrintedData(Document doc)
+    public static Dictionary<string, List<SheetModel>> GetSheetPrintedData(Document doc, string revitFileName)
     {
         FilteredElementCollector collector = new(doc);
         collector = collector.OfCategory(BuiltInCategory.OST_TitleBlocks);
@@ -90,7 +90,7 @@ internal static class PrintPdfHandler
 
                         SheetModel model = new(viewSheet, papeSize, orientType);
 
-                        model.SetSheetNameWithExtension(doc, "pdf");
+                        model.SetSheetName(doc, revitFileName, "pdf");
 
                         if (model.IsValid)
                         {
@@ -167,7 +167,7 @@ internal static class PrintPdfHandler
                             {
                                 SheetModel model = sheetModels[idx];
 
-                                string sheetFullName = model.SheetFullName;
+                                string sheetFullName = model.SheetName;
 
                                 string sheetTempPath = Path.Combine(tempDirectory, sheetFullName);
 

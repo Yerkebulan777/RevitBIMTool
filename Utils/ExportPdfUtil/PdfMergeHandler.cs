@@ -22,11 +22,11 @@ internal static class PdfMergeHandler
 
         foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
         {
-            Log.Debug($"Sheet name: {model.SheetFullName}");
+            Log.Debug($"Sheet name: {model.SheetName}");
             Log.Debug($"Organization group name: {model.OrganizationGroupName}");
             Log.Debug($"Sheet number: {model.StringNumber} ({model.DigitNumber})");
 
-            string filePath = SheetModel.FindFileInDirectory(directory, model.SheetFullName);
+            string filePath = SheetModel.FindFileInDirectory(directory, model.SheetName);
 
             if (File.Exists(filePath))
             {

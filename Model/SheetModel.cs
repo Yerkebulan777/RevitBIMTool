@@ -1,5 +1,4 @@
 ﻿using Autodesk.Revit.DB;
-using RevitBIMTool.ExportHandlers;
 using RevitBIMTool.Utils;
 using System.IO;
 using System.Text;
@@ -27,9 +26,9 @@ internal class SheetModel : IDisposable
 
 
     public bool IsValid { get; private set; }
+    public string SheetName { get; private set; }
     public double DigitNumber { get; private set; }
     public string StringNumber { get; private set; }
-    public string SheetFullName { get; private set; }
     public string PaperName => SheetPapeSize.PaperName;
     public object OrganizationGroupName { get; internal set; }
 
@@ -70,15 +69,15 @@ internal class SheetModel : IDisposable
     }
 
 
-    public void SetSheetNameWithExtension(Document doc, string extension)
+    public void SetSheetName(Document doc, string title, string extension = null)
     {
         string sheetNumber = GetSheetNumber(ViewSheet);
         string groupName = GetOrganizationGroupName(doc, ViewSheet);
         string sheetName = StringHelper.ReplaceInvalidChars(ViewSheet?.Name);
 
-        SheetFullName = string.IsNullOrWhiteSpace(groupName)
-            ? StringHelper.NormalizeLength($"Лист - {sheetNumber} - {sheetName}.{extension}")
-            : StringHelper.NormalizeLength($"Лист - {groupName}-{sheetNumber} - {sheetName}.{extension}");
+        sheetName = string.IsNullOrWhiteSpace(groupName)
+            ? StringHelper.NormalizeLength($"{title} - Лист - {sheetNumber} - {sheetName}")
+            : StringHelper.NormalizeLength($"{title} - Лист - {groupName}-{sheetNumber} - {sheetName}");
 
         OrganizationGroupName = groupName;
 
@@ -89,10 +88,11 @@ internal class SheetModel : IDisposable
 
         string sheetDigits = Regex.Replace(sheetNumber, @"[^0-9.]", string.Empty);
 
+        SheetName = string.IsNullOrEmpty(extension) ? sheetName : $"{sheetName}.{extension}";
+
         if (double.TryParse(sheetDigits, out double number) && !groupName.StartsWith("#"))
         {
             IsValid = !ViewSheet.IsPlaceholder && ViewSheet.CanBePrinted;
-            SchedulesRefresh.Start(doc, ViewSheet);
             StringNumber = sheetNumber;
             DigitNumber = number;
         }

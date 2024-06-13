@@ -369,36 +369,42 @@ public sealed class RevitViewHelper
     #endregion
 
 
-    public static void ActivateSheet(UIDocument uidoc, View view)
+    public static void ActivateSheet(UIDocument uidoc, ViewSheet sheet)
     {
-        if (view is ViewSheet sheet)
+        ICollection<ElementId> vportIds = sheet.GetAllViewports();
+
+        if (0 < vportIds.Count)
         {
             try
             {
-                uidoc.ActiveView = view;
+                uidoc.ActiveView = sheet;
                 uidoc.RefreshActiveView();
             }
             catch (Exception ex)
             {
                 Log.Error(ex, ex.Message);
             }
+            finally
+            {
+                uidoc.Selection.SetElementIds(vportIds);
+            }
         }
     }
 
 
-    public static void OpenView(UIDocument uidoc, View view)
+    public static void OpenSheet(UIDocument uidoc, ViewSheet sheet)
     {
-        ActivateSheet(uidoc, view);
+        ActivateSheet(uidoc, sheet);
 
         IList<UIView> allviews = uidoc.GetOpenUIViews();
 
-        if (view.IsValidObject && allviews.Count > 1)
+        if (sheet.IsValidObject && allviews.Count > 1)
         {
             foreach (UIView uv in allviews)
             {
                 try
                 {
-                    if (view.Id == uv.ViewId)
+                    if (sheet.Id == uv.ViewId)
                     {
                         uv.ZoomSheetSize();
                     }
