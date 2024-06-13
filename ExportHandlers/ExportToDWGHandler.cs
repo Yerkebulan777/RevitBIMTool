@@ -63,24 +63,28 @@ internal static class ExportToDWGHandler
 
         if (!ExportHelper.IsTargetFileUpdated(exportZipPath, revitFilePath))
         {
-            FilteredElementCollector collector = new FilteredElementCollector(doc).OfClass(typeof(ViewSheet));
+            RevitPathHelper.EnsureDirectory(exportFolder);
+            RevitPathHelper.ClearDirectory(exportFolder);
 
             Log.Information("Start export to DWG...");
-            _ = sb.AppendLine(baseDwgDirectory);
 
-            if (collector.GetElementCount() > 0)
+            FilteredElementCollector collector = new(doc);
+            collector = collector.OfClass(typeof(ViewSheet));
+
+            if (0 < collector.GetElementCount())
             {
                 List<SheetModel> sheetModels = [];
 
-                RevitPathHelper.EnsureDirectory(exportFolder);
-
-                foreach (ViewSheet sheet in collector.Cast<ViewSheet>())
+                foreach (Element element in collector.ToElements())
                 {
-                    SheetModel model = new(sheet);
-                    model.SetSheetName(doc, revitFileName);
-                    if (model.IsValid)
+                    if (element is ViewSheet sheet)
                     {
-                        sheetModels.Add(model);
+                        SheetModel model = new(sheet);
+                        model.SetSheetName(doc, revitFileName);
+                        if (model.IsValid)
+                        {
+                            sheetModels.Add(model);
+                        }
                     }
                 }
 
@@ -152,7 +156,5 @@ internal static class ExportToDWGHandler
         }
 
     }
-
-
 
 }
