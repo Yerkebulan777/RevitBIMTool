@@ -149,47 +149,46 @@ internal static class PrintPdfHandler
 
             if (printSetting != null && sheetDict.TryGetValue(settingName, out List<SheetModel> sheetModels))
             {
-                using Mutex mutex = new(false, "Global\\{{{ExportPDFMutex}}}");
+                printManager.PrintSetup.CurrentPrintSetting = printSetting;
+
                 using Transaction trx = new(doc, settingName);
+
                 if (TransactionStatus.Started == trx.Start())
                 {
-                    printManager.PrintSetup.CurrentPrintSetting = printSetting;
-                    printManager.Apply(); // Set print settings
-
-                    for (int idx = 0; idx < sheetModels.Count; idx++)
+                    try
                     {
-                        SheetModel model = sheetModels[idx];
+                        printManager.Apply(); // Set print settings
 
-                        string sheetFullName = model.SheetFullName;
-
-                        string sheetTempPath = Path.Combine(tempDirectory, sheetFullName);
-
-                        if (mutex.WaitOne(Timeout.Infinite))
+                        for (int idx = 0; idx < sheetModels.Count; idx++)
                         {
-                            try
-                            {
-                                printManager.PrintToFileName = sheetTempPath;
-                                RevitPathHelper.DeleteExistsFile(sheetTempPath);
-                                Log.Verbose("Start export file: " + sheetFullName);
+                            SheetModel model = sheetModels[idx];
 
-                                if (printManager.SubmitPrint(model.ViewSheet))
-                                {
-                                    Log.Verbose("Exported sheet: " + sheetFullName);
-                                    resultFilePaths.Add(model);
-                                }
-                            }
-                            catch (Exception ex)
+                            string sheetFullName = model.SheetFullName;
+
+                            string sheetTempPath = Path.Combine(tempDirectory, sheetFullName);
+
+                            printManager.PrintToFileName = sheetTempPath;
+
+                            RevitPathHelper.DeleteExistsFile(sheetTempPath);
+
+                            Log.Verbose("Start export file: " + sheetFullName);
+
+                            if (printManager.SubmitPrint(model.ViewSheet))
                             {
-                                Log.Error(ex, ex.Message);
-                            }
-                            finally
-                            {
-                                mutex.ReleaseMutex();
+                                Log.Verbose("Exported sheet: " + sheetFullName);
+
+                                resultFilePaths.Add(model);
                             }
                         }
                     }
-
-                    _ = trx.RollBack();
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, ex.Message);
+                    }
+                    finally
+                    {
+                        _ = trx.RollBack();
+                    }
                 }
 
             }
