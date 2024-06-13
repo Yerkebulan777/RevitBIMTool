@@ -11,8 +11,6 @@ using System.Text;
 namespace RevitBIMTool.ExportHandlers;
 internal static class ExportToDWGHandler
 {
-    private static readonly string output;
-
     private static readonly DWGExportOptions dwgOptions = new()
     {
         ACAPreference = ACAObjectPreference.Geometry,
@@ -29,7 +27,6 @@ internal static class ExportToDWGHandler
         HideScopeBox = true,
         MergedViews = true,
     };
-
 
     private static readonly DXFExportOptions dxfOptions = new()
     {
@@ -90,11 +87,10 @@ internal static class ExportToDWGHandler
                 ExportToCAD(uidoc, exportFolder, sheetModels);
                 ExportHelper.CreateZipTheFolder(exportFolder, baseDwgDirectory);
                 SystemFolderOpener.OpenFolderInExplorerIfNeeded(baseDwgDirectory);
-
-                Log.Information(output);
-                _ = sb.AppendLine(output);
             }
         }
+
+        _ = sb.AppendLine("Задание выполнено");
 
         return sb.ToString();
     }
