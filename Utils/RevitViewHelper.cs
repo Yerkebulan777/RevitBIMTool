@@ -1,4 +1,5 @@
 ﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.Architecture;
 using Autodesk.Revit.UI;
 using Serilog;
 using System.Diagnostics;
@@ -423,5 +424,30 @@ public sealed class RevitViewHelper
     }
 
 
+    public static void CropAroundRoom(Room room, View view)
+    {
+        if (view != null)
+        {
+            IList<IList<BoundarySegment>> segments = room.GetBoundarySegments(new SpatialElementBoundaryOptions());
 
+            if (null != segments)  //the room may not be bound
+            {
+                foreach (IList<BoundarySegment> segmentList in segments)
+                {
+                    CurveLoop loop = new();
+
+                    foreach (BoundarySegment boundarySegment in segmentList)
+                    {
+                        loop.Append(boundarySegment.GetCurve());
+                    }
+
+                    ViewCropRegionShapeManager vcrShapeMgr = view.GetCropRegionShapeManager();
+
+                    vcrShapeMgr.SetCropShape(loop);
+
+                    break;  // if more than one set of boundary segments for room, crop around the first one
+                }
+            }
+        }
+    }
 }

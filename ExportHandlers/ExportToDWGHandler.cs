@@ -13,7 +13,7 @@ internal static class ExportToDWGHandler
 {
     private static string output;
 
-    private static DWGExportOptions dwgOptions = new()
+    private static readonly DWGExportOptions dwgOptions = new()
     {
         ACAPreference = ACAObjectPreference.Geometry,
         Colors = ExportColorMode.TrueColorPerView,
@@ -85,7 +85,7 @@ internal static class ExportToDWGHandler
 
     private static void ExportToDWG(UIDocument uidoc, string exportFolder, List<SheetModel> sheetModels)
     {
-        var doc = uidoc.Document;
+        Document doc = uidoc.Document;
 
         using Transaction trx = new(doc, "ExportToDWG");
 
@@ -95,16 +95,13 @@ internal static class ExportToDWGHandler
             {
                 foreach (SheetModel sheetModel in sheetModels)
                 {
-                    ICollection<ElementId> elementIds = new List<ElementId>(){ sheetModel.ViewSheet.Id };
-                    string revitFileName = sheetModel.ViewSheet.Name; // Имя файла может быть основано на имени листа
-                    string withoutExtension = Path.GetFileNameWithoutExtension(revitFileName);
-                    string directoryName = Path.Combine(exportFolder, withoutExtension);
+                    ViewSheet sheet = sheetModel.ViewSheet;
+                    RevitViewHelper.OpenSheet(uidoc, sheet);
+                    ICollection<ElementId> elementIds = [sheet.Id];
 
-                    Log.Verbose("Start export dwg file: " + revitFileName);
-
-                    if (doc.Export(directoryName, withoutExtension, elementIds, dwgOptions))
+                    if (doc.Export(exportFolder, sheetModel.SheetName, elementIds, dwgOptions))
                     {
-                        output = "Exported sheet: " + revitFileName;
+                        output = "Exported sheet: " + sheetModel.SheetName;
                     }
                 }
             }
@@ -119,8 +116,6 @@ internal static class ExportToDWGHandler
             }
         }
     }
-
-
 
 
 }
