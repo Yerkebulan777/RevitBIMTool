@@ -125,10 +125,17 @@ internal static class PrintPdfHandler
     private static Element GetViewSheetByNumber(ref Document document, string sheetNumber)
     {
         ParameterValueProvider pvp = new(new ElementId(BuiltInParameter.SHEET_NUMBER));
+
+#if R19
+        FilterStringRule filterRule = new(pvp, new FilterStringEquals(), sheetNumber, false);
+#else
         FilterStringRule filterRule = new(pvp, new FilterStringEquals(), sheetNumber);
+#endif
 
         FilteredElementCollector collector = new FilteredElementCollector(document).OfClass(typeof(ViewSheet));
+
         collector = collector.WherePasses(new ElementParameterFilter(filterRule));
+
         return collector.FirstElement();
     }
 

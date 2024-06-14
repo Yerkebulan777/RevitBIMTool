@@ -39,7 +39,13 @@ public sealed class UnitManager
 
     public static string GetDysplayUnitType(Parameter param)
     {
+
+#if R19
+        return LabelUtils.GetLabelFor(param.Definition.UnitType);
+#else
         return LabelUtils.GetLabelForSpec(param.Definition.GetDataType());
+#endif
+
     }
 
 
