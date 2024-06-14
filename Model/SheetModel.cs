@@ -1,5 +1,6 @@
 ﻿using Autodesk.Revit.DB;
 using RevitBIMTool.Utils;
+using Serilog;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -93,7 +94,9 @@ internal class SheetModel : IDisposable
         if (double.TryParse(sheetDigits, out double number) && !groupName.StartsWith("#"))
         {
             IsValid = !ViewSheet.IsPlaceholder && ViewSheet.CanBePrinted;
+            
             StringNumber = sheetNumber;
+            Log.Information(SheetName);
             DigitNumber = number;
         }
     }

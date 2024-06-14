@@ -33,13 +33,13 @@ internal static class ExportToPDFHandler
 
         if (!ExportHelper.IsTargetFileUpdated(exportFullPath, revitFilePath))
         {
-            tempFolder = Path.Combine(tempFolder, revitFileName);
-            RevitPathHelper.EnsureDirectory(tempFolder);
-
             Log.Information("Start export to PDF...");
 
             RegistryHelper.ActivateSettingsForPDFCreator(tempFolder);
             PrintPdfHandler.ResetPrintSettings(doc, printerName);
+
+            tempFolder = Path.Combine(tempFolder, revitFileName);
+            RevitPathHelper.EnsureDirectory(tempFolder);
 
             string defaultPrinter = PrinterApiUtility.GetDefaultPrinter();
 

@@ -22,6 +22,7 @@ namespace RevitBIMTool.Core
         }
 
 
+        [STAThread]
         public void Execute(UIApplication uiapp)
         {
             currentProcess.PriorityBoostEnabled = true;

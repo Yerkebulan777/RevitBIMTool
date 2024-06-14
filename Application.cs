@@ -22,37 +22,44 @@ internal sealed class Application : IExternalApplication
 
     public Result OnStartup(UIControlledApplication application)
     {
-        try
-        {
-            SetupUIPanel.Initialize(application);
+        string versionNumber = application.ControlledApplication.VersionNumber;
+        using Mutex mutex = new(true, $"Global\\Revit {versionNumber}");
 
-            Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Verbose()
-                .WriteTo.File(logerPath,
-                rollingInterval: RollingInterval.Minute,
-                retainedFileCountLimit: 5)
-                .CreateLogger();
-        }
-        catch (Exception ex)
+        if (mutex.WaitOne())
         {
-            System.Windows.Clipboard.SetText(ex.Message);
-            application.ControlledApplication.WriteJournalComment(ex.Message, true);
-            return Result.Failed;
-        }
-        finally
-        {
-            string versionNumber = application.ControlledApplication.VersionNumber;
-
-            if (TaskRequestContainer.Instance.ValidateTaskData(versionNumber))
+            try
             {
-                Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-                externalEventHandler = new RevitExternalEventHandler(versionNumber);
-                if (ExternalEventRequest.Denied != externalEventHandler.Raise())
+                SetupUIPanel.Initialize(application);
+
+                Log.Logger = new LoggerConfiguration()
+                    .MinimumLevel.Verbose()
+                    .WriteTo.File(logerPath,
+                    rollingInterval: RollingInterval.Minute,
+                    retainedFileCountLimit: 5)
+                    .CreateLogger();
+            }
+            catch (Exception ex)
+            {
+                System.Windows.Clipboard.SetText(ex.Message);
+                application.ControlledApplication.WriteJournalComment(ex.Message, true);
+                return Result.Failed;
+            }
+            finally
+            {
+                mutex.ReleaseMutex();
+
+                if (TaskRequestContainer.Instance.ValidateTaskData(versionNumber))
                 {
-                    Log.Information($"Revit {versionNumber} handler started...");
+                    Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+                    externalEventHandler = new RevitExternalEventHandler(versionNumber);
+                    if (ExternalEventRequest.Denied != externalEventHandler.Raise())
+                    {
+                        Log.Information($"Revit {versionNumber} handler started...");
+                    }
                 }
             }
         }
+
         return Result.Succeeded;
     }
 
