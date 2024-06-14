@@ -2,21 +2,21 @@
 using Document = Autodesk.Revit.DB.Document;
 
 
-namespace RevitBIMTool.Utils;
+namespace RevitBIMTool.Utils.Performance;
 public sealed class RevitPurginqHelper
 {
     public static IDictionary<int, ElementId> PurgeAndGetValidConstructionTypeIds(Document doc)
     {
         //  Categories whose types will be purged
-        List<BuiltInCategory> purgeBuiltInCats = new List<BuiltInCategory>()
-        {
+        List<BuiltInCategory> purgeBuiltInCats =
+        [
             BuiltInCategory.OST_Roofs,
             BuiltInCategory.OST_Walls,
             BuiltInCategory.OST_Floors,
-        };
+        ];
 
 
-        ElementMulticategoryFilter multiCat = new ElementMulticategoryFilter(purgeBuiltInCats);
+        ElementMulticategoryFilter multiCat = new(purgeBuiltInCats);
 
         IDictionary<int, ElementId> validTypeIds = new Dictionary<int, ElementId>(25);
         IDictionary<int, ElementId> invalidTypeIds = new Dictionary<int, ElementId>(25);
@@ -44,23 +44,21 @@ public sealed class RevitPurginqHelper
         }
 
 
-        using (TransactionGroup tg = new TransactionGroup(doc))
+        using (TransactionGroup tg = new(doc))
         {
             TransactionStatus status = tg.Start("Purge types");
             foreach (KeyValuePair<int, ElementId> item in invalidTypeIds)
             {
-                using (Transaction trx = new Transaction(doc, "DeleteElement type"))
+                using Transaction trx = new(doc, "DeleteElement type");
+                FailureHandlingOptions failOpt = trx.GetFailureHandlingOptions();
+                failOpt = failOpt.SetFailuresPreprocessor(new WarningSwallower());
+                failOpt = failOpt.SetClearAfterRollback(true);
+                trx.SetFailureHandlingOptions(failOpt);
+                if (DocumentValidation.CanDeleteElement(doc, item.Value))
                 {
-                    FailureHandlingOptions failOpt = trx.GetFailureHandlingOptions();
-                    failOpt = failOpt.SetFailuresPreprocessor(new WarningSwallower());
-                    failOpt = failOpt.SetClearAfterRollback(true);
-                    trx.SetFailureHandlingOptions(failOpt);
-                    if (DocumentValidation.CanDeleteElement(doc, item.Value))
+                    if (TransactionStatus.Started == trx.Start())
                     {
-                        if (TransactionStatus.Started == trx.Start())
-                        {
-                            status = doc.Delete(item.Value).Any() ? trx.Commit() : trx.RollBack();
-                        }
+                        status = doc.Delete(item.Value).Any() ? trx.Commit() : trx.RollBack();
                     }
                 }
             }
@@ -73,7 +71,7 @@ public sealed class RevitPurginqHelper
 
     private static List<ElementId> GetPurgeableElements(Document doc, List<PerformanceAdviserRuleId> adviserRuleIds)
     {
-        List<ElementId> result = new List<ElementId>();
+        List<ElementId> result = [];
         PerformanceAdviser adviser = PerformanceAdviser.GetPerformanceAdviser();
         FailureResolutionType failureType = FailureResolutionType.DeleteElements;
         IList<FailureMessage> failureMessages = adviser.ExecuteRules(doc, adviserRuleIds);
@@ -97,10 +95,11 @@ public sealed class RevitPurginqHelper
         //The internal GUID of the Performance Adviser Rule 
         const string PurgeGuid = "e8c63650-70b7-435a-9010-ec97660c1bda";
 
-        List<PerformanceAdviserRuleId> performanceAdviserRuleIds = new List<PerformanceAdviserRuleId>();
+        List<PerformanceAdviserRuleId> performanceAdviserRuleIds = [];
 
-        //Iterating through all PerformanceAdviser rules looking to filled that which matches PURGE_GUID
-        foreach (PerformanceAdviserRuleId performanceAdviserRuleId in PerformanceAdviser.GetPerformanceAdviser().GetAllRuleIds())
+        //Iterating through all Performance rules looking to filled that which matches PURGE_GUID
+        PerformanceAdviser adviser = PerformanceAdviser.GetPerformanceAdviser();
+        foreach (PerformanceAdviserRuleId performanceAdviserRuleId in adviser.GetAllRuleIds())
         {
             if (performanceAdviserRuleId.Guid.ToString() == PurgeGuid)
             {
@@ -120,8 +119,8 @@ public sealed class RevitPurginqHelper
 
     public static ICollection<ElementId> GetLinkedAndImportedCADIds(Document doсument)
     {
-        FilteredElementCollector collector = new FilteredElementCollector(doсument);
-        IList<Type> typeList = new List<Type> { typeof(CADLinkType), typeof(ImportInstance) };
+        FilteredElementCollector collector = new(doсument);
+        IList<Type> typeList = [typeof(CADLinkType), typeof(ImportInstance)];
         collector = collector.WherePasses(new ElementMulticlassFilter(typeList)).WhereElementIsNotElementType();
         return collector.ToElementIds();
     }
