@@ -4,7 +4,6 @@ using Autodesk.Revit.UI;
 using CommunicationService.Models;
 using RevitBIMTool.Core;
 using Serilog;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 
