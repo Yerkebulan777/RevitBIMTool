@@ -178,7 +178,7 @@ internal static class PrintPdfHandler
 
                                 string sheetFullName = model.SheetName;
 
-                                Log.Verbose($"StaRT Print: {sheetFullName}");
+                                Log.Verbose($"Start print: {sheetFullName}");
 
                                 string sheetTempPath = Path.Combine(tempDirectory, sheetFullName);
 
