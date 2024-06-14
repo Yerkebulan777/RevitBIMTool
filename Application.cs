@@ -17,6 +17,7 @@ internal sealed class Application : IExternalApplication
     private static readonly string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
     private readonly string logerPath = Path.Combine(docPath, $"RevitBIMLog.txt");
 
+
     #region IExternalApplication
 
     public Result OnStartup(UIControlledApplication application)
