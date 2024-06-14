@@ -126,7 +126,7 @@ internal static class PrintPdfHandler
     {
         ParameterValueProvider pvp = new(new ElementId(BuiltInParameter.SHEET_NUMBER));
 
-#if R19
+#if R19 || R21
         FilterStringRule filterRule = new(pvp, new FilterStringEquals(), sheetNumber, false);
 #else
         FilterStringRule filterRule = new(pvp, new FilterStringEquals(), sheetNumber);

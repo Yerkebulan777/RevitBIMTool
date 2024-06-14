@@ -42,6 +42,8 @@ public sealed class UnitManager
 
 #if R19
         return LabelUtils.GetLabelFor(param.Definition.UnitType);
+#elif R21
+        return LabelUtils.GetLabelForSpec(param.Definition.GetSpecTypeId());
 #else
         return LabelUtils.GetLabelForSpec(param.Definition.GetDataType());
 #endif
