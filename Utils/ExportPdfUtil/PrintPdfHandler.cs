@@ -178,6 +178,8 @@ internal static class PrintPdfHandler
 
                                 string sheetFullName = model.SheetName;
 
+                                Log.Verbose($"StaRT Print: {sheetFullName}");
+
                                 string sheetTempPath = Path.Combine(tempDirectory, sheetFullName);
 
                                 printManager.PrintToFileName = sheetTempPath;
@@ -186,8 +188,6 @@ internal static class PrintPdfHandler
 
                                 if (printManager.SubmitPrint(model.ViewSheet))
                                 {
-                                    Log.Verbose($"Printed: {sheetFullName}");
-
                                     resultFilePaths.Add(model);
                                 }
                             }

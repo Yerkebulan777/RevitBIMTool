@@ -1,6 +1,5 @@
 ﻿using Autodesk.Revit.DB;
 using RevitBIMTool.Utils;
-using Serilog;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -89,14 +88,13 @@ internal class SheetModel : IDisposable
 
         string sheetDigits = Regex.Replace(sheetNumber, @"[^0-9.]", string.Empty);
 
-        SheetName = string.IsNullOrEmpty(extension) ? sheetName : $"{sheetName}.{extension}";
+        sheetName = string.IsNullOrEmpty(extension) ? sheetName : $"{sheetName}.{extension}";
 
         if (double.TryParse(sheetDigits, out double number) && !groupName.StartsWith("#"))
         {
             IsValid = !ViewSheet.IsPlaceholder && ViewSheet.CanBePrinted;
-            
+            SheetName = StringHelper.ReplaceInvalidChars(sheetName);
             StringNumber = sheetNumber;
-            Log.Information(SheetName);
             DigitNumber = number;
         }
     }
