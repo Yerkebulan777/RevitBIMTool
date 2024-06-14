@@ -65,7 +65,7 @@ internal class SheetModel : IDisposable
             }
         }
 
-        return stringBuilder.ToString();
+        return StringHelper.ReplaceInvalidChars(stringBuilder.ToString());
     }
 
 
