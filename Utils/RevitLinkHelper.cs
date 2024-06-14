@@ -1,4 +1,5 @@
 ﻿using Autodesk.Revit.DB;
+using RevitBIMTool.Core;
 using Serilog;
 using System.Diagnostics;
 
@@ -7,6 +8,9 @@ namespace RevitBIMTool.Utils
 {
     internal static class RevitLinkHelper
     {
+        private static readonly object syncLocker = RevitExternalEventHandler.SyncLocker;
+
+
         public static void CheckAndRemoveUnloadedLinks(Document doc)
         {
             FilteredElementCollector collector = new(doc);
@@ -25,28 +29,31 @@ namespace RevitBIMTool.Utils
                         {
                             string linkTypeName = linkType.Name;
 
-                            if (!linkNames.ContainsKey(linkTypeName))
+                            lock (syncLocker)
                             {
-                                linkNames.Add(linkTypeName, linkType);
-
-                                bool isLoaded = RevitLinkType.IsLoaded(doc, linkType.Id);
-
-                                Log.Debug($"Link: {linkTypeName} is loaded: {isLoaded}");
-
-                                if (!isLoaded && linkType.AttachmentType == AttachmentType.Overlay)
+                                if (!linkNames.ContainsKey(linkTypeName))
                                 {
-                                    // Если тип наложение удалить
+                                    linkNames.Add(linkTypeName, linkType);
+
+                                    bool isLoaded = RevitLinkType.IsLoaded(doc, linkType.Id);
+
+                                    Log.Debug($"Link: {linkTypeName} is loaded: {isLoaded}");
+
+                                    if (!isLoaded && linkType.AttachmentType == AttachmentType.Overlay)
+                                    {
+                                        // Если тип наложение удалить
+                                        TryDeleteLink(doc, id, linkTypeName);
+                                    }
+                                    else if (!isLoaded && linkType.AttachmentType == AttachmentType.Attachment)
+                                    {
+                                        // Если тип прикрепление загрузить
+                                        TryReloadLink(linkType, linkTypeName);
+                                    }
+                                }
+                                else
+                                {
                                     TryDeleteLink(doc, id, linkTypeName);
                                 }
-                                else if (!isLoaded && linkType.AttachmentType == AttachmentType.Attachment)
-                                {
-                                    // Если тип прикрепление загрузить
-                                    TryReloadLink(linkType, linkTypeName);
-                                }
-                            }
-                            else
-                            {
-                                TryDeleteLink(doc, id, linkTypeName);
                             }
                         }
                     }
@@ -80,7 +87,7 @@ namespace RevitBIMTool.Utils
         {
             try
             {
-                doc.Delete(id);
+                _ = doc.Delete(id);
             }
             catch (Exception ex)
             {

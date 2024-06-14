@@ -11,6 +11,7 @@ using System.Text;
 namespace RevitBIMTool.ExportHandlers;
 internal static class ExportToDWGHandler
 {
+
     private static readonly DWGExportOptions dwgOptions = new()
     {
         ACAPreference = ACAObjectPreference.Geometry,
@@ -26,22 +27,6 @@ internal static class ExportToDWGHandler
         SharedCoords = true,
         HideScopeBox = true,
         MergedViews = true,
-    };
-
-    private static readonly DXFExportOptions dxfOptions = new()
-    {
-        ACAPreference = ACAObjectPreference.Geometry,
-        Colors = ExportColorMode.TrueColorPerView,
-        PropOverrides = PropOverrideMode.ByEntity,
-        ExportOfSolids = SolidGeometry.ACIS,
-        TextTreatment = TextTreatment.Exact,
-        TargetUnit = ExportUnit.Millimeter,
-        FileVersion = ACADVersion.R2007,
-        PreserveCoincidentLines = true,
-        HideUnreferenceViewTags = true,
-        HideReferencePlane = true,
-        SharedCoords = true,
-        HideScopeBox = true,
     };
 
 
@@ -103,9 +88,7 @@ internal static class ExportToDWGHandler
     private static void ExportToCAD(UIDocument uidoc, string exportFolder, List<SheetModel> sheetModels)
     {
         Document doc = uidoc.Document;
-
         string sheetName = string.Empty;
-
         int counter = sheetModels.Count;
 
         if (counter > 0)
@@ -114,47 +97,22 @@ internal static class ExportToDWGHandler
 
             using Transaction trx = new(doc, "ExportToCAD");
 
-            if (TransactionStatus.Started == trx.Start())
+            foreach (SheetModel sheetModel in sheetModels)
             {
-                try
+                sheetName = sheetModel.SheetName;
+                ViewSheet sheet = sheetModel.ViewSheet;
+                RevitViewHelper.OpenSheet(uidoc, sheet);
+                ICollection<ElementId> elementIds = [sheet.Id];
+
+                //var titleBlockId = new FilteredElementCollector(doc, sheet.Id).OfCategory(BuiltInCategory.OST_TitleBlocks).FirstElementId();
+
+                if (doc.Export(exportFolder, sheetName, elementIds, dwgOptions))
                 {
-                    ViewSet viewSet = new();
-
-                    for (int idx = 0; idx < counter; idx++)
-                    {
-                        SheetModel sheet = sheetModels[idx];
-                        _ = viewSet.Insert(sheet.ViewSheet);
-                    }
-
-                    if (doc.Export(exportFolder, sheetName, viewSet, new DWFExportOptions()))
-                    {
-                        Log.Verbose($"Exported {Path.GetFileName(exportFolder)} to DWF");
-                    }
-
-                    foreach (SheetModel sheetModel in sheetModels)
-                    {
-                        sheetName = sheetModel.SheetName;
-                        ViewSheet sheet = sheetModel.ViewSheet;
-                        RevitViewHelper.OpenSheet(uidoc, sheet);
-                        ICollection<ElementId> elementIds = [sheet.Id];
-
-                        if (doc.Export(exportFolder, sheetName, elementIds, dwgOptions))
-                        {
-                            Log.Verbose($"Exported sheet {sheetName} to DWG");
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, $"Failed {sheetName} {ex.Message}");
-                }
-                finally
-                {
-                    _ = trx.Commit();
+                    Log.Verbose($"Exported sheet {sheetName} to DWG");
                 }
             }
         }
-
     }
+
 
 }

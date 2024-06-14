@@ -11,9 +11,9 @@ namespace RevitBIMTool.Core
     {
         private readonly string versionNumber;
         private readonly ExternalEvent externalEvent;
-        private static readonly object syncLocker = new();
         private readonly Process currentProcess = Process.GetCurrentProcess();
 
+        public static readonly object SyncLocker = new();
 
         public RevitExternalEventHandler(string version)
         {
@@ -29,21 +29,18 @@ namespace RevitBIMTool.Core
 
             while (TaskRequestContainer.Instance.PopTaskModel(versionNumber, out TaskRequest taskRequest))
             {
-                lock (syncLocker)
+                if (File.Exists(taskRequest.RevitFilePath))
                 {
-                    if (File.Exists(taskRequest.RevitFilePath))
+                    string result = autoHandler.ExecuteTask(taskRequest);
+                    Log.Information($"Task result:  {result}");
+
+                    Task task = new(async () =>
                     {
-                        string result = autoHandler.ExecuteTask(taskRequest);
-                        Log.Information($"Task result:  {result}");
+                        await Task.Delay(taskRequest.CommandNumber * 1000);
+                        await RevitMessageManager.SendInfoAsync(taskRequest.BotChatId, result);
+                    });
 
-                        Task task = new(async () =>
-                        {
-                            await Task.Delay(taskRequest.CommandNumber * 1000);
-                            await RevitMessageManager.SendInfoAsync(taskRequest.BotChatId, result);
-                        });
-
-                        task.RunSynchronously();
-                    }
+                    task.RunSynchronously();
                 }
             }
 
