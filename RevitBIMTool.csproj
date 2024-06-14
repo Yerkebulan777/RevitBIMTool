@@ -6,7 +6,7 @@
         <PlatformTarget>x64</PlatformTarget>
         <ImplicitUsings>true</ImplicitUsings>
         <TargetFramework>net48</TargetFramework>
-        <Configurations>Debug R19;Debug R21;Debug R23;Release R19;Release R21;Release R23;Release R20;Release R22</Configurations>
+        <Configurations>Debug R19;Debug R21;Debug R23;Release R19;Release R21;Release R23</Configurations>
 		<Configurations>$(Configurations);Release R19;Release R21;Release R23</Configurations>
     </PropertyGroup>
 
@@ -34,7 +34,7 @@
     <PropertyGroup Condition="$(Configuration.Contains('R23'))">
         <RevitVersion>2023</RevitVersion>
         <DefineConstants>$(DefineConstants);R23</DefineConstants>
-        <DefineConstants>$(DefineConstants);R19_OR_GREATER;R21_OR_GREATER;R22_OR_GREATER;R23_OR_GREATER</DefineConstants>
+        <DefineConstants>$(DefineConstants);R19_OR_GREATER;R21_OR_GREATER;R23_OR_GREATER</DefineConstants>
     </PropertyGroup>
 
     <PropertyGroup>
