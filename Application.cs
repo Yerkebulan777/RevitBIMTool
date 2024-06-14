@@ -4,6 +4,7 @@ using Autodesk.Revit.UI;
 using CommunicationService.Models;
 using RevitBIMTool.Core;
 using Serilog;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 
@@ -15,11 +16,9 @@ internal sealed class Application : IExternalApplication
 {
     private RevitExternalEventHandler externalEventHandler;
     private static readonly string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-    private static readonly string logerPath = Path.Combine(docPath, "RevitBIMToolLog.txt");
-
+    private readonly string logerPath = Path.Combine(docPath, $"RevitBIMLog.txt");
 
     #region IExternalApplication
-
 
     public Result OnStartup(UIControlledApplication application)
     {
@@ -29,7 +28,9 @@ internal sealed class Application : IExternalApplication
 
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
-                .WriteTo.File(logerPath)
+                .WriteTo.File(logerPath,
+                rollingInterval: RollingInterval.Minute,
+                retainedFileCountLimit: 5)
                 .CreateLogger();
         }
         catch (Exception ex)
@@ -61,7 +62,6 @@ internal sealed class Application : IExternalApplication
         Log.CloseAndFlush();
         return Result.Succeeded;
     }
-
 
     #endregion
 
