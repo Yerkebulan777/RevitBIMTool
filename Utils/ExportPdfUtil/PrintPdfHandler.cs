@@ -14,7 +14,6 @@ namespace RevitBIMTool.Utils.ExportPdfUtil;
 internal static class PrintPdfHandler
 {
 
-
     private static string defaultPrinterName;
     private static readonly object syncLocker = new();
 
@@ -213,4 +212,6 @@ internal static class PrintPdfHandler
 
         return resultFilePaths;
     }
+
+
 }
