@@ -43,8 +43,6 @@ internal static class ExportToPDFHandler
 
             string defaultPrinter = PrinterApiUtility.GetDefaultPrinter();
 
-            Log.Debug($"TEMP directory: {tempFolder}");
-
             if (!defaultPrinter.Equals(printerName))
             {
                 throw new ArgumentException(printerName + "is not defined");
@@ -53,12 +51,14 @@ internal static class ExportToPDFHandler
             Dictionary<string, List<SheetModel>> sheetData = PrintPdfHandler.GetSheetPrintedData(doc, revitFileName);
             List<SheetModel> sheetModels = PrintPdfHandler.PrintSheetData(ref doc, sheetData, tempFolder);
             Log.Information($"Total valid sheet count: ({sheetModels.Count})");
+            SystemFolderOpener.OpenFolderInExplorerIfNeeded(tempFolder);
 
             if (sheetModels.Count > 0)
             {
+                Log.Debug($"TEMP directory: {tempFolder}");
                 sb.AppendLine(Path.GetDirectoryName(exportBaseDirectory));
-                PdfMergeHandler.CombinePDFsFromFolder(sheetModels, tempFolder, exportFullPath);
                 SystemFolderOpener.OpenFolderInExplorerIfNeeded(exportBaseDirectory);
+                PdfMergeHandler.CombinePDFsFromFolder(sheetModels, tempFolder, exportFullPath);
                 RevitPathHelper.DeleteDirectory(tempFolder);
             }
 

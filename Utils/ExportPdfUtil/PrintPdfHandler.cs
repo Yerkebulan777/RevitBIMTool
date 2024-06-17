@@ -188,7 +188,10 @@ internal static class PrintPdfHandler
 
                                 if (printManager.SubmitPrint(model.ViewSheet))
                                 {
-                                    resultFilePaths.Add(model);
+                                    if (RevitPathHelper.AwaitExistsFile(sheetTempPath))
+                                    {
+                                        resultFilePaths.Add(model);
+                                    }
                                 }
                             }
                         }

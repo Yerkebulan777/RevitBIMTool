@@ -204,5 +204,22 @@ public static class RevitPathHelper
     }
 
 
+    public static bool AwaitExistsFile(string filePath, int maxDuration = 100)
+    {
+        int counter = 0;
+
+        while (counter < maxDuration)
+        {
+            counter++;
+            Thread.Sleep(1000);
+            if (File.Exists(filePath))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
 
 }

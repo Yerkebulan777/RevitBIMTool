@@ -18,6 +18,7 @@ internal sealed class Application : IExternalApplication
     private readonly Process process = Process.GetCurrentProcess();
     private readonly string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 
+
     #region IExternalApplication
 
     public Result OnStartup(UIControlledApplication application)
