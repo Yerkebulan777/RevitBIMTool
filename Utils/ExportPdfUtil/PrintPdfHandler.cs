@@ -191,6 +191,7 @@ internal static class PrintPdfHandler
                                     if (RevitPathHelper.AwaitExistsFile(sheetTempPath))
                                     {
                                         resultFilePaths.Add(model);
+                                        Thread.Sleep(100);
                                     }
                                 }
                             }
@@ -202,7 +203,6 @@ internal static class PrintPdfHandler
                         finally
                         {
                             mutex.ReleaseMutex();
-                            Thread.Sleep(1000);
                         }
                     }
                 }
