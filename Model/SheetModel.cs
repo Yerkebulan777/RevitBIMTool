@@ -88,16 +88,20 @@ internal class SheetModel : IDisposable
             OrganizationGroupName = Regex.Replace(sheetNumber, @"[0-9.]", string.Empty);
         }
 
-        string sheetDigits = Regex.Replace(sheetNumber, @"[^0-9.]", string.Empty);
-
         sheetName = string.IsNullOrEmpty(extension) ? sheetName : $"{sheetName}.{extension}";
 
-        if (double.TryParse(sheetDigits, out double number) && !groupName.StartsWith("#"))
+        string sheetDigits = Regex.Replace(sheetNumber, @"[^0-9.]", string.Empty);
+
+        SheetName = StringHelper.ReplaceInvalidChars(sheetName);
+
+        if (double.TryParse(sheetDigits, out double number))
         {
-            IsValid = !ViewSheet.IsPlaceholder && ViewSheet.CanBePrinted;
-            SheetName = StringHelper.ReplaceInvalidChars(sheetName);
-            StringNumber = sheetNumber;
-            DigitNumber = number;
+            if (number < 300 && !groupName.StartsWith("#"))
+            {
+                IsValid = ViewSheet.CanBePrinted;
+                StringNumber = sheetNumber;
+                DigitNumber = number;
+            }
         }
     }
 
