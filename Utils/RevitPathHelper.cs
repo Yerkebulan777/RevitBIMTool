@@ -212,16 +212,23 @@ public static class RevitPathHelper
         while (counter < maxDuration)
         {
             counter++;
+
             Thread.Sleep(1000);
-            if (File.Exists(filePath))
+
+            lock (sectionAcronyms)
             {
-                Log.Debug($"File found after {counter} sec");
-                return true;
+                if (File.Exists(filePath))
+                {
+                    Log.Debug($"File found after {counter} sec");
+                    return true;
+                }
             }
         }
 
         Log.Warning($"File not found {filePath}");
+
         Thread.Sleep(1000);
+
         return false;
     }
 
