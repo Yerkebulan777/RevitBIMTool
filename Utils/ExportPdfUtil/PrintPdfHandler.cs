@@ -166,11 +166,11 @@ internal static class PrintPdfHandler
 
                     printManager.Apply(); // Set print settings
 
-                    if (mutex.WaitOne(Timeout.InfiniteTimeSpan))
+                    for (int idx = 0; idx < sheetModels.Count; idx++)
                     {
-                        try
+                        if (mutex.WaitOne(Timeout.InfiniteTimeSpan))
                         {
-                            for (int idx = 0; idx < sheetModels.Count; idx++)
+                            try
                             {
                                 SheetModel model = sheetModels[idx];
 
@@ -195,14 +195,14 @@ internal static class PrintPdfHandler
                                     }
                                 }
                             }
-                        }
-                        catch (Exception ex)
-                        {
-                            Log.Error(ex, ex.Message);
-                        }
-                        finally
-                        {
-                            mutex.ReleaseMutex();
+                            catch (Exception ex)
+                            {
+                                Log.Error(ex, ex.Message);
+                            }
+                            finally
+                            {
+                                mutex.ReleaseMutex();
+                            }
                         }
                     }
                 }
