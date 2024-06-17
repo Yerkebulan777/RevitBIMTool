@@ -28,7 +28,8 @@ internal static class ExportToPDFHandler
 
         string tempPath = Path.GetTempPath();
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
-        string tempFolder = Path.Combine(tempPath, revitFileName + DateTime.Now.ToShortDateString());
+        string shortenedName = revitFileName.Substring(0, Math.Min(30, revitFileName.Length));
+        string tempFolder = Path.Combine(tempPath, shortenedName + DateTime.Now.ToShortDateString());
         string exportBaseDirectory = ExportHelper.ExportDirectory(revitFilePath, "03_PDF", true);
         string exportFullPath = Path.Combine(exportBaseDirectory, revitFileName + ".pdf");
 
