@@ -18,7 +18,7 @@ internal static class ExportToPDFHandler
     public static string ExportToPDF(UIDocument uidoc, string revitFilePath)
     {
         StringBuilder sb = new();
-        Document doc = uidoc.Document; 
+        Document doc = uidoc.Document;
         Guid guidValue = Guid.NewGuid();
 
         if (string.IsNullOrEmpty(revitFilePath))
@@ -28,9 +28,9 @@ internal static class ExportToPDFHandler
 
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
         string baseDirectory = ExportHelper.ExportDirectory(revitFilePath, "03_PDF", true);
+        string exportFullPath = Path.Combine(baseDirectory, $"{revitFileName}.pdf");
         string tempFolder = Path.Combine(Path.GetTempPath(), guidValue.ToString());
-        string exportFullPath = Path.Combine(baseDirectory, revitFileName);
-
+        
         if (!ExportHelper.IsTargetFileUpdated(exportFullPath, revitFilePath))
         {
             Log.Information("Start export to PDF...");
@@ -49,7 +49,6 @@ internal static class ExportToPDFHandler
             Dictionary<string, List<SheetModel>> sheetData = PrintPdfHandler.GetSheetPrintedData(doc, revitFileName);
             List<SheetModel> sheetModels = PrintPdfHandler.PrintSheetData(ref doc, sheetData, tempFolder);
             Log.Information($"Total valid sheet count: ({sheetModels.Count})");
-            SystemFolderOpener.OpenFolderInExplorerIfNeeded(tempFolder);
 
             if (sheetModels.Count > 0)
             {
