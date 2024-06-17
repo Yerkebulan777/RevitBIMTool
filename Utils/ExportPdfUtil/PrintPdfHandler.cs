@@ -152,6 +152,7 @@ internal static class PrintPdfHandler
 
         using Transaction trx = new(doc, "ExportToPDF");
 
+        tempFolder = Path.GetFullPath(tempFolder);
         RevitPathHelper.EnsureDirectory(tempFolder);
         RevitPathHelper.ClearDirectory(tempFolder);
 
@@ -180,8 +181,6 @@ internal static class PrintPdfHandler
                                 string sheetFullName = model.SheetName;
 
                                 string sheetTempPath = Path.Combine(tempFolder, sheetFullName);
-
-                                sheetTempPath = Path.GetFullPath(sheetTempPath);
 
                                 Log.Debug($"Start print in path {sheetTempPath}");
 
