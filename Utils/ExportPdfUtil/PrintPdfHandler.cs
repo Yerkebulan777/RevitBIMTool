@@ -170,6 +170,8 @@ internal static class PrintPdfHandler
                     {
                         try
                         {
+                            RegistryHelper.ActivateSettingsForPDFCreator(tempFolder);
+
                             for (int idx = 0; idx < sheetModels.Count; idx++)
                             {
                                 SheetModel model = sheetModels[idx];
