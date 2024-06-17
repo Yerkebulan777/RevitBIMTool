@@ -1,6 +1,7 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Microsoft.Win32;
+using Serilog;
 
 
 namespace RevitBIMTool.Utils.PrintUtil;
@@ -10,6 +11,8 @@ internal static class RegistryHelper
 
     private static void SetRegistryValue(RegistryKey regRoot, string regPath, string keyName, string value)
     {
+        object result = null;
+
         try
         {
             using (RegistryKey registryKey = regRoot.OpenSubKey(regPath, true))
@@ -27,15 +30,20 @@ internal static class RegistryHelper
                 {
                     registryKey.SetValue(keyName, value, RegistryValueKind.String);
                 }
+
+                result = registryKey.GetValue(keyName);
+
             }
         }
-        catch (Exception exc)
+        catch (Exception ex)
         {
-            string msg = $"Failed to set {keyName} regValue {value}: {exc.Message}";
-            TaskDialogResult dlgResult = TaskDialog.Show("SetRegistryValue", msg);
-            if (TaskDialogResult.Close == dlgResult)
+            Log.Error(ex, $"Failed to set {keyName} regValue {value}: {ex.Message}");
+        }
+        finally
+        {
+            if (result != null)
             {
-                System.Windows.Clipboard.SetText(msg);
+                Log.Debug($"{keyName} value: {result}");
             }
         }
     }
