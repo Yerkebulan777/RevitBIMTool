@@ -1,6 +1,7 @@
 ﻿using iTextSharp.text.pdf;
 using RevitBIMTool.Model;
 using Serilog;
+using System.Diagnostics;
 using System.IO;
 using Document = iTextSharp.text.Document;
 
@@ -27,6 +28,11 @@ internal static class PdfMergeHandler
             Log.Debug($"Sheet number: {model.StringNumber} ({model.DigitNumber})");
 
             string filePath = SheetModel.FindFileInDirectory(directory, model.SheetName);
+
+            if (string.IsNullOrEmpty(filePath))
+            {
+                Log.Warning($"Not founded file: {filePath}");
+            }
 
             if (File.Exists(filePath))
             {
