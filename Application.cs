@@ -33,10 +33,8 @@ internal sealed class Application : IExternalApplication
                 SetupUIPanel.Initialize(application);
 
                 Log.Logger = new LoggerConfiguration()
+                    .WriteTo.File(logerPath)
                     .MinimumLevel.Verbose()
-                    .WriteTo.File(logerPath,
-                    rollingInterval: RollingInterval.Minute,
-                    retainedFileCountLimit: 5)
                     .CreateLogger();
             }
             catch (Exception ex)
@@ -78,30 +76,37 @@ internal sealed class Application : IExternalApplication
 
     public ExternalDBApplicationResult OnStartup(ControlledApplication application)
     {
-        try
-        {
-            Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Verbose()
-                .WriteTo.File(logerPath)
-                .CreateLogger();
-        }
-        catch (Exception ex)
-        {
-            System.Windows.Clipboard.SetText(ex.Message);
-            application.WriteJournalComment(ex.Message, true);
-            return ExternalDBApplicationResult.Failed;
-        }
-        finally
-        {
-            string versionNumber = application.VersionNumber;
+        string versionNumber = application.VersionNumber;
+        string logerPath = Path.Combine(docPath, $"RevitBIMTool{process.SessionId}.txt");
+        using Mutex mutex = new(true, $"Global\\Revit {versionNumber}");
 
-            if (TaskRequestContainer.Instance.ValidateTaskData(versionNumber))
+        if (mutex.WaitOne())
+        {
+            try
             {
-                Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-                externalEventHandler = new RevitExternalEventHandler(versionNumber);
-                if (ExternalEventRequest.Denied != externalEventHandler.Raise())
+                Log.Logger = new LoggerConfiguration()
+                    .MinimumLevel.Verbose()
+                    .WriteTo.File(logerPath)
+                    .CreateLogger();
+            }
+            catch (Exception ex)
+            {
+                System.Windows.Clipboard.SetText(ex.Message);
+                application.WriteJournalComment(ex.Message, true);
+                return ExternalDBApplicationResult.Failed;
+            }
+            finally
+            {
+                mutex.ReleaseMutex();
+
+                if (TaskRequestContainer.Instance.ValidateTaskData(versionNumber))
                 {
-                    Log.Information($"Revit {versionNumber} handler started...");
+                    Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+                    externalEventHandler = new RevitExternalEventHandler(versionNumber);
+                    if (ExternalEventRequest.Denied != externalEventHandler.Raise())
+                    {
+                        Log.Information($"Revit {versionNumber} handler started...");
+                    }
                 }
             }
         }
