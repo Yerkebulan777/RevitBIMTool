@@ -146,15 +146,15 @@ internal static class PrintPdfHandler
     {
         List<PrintSetting> printAllSettings = RevitPrinterUtil.GetPrintSettings(doc);
 
-        List<SheetModel> resultFilePaths = new(sheetDict.Values.Count);
+        using Mutex mutex = new(false, "Global\\{{{ExportToPDFMutex}}}");
 
-        using Mutex mutex = new(false, "Global\\{{{ExportToPDF}}}");
+        List<SheetModel> resultFilePaths = new(sheetDict.Values.Count);
 
         using Transaction trx = new(doc, "ExportToPDF");
 
         if (TransactionStatus.Started == trx.Start())
         {
-            if (mutex.WaitOne(Timeout.Infinite))
+            if (mutex.WaitOne(Timeout.InfiniteTimeSpan))
             {
                 try
                 {
@@ -203,6 +203,7 @@ internal static class PrintPdfHandler
                 finally
                 {
                     mutex.ReleaseMutex();
+
                     if (!trx.HasEnded())
                     {
                         _ = trx.Commit();
