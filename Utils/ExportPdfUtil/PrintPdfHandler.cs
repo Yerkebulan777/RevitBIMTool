@@ -142,7 +142,7 @@ internal static class PrintPdfHandler
     }
 
 
-    public static List<SheetModel> PrintSheetData(ref Document doc, Dictionary<string, List<SheetModel>> sheetDict, string tempDirectory)
+    public static List<SheetModel> PrintSheetData(ref Document doc, Dictionary<string, List<SheetModel>> sheetDict, string tempFolder)
     {
         List<PrintSetting> printAllSettings = RevitPrinterUtil.GetPrintSettings(doc);
 
@@ -150,9 +150,10 @@ internal static class PrintPdfHandler
 
         using Mutex mutex = new(false, "Global\\{{{ExportToPDF}}}");
 
-        RevitPathHelper.EnsureDirectory(tempDirectory);
-
         using Transaction trx = new(doc, "ExportToPDF");
+
+        RevitPathHelper.EnsureDirectory(tempFolder);
+        RevitPathHelper.ClearDirectory(tempFolder);
 
         if (TransactionStatus.Started == trx.Start())
         {
@@ -178,9 +179,9 @@ internal static class PrintPdfHandler
 
                                 string sheetFullName = model.SheetName;
 
-                                string sheetTempPath = Path.Combine(tempDirectory, sheetFullName);
+                                string sheetTempPath = Path.Combine(tempFolder, sheetFullName);
 
-                                Log.Debug($"Start print {sheetFullName} in path {sheetTempPath}");
+                                Log.Debug($"Start print in path {sheetTempPath}");
 
                                 RevitPathHelper.DeleteExistsFile(sheetTempPath);
 
