@@ -26,8 +26,8 @@ internal static class ExportToPDFHandler
             throw new ArgumentNullException(nameof(revitFilePath));
         }
 
-        string tempFolder = Path.GetTempPath();
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
+        string tempFolder = Path.Combine(Path.GetTempPath(), revitFileName + DateTime.Now.ToShortDateString());
         string exportBaseDirectory = ExportHelper.ExportDirectory(revitFilePath, "03_PDF", true);
         string exportFullPath = Path.Combine(exportBaseDirectory, revitFileName + ".pdf");
 
@@ -38,7 +38,7 @@ internal static class ExportToPDFHandler
             RevitPathHelper.EnsureDirectory(tempFolder);
             PrintPdfHandler.ResetPrintSettings(doc, printerName);
             RegistryHelper.ActivateSettingsForPDFCreator(tempFolder);
-            
+
             string defaultPrinter = PrinterApiUtility.GetDefaultPrinter();
 
             if (!defaultPrinter.Equals(printerName))
@@ -54,7 +54,7 @@ internal static class ExportToPDFHandler
             if (sheetModels.Count > 0)
             {
                 Log.Debug($"TEMP directory: {tempFolder}");
-                sb.AppendLine(Path.GetDirectoryName(exportBaseDirectory));
+                _ = sb.AppendLine(Path.GetDirectoryName(exportBaseDirectory));
                 SystemFolderOpener.OpenFolderInExplorerIfNeeded(exportBaseDirectory);
                 PdfMergeHandler.CombinePDFsFromFolder(sheetModels, tempFolder, exportFullPath);
                 RevitPathHelper.DeleteDirectory(tempFolder);
