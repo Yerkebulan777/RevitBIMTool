@@ -154,22 +154,22 @@ internal static class PrintPdfHandler
 
         if (TransactionStatus.Started == trx.Start())
         {
-            if (mutex.WaitOne(Timeout.InfiniteTimeSpan))
+            PrintManager printManager = doc.PrintManager;
+
+            foreach (string settingName in sheetDict.Keys)
             {
-                try
+                PrintSetting printSetting = printAllSettings.FirstOrDefault(set => set.Name == settingName);
+
+                if (printSetting != null && sheetDict.TryGetValue(settingName, out List<SheetModel> sheetModels))
                 {
-                    PrintManager printManager = doc.PrintManager;
+                    printManager.PrintSetup.CurrentPrintSetting = printSetting;
 
-                    foreach (string settingName in sheetDict.Keys)
+                    printManager.Apply(); // Set print settings
+
+                    if (mutex.WaitOne(Timeout.InfiniteTimeSpan))
                     {
-                        PrintSetting printSetting = printAllSettings.FirstOrDefault(set => set.Name == settingName);
-
-                        if (printSetting != null && sheetDict.TryGetValue(settingName, out List<SheetModel> sheetModels))
+                        try
                         {
-                            printManager.PrintSetup.CurrentPrintSetting = printSetting;
-
-                            printManager.Apply(); // Set print settings
-
                             for (int idx = 0; idx < sheetModels.Count; idx++)
                             {
                                 SheetModel model = sheetModels[idx];
@@ -193,28 +193,22 @@ internal static class PrintPdfHandler
                                 }
                             }
                         }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _ = trx.RollBack();
-                    Log.Error(ex, ex.Message);
-                }
-                finally
-                {
-                    mutex.ReleaseMutex();
-
-                    if (!trx.HasEnded())
-                    {
-                        _ = trx.Commit();
+                        catch (Exception ex)
+                        {
+                            Log.Error(ex, ex.Message);
+                        }
+                        finally
+                        {
+                            mutex.ReleaseMutex();
+                            Thread.Sleep(1000);
+                        }
                     }
                 }
             }
+
+            _ = trx.Commit();
         }
 
         return resultFilePaths;
     }
-
-
-
 }
