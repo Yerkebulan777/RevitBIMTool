@@ -1,7 +1,6 @@
 ﻿using iTextSharp.text.pdf;
 using RevitBIMTool.Model;
 using Serilog;
-using System.Diagnostics;
 using System.IO;
 using Document = iTextSharp.text.Document;
 

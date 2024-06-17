@@ -4,6 +4,7 @@ using Autodesk.Revit.UI;
 using CommunicationService.Models;
 using RevitBIMTool.Core;
 using Serilog;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 
@@ -14,15 +15,15 @@ namespace RevitBIMTool;
 internal sealed class Application : IExternalApplication
 {
     private RevitExternalEventHandler externalEventHandler;
-    private static readonly string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-    private readonly string logerPath = Path.Combine(docPath, $"RevitBIMLog.txt");
-
+    private readonly Process process = Process.GetCurrentProcess();
+    private readonly string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 
     #region IExternalApplication
 
     public Result OnStartup(UIControlledApplication application)
     {
         string versionNumber = application.ControlledApplication.VersionNumber;
+        string logerPath = Path.Combine(docPath, $"RevitBIMTool{process.SessionId}.txt");
         using Mutex mutex = new(true, $"Global\\Revit {versionNumber}");
 
         if (mutex.WaitOne())
