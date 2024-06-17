@@ -38,6 +38,7 @@ internal static class ExportToPDFHandler
         if (!ExportHelper.IsTargetFileUpdated(exportFullPath, revitFilePath))
         {
             Log.Information("Start export to PDF...");
+            Log.Debug($"TEMP directory: {tempDirectory}");
 
             RevitPathHelper.EnsureDirectory(tempDirectory);
             PrintPdfHandler.ResetPrintSettings(doc, printerName);
@@ -56,7 +57,6 @@ internal static class ExportToPDFHandler
 
             if (sheetModels.Count > 0)
             {
-                Log.Debug($"TEMP directory: {tempDirectory}");
                 _ = sb.AppendLine(Path.GetDirectoryName(baseDirectory));
                 SystemFolderOpener.OpenFolderInExplorerIfNeeded(baseDirectory);
                 PdfMergeHandler.CombinePDFsFromFolder(sheetModels, tempDirectory, exportFullPath);
