@@ -18,20 +18,18 @@ internal static class ExportToPDFHandler
     public static string ExportToPDF(UIDocument uidoc, string revitFilePath)
     {
         StringBuilder sb = new();
-
-        Document doc = uidoc.Document;
+        Document doc = uidoc.Document; 
+        Guid guidValue = Guid.NewGuid();
 
         if (string.IsNullOrEmpty(revitFilePath))
         {
             throw new ArgumentNullException(nameof(revitFilePath));
         }
 
-        string tempPath = Path.GetTempPath();
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
-        string shortenedName = revitFileName.Substring(0, Math.Min(30, revitFileName.Length));
-        string tempFolder = Path.Combine(tempPath, shortenedName + DateTime.Now.ToShortDateString());
-        string exportBaseDirectory = ExportHelper.ExportDirectory(revitFilePath, "03_PDF", true);
-        string exportFullPath = Path.Combine(exportBaseDirectory, revitFileName + ".pdf");
+        string baseDirectory = ExportHelper.ExportDirectory(revitFilePath, "03_PDF", true);
+        string tempFolder = Path.Combine(Path.GetTempPath(), guidValue.ToString());
+        string exportFullPath = Path.Combine(baseDirectory, revitFileName);
 
         if (!ExportHelper.IsTargetFileUpdated(exportFullPath, revitFilePath))
         {
@@ -56,8 +54,8 @@ internal static class ExportToPDFHandler
             if (sheetModels.Count > 0)
             {
                 Log.Debug($"TEMP directory: {tempFolder}");
-                _ = sb.AppendLine(Path.GetDirectoryName(exportBaseDirectory));
-                SystemFolderOpener.OpenFolderInExplorerIfNeeded(exportBaseDirectory);
+                _ = sb.AppendLine(Path.GetDirectoryName(baseDirectory));
+                SystemFolderOpener.OpenFolderInExplorerIfNeeded(baseDirectory);
                 PdfMergeHandler.CombinePDFsFromFolder(sheetModels, tempFolder, exportFullPath);
                 RevitPathHelper.DeleteDirectory(tempFolder);
             }

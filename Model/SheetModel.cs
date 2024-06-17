@@ -70,15 +70,16 @@ internal class SheetModel : IDisposable
     }
 
 
-    public void SetSheetName(Document doc, string title, string extension = null)
+    public void SetSheetName(Document doc, string projectName, string extension = null)
     {
         string sheetNumber = GetSheetNumber(ViewSheet);
         string groupName = GetOrganizationGroupName(doc, ViewSheet);
-        string sheetName = StringHelper.ReplaceInvalidChars(ViewSheet?.Name);
-
+        string shortName = projectName.Substring(0, Math.Min(35, projectName.Length));
+        string sheetName = StringHelper.ReplaceInvalidChars(ViewSheet.Name);
+        
         sheetName = string.IsNullOrWhiteSpace(groupName)
-            ? StringHelper.NormalizeLength($"{title} - Лист - {sheetNumber} - {sheetName}")
-            : StringHelper.NormalizeLength($"{title} - Лист - {groupName}-{sheetNumber} - {sheetName}");
+            ? StringHelper.NormalizeLength($"{shortName} - Лист - {sheetNumber} - {sheetName}")
+            : StringHelper.NormalizeLength($"{shortName} - Лист - {groupName}-{sheetNumber} - {sheetName}");
 
         OrganizationGroupName = groupName;
 

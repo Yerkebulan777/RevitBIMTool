@@ -49,25 +49,6 @@ public static class RevitPathHelper
     }
 
 
-    public static List<string> GetProjectSectionPaths(string inputpath)
-    {
-        List<string> output = [];
-        DirectoryInfo inputDirectoryInfo = new(inputpath);
-        foreach (DirectoryInfo dirInfo in inputDirectoryInfo.GetDirectories())
-        {
-            for (int idx = 0; idx < sectionAcronyms.Length; idx++)
-            {
-                if (dirInfo.Name.EndsWith(sectionAcronyms[idx]))
-                {
-                    output.Add(dirInfo.FullName);
-                }
-            }
-        }
-
-        return output;
-    }
-
-
     public static string GetDirectoryFromRoot(string filepath, string searchName)
     {
         DirectoryInfo dirInfo = new(filepath);
@@ -122,6 +103,26 @@ public static class RevitPathHelper
         }
 
         return sectionDirectory;
+    }
+
+
+    public static string GetProgectDirectoryName(string filePath)
+    {
+        if (!File.Exists(filePath))
+        {
+            throw new FileNotFoundException(filePath);
+        }
+
+        string projectPath = GetDirectoryFromRoot(filePath, "PROJECT");
+        string result = Path.GetFileNameWithoutExtension(filePath);
+
+        if (!string.IsNullOrEmpty(projectPath))
+        {
+            string projectDirectory = Path.GetDirectoryName(projectPath);
+            result = Path.GetFileName(projectDirectory);
+        }
+
+        return result;
     }
 
 
