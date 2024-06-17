@@ -74,7 +74,7 @@ internal class SheetModel : IDisposable
     {
         string sheetNumber = GetSheetNumber(ViewSheet);
         string groupName = GetOrganizationGroupName(doc, ViewSheet);
-        string shortName = projectName.Substring(0, Math.Min(35, projectName.Length));
+        string shortName = projectName.Substring(0, Math.Min(30, projectName.Length));
         string sheetName = StringHelper.ReplaceInvalidChars(ViewSheet.Name);
         
         sheetName = string.IsNullOrWhiteSpace(groupName)

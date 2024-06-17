@@ -8,6 +8,7 @@ using RevitBIMTool.Utils.SystemUtil;
 using Serilog;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 
 
 namespace RevitBIMTool.ExportHandlers;
@@ -26,10 +27,13 @@ internal static class ExportToPDFHandler
             throw new ArgumentNullException(nameof(revitFilePath));
         }
 
-        string tempDirectory = Path.Combine(temp, Path.GetRandomFileName());
+
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
+        string randomName = Regex.Replace(Path.GetRandomFileName(), @"[\p{P}\p{S}]", string.Empty);
         string baseDirectory = ExportHelper.ExportDirectory(revitFilePath, "03_PDF", true);
         string exportFullPath = Path.Combine(baseDirectory, $"{revitFileName}.pdf");
+        string tempDirectory = Path.Combine(temp, randomName);
+
 
         if (!ExportHelper.IsTargetFileUpdated(exportFullPath, revitFilePath))
         {
