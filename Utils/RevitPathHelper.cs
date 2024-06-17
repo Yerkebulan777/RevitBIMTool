@@ -219,8 +219,10 @@ public static class RevitPathHelper
             }
         }
 
+        Log.Warning($"File not found");
         return false;
     }
+
 
 
 }
