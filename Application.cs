@@ -24,8 +24,8 @@ internal sealed class Application : IExternalApplication
     public Result OnStartup(UIControlledApplication application)
     {
         string versionNumber = application.ControlledApplication.VersionNumber;
-        string logerPath = Path.Combine(docPath, $"RevitBIMTool[{process.Id}].txt");
         using Mutex mutex = new(true, $"Global\\Revit {versionNumber}");
+        string logerPath = Path.Combine(docPath, $"RevitBIMTool.txt");
 
         if (mutex.WaitOne())
         {
@@ -35,7 +35,9 @@ internal sealed class Application : IExternalApplication
 
                 Log.Logger = new LoggerConfiguration()
                     .MinimumLevel.Verbose()
-                    .WriteTo.File(logerPath)
+                    .WriteTo.File(logerPath, 
+                    retainedFileCountLimit: 5, 
+                    rollOnFileSizeLimit: true)
                     .CreateLogger();
             }
             catch (Exception ex)
@@ -78,8 +80,8 @@ internal sealed class Application : IExternalApplication
     public ExternalDBApplicationResult OnStartup(ControlledApplication application)
     {
         string versionNumber = application.VersionNumber;
-        string logerPath = Path.Combine(docPath, $"RevitBIMTool[{process.Id}].txt");
         using Mutex mutex = new(true, $"Global\\Revit {versionNumber}");
+        string logerPath = Path.Combine(docPath, $"RevitBIMTool.txt");
 
         if (mutex.WaitOne())
         {
@@ -87,7 +89,9 @@ internal sealed class Application : IExternalApplication
             {
                 Log.Logger = new LoggerConfiguration()
                     .MinimumLevel.Verbose()
-                    .WriteTo.File(logerPath)
+                    .WriteTo.File(logerPath,
+                    retainedFileCountLimit: 5,
+                    rollOnFileSizeLimit: true)
                     .CreateLogger();
             }
             catch (Exception ex)
@@ -124,7 +128,6 @@ internal sealed class Application : IExternalApplication
     }
 
     #endregion
-
 
 
 }
