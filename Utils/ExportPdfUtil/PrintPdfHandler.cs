@@ -178,13 +178,13 @@ internal static class PrintPdfHandler
 
                                 string sheetFullName = model.SheetName;
 
-                                Log.Verbose($"Start print: {sheetFullName}");
-
                                 string sheetTempPath = Path.Combine(tempDirectory, sheetFullName);
 
-                                printManager.PrintToFileName = sheetTempPath;
+                                Log.Debug($"Start print {sheetFullName} in path {sheetTempPath}");
 
                                 RevitPathHelper.DeleteExistsFile(sheetTempPath);
+
+                                printManager.PrintToFileName = sheetTempPath;
 
                                 if (printManager.SubmitPrint(model.ViewSheet))
                                 {
