@@ -29,44 +29,42 @@ internal static class PdfMergeHandler
 
             string filePath = SheetModel.FindFileInDirectory(directory, model.SheetName);
 
-            if (string.IsNullOrEmpty(filePath))
+            if (!File.Exists(filePath))
             {
                 Log.Warning($"Not founded file: {filePath}");
+                continue;
             }
 
-            if (File.Exists(filePath))
+            PdfReader reader = new(filePath);
+            reader.ConsolidateNamedDestinations();
+
+            try
             {
-                PdfReader reader = new(filePath);
-                reader.ConsolidateNamedDestinations();
-
-                try
+                for (int num = 1; num <= reader.NumberOfPages; num++)
                 {
-                    for (int num = 1; num <= reader.NumberOfPages; num++)
+                    PdfImportedPage page = copy.GetImportedPage(reader, num);
+
+                    if (page != null && outputDocument.IsOpen())
                     {
-                        PdfImportedPage page = copy.GetImportedPage(reader, num);
-
-                        if (page != null && outputDocument.IsOpen())
-                        {
-                            copy.AddPage(page);
-                        }
+                        copy.AddPage(page);
                     }
-
-                    copy.FreeReader(reader);
-
                 }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, ex.Message);
-                }
-                finally
-                {
-                    reader.Close();
-                    model.Dispose();
 
-                    if (deleted)
-                    {
-                        File.Delete(filePath);
-                    }
+                copy.FreeReader(reader);
+
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+            }
+            finally
+            {
+                reader.Close();
+                model.Dispose();
+
+                if (deleted)
+                {
+                    File.Delete(filePath);
                 }
             }
         }
