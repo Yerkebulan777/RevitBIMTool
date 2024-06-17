@@ -152,10 +152,6 @@ internal static class PrintPdfHandler
 
         using Transaction trx = new(doc, "ExportToPDF");
 
-        tempFolder = Path.GetFullPath(tempFolder);
-        RevitPathHelper.EnsureDirectory(tempFolder);
-        RevitPathHelper.ClearDirectory(tempFolder);
-
         if (TransactionStatus.Started == trx.Start())
         {
             if (mutex.WaitOne(Timeout.Infinite))

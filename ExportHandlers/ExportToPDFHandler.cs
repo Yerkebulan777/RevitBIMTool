@@ -34,7 +34,6 @@ internal static class ExportToPDFHandler
         {
             Log.Information("Start export to PDF...");
 
-            RevitPathHelper.EnsureDirectory(tempFolder);
             PrintPdfHandler.ResetPrintSettings(doc, printerName);
             RegistryHelper.ActivateSettingsForPDFCreator(tempFolder);
 
