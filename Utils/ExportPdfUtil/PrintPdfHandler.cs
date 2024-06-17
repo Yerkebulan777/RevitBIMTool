@@ -181,6 +181,8 @@ internal static class PrintPdfHandler
 
                                 string sheetTempPath = Path.Combine(tempFolder, sheetFullName);
 
+                                sheetTempPath = Path.GetFullPath(sheetTempPath);
+
                                 Log.Debug($"Start print in path {sheetTempPath}");
 
                                 RevitPathHelper.DeleteExistsFile(sheetTempPath);
