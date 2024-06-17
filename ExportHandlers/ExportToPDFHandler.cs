@@ -26,7 +26,7 @@ internal static class ExportToPDFHandler
             throw new ArgumentNullException(nameof(revitFilePath));
         }
 
-        string tempFolder = Path.Combine(temp, Path.GetRandomFileName());
+        string tempDirectory = Path.Combine(temp, Path.GetRandomFileName());
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
         string baseDirectory = ExportHelper.ExportDirectory(revitFilePath, "03_PDF", true);
         string exportFullPath = Path.Combine(baseDirectory, $"{revitFileName}.pdf");
@@ -35,8 +35,9 @@ internal static class ExportToPDFHandler
         {
             Log.Information("Start export to PDF...");
 
+            RevitPathHelper.EnsureDirectory(tempDirectory);
             PrintPdfHandler.ResetPrintSettings(doc, printerName);
-            RegistryHelper.ActivateSettingsForPDFCreator(tempFolder);
+            RegistryHelper.ActivateSettingsForPDFCreator(tempDirectory);
 
             string defaultPrinter = PrinterApiUtility.GetDefaultPrinter();
 
@@ -46,16 +47,16 @@ internal static class ExportToPDFHandler
             }
 
             Dictionary<string, List<SheetModel>> sheetData = PrintPdfHandler.GetSheetPrintedData(doc, revitFileName);
-            List<SheetModel> sheetModels = PrintPdfHandler.PrintSheetData(ref doc, sheetData, tempFolder);
+            List<SheetModel> sheetModels = PrintPdfHandler.PrintSheetData(ref doc, sheetData, tempDirectory);
             Log.Information($"Total valid sheet count: ({sheetModels.Count})");
 
             if (sheetModels.Count > 0)
             {
-                Log.Debug($"TEMP directory: {tempFolder}");
+                Log.Debug($"TEMP directory: {tempDirectory}");
                 _ = sb.AppendLine(Path.GetDirectoryName(baseDirectory));
                 SystemFolderOpener.OpenFolderInExplorerIfNeeded(baseDirectory);
-                PdfMergeHandler.CombinePDFsFromFolder(sheetModels, tempFolder, exportFullPath);
-                RevitPathHelper.DeleteDirectory(tempFolder);
+                PdfMergeHandler.CombinePDFsFromFolder(sheetModels, tempDirectory, exportFullPath);
+                RevitPathHelper.DeleteDirectory(tempDirectory);
             }
 
             return sb.ToString();
