@@ -170,8 +170,6 @@ internal static class PrintPdfHandler
                     {
                         try
                         {
-                            RegistryHelper.ActivateSettingsForPDFCreator(tempFolder);
-
                             for (int idx = 0; idx < sheetModels.Count; idx++)
                             {
                                 SheetModel model = sheetModels[idx];
@@ -179,6 +177,8 @@ internal static class PrintPdfHandler
                                 string sheetFullName = model.SheetName;
 
                                 string sheetTempPath = Path.Combine(tempFolder, sheetFullName);
+
+                                RegistryHelper.ActivateSettingsForPDFCreator(tempFolder);
 
                                 Log.Debug($"Start print in path {sheetTempPath}");
 
