@@ -19,17 +19,18 @@ internal static class ExportToPDFHandler
     {
         StringBuilder sb = new();
         Document doc = uidoc.Document;
+        string temp = Path.GetTempPath();
 
         if (string.IsNullOrEmpty(revitFilePath))
         {
             throw new ArgumentNullException(nameof(revitFilePath));
         }
 
-        string tempFolder = Path.GetTempFileName();
+        string tempFolder = Path.Combine(temp, Path.GetRandomFileName());
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
         string baseDirectory = ExportHelper.ExportDirectory(revitFilePath, "03_PDF", true);
         string exportFullPath = Path.Combine(baseDirectory, $"{revitFileName}.pdf");
-        
+
         if (!ExportHelper.IsTargetFileUpdated(exportFullPath, revitFilePath))
         {
             Log.Information("Start export to PDF...");
