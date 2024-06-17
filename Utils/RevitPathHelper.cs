@@ -220,7 +220,8 @@ public static class RevitPathHelper
             }
         }
 
-        Log.Warning($"File not found");
+        Log.Warning($"File not found {filePath}");
+        Thread.Sleep(1000);
         return false;
     }
 
