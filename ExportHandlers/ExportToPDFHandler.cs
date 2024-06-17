@@ -26,21 +26,19 @@ internal static class ExportToPDFHandler
             throw new ArgumentNullException(nameof(revitFilePath));
         }
 
+        string tempFolder = Path.GetTempPath();
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
         string exportBaseDirectory = ExportHelper.ExportDirectory(revitFilePath, "03_PDF", true);
-        string tempFolder = Environment.GetEnvironmentVariable("TEMP", EnvironmentVariableTarget.User);
         string exportFullPath = Path.Combine(exportBaseDirectory, revitFileName + ".pdf");
 
         if (!ExportHelper.IsTargetFileUpdated(exportFullPath, revitFilePath))
         {
             Log.Information("Start export to PDF...");
 
-            RegistryHelper.ActivateSettingsForPDFCreator(tempFolder);
-            PrintPdfHandler.ResetPrintSettings(doc, printerName);
-
-            tempFolder = Path.Combine(tempFolder, revitFileName);
             RevitPathHelper.EnsureDirectory(tempFolder);
-
+            PrintPdfHandler.ResetPrintSettings(doc, printerName);
+            RegistryHelper.ActivateSettingsForPDFCreator(tempFolder);
+            
             string defaultPrinter = PrinterApiUtility.GetDefaultPrinter();
 
             if (!defaultPrinter.Equals(printerName))

@@ -24,7 +24,7 @@ internal sealed class Application : IExternalApplication
     public Result OnStartup(UIControlledApplication application)
     {
         string versionNumber = application.ControlledApplication.VersionNumber;
-        string logerPath = Path.Combine(docPath, $"RevitBIMTool[{process.SessionId}].txt");
+        string logerPath = Path.Combine(docPath, $"RevitBIMTool[{process.Id}].txt");
         using Mutex mutex = new(true, $"Global\\Revit {versionNumber}");
 
         if (mutex.WaitOne())
@@ -78,7 +78,7 @@ internal sealed class Application : IExternalApplication
     public ExternalDBApplicationResult OnStartup(ControlledApplication application)
     {
         string versionNumber = application.VersionNumber;
-        string logerPath = Path.Combine(docPath, $"RevitBIMTool[{process.SessionId}].txt");
+        string logerPath = Path.Combine(docPath, $"RevitBIMTool[{process.Id}].txt");
         using Mutex mutex = new(true, $"Global\\Revit {versionNumber}");
 
         if (mutex.WaitOne())
