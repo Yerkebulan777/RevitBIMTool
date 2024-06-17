@@ -33,8 +33,8 @@ internal sealed class Application : IExternalApplication
                 SetupUIPanel.Initialize(application);
 
                 Log.Logger = new LoggerConfiguration()
-                    .WriteTo.File(logerPath)
                     .MinimumLevel.Verbose()
+                    .WriteTo.File(logerPath)
                     .CreateLogger();
             }
             catch (Exception ex)
