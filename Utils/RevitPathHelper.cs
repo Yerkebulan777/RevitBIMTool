@@ -214,6 +214,7 @@ public static class RevitPathHelper
             Thread.Sleep(1000);
             if (File.Exists(filePath))
             {
+                Log.Debug($"File found after {counter} sec");
                 return true;
             }
         }
