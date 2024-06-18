@@ -15,6 +15,7 @@ internal static class PrintPdfHandler
 {
 
     private static string defaultPrinterName;
+
     private static readonly object syncLocker = new();
 
 
@@ -31,7 +32,7 @@ internal static class PrintPdfHandler
             {
                 printManager.SelectNewPrintDriver(printerName);
                 printSettings.ForEach(set => doc.Delete(set.Id));
-                printManager.PrintRange = PrintRange.Visible;
+                printManager.PrintRange = PrintRange.Current;
                 printManager.PrintToFile = true;
             }
             catch (Exception ex)
