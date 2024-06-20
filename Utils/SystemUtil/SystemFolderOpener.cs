@@ -11,54 +11,43 @@ internal static class SystemFolderOpener
     private static extern bool SetForegroundWindow(IntPtr hWnd);
 
 
-    public static bool IsExplorerWindowOpenForFolder(string folderPath, out IntPtr handle)
+    public static void CloseDirectory(string inputPath)
     {
-        handle = IntPtr.Zero;
+        string inputName = Path.GetFileName(inputPath);
+
+        Log.Debug($"Input folder name: ({inputName})");
 
         foreach (Process proc in Process.GetProcessesByName("explorer"))
         {
-            string path = Path.GetFullPath(proc.MainModule.FileName);
-
-            if (path.Equals(folderPath, StringComparison.OrdinalIgnoreCase))
+            if (inputName.EndsWith(proc.MainWindowTitle, StringComparison.OrdinalIgnoreCase))
             {
-                handle = proc.MainWindowHandle;
-                return true;
+                Log.Debug($"Process {proc.MainWindowTitle} will be close");
+
+                proc?.Kill();
+                proc?.Dispose();
             }
         }
-
-        return false;
     }
 
 
-    public static void OpenFolderInExplorerIfNeeded(string directoryPath)
+    public static void OpenFolder(string directoryPath)
     {
-        Log.Debug($"Start method {nameof(OpenFolderInExplorerIfNeeded)}");
+        Log.Debug($"Start method {nameof(OpenFolder)}");
 
-        if (!Directory.Exists(directoryPath))
+        if (Directory.Exists(directoryPath))
         {
-            Log.Debug($"Folder not found: {directoryPath}");
-            return;
-        }
+            CloseDirectory(directoryPath);
 
-        if (IsExplorerWindowOpenForFolder(directoryPath, out IntPtr handle))
-        {
-            Log.Debug($"Window for folder ({directoryPath}) found");
-            // Try to bring the window to the foreground
-            if (SetForegroundWindow(handle))
+            Process proc = Process.Start("explorer.exe", directoryPath);
+
+            if (proc.WaitForExit(1000))
             {
-                Log.Debug($"Folder brought to the foreground");
-                return;
+                Log.Debug($"Opened folder ({directoryPath})");
             }
+
         }
 
-        Process proc = Process.Start("explorer.exe", directoryPath);
-
-        if (!proc.HasExited)
-        {
-            Log.Debug($"Opened folder ({directoryPath})");
-        }
     }
-
 
 
 }

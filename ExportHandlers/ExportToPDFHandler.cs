@@ -56,8 +56,8 @@ internal static class ExportToPDFHandler
             if (sheetModels.Count > 0)
             {
                 _ = sb.AppendLine(Path.GetDirectoryName(baseDirectory));
-                SystemFolderOpener.OpenFolderInExplorerIfNeeded(baseDirectory);
                 PdfMergeHandler.CombinePDFsFromFolder(sheetModels, tempFolder, exportFullPath);
+                SystemFolderOpener.OpenFolder(baseDirectory);
                 RevitPathHelper.DeleteDirectory(tempFolder);
             }
 

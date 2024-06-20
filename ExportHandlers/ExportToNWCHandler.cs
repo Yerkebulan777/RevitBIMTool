@@ -75,7 +75,7 @@ internal static class ExportToNWCHandler
                 try
                 {
                     doc.Export(exportBaseDirectory, revitFileName, options);
-                    SystemFolderOpener.OpenFolderInExplorerIfNeeded(exportBaseDirectory);
+                    SystemFolderOpener.OpenFolder(exportBaseDirectory);
                     _ = sb.AppendLine(exportBaseDirectory);
                 }
                 catch (Exception ex)

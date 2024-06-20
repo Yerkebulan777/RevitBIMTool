@@ -75,8 +75,8 @@ internal static class ExportToDWGHandler
                 }
 
                 ExportToCAD(uidoc, exportFolder, sheetModels);
+                SystemFolderOpener.OpenFolder(baseDwgDirectory);
                 ExportHelper.CreateZipTheFolder(exportFolder, baseDwgDirectory);
-                SystemFolderOpener.OpenFolderInExplorerIfNeeded(baseDwgDirectory);
             }
         }
 
