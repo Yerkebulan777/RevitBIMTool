@@ -34,7 +34,7 @@ internal sealed class Application : IExternalApplication
                 Log.Logger = new LoggerConfiguration()
                     .Enrich.WithProperty("ProcessId", process.Id)
                     .WriteTo.File(logerPath, rollOnFileSizeLimit: true)
-                    .MinimumLevel.Verbose()
+                    .MinimumLevel.Debug()
                     .CreateLogger();
             }
             catch (Exception ex)
