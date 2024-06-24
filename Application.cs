@@ -25,7 +25,7 @@ internal sealed class Application : IExternalApplication
         using Mutex mutex = new(true, $"Global\\Revit{versionNumber}");
         string logerPath = Path.Combine(docPath, $"RevitBIMTool.txt");
 
-        if (mutex.WaitOne(TimeSpan.FromMinutes(5)))
+        if (mutex.WaitOne(TimeSpan.FromSeconds(1000)))
         {
             try
             {
