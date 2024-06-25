@@ -49,28 +49,31 @@ public static class RevitPathHelper
     }
 
 
-    public static string GetDirectoryFromRoot(string filepath, string searchName)
+    public static string GetDirectoryFromRoot(string filePath, string searchName)
     {
-        DirectoryInfo dirInfo = new(filepath);
+        DirectoryInfo dirInfo = new(filePath);
 
-        while (dirInfo != null)
+        if (!filePath.EndsWith(searchName))
         {
-            dirInfo = dirInfo.Parent;
-            if (dirInfo != null)
+            while (dirInfo != null)
             {
-                string dirName = dirInfo.Name;
-                if (dirName.EndsWith(searchName))
+                dirInfo = dirInfo.Parent;
+                if (dirInfo != null)
                 {
-                    string dirPath = dirInfo.FullName;
-                    if (Directory.Exists(dirPath))
+                    string dirName = dirInfo.Name;
+                    if (dirName.EndsWith(searchName))
                     {
-                        return dirPath;
+                        filePath = dirInfo.FullName;
+                        if (Directory.Exists(filePath))
+                        {
+                            return filePath;
+                        }
                     }
                 }
             }
         }
 
-        return null;
+        return filePath;
     }
 
 
