@@ -104,6 +104,7 @@ internal static class ExportToDWGHandler
                 sheetName = sheetModel.SheetName;
                 ViewSheet sheet = sheetModel.ViewSheet;
                 ICollection<ElementId> elementIds = [sheet.Id];
+
                 Dispatcher.CurrentDispatcher.Invoke(() => RevitViewHelper.OpenSheet(uidoc, sheet));
 
                 //var titleBlockId = new FilteredElementCollector(doc, sheet.Id).OfCategory(BuiltInCategory.OST_TitleBlocks).FirstElementId();
