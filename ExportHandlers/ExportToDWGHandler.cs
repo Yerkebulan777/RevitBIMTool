@@ -73,7 +73,7 @@ internal static class ExportToDWGHandler
                     }
                 }
 
-                ExportToCAD(uidoc, exportFolder, sheetModels);
+                ExportToDWG(uidoc, exportFolder, sheetModels);
                 SystemFolderOpener.OpenFolder(baseDwgDirectory);
                 ExportHelper.CreateZipTheFolder(exportFolder, baseDwgDirectory);
             }
@@ -85,7 +85,7 @@ internal static class ExportToDWGHandler
     }
 
 
-    private static void ExportToCAD(UIDocument uidoc, string exportFolder, List<SheetModel> sheetModels)
+    private static void ExportToDWG(UIDocument uidoc, string exportFolder, List<SheetModel> sheetModels)
     {
         Document doc = uidoc.Document;
         string sheetName = string.Empty;
@@ -95,7 +95,7 @@ internal static class ExportToDWGHandler
         {
             sheetModels = SheetModel.SortSheetModels(sheetModels);
 
-            using Transaction trx = new(doc, "ExportToCAD");
+            using Transaction trx = new(doc, "ExportToDWG");
 
             foreach (SheetModel sheetModel in sheetModels)
             {
