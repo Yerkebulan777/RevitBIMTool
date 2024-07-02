@@ -6,6 +6,7 @@ using RevitBIMTool.Utils.SystemUtil;
 using Serilog;
 using System.IO;
 using System.Text;
+using System.Windows.Threading;
 
 
 namespace RevitBIMTool.ExportHandlers;
@@ -102,8 +103,8 @@ internal static class ExportToDWGHandler
             {
                 sheetName = sheetModel.SheetName;
                 ViewSheet sheet = sheetModel.ViewSheet;
-                RevitViewHelper.OpenSheet(uidoc, sheet);
                 ICollection<ElementId> elementIds = [sheet.Id];
+                Dispatcher.CurrentDispatcher.Invoke(() => RevitViewHelper.OpenSheet(uidoc, sheet));
 
                 //var titleBlockId = new FilteredElementCollector(doc, sheet.Id).OfCategory(BuiltInCategory.OST_TitleBlocks).FirstElementId();
 
@@ -114,6 +115,7 @@ internal static class ExportToDWGHandler
             }
         }
     }
+
 
 
 }

@@ -3,13 +3,14 @@ using Autodesk.Revit.DB.Architecture;
 using Autodesk.Revit.UI;
 using Serilog;
 using System.Diagnostics;
+using System.Windows.Threading;
 using Color = Autodesk.Revit.DB.Color;
 using Level = Autodesk.Revit.DB.Level;
 using View = Autodesk.Revit.DB.View;
 
 
 namespace RevitBIMTool.Utils;
-public sealed class RevitViewHelper
+internal sealed class RevitViewHelper
 {
 
     #region 3dView
@@ -370,7 +371,7 @@ public sealed class RevitViewHelper
     #endregion
 
 
-    public static void ActivateSheet(UIDocument uidoc, ViewSheet sheet)
+    static void ActivateSheet(UIDocument uidoc, ViewSheet sheet)
     {
         ICollection<ElementId> vportIds = sheet.GetAllViewports();
 
@@ -387,7 +388,7 @@ public sealed class RevitViewHelper
             }
             finally
             {
-                uidoc.Selection.SetElementIds(vportIds);
+                Log.Debug($"Activated sheet: {sheet.Name}");
             }
         }
     }
