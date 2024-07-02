@@ -111,7 +111,7 @@ internal static class ExportToDWGHandler
 
                 if (doc.Export(exportFolder, sheetName, elementIds, dwgOptions))
                 {
-                    Log.Verbose($"Exported sheet {sheetName} to DWG");
+                    Log.Debug($"Exported sheet {sheetName} to DWG");
                 }
             }
         }
