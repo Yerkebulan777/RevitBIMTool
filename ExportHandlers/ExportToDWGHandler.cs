@@ -88,10 +88,8 @@ internal static class ExportToDWGHandler
     private static void ExportToDWG(UIDocument uidoc, string exportFolder, List<SheetModel> sheetModels)
     {
         Document doc = uidoc.Document;
-        string sheetName = string.Empty;
-        int counter = sheetModels.Count;
 
-        if (counter > 0)
+        if (sheetModels.Count > 0)
         {
             sheetModels = SheetModel.SortSheetModels(sheetModels);
 
@@ -99,8 +97,8 @@ internal static class ExportToDWGHandler
 
             foreach (SheetModel sheetModel in sheetModels)
             {
-                sheetName = sheetModel.SheetName;
                 ViewSheet sheet = sheetModel.ViewSheet;
+                string sheetName = sheetModel.SheetName;
                 ICollection<ElementId> elementIds = [sheet.Id];
 
                 Dispatcher.CurrentDispatcher.Invoke(() => RevitViewHelper.OpenSheet(uidoc, sheet));
