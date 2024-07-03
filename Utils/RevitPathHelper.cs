@@ -63,17 +63,13 @@ public static class RevitPathHelper
                     string dirName = dirInfo.Name;
                     if (dirName.EndsWith(searchName))
                     {
-                        filePath = dirInfo.FullName;
-                        if (Directory.Exists(filePath))
-                        {
-                            return filePath;
-                        }
+                        return dirInfo.FullName;
                     }
                 }
             }
         }
 
-        return filePath;
+        return null;
     }
 
 
@@ -184,9 +180,15 @@ public static class RevitPathHelper
             {
                 _ = Directory.CreateDirectory(directoryPath);
             }
+            catch (Exception ex)
+            {
+                Log.Error($"Directory: {directoryPath}");
+                Log.Error(ex, $"{ex.Message}");
+                return;
+            }
             finally
             {
-                Log.Debug($"Created directory: {directoryPath}");
+                Log.Debug($"Created directory");
             }
         }
     }
