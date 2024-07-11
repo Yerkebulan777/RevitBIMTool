@@ -33,7 +33,7 @@ internal sealed class Application : IExternalApplication
 
                 Log.Logger = new LoggerConfiguration()
                     .Enrich.WithProperty("ProcessId", process.Id)
-                    .WriteTo.File(logerPath, rollOnFileSizeLimit: true)
+                    .WriteTo.File(logerPath, rollingInterval: RollingInterval.Infinite, retainedFileCountLimit: 5)
                     .MinimumLevel.Debug()
                     .CreateLogger();
             }

@@ -180,11 +180,11 @@ internal static class PrintPdfHandler
 
                                 RegistryHelper.ActivateSettingsForPDFCreator(tempFolder);
 
-                                Log.Debug($"Start print in path {sheetTempPath}");
-
                                 RevitPathHelper.DeleteExistsFile(sheetTempPath);
 
                                 printManager.PrintToFileName = sheetTempPath;
+
+                                Log.Debug($"Start print file {sheetFullName}");
 
                                 if (printManager.SubmitPrint(model.ViewSheet))
                                 {

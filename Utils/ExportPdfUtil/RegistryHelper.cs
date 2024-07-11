@@ -1,10 +1,9 @@
 ﻿using Autodesk.Revit.DB;
-using Autodesk.Revit.UI;
 using Microsoft.Win32;
 using Serilog;
 
 
-namespace RevitBIMTool.Utils.PrintUtil;
+namespace RevitBIMTool.Utils.ExportPdfUtil;
 internal static class RegistryHelper
 {
     private const string registryPDFCreatorPath = "SOFTWARE\\pdfforge\\PDFCreator\\Settings\\ConversionProfiles\\0";
@@ -15,25 +14,22 @@ internal static class RegistryHelper
 
         try
         {
-            using (RegistryKey registryKey = regRoot.OpenSubKey(regPath, true))
+            using RegistryKey registryKey = regRoot.OpenSubKey(regPath, true);
+            if (registryKey is null)
             {
-                if (registryKey is null)
-                {
-                    throw new Exception("RegistryKey not bу null");
-                }
-
-                if (int.TryParse(value, out int intValue))
-                {
-                    registryKey.SetValue(keyName, intValue, RegistryValueKind.DWord);
-                }
-                else if (!string.IsNullOrWhiteSpace(value))
-                {
-                    registryKey.SetValue(keyName, value, RegistryValueKind.String);
-                }
-
-                result = registryKey.GetValue(keyName);
-
+                throw new Exception("RegistryKey not bу null");
             }
+
+            if (int.TryParse(value, out int intValue))
+            {
+                registryKey.SetValue(keyName, intValue, RegistryValueKind.DWord);
+            }
+            else if (!string.IsNullOrWhiteSpace(value))
+            {
+                registryKey.SetValue(keyName, value, RegistryValueKind.String);
+            }
+
+            result = registryKey.GetValue(keyName);
         }
         catch (Exception ex)
         {
@@ -41,10 +37,7 @@ internal static class RegistryHelper
         }
         finally
         {
-            if (result != null)
-            {
-                Log.Debug($"{keyName} value: {result}");
-            }
+            Log.Verbose($"Registry {keyName} set value: {result}");
         }
     }
 

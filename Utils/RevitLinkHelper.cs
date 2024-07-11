@@ -13,9 +13,10 @@ namespace RevitBIMTool.Utils
 
         public static void CheckAndRemoveUnloadedLinks(Document doc)
         {
+            Log.Debug($"Start check links ...");
             FilteredElementCollector collector = new(doc);
             collector = collector.OfClass(typeof(RevitLinkType));
-            using Transaction trans = new(doc, "Check Links");
+            using Transaction trans = new(doc, "CheckLinks");
             Dictionary<string, RevitLinkType> linkNames = [];
             if (TransactionStatus.Started == trans.Start())
             {
@@ -35,16 +36,18 @@ namespace RevitBIMTool.Utils
                                 {
                                     linkNames.Add(linkTypeName, linkType);
 
+                                    AttachmentType attachmentType = linkType.AttachmentType;
+
                                     bool isLoaded = RevitLinkType.IsLoaded(doc, linkType.Id);
 
-                                    Log.Debug($"Link: {linkTypeName} is loaded: {isLoaded}");
+                                    Log.Debug($"Link: {linkTypeName} is loaded: {isLoaded} ({attachmentType})");
 
-                                    if (!isLoaded && linkType.AttachmentType == AttachmentType.Overlay)
+                                    if (!isLoaded && attachmentType == AttachmentType.Overlay)
                                     {
                                         // Если тип наложение удалить
                                         TryDeleteLink(doc, id, linkTypeName);
                                     }
-                                    else if (!isLoaded && linkType.AttachmentType == AttachmentType.Attachment)
+                                    else if (!isLoaded && attachmentType == AttachmentType.Attachment)
                                     {
                                         // Если тип прикрепление загрузить
                                         TryReloadLink(linkType, linkTypeName);
