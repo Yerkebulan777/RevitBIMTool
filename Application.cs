@@ -13,9 +13,7 @@ namespace RevitBIMTool;
 internal sealed class Application : IExternalApplication
 {
     private RevitExternalEventHandler externalEventHandler;
-    private readonly Process process = Process.GetCurrentProcess();
-    private readonly string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-
+   
 
     #region IExternalApplication
 
@@ -23,19 +21,12 @@ internal sealed class Application : IExternalApplication
     {
         string versionNumber = application.ControlledApplication.VersionNumber;
         using Mutex mutex = new(true, $"Global\\Revit{versionNumber}");
-        string logerPath = Path.Combine(docPath, $"RevitBIMTool.txt");
-
+        
         if (mutex.WaitOne(TimeSpan.FromSeconds(1000)))
         {
             try
             {
                 SetupUIPanel.Initialize(application);
-
-                Log.Logger = new LoggerConfiguration()
-                    .Enrich.WithProperty("ProcessId", process.Id)
-                    .WriteTo.File(logerPath, rollingInterval: RollingInterval.Infinite, retainedFileCountLimit: 5)
-                    .MinimumLevel.Debug()
-                    .CreateLogger();
             }
             catch (Exception ex)
             {
@@ -53,7 +44,7 @@ internal sealed class Application : IExternalApplication
                     externalEventHandler = new RevitExternalEventHandler(versionNumber);
                     if (ExternalEventRequest.Denied != externalEventHandler.Raise())
                     {
-                        Log.Information($"Revit {versionNumber} handler started...");
+                        Log.Information($"Revit {versionNumber} started...");
                     }
                 }
             }
@@ -70,6 +61,7 @@ internal sealed class Application : IExternalApplication
     }
 
     #endregion
+
 
 
 }
