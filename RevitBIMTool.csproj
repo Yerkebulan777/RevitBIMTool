@@ -68,12 +68,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Using Include="Nice3point.Revit.Extensions" />
-        <Using Include="Nice3point.Revit.Toolkit.Utils" />
-        <Using Include="JetBrains.Annotations" />
-    </ItemGroup>
-
-    <ItemGroup>
         <Resource Include="Resources\Icons\RibbonIcon16.png" />
         <Resource Include="Resources\Icons\RibbonIcon32.png" />
     </ItemGroup>
