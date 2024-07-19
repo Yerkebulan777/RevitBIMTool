@@ -84,11 +84,11 @@ public static class RevitPathHelper
         {
             foreach (string section in sectionAcronyms)
             {
-                string temp = GetPathFromRoot(filePath, section);
+                string tempPath = GetPathFromRoot(filePath, section);
 
-                if (temp is string result)
+                if (!string.IsNullOrEmpty(tempPath))
                 {
-                    return result;
+                    return tempPath;
                 }
             }
         }
