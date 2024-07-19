@@ -52,11 +52,12 @@ public static class RevitPathHelper
     public static string GetPathFromRoot(string filePath, string searchName)
     {
         StringComparison compr = StringComparison.OrdinalIgnoreCase;
-        DirectoryInfo dirInfo = new(filePath);
 
-        if (filePath.EndsWith(searchName))
+        DirectoryInfo dirInfo = new DirectoryInfo(filePath);
+
+        if (dirInfo.Name.EndsWith(searchName, compr))
         {
-            return filePath;
+            return dirInfo.FullName;
         }
 
         while (dirInfo != null)
