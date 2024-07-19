@@ -49,22 +49,27 @@ public static class RevitPathHelper
     }
 
 
-    public static string GetDirectoryFromRoot(string filePath, string searchName)
+    public static string GetPathFromRoot(string filePath, string searchName)
     {
+        StringComparison compr = StringComparison.OrdinalIgnoreCase;
         DirectoryInfo dirInfo = new(filePath);
 
-        if (!filePath.EndsWith(searchName))
+        if (filePath.EndsWith(searchName))
         {
-            while (dirInfo != null)
+            return filePath;
+        }
+
+        while (dirInfo != null)
+        {
+            dirInfo = dirInfo.Parent;
+
+            if (dirInfo != null)
             {
-                dirInfo = dirInfo.Parent;
-                if (dirInfo != null)
+                string dirName = dirInfo.Name;
+
+                if (dirName.EndsWith(searchName, compr))
                 {
-                    string dirName = dirInfo.Name;
-                    if (dirName.EndsWith(searchName))
-                    {
-                        return dirInfo.FullName;
-                    }
+                    return dirInfo.FullName;
                 }
             }
         }
@@ -77,16 +82,17 @@ public static class RevitPathHelper
     {
         if (!string.IsNullOrEmpty(filePath))
         {
-            foreach (string abbreviation in sectionAcronyms)
+            foreach (string section in sectionAcronyms)
             {
-                string path = GetDirectoryFromRoot(filePath, abbreviation);
+                string temp = GetPathFromRoot(filePath, section);
 
-                if (!string.IsNullOrEmpty(path))
+                if (temp is string result)
                 {
-                    return path;
+                    return result;
                 }
             }
         }
+
         return null;
     }
 
@@ -112,7 +118,7 @@ public static class RevitPathHelper
             throw new FileNotFoundException(filePath);
         }
 
-        string projectPath = GetDirectoryFromRoot(filePath, "PROJECT");
+        string projectPath = GetPathFromRoot(filePath, "PROJECT");
         string result = Path.GetFileNameWithoutExtension(filePath);
 
         if (!string.IsNullOrEmpty(projectPath))
