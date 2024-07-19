@@ -1,7 +1,6 @@
 ﻿using Autodesk.Revit.UI;
 using CommunicationService.Models;
 using Serilog;
-using System;
 using System.Diagnostics;
 using System.IO;
 

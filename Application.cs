@@ -2,18 +2,16 @@ using Autodesk.Revit.UI;
 using CommunicationService.Models;
 using RevitBIMTool.Core;
 using Serilog;
-using System.Diagnostics;
 using System.Globalization;
-using System.IO;
 
 
 namespace RevitBIMTool;
 
-[UsedImplicitly]
+
 internal sealed class Application : IExternalApplication
 {
     private RevitExternalEventHandler externalEventHandler;
-   
+
 
     #region IExternalApplication
 
@@ -21,7 +19,7 @@ internal sealed class Application : IExternalApplication
     {
         string versionNumber = application.ControlledApplication.VersionNumber;
         using Mutex mutex = new(true, $"Global\\Revit{versionNumber}");
-        
+
         if (mutex.WaitOne(TimeSpan.FromSeconds(1000)))
         {
             try

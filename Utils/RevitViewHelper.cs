@@ -3,7 +3,6 @@ using Autodesk.Revit.DB.Architecture;
 using Autodesk.Revit.UI;
 using Serilog;
 using System.Diagnostics;
-using System.Windows.Threading;
 using Color = Autodesk.Revit.DB.Color;
 using Level = Autodesk.Revit.DB.Level;
 using View = Autodesk.Revit.DB.View;

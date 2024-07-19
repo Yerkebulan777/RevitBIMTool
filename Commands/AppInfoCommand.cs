@@ -1,18 +1,18 @@
 ﻿using Autodesk.Revit.Attributes;
+using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using Nice3point.Revit.Toolkit.External;
 
 
 namespace RevitBIMTool.Commands;
 
 /// External command entry point invoked from the Revit interface /// 
 
-[UsedImplicitly]
 [Transaction(TransactionMode.Manual)]
-public class AppInfoCommand : ExternalCommand
+public class AppInfoCommand : IExternalCommand
 {
-    public override void Execute()
+    public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
     {
         TaskDialog.Show("RevitBIMTool", "DEMO");
+        return Result.Succeeded;
     }
 }

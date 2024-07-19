@@ -41,7 +41,7 @@ internal static class ExportToPDFHandler
 
             RevitPathHelper.EnsureDirectory(tempFolder);
             PrintPdfHandler.ResetPrintSettings(doc, printerName);
-            
+
             string defaultPrinter = PrinterApiUtility.GetDefaultPrinter();
 
             if (!defaultPrinter.Equals(printerName))

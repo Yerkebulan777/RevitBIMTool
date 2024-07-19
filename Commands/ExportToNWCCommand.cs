@@ -35,7 +35,7 @@ internal sealed class ExportToNWCCommand : IExternalCommand, IExternalCommandAva
             Clipboard.SetText(ex.ToString());
             return Result.Failed;
         }
-        
+
         RevitMessageManager.ShowInfo(message);
 
         return Result.Succeeded;
