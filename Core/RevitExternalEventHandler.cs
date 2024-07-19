@@ -55,7 +55,6 @@ namespace RevitBIMTool.Core
         {
             return new LoggerConfiguration()
                 .WriteTo.File(logerPath, retainedFileCountLimit: 5)
-                .Enrich.WithProcessId()
                 .MinimumLevel.Debug()
                 .CreateLogger();
         }
