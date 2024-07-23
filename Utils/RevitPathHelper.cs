@@ -112,26 +112,6 @@ public static class RevitPathHelper
     }
 
 
-    public static string GetProgectDirectoryName(string filePath)
-    {
-        if (!File.Exists(filePath))
-        {
-            throw new FileNotFoundException(filePath);
-        }
-
-        string projectPath = GetPathFromRoot(filePath, "PROJECT");
-        string result = Path.GetFileNameWithoutExtension(filePath);
-
-        if (!string.IsNullOrEmpty(projectPath))
-        {
-            string projectDirectory = Path.GetDirectoryName(projectPath);
-            result = Path.GetFileName(projectDirectory);
-        }
-
-        return result;
-    }
-
-
     public static string GetRevitFilePath(Document document)
     {
         if (document.IsWorkshared && !document.IsDetached)

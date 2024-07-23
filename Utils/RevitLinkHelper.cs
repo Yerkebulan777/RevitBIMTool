@@ -104,5 +104,64 @@ namespace RevitBIMTool.Utils
 
 
 
+        private static void InsertRevitLinks(Document doc, List<string> filePaths)
+        {
+            RevitLinkOptions options = new(false);
+
+            using (Transaction transaction = new Transaction(doc))
+            {
+                if (transaction.Start("InsertRevitLinks") == TransactionStatus.Started)
+                {
+                    foreach (string filePath in filePaths)
+                    {
+                        ModelPath modelPath = ModelPathUtils.ConvertUserVisiblePathToModelPath(filePath);
+                        LinkLoadResult result = RevitLinkType.Create(doc, modelPath, options);
+
+                        if (result.LoadResult == LinkLoadResultType.LinkLoaded)
+                        {
+                            RevitLinkInstance linkInstance = RevitLinkInstance.Create(doc, result.ElementId);
+
+                            if (!IsSharedCoordinates(linkInstance))
+                            {
+                                XYZ linkCoordinates = GetLinkCoordinates(linkInstance);
+                                SetProjectCoordinates(doc, linkCoordinates);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
+        private static bool IsSharedCoordinates(RevitLinkInstance linkInstance)
+        {
+            // Получаем координаты связанной модели
+            Transform linkTransform = linkInstance.GetTransform();
+
+            Document hostDoc = linkInstance.Document;
+            ProjectLocation projectLocation = hostDoc.ActiveProjectLocation;
+            Transform hostTransform = projectLocation.GetTransform();
+
+            // Сравниваем трансформации
+            return linkTransform.AlmostEqual(hostTransform);
+        }
+
+
+        private static XYZ GetLinkCoordinates(RevitLinkInstance linkInstance)
+        {
+            // Логика получения координат из связи
+            LocationPoint locationPoint = linkInstance.Location as LocationPoint;
+            return locationPoint.Point;
+        }
+
+
+        private static void SetProjectCoordinates(Document doc, XYZ coordinates)
+        {
+            // Логика установки координат в проекте
+            ProjectLocation projectLocation = doc.ActiveProjectLocation;
+            LocationPoint projectLocationPoint = projectLocation.Location as LocationPoint;
+            projectLocationPoint.Point = coordinates;
+        }
+
     }
 }
