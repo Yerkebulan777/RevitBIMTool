@@ -3,6 +3,7 @@ using Autodesk.Revit.UI;
 using RevitBIMTool.Utils;
 using RevitBIMTool.Utils.Performance;
 using RevitBIMTool.Utils.SystemUtil;
+using Serilog;
 using System.IO;
 using System.Text;
 
@@ -27,6 +28,7 @@ internal static class ExportToNWCHandler
 
         if (!ExportHelper.IsTargetFileUpdated(exportFullPath, revitFilePath))
         {
+
             ICollection<ElementId> cadImportIds = RevitPurginqHelper.GetLinkedAndImportedCADIds(doc);
 
             if (cadImportIds != null && cadImportIds.Count > 0)
@@ -53,6 +55,13 @@ internal static class ExportToNWCHandler
                 RevitViewHelper.SetWorksetsVisible(doc, activeView);
                 RevitViewHelper.SetCategoriesToVisible(doc, activeView, builtCatsToHide);
                 RevitViewHelper.SetViewSettings(doc, activeView, discipline, displayStyle, detailLevel);
+
+                FilteredElementCollector instanses = CollectorHelper.GetInstancesBySymbolName(doc, BuiltInCategory.OST_Walls, "RRR");
+
+                foreach (Element instance in instanses.ToElements())
+                {
+                    Log.Information(instance.Name);
+                }
 
                 NavisworksExportOptions options = new()
                 {

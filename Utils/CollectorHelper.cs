@@ -5,7 +5,7 @@ using Level = Autodesk.Revit.DB.Level;
 
 namespace RevitBIMTool.Utils;
 
-public static class ElementCollectorHelper
+public static class CollectorHelper
 {
 
     #region FilteredBySymbolName
