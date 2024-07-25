@@ -58,10 +58,14 @@ internal static class ExportToNWCHandler
 
                 FilteredElementCollector instanses = CollectorHelper.GetInstancesBySymbolName(doc, BuiltInCategory.OST_Walls, "RRR");
 
+                StringBuilder builder = new StringBuilder();
+
                 foreach (Element instance in instanses.ToElements())
                 {
-                    Log.Information(instance.Name);
+                    builder.AppendLine(instance.Name);
                 }
+
+                Log.Information(builder.ToString());
 
                 NavisworksExportOptions options = new()
                 {
