@@ -103,7 +103,6 @@ namespace RevitBIMTool.Utils
         }
 
 
-
         private static void InsertRevitLinks(Document doc, List<string> filePaths)
         {
             RevitLinkOptions options = new(false);
