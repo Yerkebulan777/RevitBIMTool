@@ -2,10 +2,7 @@
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using RevitBIMTool.ExportHandlers;
-using RevitBIMTool.Utils;
-using Serilog;
 using System.Globalization;
-using System.Text;
 
 
 namespace RevitBIMTool.Commands
@@ -13,6 +10,8 @@ namespace RevitBIMTool.Commands
     [Transaction(TransactionMode.Manual)]
     public class TestCommand : IExternalCommand, IExternalCommandAvailability
     {
+        string output { get; set; } = string.Empty;
+
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
             if (commandData.Application == null) { return Result.Cancelled; }
@@ -22,8 +21,9 @@ namespace RevitBIMTool.Commands
             UIDocument uidoc = uiapp.ActiveUIDocument;
             Document doc = uidoc.Document;
 
-            string output = VisibilityHelper.HideElementBySymbolName(doc, BuiltInCategory.OST_StructuralColumns, "450mm");
-
+            output += VisibilityHelper.HideElementBySymbolName(doc, BuiltInCategory.OST_DuctAccessory, "(клапан)kazvent_bm-h");
+            output += VisibilityHelper.HideElementBySymbolName(doc, BuiltInCategory.OST_DuctAccessory, "(клапан)анемостат_10авп");
+            
             _ = TaskDialog.Show("RevitBIMTool", output);
 
             return Result.Succeeded;

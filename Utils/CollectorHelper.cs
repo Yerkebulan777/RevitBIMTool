@@ -15,7 +15,7 @@ public static class CollectorHelper
         ElementId typeParamId = new(BuiltInParameter.ELEM_TYPE_PARAM);
         ElementId symbolParamId = new(BuiltInParameter.SYMBOL_NAME_PARAM);
 
-#if   R23
+#if R23
         FilterRule typeRule = ParameterFilterRuleFactory.CreateEqualsRule(typeParamId, symbolName);
         FilterRule symbolRule = ParameterFilterRuleFactory.CreateEqualsRule(symbolParamId, symbolName);
 #elif R19 || R21
