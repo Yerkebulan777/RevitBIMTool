@@ -10,7 +10,7 @@ using System.Text;
 namespace RevitBIMTool.Commands
 {
     [Transaction(TransactionMode.Manual)]
-    public class TestCommand : IExternalCommand
+    public class TestCommand : IExternalCommand, IExternalCommandAvailability
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
@@ -26,7 +26,11 @@ namespace RevitBIMTool.Commands
         }
 
 
-
+        public bool IsCommandAvailable(UIApplication applicationData, CategorySet selectedCategories)
+        {
+            UIDocument uidoc = applicationData?.ActiveUIDocument;
+            return uidoc != null && uidoc.Document.IsDetached.Equals(false);
+        }
 
     }
 }
