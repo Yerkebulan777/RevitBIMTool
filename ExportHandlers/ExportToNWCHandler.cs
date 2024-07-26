@@ -3,7 +3,6 @@ using Autodesk.Revit.UI;
 using RevitBIMTool.Utils;
 using RevitBIMTool.Utils.Performance;
 using RevitBIMTool.Utils.SystemUtil;
-using Serilog;
 using System.IO;
 using System.Text;
 
@@ -55,52 +54,6 @@ internal static class ExportToNWCHandler
                 RevitViewHelper.SetWorksetsVisible(doc, activeView);
                 RevitViewHelper.SetCategoriesToVisible(doc, activeView, builtCatsToHide);
                 RevitViewHelper.SetViewSettings(doc, activeView, discipline, displayStyle, detailLevel);
-
-                FilteredElementCollector instanses = CollectorHelper.GetInstancesBySymbolName(doc, BuiltInCategory.OST_Walls, "RRR");
-
-                StringBuilder builder = new();
-
-                List<ElementId> hideIds = [];
-
-                foreach (Element instance in instanses.ToElements())
-                {
-                    _ = builder.AppendLine($"Name: {instance.Name}");
-
-                    if (instance.CanBeHidden(activeView))
-                    {
-                        if (instance.IsHidden(activeView))
-                        {
-                            hideIds.Add(instance.Id);
-                        }
-                    }
-                }
-
-                if (hideIds.Count > 0)
-                {
-                    using (Transaction trx = new(doc, "HideElements"))
-                    {
-                        TransactionStatus status = trx.Start();
-                        try
-                        {
-                            if (status == TransactionStatus.Started)
-                            {
-                                activeView.HideElements(hideIds);
-                                status = trx.Commit();
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Log.Error(ex, ex.Message);
-
-                            if (!trx.HasEnded())
-                            {
-                                status = trx.RollBack();
-                            }
-                        }
-                    }
-                }
-
-                Log.Information(builder.ToString());
 
                 NavisworksExportOptions options = new()
                 {

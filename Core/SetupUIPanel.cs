@@ -53,6 +53,15 @@ public static class SetupUIPanel
                 button03.SetLargeImage("/RevitBIMTool;component/Resources/Icons/RibbonIcon32.png");
                 ribbonPanel.AddSeparator();
             }
+
+            if (ribbonPanel.CreatePushButton(typeof(TestCommand), "Test") is PushButton button)
+            {
+                button.AvailabilityClassName = typeof(TestCommand).FullName;
+                button.SetImage("/RevitBIMTool;component/Resources/Icons/RibbonIcon16.png");
+                button.SetLargeImage("/RevitBIMTool;component/Resources/Icons/RibbonIcon32.png");
+                ribbonPanel.AddSeparator();
+            }
+
         }
 
 
