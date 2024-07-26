@@ -22,7 +22,7 @@ namespace RevitBIMTool.Commands
             UIDocument uidoc = uiapp.ActiveUIDocument;
             Document doc = uidoc.Document;
 
-            string output = VisibilityHelper.HideElementBySymbolName(doc, BuiltInCategory.OST_Columns, "450mm");
+            string output = VisibilityHelper.HideElementBySymbolName(doc, BuiltInCategory.OST_StructuralColumns, "450mm");
 
             _ = TaskDialog.Show("RevitBIMTool", output);
 

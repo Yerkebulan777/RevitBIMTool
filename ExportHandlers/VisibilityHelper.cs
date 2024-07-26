@@ -17,15 +17,13 @@ internal static class VisibilityHelper
 
         FilteredElementCollector instanses = CollectorHelper.GetInstancesBySymbolName(doc, bic, symbolName);
 
-        strBuilder.AppendLine($"Number of elements found: {instanses.GetElementCount()}");
+        strBuilder.AppendLine($"All {symbolName} elements found: {instanses.GetElementCount()}");
 
         foreach (Element instance in instanses.ToElements())
         {
-            _ = strBuilder.AppendLine($"Name: {instance.Name}");
-
             if (instance.CanBeHidden(activeView))
             {
-                if (instance.IsHidden(activeView))
+                if (!instance.IsHidden(activeView))
                 {
                     hideIds.Add(instance.Id);
                 }
