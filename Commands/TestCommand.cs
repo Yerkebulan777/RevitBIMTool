@@ -4,6 +4,7 @@ using Autodesk.Revit.UI;
 using RevitBIMTool.ExportHandlers;
 using RevitBIMTool.Utils;
 using Serilog;
+using System.Globalization;
 using System.Text;
 
 
@@ -14,6 +15,9 @@ namespace RevitBIMTool.Commands
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
+            if (commandData.Application == null) { return Result.Cancelled; }
+            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+
             UIApplication uiapp = commandData.Application;
             UIDocument uidoc = uiapp.ActiveUIDocument;
             Document doc = uidoc.Document;

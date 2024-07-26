@@ -11,7 +11,7 @@ internal static class VisibilityHelper
     {
         List<ElementId> hideIds = [];
 
-        StringBuilder builder = new();
+        StringBuilder strBuilder = new();
 
         View activeView = doc.ActiveView;
 
@@ -19,7 +19,7 @@ internal static class VisibilityHelper
 
         foreach (Element instance in instanses.ToElements())
         {
-            _ = builder.AppendLine($"Name: {instance.Name}");
+            _ = strBuilder.AppendLine($"Name: {instance.Name}");
 
             if (instance.CanBeHidden(activeView))
             {
@@ -29,6 +29,8 @@ internal static class VisibilityHelper
                 }
             }
         }
+
+        strBuilder.AppendLine($"Number of elements found: {hideIds.Count}");
 
         if (hideIds.Count > 0)
         {
@@ -46,7 +48,7 @@ internal static class VisibilityHelper
             }
             catch (Exception ex)
             {
-                builder.AppendLine(ex.Message);
+                strBuilder.AppendLine(ex.Message);
 
                 if (!trx.HasEnded())
                 {
@@ -55,7 +57,7 @@ internal static class VisibilityHelper
             }
         }
 
-        return builder.ToString();
+        return strBuilder.ToString();
     }
 
 }
