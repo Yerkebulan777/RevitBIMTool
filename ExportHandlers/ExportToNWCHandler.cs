@@ -58,13 +58,47 @@ internal static class ExportToNWCHandler
 
                 FilteredElementCollector instanses = CollectorHelper.GetInstancesBySymbolName(doc, BuiltInCategory.OST_Walls, "RRR");
 
-                StringBuilder builder = new StringBuilder();
+                StringBuilder builder = new();
+
+                List<ElementId> hideIds = [];
 
                 foreach (Element instance in instanses.ToElements())
                 {
-                    builder.AppendLine(instance.Name);
+                    _ = builder.AppendLine($"Name: {instance.Name}");
+
+                    if (instance.CanBeHidden(activeView))
+                    {
+                        if (instance.IsHidden(activeView))
+                        {
+                            hideIds.Add(instance.Id);
+                        }
+                    }
                 }
 
+                if (hideIds.Count > 0)
+                {
+                    using (Transaction trx = new(doc, "HideElements"))
+                    {
+                        TransactionStatus status = trx.Start();
+                        try
+                        {
+                            if (status == TransactionStatus.Started)
+                            {
+                                activeView.HideElements(hideIds);
+                                status = trx.Commit();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error(ex, ex.Message);
+
+                            if (!trx.HasEnded())
+                            {
+                                status = trx.RollBack();
+                            }
+                        }
+                    }
+                }
 
                 Log.Information(builder.ToString());
 
