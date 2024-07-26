@@ -13,34 +13,43 @@ internal sealed class RevitViewHelper
 {
 
     #region 3dView
+
     public static View3D Create3DView(Document doc, string viewName)
     {
         View3D view3d = null;
-        ViewFamilyType vft = new FilteredElementCollector(doc)
-        .OfClass(typeof(ViewFamilyType)).Cast<ViewFamilyType>()
-        .First(q => q.ViewFamily == ViewFamily.ThreeDimensional);
+
+        ViewFamilyType viewFamly = new FilteredElementCollector(doc)
+            .OfClass(typeof(ViewFamilyType)).Cast<ViewFamilyType>()
+            .First(q => q.ViewFamily == ViewFamily.ThreeDimensional);
+
         using (Transaction trx = new(doc, "Create3DView"))
         {
             TransactionStatus status = trx.Start();
+
             if (status == TransactionStatus.Started)
             {
                 try
                 {
-                    view3d = View3D.CreateIsometric(doc, vft.Id);
+                    view3d = View3D.CreateIsometric(doc, viewFamly.Id);
                     view3d.Name = viewName;
                     status = trx.Commit();
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine(ex);
-                    status = trx.RollBack();
+                    Log.Error(ex, ex.Message);
+
+                    if (!trx.HasEnded())
+                    {
+                        status = trx.RollBack();
+                    }
                 }
                 finally
                 {
-                    vft.Dispose();
+                    viewFamly.Dispose();
                 }
             }
         }
+
         return view3d;
     }
 
@@ -370,7 +379,7 @@ internal sealed class RevitViewHelper
     #endregion
 
 
-    static void ActivateSheet(UIDocument uidoc, ViewSheet sheet)
+    private static void ActivateSheet(UIDocument uidoc, ViewSheet sheet)
     {
         ICollection<ElementId> vportIds = sheet.GetAllViewports();
 
@@ -450,4 +459,7 @@ internal sealed class RevitViewHelper
             }
         }
     }
+
+
+
 }

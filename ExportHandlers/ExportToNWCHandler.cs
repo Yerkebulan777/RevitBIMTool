@@ -65,6 +65,7 @@ internal static class ExportToNWCHandler
                     builder.AppendLine(instance.Name);
                 }
 
+
                 Log.Information(builder.ToString());
 
                 NavisworksExportOptions options = new()
