@@ -17,6 +17,8 @@ internal static class VisibilityHelper
 
         FilteredElementCollector instanses = CollectorHelper.GetInstancesBySymbolName(doc, bic, symbolName);
 
+        strBuilder.AppendLine($"Number of elements found: {instanses.GetElementCount()}");
+
         foreach (Element instance in instanses.ToElements())
         {
             _ = strBuilder.AppendLine($"Name: {instance.Name}");
@@ -29,8 +31,6 @@ internal static class VisibilityHelper
                 }
             }
         }
-
-        strBuilder.AppendLine($"Number of elements found: {hideIds.Count}");
 
         if (hideIds.Count > 0)
         {
