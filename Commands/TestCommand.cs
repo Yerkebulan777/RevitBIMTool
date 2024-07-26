@@ -10,7 +10,7 @@ namespace RevitBIMTool.Commands
     [Transaction(TransactionMode.Manual)]
     public class TestCommand : IExternalCommand, IExternalCommandAvailability
     {
-        string output { get; set; } = string.Empty;
+        string output = string.Empty;
 
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {

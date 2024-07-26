@@ -55,6 +55,11 @@ internal static class ExportToNWCHandler
                 RevitViewHelper.SetCategoriesToVisible(doc, activeView, builtCatsToHide);
                 RevitViewHelper.SetViewSettings(doc, activeView, discipline, displayStyle, detailLevel);
 
+                BuiltInCategory ductCat = BuiltInCategory.OST_DuctAccessory;
+
+                _ = sb.AppendLine(VisibilityHelper.HideElementBySymbolName(doc, ductCat, "(клапан)kazvent_bm-h"));
+                _ = sb.AppendLine(VisibilityHelper.HideElementBySymbolName(doc, ductCat, "(клапан)анемостат_10авп"));
+
                 NavisworksExportOptions options = new()
                 {
                     ExportScope = NavisworksExportScope.View,
