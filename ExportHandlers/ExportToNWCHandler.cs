@@ -3,6 +3,7 @@ using Autodesk.Revit.UI;
 using RevitBIMTool.Utils;
 using RevitBIMTool.Utils.Performance;
 using RevitBIMTool.Utils.SystemUtil;
+using Serilog;
 using System.IO;
 using System.Text;
 
@@ -47,14 +48,19 @@ internal static class ExportToNWCHandler
 
             View3D view3d = RevitViewHelper.Get3dView(doc, "3DNavisView");
 
-            if (view3d is View activeView)
+            if (view3d is View view)
             {
-                uidoc.RequestViewChange(view3d);
-                uidoc.RefreshActiveView();
+                uidoc.ActiveView = view;
 
-                RevitViewHelper.SetWorksetsVisible(doc, activeView);
-                RevitViewHelper.SetCategoriesToVisible(doc, activeView, builtCatsToHide);
-                RevitViewHelper.SetViewSettings(doc, activeView, discipline, displayStyle, detailLevel);
+                if (doc.ActiveView == view)
+                {
+                    uidoc.RefreshActiveView();
+                    Log.Debug("3D view activated");
+                }
+                
+                RevitViewHelper.SetWorksetsVisible(doc, view);
+                RevitViewHelper.SetCategoriesToVisible(doc, view, builtCatsToHide);
+                RevitViewHelper.SetViewSettings(doc, view, discipline, displayStyle, detailLevel);
 
                 BuiltInCategory ductCat = BuiltInCategory.OST_DuctAccessory;
 
