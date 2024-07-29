@@ -49,7 +49,8 @@ internal static class ExportToNWCHandler
 
             if (view3d is View activeView)
             {
-                uidoc?.RequestViewChange(view3d);
+                uidoc.RequestViewChange(view3d);
+                uidoc.RefreshActiveView();
 
                 RevitViewHelper.SetWorksetsVisible(doc, activeView);
                 RevitViewHelper.SetCategoriesToVisible(doc, activeView, builtCatsToHide);
@@ -80,6 +81,7 @@ internal static class ExportToNWCHandler
 
                 try
                 {
+                    
                     doc.Export(exportBaseDirectory, revitFileName, options);
                     SystemFolderOpener.OpenFolder(exportBaseDirectory);
                     _ = sb.AppendLine(exportBaseDirectory);

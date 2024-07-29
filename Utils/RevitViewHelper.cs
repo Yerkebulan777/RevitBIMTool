@@ -378,28 +378,7 @@ internal sealed class RevitViewHelper
     #endregion
 
 
-    private static void ActivateSheet(UIDocument uidoc, ViewSheet sheet)
-    {
-        ICollection<ElementId> vportIds = sheet.GetAllViewports();
-
-        if (0 < vportIds.Count)
-        {
-            try
-            {
-                uidoc.ActiveView = sheet;
-                uidoc.RefreshActiveView();
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, ex.Message);
-            }
-            finally
-            {
-                Log.Debug($"Activated sheet: {sheet.Name}");
-            }
-        }
-    }
-
+    #region ViewSheet
 
     public static void OpenSheet(UIDocument uidoc, ViewSheet sheet)
     {
@@ -432,13 +411,38 @@ internal sealed class RevitViewHelper
     }
 
 
+    private static void ActivateSheet(UIDocument uidoc, ViewSheet sheet)
+    {
+        ICollection<ElementId> vportIds = sheet.GetAllViewports();
+
+        if (0 < vportIds.Count)
+        {
+            try
+            {
+                uidoc.ActiveView = sheet;
+                uidoc.RefreshActiveView();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+            }
+            finally
+            {
+                Log.Debug($"Activated sheet: {sheet.Name}");
+            }
+        }
+    }
+
+    #endregion
+
+
     public static void CropAroundRoom(Room room, View view)
     {
         if (view != null)
         {
             IList<IList<BoundarySegment>> segments = room.GetBoundarySegments(new SpatialElementBoundaryOptions());
 
-            if (null != segments)  //the room may not be bound
+            if (segments != null)  //the room may not be bound
             {
                 foreach (IList<BoundarySegment> segmentList in segments)
                 {
@@ -458,7 +462,6 @@ internal sealed class RevitViewHelper
             }
         }
     }
-
 
 
 }
