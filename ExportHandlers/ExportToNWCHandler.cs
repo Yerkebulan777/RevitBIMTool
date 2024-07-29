@@ -64,7 +64,7 @@ internal static class ExportToNWCHandler
                 RevitViewHelper.SetCategoriesToVisible(doc, view, builtCatsToHide);
                 RevitViewHelper.SetViewSettings(doc, view, discipline, displayStyle, detailLevel);
 
-                BuiltInCategory ductCat = BuiltInCategory.OST_DuctAccessory;
+                const BuiltInCategory ductCat = BuiltInCategory.OST_DuctAccessory;
 
                 _ = sb.AppendLine(VisibilityHelper.HideElementBySymbolName(doc, ductCat, "(клапан)kazvent_bm-h"));
                 _ = sb.AppendLine(VisibilityHelper.HideElementBySymbolName(doc, ductCat, "(клапан)анемостат_10авп"));
