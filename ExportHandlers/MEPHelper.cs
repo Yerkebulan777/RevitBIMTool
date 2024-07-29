@@ -61,7 +61,5 @@ namespace RevitBIMTool.ExportHandlers
         }
 
 
-
-
     }
 }
