@@ -66,9 +66,8 @@ namespace RevitBIMTool.Core
             {
                 try
                 {
-                    Log.Warning("Start purge api objects ...");
+                    Log.Warning("Сlosing the Revit...");
                     uiapp.Application.PurgeReleasedAPIObjects();
-                    Log.Warning("Start closing the Revit ...");
                 }
                 finally
                 {
@@ -90,6 +89,7 @@ namespace RevitBIMTool.Core
             Log.Logger = ConfigureLogger(logerPath);
             return externalEvent.Raise();
         }
+
 
     }
 
