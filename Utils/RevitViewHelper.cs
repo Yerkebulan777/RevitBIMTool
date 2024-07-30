@@ -2,6 +2,7 @@
 using Autodesk.Revit.DB.Architecture;
 using Autodesk.Revit.UI;
 using Serilog;
+using System.Text;
 using Color = Autodesk.Revit.DB.Color;
 using Level = Autodesk.Revit.DB.Level;
 using View = Autodesk.Revit.DB.View;
@@ -351,7 +352,78 @@ internal sealed class RevitViewHelper
 
     #region Worksets
 
-    public static void SetWorksetsVisible(Document doc, View view)
+    public void GetWorksetsInfo(Document doc)
+    {
+        String message = String.Empty;
+        // Enumerating worksets in a document and getting basic information for each
+        FilteredWorksetCollector collector = new FilteredWorksetCollector(doc);
+
+        // find all user worksets
+        collector.OfKind(WorksetKind.UserWorkset);
+        IList<Workset> worksets = collector.ToWorksets();
+
+        // get information for each workset
+        int count = 3; // show info for 3 worksets only
+        foreach (Workset workset in worksets)
+        {
+            message += "Workset : " + workset.Name;
+            message += "\nUnique Id : " + workset.UniqueId;
+            message += "\nOwner : " + workset.Owner;
+            message += "\nKind : " + workset.Kind;
+            message += "\nIs default : " + workset.IsDefaultWorkset;
+            message += "\nIs editable : " + workset.IsEditable;
+            message += "\nIs open : " + workset.IsOpen;
+            message += "\nIs visible by default : " + workset.IsVisibleByDefault;
+
+            TaskDialog.Show("GetWorksetsInfo", message);
+
+            if (0 == --count)
+                break;
+        }
+    }
+
+
+    static void HideWorksetIfNameConstain(Document doc, View view, string name)
+    {
+        FilteredWorksetCollector collector = new FilteredWorksetCollector(doc).OfKind(WorksetKind.UserWorkset);
+        WorksetDefaultVisibilitySettings visibilitySettings = WorksetDefaultVisibilitySettings.GetWorksetDefaultVisibilitySettings(doc);
+
+        StringBuilder stringBuilder = new StringBuilder();
+
+        foreach (Workset workset in collector.ToWorksets())
+        {
+            if (workset.IsEditable)
+            {
+                var worksetName = workset.Name;
+
+                if (worksetName.Contains(name))
+                {
+                    stringBuilder.AppendLine("Workset : " + workset.Name);
+                    stringBuilder.AppendLine("Unique Id : " + workset.UniqueId);
+                    stringBuilder.AppendLine("Owner : " + workset.Owner);
+                    stringBuilder.AppendLine("Kind : " + workset.Kind);
+                }
+            }
+
+            "Workset : " + workset.Name;
+            "\nUnique Id : " + workset.UniqueId;
+            "\nOwner : " + workset.Owner;
+            
+            "\nIs default : " + workset.IsDefaultWorkset;
+            "\nIs editable : " + workset.IsEditable;
+            "\nIs open : " + workset.IsOpen;
+            "\nIs visible by default : " + workset.IsVisibleByDefault;
+
+            TaskDialog.Show("GetWorksetsInfo", message);
+
+        }
+
+        // Скрываем рабочий набор на виде
+        visibilitySettings.SetWorksetVisibility(worksetToHide.Id, WorksetVisibility.Hidden);
+    }
+
+
+    public static void SetWorksetsToVisible(Document doc, View view)
     {
         using Transaction trans = new(doc);
         TransactionStatus status = trans.Start("Workset Visible modify");

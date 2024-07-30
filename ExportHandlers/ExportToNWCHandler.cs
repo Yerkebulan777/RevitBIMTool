@@ -12,8 +12,6 @@ namespace RevitBIMTool.ExportHandlers;
 
 internal static class ExportToNWCHandler
 {
-
-
     public static string ExportToNWC(UIDocument uidoc, string revitFilePath)
     {
         StringBuilder sb = new();
@@ -60,7 +58,7 @@ internal static class ExportToNWCHandler
                     Log.Debug("3D view activated");
                 }
 
-                RevitViewHelper.SetWorksetsVisible(doc, view);
+                RevitViewHelper.SetWorksetsToVisible(doc, view);
                 RevitViewHelper.SetCategoriesToVisible(doc, view, builtCatsToHide);
                 RevitViewHelper.SetViewSettings(doc, view, discipline, displayStyle, detailLevel);
 
