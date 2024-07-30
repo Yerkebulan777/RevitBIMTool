@@ -64,10 +64,12 @@ internal static class ExportToNWCHandler
                 RevitViewHelper.SetViewSettings(doc, view, discipline, displayStyle, detailLevel);
 
                 const BuiltInCategory ductCat = BuiltInCategory.OST_DuctAccessory;
+                const BuiltInCategory structCat = BuiltInCategory.OST_StructuralFraming;
 
                 _ = sb.AppendLine(VisibilityHelper.HideElementBySymbolName(doc, ductCat, "(клапан)kazvent_bm-h"));
                 _ = sb.AppendLine(VisibilityHelper.HideElementBySymbolName(doc, ductCat, "(клапан)анемостат_10авп"));
-
+                _ = sb.AppendLine(VisibilityHelper.HideElementBySymbolName(doc, structCat, "(элемент_перемычки)"));
+                
                 NavisworksExportOptions options = new()
                 {
                     ExportScope = NavisworksExportScope.View,
