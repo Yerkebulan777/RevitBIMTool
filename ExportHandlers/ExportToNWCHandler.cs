@@ -58,7 +58,8 @@ internal static class ExportToNWCHandler
                     Log.Debug("3D view activated");
                 }
 
-                RevitViewHelper.SetWorksetsToVisible(doc, view);
+                RevitWorksetHelper.SetWorksetsToVisible(doc, view);
+                RevitWorksetHelper.HideWorksetInView(doc, view, "@");
                 RevitViewHelper.SetCategoriesToVisible(doc, view, builtCatsToHide);
                 RevitViewHelper.SetViewSettings(doc, view, discipline, displayStyle, detailLevel);
 
