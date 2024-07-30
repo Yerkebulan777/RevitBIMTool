@@ -398,28 +398,23 @@ internal sealed class RevitViewHelper
 
                 if (worksetName.Contains(name))
                 {
-                    stringBuilder.AppendLine("Workset : " + workset.Name);
-                    stringBuilder.AppendLine("Unique Id : " + workset.UniqueId);
-                    stringBuilder.AppendLine("Owner : " + workset.Owner);
-                    stringBuilder.AppendLine("Kind : " + workset.Kind);
+                    stringBuilder.AppendLine("Kind: " + workset.Kind);
+                    stringBuilder.AppendLine("Owner: " + workset.Owner);
+                    stringBuilder.AppendLine("Workset: " + workset.Name);
+                    stringBuilder.AppendLine("Is open: " + workset.IsOpen);
+                    stringBuilder.AppendLine("UniqueId: " + workset.UniqueId);
+                    stringBuilder.AppendLine("Is editable: " + workset.IsEditable);
+                    stringBuilder.AppendLine("Is default: " + workset.IsDefaultWorkset);
+                    stringBuilder.AppendLine("Is visible: " + workset.IsVisibleByDefault);
+
+                    visibilitySettings.SetWorksetVisibility(workset.Id, false);
                 }
             }
 
-            "Workset : " + workset.Name;
-            "\nUnique Id : " + workset.UniqueId;
-            "\nOwner : " + workset.Owner;
-            
-            "\nIs default : " + workset.IsDefaultWorkset;
-            "\nIs editable : " + workset.IsEditable;
-            "\nIs open : " + workset.IsOpen;
-            "\nIs visible by default : " + workset.IsVisibleByDefault;
-
-            TaskDialog.Show("GetWorksetsInfo", message);
-
+            TaskDialog.Show("GetWorksetsInfo", stringBuilder.ToString());
         }
 
-        // Скрываем рабочий набор на виде
-        visibilitySettings.SetWorksetVisibility(worksetToHide.Id, WorksetVisibility.Hidden);
+
     }
 
 

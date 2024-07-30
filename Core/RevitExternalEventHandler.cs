@@ -13,7 +13,7 @@ namespace RevitBIMTool.Core
         private readonly ExternalEvent externalEvent;
         private readonly Process currentProcess = Process.GetCurrentProcess();
         private static readonly string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-        private static readonly string logerPath = Path.Combine(docPath, $"RevitBIMTool.txt");
+
         public static readonly object SyncLocker = new();
 
 
@@ -51,10 +51,13 @@ namespace RevitBIMTool.Core
         }
 
 
-        static ILogger ConfigureLogger(string logerPath)
+        public ILogger ConfigureLogger()
         {
+            string logFileName = $"RevitBIMTool{versionNumber}({currentProcess.SessionId}).txt";
+            string logFilePath = Path.Combine(docPath, logFileName);
+
             return new LoggerConfiguration()
-                .WriteTo.File(logerPath, retainedFileCountLimit: 5)
+                .WriteTo.File(logFilePath, retainedFileCountLimit: 5)
                 .MinimumLevel.Debug()
                 .CreateLogger();
         }
@@ -86,7 +89,7 @@ namespace RevitBIMTool.Core
 
         public ExternalEventRequest Raise()
         {
-            Log.Logger = ConfigureLogger(logerPath);
+            Log.Logger = ConfigureLogger();
             return externalEvent.Raise();
         }
 
