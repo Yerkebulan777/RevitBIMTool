@@ -354,15 +354,15 @@ internal sealed class RevitViewHelper
 
     public void GetWorksetsInfo(Document doc)
     {
-        String message = String.Empty;
+        string message = string.Empty;
         // Enumerating worksets in a document and getting basic information for each
-        FilteredWorksetCollector collector = new FilteredWorksetCollector(doc);
+        FilteredWorksetCollector collector = new(doc);
 
         // find all user worksets
-        collector.OfKind(WorksetKind.UserWorkset);
+        _ = collector.OfKind(WorksetKind.UserWorkset);
         IList<Workset> worksets = collector.ToWorksets();
 
-        // get information for each workset
+        // get information for each w
         int count = 3; // show info for 3 worksets only
         foreach (Workset workset in worksets)
         {
@@ -375,71 +375,115 @@ internal sealed class RevitViewHelper
             message += "\nIs open : " + workset.IsOpen;
             message += "\nIs visible by default : " + workset.IsVisibleByDefault;
 
-            TaskDialog.Show("GetWorksetsInfo", message);
+            _ = TaskDialog.Show("GetWorksetsInfo", message);
 
             if (0 == --count)
+            {
                 break;
+            }
         }
     }
 
 
-    static void HideWorksetIfNameConstain(Document doc, View view, string name)
+    private static void HideWorksetInView(Document doc, View view, string worksetName)
     {
-        FilteredWorksetCollector collector = new FilteredWorksetCollector(doc).OfKind(WorksetKind.UserWorkset);
-        WorksetDefaultVisibilitySettings visibilitySettings = WorksetDefaultVisibilitySettings.GetWorksetDefaultVisibilitySettings(doc);
-
-        StringBuilder stringBuilder = new StringBuilder();
-
-        foreach (Workset workset in collector.ToWorksets())
+        StringBuilder stringBuilder = new();
+        FilteredWorksetCollector collector = new(doc);
+        IList<Workset> worksets = collector.OfKind(WorksetKind.UserWorkset).ToWorksets();
+        Workset workset = worksets.FirstOrDefault(w => w.IsEditable && w.Name.Contains(worksetName));
+        using Transaction trans = new(doc, $"HideWorkset{worksetName}");
+        TransactionStatus status = trans.Start();
+        if (status == TransactionStatus.Started)
         {
-            if (workset.IsEditable)
+            if (workset != null)
             {
-                var worksetName = workset.Name;
-
-                if (worksetName.Contains(name))
+                try
                 {
-                    stringBuilder.AppendLine("Kind: " + workset.Kind);
-                    stringBuilder.AppendLine("Owner: " + workset.Owner);
-                    stringBuilder.AppendLine("Workset: " + workset.Name);
-                    stringBuilder.AppendLine("Is open: " + workset.IsOpen);
-                    stringBuilder.AppendLine("UniqueId: " + workset.UniqueId);
-                    stringBuilder.AppendLine("Is editable: " + workset.IsEditable);
-                    stringBuilder.AppendLine("Is default: " + workset.IsDefaultWorkset);
-                    stringBuilder.AppendLine("Is visible: " + workset.IsVisibleByDefault);
+                    WorksetId wid = new(workset.Id.IntegerValue);
 
-                    visibilitySettings.SetWorksetVisibility(workset.Id, false);
+                    _ = stringBuilder.AppendLine("Name: " + workset.Name);
+                    _ = stringBuilder.AppendLine("Kind: " + workset.Kind);
+                    _ = stringBuilder.AppendLine("Owner: " + workset.Owner);
+                    _ = stringBuilder.AppendLine("Is open: " + workset.IsOpen);
+                    _ = stringBuilder.AppendLine("UniqueId: " + workset.UniqueId);
+                    _ = stringBuilder.AppendLine("Is editable: " + workset.IsEditable);
+                    _ = stringBuilder.AppendLine("Is default: " + workset.IsDefaultWorkset);
+                    _ = stringBuilder.AppendLine("Is visible: " + workset.IsVisibleByDefault);
+
+                    if (view.GetWorksetVisibility(wid) == WorksetVisibility.Visible)
+                    {
+                        view.SetWorksetVisibility(wid, WorksetVisibility.Hidden);
+                    }
+
+                    Log.Debug($"WorksetsInfo: {stringBuilder}");
+
+                    status = trans.Commit();
                 }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, ex.Message);
+                }
+                finally
+                {
+                    if (!trans.HasEnded())
+                    {
+                        status = trans.RollBack();
+                    }
+                }
+
             }
-
-            TaskDialog.Show("GetWorksetsInfo", stringBuilder.ToString());
         }
-
-
     }
 
 
     public static void SetWorksetsToVisible(Document doc, View view)
     {
-        using Transaction trans = new(doc);
-        TransactionStatus status = trans.Start("Workset Visible modify");
-        WorksetDefaultVisibilitySettings defaultVisibility = WorksetDefaultVisibilitySettings.GetWorksetDefaultVisibilitySettings(doc);
-        foreach (Workset workset in new FilteredWorksetCollector(doc).OfKind(WorksetKind.UserWorkset).OfType<Workset>())
+        if (doc.IsWorkshared)
         {
-            if (status == TransactionStatus.Started && workset.IsValidObject)
+            using Transaction trans = new(doc);
+            TransactionStatus status = trans.Start("SetWorksetsToVisible");
+            IList<Workset> worksets = new FilteredWorksetCollector(doc).OfKind(WorksetKind.UserWorkset).ToWorksets();
+            WorksetDefaultVisibilitySettings defaultVisibility = WorksetDefaultVisibilitySettings.GetWorksetDefaultVisibilitySettings(doc);
+
+            try
             {
-                WorksetId wid = new(workset.Id.IntegerValue);
-                WorksetVisibility visibility = view.GetWorksetVisibility(wid);
-                if (!defaultVisibility.IsWorksetVisible(wid))
+                if (status == TransactionStatus.Started)
                 {
-                    defaultVisibility.SetWorksetVisibility(wid, true);
+                    Log.Debug($"Set Worksets to Visible");
+                    foreach (Workset workset in worksets)
+                    {
+                        if (workset.IsEditable)
+                        {
+                            WorksetId wid = new(workset.Id.IntegerValue);
+
+                            if (!defaultVisibility.IsWorksetVisible(wid))
+                            {
+                                defaultVisibility.SetWorksetVisibility(wid, true);
+                            }
+
+                            if (view.GetWorksetVisibility(wid) == WorksetVisibility.Hidden)
+                            {
+                                view.SetWorksetVisibility(wid, WorksetVisibility.Visible);
+                            }
+
+                        }
+                    }
+
+                    status = trans.Commit();
                 }
-                if (visibility == WorksetVisibility.Hidden)
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+            }
+            finally
+            {
+                if (!trans.HasEnded())
                 {
-                    view.SetWorksetVisibility(wid, WorksetVisibility.Visible);
+                    _ = trans.RollBack();
                 }
             }
         }
-        _ = trans.Commit();
     }
 
     #endregion
