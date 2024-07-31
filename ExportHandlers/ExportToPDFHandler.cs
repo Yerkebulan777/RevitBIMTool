@@ -30,11 +30,11 @@ internal static class ExportToPDFHandler
 
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
         string randName = Regex.Replace(Path.GetRandomFileName(), @"[\p{P}\p{S}]", string.Empty);
-        string baseDirectory = ExportHelper.ExportDirectory(revitFilePath, "03_PDF", true);
+        string baseDirectory = ExportPathHelper.ExportDirectory(revitFilePath, "03_PDF", true);
         string exportFullPath = Path.Combine(baseDirectory, $"{revitFileName}.pdf");
         string tempFolder = Path.Combine(temp, randName);
 
-        if (!ExportHelper.IsTargetFileUpdated(exportFullPath, revitFilePath))
+        if (!ExportPathHelper.IsTargetFileUpdated(exportFullPath, revitFilePath))
         {
             Log.Information("Start export to PDF...");
             Log.Debug($"TEMP directory: {tempFolder}");

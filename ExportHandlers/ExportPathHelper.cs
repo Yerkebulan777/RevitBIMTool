@@ -9,7 +9,7 @@ using System.Text;
 
 
 namespace RevitBIMTool.ExportHandlers;
-internal static class ExportHelper
+internal static class ExportPathHelper
 {
 
     public static readonly string formatedDate = DateTime.Today.ToString("yyyy-MM-dd");

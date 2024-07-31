@@ -23,10 +23,10 @@ internal static class ExportToNWCHandler
         }
 
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
-        string exportBaseDirectory = ExportHelper.ExportDirectory(revitFilePath, "05_NWC");
+        string exportBaseDirectory = ExportPathHelper.ExportDirectory(revitFilePath, "05_NWC");
         string exportFullPath = Path.Combine(exportBaseDirectory, revitFileName + ".nwc");
 
-        if (!ExportHelper.IsTargetFileUpdated(exportFullPath, revitFilePath))
+        if (!ExportPathHelper.IsTargetFileUpdated(exportFullPath, revitFilePath))
         {
 
             ICollection<ElementId> cadImportIds = RevitPurginqHelper.GetLinkedAndImportedCADIds(doc);

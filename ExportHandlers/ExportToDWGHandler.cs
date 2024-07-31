@@ -42,11 +42,11 @@ internal static class ExportToDWGHandler
         }
 
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
-        string baseDwgDirectory = ExportHelper.ExportDirectory(revitFilePath, "02_DWG", true);
+        string baseDwgDirectory = ExportPathHelper.ExportDirectory(revitFilePath, "02_DWG", true);
         string exportZipPath = Path.Combine(baseDwgDirectory, revitFileName + ".zip");
         string exportFolder = Path.Combine(baseDwgDirectory, revitFileName);
 
-        if (!ExportHelper.IsTargetFileUpdated(exportZipPath, revitFilePath))
+        if (!ExportPathHelper.IsTargetFileUpdated(exportZipPath, revitFilePath))
         {
             RevitPathHelper.EnsureDirectory(exportFolder);
             RevitPathHelper.ClearDirectory(exportFolder);
@@ -75,7 +75,7 @@ internal static class ExportToDWGHandler
 
                 ExportToDWG(uidoc, exportFolder, sheetModels);
                 SystemFolderOpener.OpenFolder(baseDwgDirectory);
-                ExportHelper.CreateZipTheFolder(exportFolder, baseDwgDirectory);
+                ExportPathHelper.CreateZipTheFolder(exportFolder, baseDwgDirectory);
             }
         }
 
