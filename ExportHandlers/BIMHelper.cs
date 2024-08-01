@@ -1,6 +1,7 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Mechanical;
 using Autodesk.Revit.DB.Plumbing;
+using System.Text;
 
 
 namespace RevitBIMTool.ExportHandlers
@@ -64,6 +65,66 @@ namespace RevitBIMTool.ExportHandlers
             }
 
             return 0;
+        }
+
+
+        private static List<Element> GetElements(Document doc, string[] keywords, out string output)
+        {
+            List<Element> result = [];
+            StringBuilder builder = new();
+
+            List<BuiltInCategory> categories =
+            [
+                BuiltInCategory.OST_PipeCurves,
+                BuiltInCategory.OST_DuctCurves,
+                BuiltInCategory.OST_MechanicalEquipment
+            ];
+
+            ElementMulticategoryFilter filter = new(categories);
+            FilteredElementCollector collector = new FilteredElementCollector(doc).WherePasses(filter);
+            IList<Element> elements = collector.WhereElementIsNotElementType().ToElements();
+
+            StringComparison comparison = StringComparison.OrdinalIgnoreCase;
+
+            HashSet<int> categorIds = new(elements.Count);
+
+            for (int idx = 0; idx < elements.Count; idx++)
+            {
+                Element elem = elements[idx];
+                Category category = elem.Category;
+
+                if (categorIds.Add(category.Id.IntegerValue))
+                {
+                    _ = builder.AppendLine(category.Name);
+
+                    foreach (Parameter param in elem.Parameters)
+                    {
+                        if (!param.IsShared)
+                        {
+                            ElementId paramId = param.AsElementId();
+                            int paranIntegerId = paramId.IntegerValue;
+                            BuiltInParameter builtInParam = (BuiltInParameter)paranIntegerId;
+
+                            if (builtInParam != BuiltInParameter.INVALID)
+                            {
+                                string builtInParameterName = builtInParam.ToString();
+
+                                foreach (string keyword in keywords)
+                                {
+                                    if (builtInParameterName.Equals(keyword, comparison))
+                                    {
+                                        _ = builder.AppendLine(builtInParameterName);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            output = builder.ToString();
+
+            return result;
         }
 
 
