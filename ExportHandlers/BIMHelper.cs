@@ -79,8 +79,7 @@ namespace RevitBIMTool.ExportHandlers
                 BuiltInCategory.OST_PipeCurves,
                 BuiltInCategory.OST_DuctCurves,
                 BuiltInCategory.OST_PipeFitting,
-                BuiltInCategory.OST_PipeAccessory,
-                BuiltInCategory.OST_MechanicalEquipment
+                BuiltInCategory.OST_PipeAccessory
             ];
 
             var bipCalcSize = BuiltInParameter.RBS_CALCULATED_SIZE;
