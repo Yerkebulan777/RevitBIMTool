@@ -434,4 +434,45 @@ internal sealed class RevitViewHelper
     }
 
 
+    public static void HideElementsInView(Document doc, IList<Element> elements, View activeView)
+    {
+        List<ElementId> hideIds = [];
+
+        foreach (Element instance in elements)
+        {
+            if (instance.CanBeHidden(activeView))
+            {
+                if (!instance.IsHidden(activeView))
+                {
+                    hideIds.Add(instance.Id);
+                }
+            }
+        }
+
+        if (hideIds.Count > 0)
+        {
+            using Transaction trx = new(doc, "HideElements");
+            try
+            {
+                if (trx.Start() == TransactionStatus.Started)
+                {
+                    activeView.HideElements(hideIds);
+                    _ = trx.Commit();
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+            }
+            finally
+            {
+                if (!trx.HasEnded())
+                {
+                    _ = trx.RollBack();
+                }
+            }
+        }
+    }
+
+
 }
