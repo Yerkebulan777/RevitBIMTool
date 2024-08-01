@@ -59,17 +59,18 @@ namespace RevitBIMTool.Utils
         }
 
 
-        public static void HideWorksetInView(Document doc, View view, string worksetName)
+        public static void HideWorksetByNamePattern(Document doc, View view, string worksetPattern)
         {
             StringBuilder stringBuilder = new();
-            FilteredWorksetCollector collector = new(doc);
-            IList<Workset> worksets = collector.OfKind(WorksetKind.UserWorkset).ToWorksets();
-            Workset workset = worksets.FirstOrDefault(w => w.IsEditable && w.Name.Contains(worksetName));
-            using Transaction trans = new(doc, $"HideWorkset{worksetName}");
+
+            IList<Workset> worksetList = new FilteredWorksetCollector(doc).OfKind(WorksetKind.UserWorkset).ToWorksets();
+            worksetList = worksetList.Where(w => w.Name.Contains(worksetPattern)).ToList();
+
+            using Transaction trans = new(doc, $"HideWorkset{worksetPattern}");
             TransactionStatus status = trans.Start();
             if (status == TransactionStatus.Started)
             {
-                if (workset != null)
+                foreach (Workset workset in worksetList)
                 {
                     try
                     {
@@ -104,10 +105,8 @@ namespace RevitBIMTool.Utils
                             status = trans.RollBack();
                         }
                     }
-
                 }
             }
         }
-
     }
 }
