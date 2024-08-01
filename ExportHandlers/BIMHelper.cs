@@ -165,7 +165,6 @@ namespace RevitBIMTool.ExportHandlers
         }
 
 
-
         public static Parameter GetBuiltinParameter(Element elem)
         {
             BuiltInParameter paraIndex = BuiltInParameter.WALL_BASE_OFFSET;
