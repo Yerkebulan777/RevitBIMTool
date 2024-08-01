@@ -1,6 +1,7 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Mechanical;
 using Autodesk.Revit.DB.Plumbing;
+using RevitBIMTool.Utils;
 using System.Text;
 
 
@@ -77,52 +78,50 @@ namespace RevitBIMTool.ExportHandlers
             [
                 BuiltInCategory.OST_PipeCurves,
                 BuiltInCategory.OST_DuctCurves,
+                BuiltInCategory.OST_PipeFitting,
+                BuiltInCategory.OST_PipeAccessory,
                 BuiltInCategory.OST_MechanicalEquipment
             ];
 
+            var bipCalcSize = BuiltInParameter.RBS_CALCULATED_SIZE;
+            var bipDiameter = BuiltInParameter.RBS_PIPE_DIAMETER_PARAM;
+
             ElementMulticategoryFilter filter = new(categories);
             FilteredElementCollector collector = new FilteredElementCollector(doc).WherePasses(filter);
-            IList<Element> elements = collector.WhereElementIsNotElementType().ToElements();
+            collector = collector.WhereElementIsNotElementType();
+            collector = collector.WhereElementIsCurveDriven();
 
-            StringComparison comparison = StringComparison.OrdinalIgnoreCase;
-
-            _ = builder.AppendLine("Start retrieve pipes... ");
-
-            HashSet<int> categorIds = new(elements.Count);
+            IList<Element> elements = collector.ToElements();
 
             for (int idx = 0; idx < elements.Count; idx++)
             {
                 Element elem = elements[idx];
-                Category category = elem.Category;
 
-                if (categorIds.Add(category.Id.IntegerValue))
+                Parameter paramCalcSize = elem.get_Parameter(bipCalcSize);
+                Parameter paramDiameter = elem.get_Parameter(bipDiameter);
+
+                Parameter builtInParam = null;
+
+                if (paramCalcSize != null)
                 {
-                    _ = builder.AppendLine();
-                    _ = builder.AppendLine(category.Name);
-
-                    foreach (Parameter param in elem.Parameters)
-                    {
-                        if (!param.IsShared)
-                        {
-                            ElementId paramId = param.AsElementId();
-                            int paranIntegerId = paramId.IntegerValue;
-                            BuiltInParameter builtInParam = (BuiltInParameter)paranIntegerId;
-
-                            if (builtInParam != BuiltInParameter.INVALID)
-                            {
-                                string builtInParameterName = builtInParam.ToString();
-
-                                foreach (string keyword in keywords)
-                                {
-                                    if (builtInParameterName.Equals(keyword, comparison))
-                                    {
-                                        _ = builder.AppendLine(builtInParameterName);
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    builtInParam = paramCalcSize;
                 }
+                else if (paramDiameter != null)
+                {
+                    builtInParam = paramDiameter;
+                }
+                else
+                {
+                    throw new Exception(elem.Category.Name);
+                }
+
+                var value = UnitManager.FootToMm( builtInParam.AsDouble());
+
+                if (value < 30)
+                {
+                    result.Add(elem);
+                }
+
             }
 
             output = builder.ToString();
