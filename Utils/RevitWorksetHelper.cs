@@ -1,6 +1,7 @@
 ﻿using Autodesk.Revit.DB;
 using Serilog;
 using System.Text;
+using System.Text.RegularExpressions;
 using View = Autodesk.Revit.DB.View;
 
 namespace RevitBIMTool.Utils
@@ -59,14 +60,14 @@ namespace RevitBIMTool.Utils
         }
 
 
-        public static void HideWorksetByNamePattern(Document doc, View view, string worksetPattern)
+        public static void HideWorksetsByPattern(Document doc, View view, string pattern= @"^@.+")
         {
             StringBuilder stringBuilder = new();
 
             IList<Workset> worksetList = new FilteredWorksetCollector(doc).OfKind(WorksetKind.UserWorkset).ToWorksets();
-            worksetList = worksetList.Where(w => w.Name.Contains(worksetPattern)).ToList();
+            worksetList = worksetList.Where(w => Regex.IsMatch(w.Name, pattern, RegexOptions.IgnoreCase)).ToList();
 
-            using Transaction trans = new(doc, $"HideWorkset{worksetPattern}");
+            using Transaction trans = new(doc, $"HideWorkset{pattern}");
             TransactionStatus status = trans.Start();
             if (status == TransactionStatus.Started)
             {
@@ -90,7 +91,7 @@ namespace RevitBIMTool.Utils
                             view.SetWorksetVisibility(wid, WorksetVisibility.Hidden);
                         }
 
-                        Log.Debug($"WorksetsInfo: {stringBuilder}");
+                        Log.Debug($"Hide workset: {stringBuilder}");
 
                         status = trans.Commit();
                     }

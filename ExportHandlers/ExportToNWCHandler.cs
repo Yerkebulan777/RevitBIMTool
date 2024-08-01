@@ -59,7 +59,7 @@ internal static class ExportToNWCHandler
                 }
 
                 RevitWorksetHelper.SetWorksetsToVisible(doc, view);
-                RevitWorksetHelper.HideWorksetByNamePattern(doc, view, "@");
+                RevitWorksetHelper.HideWorksetsByPattern(doc, view);
                 RevitViewHelper.SetCategoriesToVisible(doc, view, builtCatsToHide);
                 RevitViewHelper.SetViewSettings(doc, view, discipline, displayStyle, detailLevel);
 
