@@ -72,7 +72,7 @@ namespace RevitBIMTool.ExportHandlers
         public static List<Element> RetrievePipesAndFittings(Document doc)
         {
             List<Element> result = [];
-            StringBuilder builder = new();
+            _ = new StringBuilder();
 
             List<BuiltInCategory> categories =
             [
@@ -82,8 +82,8 @@ namespace RevitBIMTool.ExportHandlers
                 BuiltInCategory.OST_PipeAccessory
             ];
 
-            var bipCalcSize = BuiltInParameter.RBS_CALCULATED_SIZE;
-            var bipDiameter = BuiltInParameter.RBS_PIPE_DIAMETER_PARAM;
+            BuiltInParameter bipCalcSize = BuiltInParameter.RBS_CALCULATED_SIZE;
+            BuiltInParameter bipDiameter = BuiltInParameter.RBS_PIPE_DIAMETER_PARAM;
 
             ElementMulticategoryFilter filter = new(categories);
             FilteredElementCollector collector = new FilteredElementCollector(doc).WherePasses(filter);
@@ -127,6 +127,43 @@ namespace RevitBIMTool.ExportHandlers
 
             return result;
         }
+
+
+        private static List<double> GetAvailablePipeSegmentSizes(Document doc)
+        {
+            HashSet<double> sizes = [];
+
+            FilteredElementCollector collectorPipeType = new(doc);
+            collectorPipeType = collectorPipeType.OfClass(typeof(PipeType));
+            IList<Element> pipeTypes = collectorPipeType.ToElements();
+
+            foreach (PipeType pipeType in pipeTypes.Cast<PipeType>())
+            {
+                RoutingPreferenceManager rpm = pipeType.RoutingPreferenceManager;
+
+                int segmentCount = rpm.GetNumberOfRules(RoutingPreferenceRuleGroupType.Segments);
+
+                for (int index = 0; index < segmentCount; ++index)
+                {
+                    RoutingPreferenceRule segmentRule = rpm.GetRule(RoutingPreferenceRuleGroupType.Segments, index);
+
+                    var element = doc.GetElement(segmentRule.MEPPartId);
+
+                    if (element is Segment segment)
+                    {
+                        foreach (MEPSize size in segment.GetSizes())
+                        {
+                            _ = sizes.Add(size.NominalDiameter); // Используем HashSet для удаления дублирующихся размеров
+                        }
+                    }
+                }
+            }
+
+            List<double> sizesSorted = sizes.ToList();
+            sizesSorted.Sort();
+            return sizesSorted;
+        }
+
 
 
         public static Parameter GetBuiltinParameter(Element elem)
