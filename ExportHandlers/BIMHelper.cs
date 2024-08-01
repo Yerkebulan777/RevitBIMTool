@@ -147,13 +147,13 @@ namespace RevitBIMTool.ExportHandlers
                 {
                     RoutingPreferenceRule segmentRule = rpm.GetRule(RoutingPreferenceRuleGroupType.Segments, index);
 
-                    var element = doc.GetElement(segmentRule.MEPPartId);
+                    Element element = doc.GetElement(segmentRule.MEPPartId);
 
                     if (element is Segment segment)
                     {
                         foreach (MEPSize size in segment.GetSizes())
                         {
-                            _ = sizes.Add(size.NominalDiameter); // Используем HashSet для удаления дублирующихся размеров
+                            _ = sizes.Add(size.NominalDiameter);
                         }
                     }
                 }
