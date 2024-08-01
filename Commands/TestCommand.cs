@@ -25,6 +25,7 @@ namespace RevitBIMTool.Commands
             string[] paramNames = { "Диаметр", "Размер" };
 
             List<Element> elems = BIMHelper.RetrievePipesAndFittings(doc, paramNames, out output);
+
             uidoc.Selection.SetElementIds(elems.Select(elem => elem.Id).ToList());
 
             output += $"\n Total elements count: {elems.Count}";
