@@ -129,7 +129,7 @@ namespace RevitBIMTool.ExportHandlers
         }
 
 
-        private static List<double> GetAvailablePipeSegmentSizes(Document doc)
+        public static List<double> GetAvailablePipeSegmentSizes(Document doc)
         {
             HashSet<double> sizes = [];
 
