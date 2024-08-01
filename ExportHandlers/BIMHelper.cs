@@ -68,7 +68,7 @@ namespace RevitBIMTool.ExportHandlers
         }
 
 
-        private static List<Element> RetrievePipesAndFittings(Document doc, string[] keywords, out string output)
+        public static List<Element> RetrievePipesAndFittings(Document doc, string[] keywords, out string output)
         {
             List<Element> result = [];
             StringBuilder builder = new();
