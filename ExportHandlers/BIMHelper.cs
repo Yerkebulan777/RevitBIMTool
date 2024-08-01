@@ -68,7 +68,7 @@ namespace RevitBIMTool.ExportHandlers
         }
 
 
-        private static List<Element> GetElements(Document doc, string[] keywords, out string output)
+        private static List<Element> RetrievePipesAndFittings(Document doc, string[] keywords, out string output)
         {
             List<Element> result = [];
             StringBuilder builder = new();
@@ -86,6 +86,8 @@ namespace RevitBIMTool.ExportHandlers
 
             StringComparison comparison = StringComparison.OrdinalIgnoreCase;
 
+            _ = builder.AppendLine("Start retrieve pipes... ");
+
             HashSet<int> categorIds = new(elements.Count);
 
             for (int idx = 0; idx < elements.Count; idx++)
@@ -95,6 +97,7 @@ namespace RevitBIMTool.ExportHandlers
 
                 if (categorIds.Add(category.Id.IntegerValue))
                 {
+                    _ = builder.AppendLine();
                     _ = builder.AppendLine(category.Name);
 
                     foreach (Parameter param in elem.Parameters)
