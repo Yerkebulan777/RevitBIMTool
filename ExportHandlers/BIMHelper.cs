@@ -69,7 +69,7 @@ namespace RevitBIMTool.ExportHandlers
         }
 
 
-        public static List<Element> RetrievePipesAndFittings(Document doc, string[] keywords, out string output)
+        public static List<Element> RetrievePipesAndFittings(Document doc)
         {
             List<Element> result = [];
             StringBuilder builder = new();
@@ -100,31 +100,31 @@ namespace RevitBIMTool.ExportHandlers
                 Parameter paramCalcSize = elem.get_Parameter(bipCalcSize);
                 Parameter paramDiameter = elem.get_Parameter(bipDiameter);
 
-                Parameter builtInParam = null;
+                Parameter parameter = null;
 
                 if (paramCalcSize != null)
                 {
-                    builtInParam = paramCalcSize;
+                    parameter = paramCalcSize;
                 }
-                else if (paramDiameter != null)
+
+                if (paramDiameter != null)
                 {
-                    builtInParam = paramDiameter;
+                    parameter = paramDiameter;
                 }
-                else
+
+                if (parameter is null)
                 {
                     throw new Exception(elem.Category.Name);
                 }
 
-                var value = UnitManager.FootToMm( builtInParam.AsDouble());
+                double value = UnitManager.FootToMm(parameter.AsDouble());
 
-                if (value < 30)
+                if (parameter.HasValue && value < 30)
                 {
                     result.Add(elem);
                 }
 
             }
-
-            output = builder.ToString();
 
             return result;
         }
