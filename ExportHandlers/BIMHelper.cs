@@ -2,7 +2,6 @@
 using Autodesk.Revit.DB.Mechanical;
 using Autodesk.Revit.DB.Plumbing;
 using RevitBIMTool.Utils;
-using System.Text;
 
 
 namespace RevitBIMTool.ExportHandlers
@@ -69,10 +68,11 @@ namespace RevitBIMTool.ExportHandlers
         }
 
 
-        public static List<Element> RetrievePipesAndFittings(Document doc)
+        public static List<Element> FilterPipesAndFittingsByMaxDiameter(Document doc, double diameter)
         {
             List<Element> result = [];
-            _ = new StringBuilder();
+
+            diameter += double.Epsilon;
 
             List<BuiltInCategory> categories =
             [
@@ -116,13 +116,15 @@ namespace RevitBIMTool.ExportHandlers
                     throw new Exception(elem.Category.Name);
                 }
 
-                double value = UnitManager.FootToMm(parameter.AsDouble());
-
-                if (parameter.HasValue && value < 30)
+                if (parameter.HasValue)
                 {
-                    result.Add(elem);
-                }
+                    double value = UnitManager.FootToMm(parameter.AsDouble());
 
+                    if (value < diameter)
+                    {
+                        result.Add(elem);
+                    }
+                }
             }
 
             return result;
