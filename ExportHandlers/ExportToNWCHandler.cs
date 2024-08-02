@@ -12,8 +12,6 @@ namespace RevitBIMTool.ExportHandlers;
 
 internal static class ExportToNWCHandler
 {
-    private static List<Element> instansesToHide;
-
     public static string ExportToNWC(UIDocument uidoc, string revitFilePath)
     {
         StringBuilder sb = new();
@@ -52,8 +50,6 @@ internal static class ExportToNWCHandler
 
             if (view3d is View view)
             {
-                instansesToHide = [];
-
                 uidoc.ActiveView = view;
 
                 if (doc.ActiveView == view)
@@ -61,6 +57,8 @@ internal static class ExportToNWCHandler
                     uidoc.RefreshActiveView();
                     Log.Debug("3D view activated");
                 }
+
+                List<Element> instansesToHide = [];
 
                 const BuiltInCategory ductCat = BuiltInCategory.OST_DuctAccessory;
                 const BuiltInCategory struсCat = BuiltInCategory.OST_StructuralFraming;
@@ -73,6 +71,7 @@ internal static class ExportToNWCHandler
 
                 RevitViewHelper.SetViewSettings(doc, view, discipline, displayStyle, detailLevel);
                 RevitViewHelper.SetCategoriesToVisible(doc, view, builtCatsToHide);
+                RevitViewHelper.HideElementsInView(doc, instansesToHide, view);
                 RevitWorksetHelper.HideWorksetsByPattern(doc, view);
                 RevitWorksetHelper.SetWorksetsToVisible(doc, view);
 
