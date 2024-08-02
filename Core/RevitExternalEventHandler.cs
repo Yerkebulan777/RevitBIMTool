@@ -58,7 +58,7 @@ namespace RevitBIMTool.Core
             string logFilePath = Path.Combine(docPath, logFileName);
 
             return new LoggerConfiguration()
-                .WriteTo.File(logFilePath, retainedFileCountLimit: 5)
+                .WriteTo.File(logFilePath)
                 .MinimumLevel.Debug()
                 .CreateLogger();
         }
