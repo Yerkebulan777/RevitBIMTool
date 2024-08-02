@@ -12,6 +12,8 @@ namespace RevitBIMTool.ExportHandlers;
 
 internal static class ExportToNWCHandler
 {
+    private static List<Element> instansesToHide;
+
     public static string ExportToNWC(UIDocument uidoc, string revitFilePath)
     {
         StringBuilder sb = new();
@@ -50,6 +52,8 @@ internal static class ExportToNWCHandler
 
             if (view3d is View view)
             {
+                instansesToHide = [];
+
                 uidoc.ActiveView = view;
 
                 if (doc.ActiveView == view)
@@ -58,17 +62,19 @@ internal static class ExportToNWCHandler
                     Log.Debug("3D view activated");
                 }
 
-                RevitWorksetHelper.SetWorksetsToVisible(doc, view);
-                RevitWorksetHelper.HideWorksetsByPattern(doc, view);
-                RevitViewHelper.SetCategoriesToVisible(doc, view, builtCatsToHide);
-                RevitViewHelper.SetViewSettings(doc, view, discipline, displayStyle, detailLevel);
-
                 const BuiltInCategory ductCat = BuiltInCategory.OST_DuctAccessory;
-                const BuiltInCategory structCat = BuiltInCategory.OST_StructuralFraming;
+                const BuiltInCategory struсCat = BuiltInCategory.OST_StructuralFraming;
 
-                _ = sb.AppendLine(VisibilityHelper.HideElementBySymbolName(doc, ductCat, "(клапан)kazvent_bm-h"));
-                _ = sb.AppendLine(VisibilityHelper.HideElementBySymbolName(doc, ductCat, "(клапан)анемостат_10авп"));
-                _ = sb.AppendLine(VisibilityHelper.HideElementBySymbolName(doc, structCat, "(элемент_перемычки)"));
+                instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, struсCat, "(элемент_перемычки)").ToElements());
+                instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, ductCat, "(клапан)kazvent_bm-h").ToElements());
+                instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, ductCat, "(клапан)анемостат_10авп").ToElements());
+
+                _ = sb.AppendLine($"Total number of items found for hiding: {instansesToHide.Count}");
+
+                RevitViewHelper.SetViewSettings(doc, view, discipline, displayStyle, detailLevel);
+                RevitViewHelper.SetCategoriesToVisible(doc, view, builtCatsToHide);
+                RevitWorksetHelper.HideWorksetsByPattern(doc, view);
+                RevitWorksetHelper.SetWorksetsToVisible(doc, view);
 
                 NavisworksExportOptions options = new()
                 {

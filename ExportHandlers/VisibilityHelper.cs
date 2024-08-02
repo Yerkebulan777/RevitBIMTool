@@ -15,9 +15,7 @@ internal static class VisibilityHelper
 
         View activeView = doc.ActiveView;
 
-        FilteredElementCollector instanses = CollectorHelper.GetInstancesBySymbolName(doc, bic, symbolName);
 
-        strBuilder.AppendLine($"{symbolName} elements found: {instanses.GetElementCount()}");
 
         foreach (Element instance in instanses.ToElements())
         {
