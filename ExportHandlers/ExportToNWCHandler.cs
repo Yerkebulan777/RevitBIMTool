@@ -61,9 +61,10 @@ internal static class ExportToNWCHandler
                 List<Element> instansesToHide = [];
 
                 const BuiltInCategory ductCat = BuiltInCategory.OST_DuctAccessory;
-                const BuiltInCategory struсCat = BuiltInCategory.OST_StructuralFraming;
+                const BuiltInCategory strFCat = BuiltInCategory.OST_StructuralFraming;
 
-                instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, struсCat, "(элемент_перемычки)").ToElements());
+
+                instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, strFCat, "(элемент_перемычки)").ToElements());
                 instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, ductCat, "(клапан)kazvent_bm-h").ToElements());
                 instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, ductCat, "(клапан)анемостат_10авп").ToElements());
 
