@@ -53,7 +53,8 @@ namespace RevitBIMTool.Core
 
         public ILogger ConfigureLogger()
         {
-            string logFileName = $"RevitBIMTool{versionNumber}({currentProcess.SessionId}).txt";
+            int procId = currentProcess.Id;
+            string logFileName = $"RevitBIMTool{versionNumber}:{procId}.txt";
             string logFilePath = Path.Combine(docPath, logFileName);
 
             return new LoggerConfiguration()
