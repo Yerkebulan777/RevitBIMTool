@@ -1,4 +1,5 @@
 ﻿using Autodesk.Revit.UI;
+using Autodesk.Revit.UI.Events;
 using CommunicationService.Models;
 using Serilog;
 using System.Diagnostics;
@@ -9,10 +10,12 @@ namespace RevitBIMTool.Core
 {
     public sealed class RevitExternalEventHandler : IExternalEventHandler
     {
+        private static int counter = 0;
         private readonly string versionNumber;
         private readonly ExternalEvent externalEvent;
-        private readonly Process currentProcess = Process.GetCurrentProcess();
+        private static readonly Process currentProcess = Process.GetCurrentProcess();
         private static readonly string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        private static readonly string logFileName = $"RevitBIMTool:{currentProcess.Id}.txt";
 
         public static readonly object SyncLocker = new();
 
@@ -28,14 +31,18 @@ namespace RevitBIMTool.Core
         public void Execute(UIApplication uiapp)
         {
             currentProcess.PriorityBoostEnabled = true;
+
             AutomationHandler autoHandler = new(uiapp);
+
+            uiapp.Idling += new EventHandler<IdlingEventArgs>(OnIdlingAsync);
 
             while (TaskRequestContainer.Instance.PopTaskModel(versionNumber, out TaskRequest taskRequest))
             {
                 if (File.Exists(taskRequest.RevitFilePath))
                 {
                     string result = autoHandler.ExecuteTask(taskRequest);
-                    Log.Information($"Task result:  {result}");
+
+                    Log.Information($"Task result:\r\n\t{result}");
 
                     Task task = new(async () =>
                     {
@@ -53,31 +60,44 @@ namespace RevitBIMTool.Core
 
         public ILogger ConfigureLogger()
         {
-            int procId = currentProcess.Id;
-            string logFileName = $"RevitBIMTool{versionNumber}:{procId}.txt";
-            string logFilePath = Path.Combine(docPath, logFileName);
-
             return new LoggerConfiguration()
-                .WriteTo.File(logFilePath)
+                .WriteTo.File(Path.Combine(docPath, logFileName))
                 .MinimumLevel.Debug()
                 .CreateLogger();
         }
 
 
-        private void CloseRevitApplication(UIApplication uiapp)
+        private async void OnIdlingAsync(object sender, IdlingEventArgs e)
         {
-            if (!currentProcess.HasExited)
+            Log.Debug($"Idling session called {counter}");
+
+            while (true)
             {
-                try
+                counter++;
+
+                await Task.Delay(1000);
+
+                if (counter > 1000)
                 {
-                    Log.Warning("Сlosing the Revit...");
-                    uiapp.Application.PurgeReleasedAPIObjects();
+                    CloseRevitApplication();
                 }
-                finally
-                {
-                    currentProcess.Kill();
-                    currentProcess?.Dispose();
-                }
+
+            }
+        }
+
+
+        private void CloseRevitApplication(UIApplication uiapp = null)
+        {
+            try
+            {
+                Log.Warning("Сlose Revit process...");
+                uiapp?.Application.PurgeReleasedAPIObjects();
+            }
+            finally
+            {
+                Log.CloseAndFlush();
+                currentProcess?.Kill();
+                currentProcess?.Dispose();
             }
         }
 
@@ -90,10 +110,10 @@ namespace RevitBIMTool.Core
 
         public ExternalEventRequest Raise()
         {
+            Log.Information($"Run {logFileName}");
             Log.Logger = ConfigureLogger();
             return externalEvent.Raise();
         }
-
 
     }
 
