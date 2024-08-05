@@ -61,6 +61,7 @@ namespace RevitBIMTool.Core
 
         internal ILogger ConfigureLogger()
         {
+            Debug.WriteLine(logFileName);
             return new LoggerConfiguration()
                 .WriteTo.File(Path.Combine(docPath, logFileName))
                 .MinimumLevel.Debug()

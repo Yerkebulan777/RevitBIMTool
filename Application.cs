@@ -12,13 +12,17 @@ internal sealed class Application : IExternalApplication
 {
     private RevitExternalEventHandler externalEventHandler;
 
+    int counter = 0;
 
     #region IExternalApplication
 
     public Result OnStartup(UIControlledApplication application)
     {
         string versionNumber = application.ControlledApplication.VersionNumber;
+
         using Mutex mutex = new(true, $"Global\\Revit{versionNumber}");
+
+        application.Idling += new EventHandler<IdlingEventArgs>(OnIdlingAsync);
 
         if (mutex.WaitOne(TimeSpan.FromSeconds(1000)))
         {
@@ -67,13 +71,13 @@ internal sealed class Application : IExternalApplication
 
         Type type = sender.GetType();
 
-        Log.Warning($"Sender IS {type.Name}");
+        Log.Warning($"Sender is {type.Name}");
 
         if (sender is UIApplication uiapp)
         {
             Log.Warning($"Sender is UIApplication");
 
-            int counter = 0;
+            
 
             while (true)
             {
