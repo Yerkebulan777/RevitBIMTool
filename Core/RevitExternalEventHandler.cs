@@ -10,7 +10,7 @@ namespace RevitBIMTool.Core
 {
     public sealed class RevitExternalEventHandler : IExternalEventHandler
     {
-        private static int counter = 0;
+        private static int counter;
         private readonly string versionNumber;
         private readonly ExternalEvent externalEvent;
         private static readonly Process currentProcess = Process.GetCurrentProcess();
@@ -35,7 +35,7 @@ namespace RevitBIMTool.Core
 
             AutomationHandler autoHandler = new(uiapp);
 
-            uiapp.Idling += new EventHandler<IdlingEventArgs>(OnIdlingAsync);
+            uiapp.Idling += new EventHandler<IdlingEventArgs>(OnIdling);
 
             while (TaskRequestContainer.Instance.PopTaskModel(versionNumber, out TaskRequest taskRequest))
             {
@@ -69,24 +69,15 @@ namespace RevitBIMTool.Core
         }
 
 
-        internal async void OnIdlingAsync(object sender, IdlingEventArgs e)
+        internal void OnIdling(object sender, IdlingEventArgs e)
         {
-            if (sender is UIApplication uiapp)
+            counter++;
+
+            Log.Debug($"Idling session called {counter}");
+
+            if (sender is UIApplication uiapp && counter > 100)
             {
-                while (true)
-                {
-                    counter++;
-
-                    await Task.Delay(1000);
-
-                    Log.Debug($"Idling called {counter}");
-
-                    if (counter > 1000)
-                    {
-                        CloseRevitApplication(uiapp);
-                    }
-
-                }
+                CloseRevitApplication(uiapp);
             }
         }
 
@@ -97,10 +88,11 @@ namespace RevitBIMTool.Core
             {
                 Log.Warning("Сlose Revit ...");
                 uiapp.Application.PurgeReleasedAPIObjects();
-                uiapp.Idling -= new EventHandler<IdlingEventArgs>(OnIdlingAsync);
+                uiapp.Idling -= new EventHandler<IdlingEventArgs>(OnIdling);
             }
             finally
             {
+                Thread.Sleep(1000);
                 Log.CloseAndFlush();
                 currentProcess?.Kill();
                 currentProcess?.Dispose();

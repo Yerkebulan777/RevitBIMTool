@@ -12,8 +12,6 @@ internal sealed class Application : IExternalApplication
 {
     private RevitExternalEventHandler externalEventHandler;
 
-    int counter = 0;
-
     #region IExternalApplication
 
     public Result OnStartup(UIControlledApplication application)
@@ -21,8 +19,6 @@ internal sealed class Application : IExternalApplication
         string versionNumber = application.ControlledApplication.VersionNumber;
 
         using Mutex mutex = new(true, $"Global\\Revit{versionNumber}");
-
-        application.Idling += new EventHandler<IdlingEventArgs>(OnIdlingAsync);
 
         if (mutex.WaitOne(TimeSpan.FromSeconds(1000)))
         {
@@ -63,29 +59,5 @@ internal sealed class Application : IExternalApplication
     }
 
     #endregion
-
-
-    private async void OnIdlingAsync(object sender, IdlingEventArgs e)
-    {
-        externalEventHandler = new RevitExternalEventHandler("");
-
-        Log.Debug($"Idling session called");
-
-        if (sender is UIApplication uiapp)
-        {
-            while (true)
-            {
-                counter++;
-
-                await Task.Delay(1000);
-
-                if (counter > 1000)
-                {
-                    externalEventHandler.CloseRevitApplication(uiapp);
-                }
-
-            }
-        }
-    }
 
 }
