@@ -59,10 +59,10 @@ namespace RevitBIMTool.Core
         internal ILogger ConfigureLogger(string version)
         {
             return new LoggerConfiguration()
-                .WriteTo.File(Path.Combine(docPath, $"RevitBIMTool{version}.txt"),
-                    rollingInterval: RollingInterval.Infinite,
+                .WriteTo.File(Path.Combine(docPath, $"RevitBIMTool {version}.txt"),
+                    rollingInterval: RollingInterval.Day,
                     fileSizeLimitBytes: 10_000_000,
-                    retainedFileCountLimit: 10)
+                    retainedFileCountLimit: 3)
                 .MinimumLevel.Debug()
                 .CreateLogger();
         }
