@@ -10,7 +10,6 @@ namespace RevitBIMTool.Core
 {
     public sealed class RevitExternalEventHandler : IExternalEventHandler
     {
-        private static int counter;
         private readonly string versionNumber;
         private readonly ExternalEvent externalEvent;
         private static readonly Process currentProcess = Process.GetCurrentProcess();
@@ -71,11 +70,9 @@ namespace RevitBIMTool.Core
 
         internal void OnIdling(object sender, IdlingEventArgs e)
         {
-            counter++;
+            Log.Debug($"Idling session called");
 
-            Log.Debug($"Idling session called {counter}");
-
-            if (sender is UIApplication uiapp && counter > 100)
+            if (sender is UIApplication uiapp)
             {
                 CloseRevitApplication(uiapp);
             }
