@@ -90,12 +90,14 @@ namespace RevitBIMTool.Core
         {
             try
             {
+                Log.Warning("Сlose Revit ...");
+
                 if (uiapp != null)
                 {
-                    Log.Warning("Сlose Revit process...");
                     uiapp.Application.PurgeReleasedAPIObjects();
                     uiapp.Idling -= new EventHandler<IdlingEventArgs>(OnIdlingAsync);
                 }
+
             }
             finally
             {
