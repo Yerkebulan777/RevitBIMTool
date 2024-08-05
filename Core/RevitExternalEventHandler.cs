@@ -15,7 +15,7 @@ namespace RevitBIMTool.Core
         private readonly ExternalEvent externalEvent;
         private static readonly Process currentProcess = Process.GetCurrentProcess();
         private static readonly string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-        private static readonly string logFileName = $"RevitBIMTool:{currentProcess.Id}.txt";
+        private static readonly string logFileName = $"RevitBIMTool[{currentProcess.Id}].txt";
 
         public static readonly object SyncLocker = new();
 

@@ -69,23 +69,15 @@ internal sealed class Application : IExternalApplication
     {
         externalEventHandler = new RevitExternalEventHandler("");
 
-        Type type = sender.GetType();
-
-        Log.Warning($"Sender is {type.Name}");
+        Log.Debug($"Idling session called");
 
         if (sender is UIApplication uiapp)
         {
-            Log.Warning($"Sender is UIApplication");
-
-            
-
             while (true)
             {
                 counter++;
 
                 await Task.Delay(1000);
-
-                Log.Debug($"Idling called {counter}");
 
                 if (counter > 1000)
                 {
