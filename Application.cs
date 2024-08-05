@@ -65,6 +65,7 @@ internal sealed class Application : IExternalApplication
     private async void OnIdlingAsync(object sender, IdlingEventArgs e)
     {
         externalEventHandler = new RevitExternalEventHandler("");
+
         Log.Logger = externalEventHandler.ConfigureLogger();
         
         if (sender is UIApplication uiapp)
