@@ -58,7 +58,7 @@ namespace RevitBIMTool.Core
         }
 
 
-        public ILogger ConfigureLogger()
+        internal ILogger ConfigureLogger()
         {
             return new LoggerConfiguration()
                 .WriteTo.File(Path.Combine(docPath, logFileName))
@@ -67,37 +67,35 @@ namespace RevitBIMTool.Core
         }
 
 
-        private async void OnIdlingAsync(object sender, IdlingEventArgs e)
+        internal async void OnIdlingAsync(object sender, IdlingEventArgs e)
         {
-            Log.Debug($"Idling session called {counter}");
-
-            while (true)
+            if (sender is UIApplication uiapp)
             {
-                counter++;
-
-                await Task.Delay(1000);
-
-                if (counter > 1000)
+                while (true)
                 {
-                    CloseRevitApplication();
-                }
+                    counter++;
 
+                    await Task.Delay(1000);
+
+                    Log.Debug($"Idling called {counter}");
+
+                    if (counter > 1000)
+                    {
+                        CloseRevitApplication(uiapp);
+                    }
+
+                }
             }
         }
 
 
-        private void CloseRevitApplication(UIApplication uiapp = null)
+        internal void CloseRevitApplication(UIApplication uiapp)
         {
             try
             {
                 Log.Warning("Сlose Revit ...");
-
-                if (uiapp != null)
-                {
-                    uiapp.Application.PurgeReleasedAPIObjects();
-                    uiapp.Idling -= new EventHandler<IdlingEventArgs>(OnIdlingAsync);
-                }
-
+                uiapp.Application.PurgeReleasedAPIObjects();
+                uiapp.Idling -= new EventHandler<IdlingEventArgs>(OnIdlingAsync);
             }
             finally
             {
@@ -116,7 +114,6 @@ namespace RevitBIMTool.Core
 
         public ExternalEventRequest Raise()
         {
-            Log.Information($"Run {logFileName}");
             Log.Logger = ConfigureLogger();
             return externalEvent.Raise();
         }

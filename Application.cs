@@ -1,7 +1,9 @@
 using Autodesk.Revit.UI;
+using Autodesk.Revit.UI.Events;
 using CommunicationService.Models;
 using RevitBIMTool.Core;
 using Serilog;
+using System.Diagnostics.Metrics;
 using System.Globalization;
 
 
@@ -57,7 +59,34 @@ internal sealed class Application : IExternalApplication
         return Result.Succeeded;
     }
 
+
     #endregion
 
+    private async void OnIdlingAsync(object sender, IdlingEventArgs e)
+    {
+        externalEventHandler = new RevitExternalEventHandler("");
+        Log.Logger = externalEventHandler.ConfigureLogger();
+        
+        if (sender is UIApplication uiapp)
+        {
+            Log.Warning($"Sender is UIApplication");
 
+            int counter = 0;
+
+            while (true)
+            {
+                counter++;
+
+                await Task.Delay(1000);
+
+                Log.Debug($"Idling called {counter}");
+
+                if (counter > 1000)
+                {
+                    externalEventHandler.CloseRevitApplication(uiapp);
+                }
+
+            }
+        }
+    }
 }
