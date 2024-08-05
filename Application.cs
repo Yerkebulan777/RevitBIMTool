@@ -65,7 +65,9 @@ internal sealed class Application : IExternalApplication
     {
         externalEventHandler = new RevitExternalEventHandler("");
 
-        Log.Logger = externalEventHandler.ConfigureLogger();
+        Type type = sender.GetType();
+
+        Log.Warning($"Sender IS {type.Name}");
 
         if (sender is UIApplication uiapp)
         {

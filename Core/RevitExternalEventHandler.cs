@@ -23,6 +23,7 @@ namespace RevitBIMTool.Core
         public RevitExternalEventHandler(string version)
         {
             externalEvent = ExternalEvent.Create(this);
+            Log.Logger = ConfigureLogger();
             versionNumber = version;
         }
 
@@ -114,7 +115,6 @@ namespace RevitBIMTool.Core
 
         public ExternalEventRequest Raise()
         {
-            Log.Logger = ConfigureLogger();
             return externalEvent.Raise();
         }
 
