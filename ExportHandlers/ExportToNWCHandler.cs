@@ -64,8 +64,10 @@ internal static class ExportToNWCHandler
                 const BuiltInCategory strFCat = BuiltInCategory.OST_StructuralFraming;
 
                 instansesToHide.AddRange(BIMHelper.FilterPipesAndFittingsByMaxDiameter(doc, 30));
+                instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, strFCat, "(Отверстия)").ToElements());
                 instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, strFCat, "(элемент_перемычки)").ToElements());
                 instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, ductCat, "(клапан)kazvent_bm-h").ToElements());
+                instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, strFCat, "(задание)на _отверстие").ToElements());
                 instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, ductCat, "(клапан)анемостат_10авп").ToElements());
 
                 _ = sb.AppendLine($"Total number of items found for hiding: {instansesToHide.Count}");
