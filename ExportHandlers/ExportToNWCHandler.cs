@@ -64,6 +64,7 @@ internal static class ExportToNWCHandler
 
                 instansesToHide.AddRange(BIMHelper.FilterPipesAndFittingsByMaxDiameter(doc, 30));
                 instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, strFCat, "(Отверстия)").ToElements());
+                instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, strFCat, "(Отверстия)").ToElements());
                 instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, strFCat, "(элемент_перемычки)").ToElements());
                 instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, ductCat, "(клапан)kazvent_bm-h").ToElements());
                 instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, strFCat, "(задание)на _отверстие").ToElements());
@@ -74,7 +75,8 @@ internal static class ExportToNWCHandler
                 RevitViewHelper.SetViewSettings(doc, view, discipline, displayStyle, detailLevel);
                 RevitViewHelper.SetCategoriesToVisible(doc, view, builtCatsToHide);
                 RevitViewHelper.HideElementsInView(doc, instansesToHide, view);
-                RevitWorksetHelper.HideWorksetsByPattern(doc, view);
+                RevitWorksetHelper.HideWorksetsByPattern(doc, view, @"^@.+");
+                RevitWorksetHelper.HideWorksetsByPattern(doc, view, @"^#.+");
                 RevitWorksetHelper.SetWorksetsToVisible(doc, view);
 
                 NavisworksExportOptions options = new()

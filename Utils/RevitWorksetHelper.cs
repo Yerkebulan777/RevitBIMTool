@@ -60,7 +60,7 @@ namespace RevitBIMTool.Utils
         }
 
 
-        public static void HideWorksetsByPattern(Document doc, View view, string pattern= @"^@.+")
+        public static void HideWorksetsByPattern(Document doc, View view, string pattern)
         {
             StringBuilder stringBuilder = new();
 
