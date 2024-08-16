@@ -64,7 +64,7 @@ internal sealed class Application : IExternalApplication
     #endregion
 
 
-    #region Logger
+    #region ConfigureLogger
 
     internal ILogger ConfigureLogger(string versionNumber)
     {
