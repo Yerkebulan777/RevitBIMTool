@@ -4,6 +4,7 @@ using CommunicationService.Models;
 using RevitBIMTool.Core;
 using Serilog;
 using System.Globalization;
+using System.IO;
 
 
 namespace RevitBIMTool;
@@ -11,6 +12,8 @@ namespace RevitBIMTool;
 internal sealed class Application : IExternalApplication
 {
     private RevitExternalEventHandler externalEventHandler;
+    private static readonly string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+
 
     #region IExternalApplication
 
@@ -25,6 +28,7 @@ internal sealed class Application : IExternalApplication
             try
             {
                 SetupUIPanel.Initialize(application);
+                Log.Logger = ConfigureLogger(versionNumber);
             }
             catch (Exception ex)
             {
@@ -59,5 +63,22 @@ internal sealed class Application : IExternalApplication
     }
 
     #endregion
+
+
+    #region Logger
+
+    internal ILogger ConfigureLogger(string versionNumber)
+    {
+        return new LoggerConfiguration()
+            .WriteTo.File(Path.Combine(docPath, $"RevitBIMTool {versionNumber}.txt"),
+                rollingInterval: RollingInterval.Day,
+                fileSizeLimitBytes: 10_000_000,
+                retainedFileCountLimit: 3)
+            .MinimumLevel.Debug()
+            .CreateLogger();
+    }
+
+    #endregion
+
 
 }
