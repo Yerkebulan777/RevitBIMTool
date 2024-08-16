@@ -1,5 +1,4 @@
 using Autodesk.Revit.UI;
-using Autodesk.Revit.UI.Events;
 using CommunicationService.Models;
 using RevitBIMTool.Core;
 using Serilog;
@@ -71,9 +70,9 @@ internal sealed class Application : IExternalApplication
     {
         return new LoggerConfiguration()
             .WriteTo.File(Path.Combine(docPath, $"RevitBIMTool {versionNumber}.txt"),
-                rollingInterval: RollingInterval.Day,
+                rollingInterval: RollingInterval.Infinite,
                 fileSizeLimitBytes: 10_000_000,
-                retainedFileCountLimit: 3)
+                retainedFileCountLimit: 5)
             .MinimumLevel.Debug()
             .CreateLogger();
     }
