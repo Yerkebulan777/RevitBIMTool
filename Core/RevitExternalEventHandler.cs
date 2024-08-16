@@ -12,8 +12,7 @@ namespace RevitBIMTool.Core
     {
         private readonly string versionNumber;
         private readonly ExternalEvent externalEvent;
-        private static readonly Process currentProcess = Process.GetCurrentProcess();
-        
+                
         public static object SyncLocker { get; set; } = new();
 
 
@@ -27,11 +26,7 @@ namespace RevitBIMTool.Core
         [STAThread]
         public void Execute(UIApplication uiapp)
         {
-            currentProcess.PriorityBoostEnabled = true;
-
             AutomationHandler autoHandler = new(uiapp);
-
-            uiapp.Idling += new EventHandler<IdlingEventArgs>(OnIdling);
 
             while (TaskRequestContainer.Instance.PopTaskModel(versionNumber, out TaskRequest taskRequest))
             {
@@ -51,36 +46,6 @@ namespace RevitBIMTool.Core
                 }
             }
 
-            CloseRevitApplication(uiapp);
-        }
-
-
-        internal void OnIdling(object sender, IdlingEventArgs e)
-        {
-            Log.Debug($"Idling session called");
-
-            if (sender is UIApplication uiapp)
-            {
-                CloseRevitApplication(uiapp);
-            }
-        }
-
-
-        internal void CloseRevitApplication(UIApplication uiapp)
-        {
-            try
-            {
-                Log.Warning("Сlose Revit ...");
-                uiapp.Application.PurgeReleasedAPIObjects();
-                uiapp.Idling -= new EventHandler<IdlingEventArgs>(OnIdling);
-            }
-            finally
-            {
-                Thread.Sleep(1000);
-                Log.CloseAndFlush();
-                currentProcess?.Kill();
-                currentProcess?.Dispose();
-            }
         }
 
 

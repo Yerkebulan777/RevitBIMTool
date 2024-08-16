@@ -1,7 +1,9 @@
 using Autodesk.Revit.UI;
+using Autodesk.Revit.UI.Events;
 using CommunicationService.Models;
 using RevitBIMTool.Core;
 using Serilog;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 
@@ -11,6 +13,7 @@ namespace RevitBIMTool;
 internal sealed class Application : IExternalApplication
 {
     private RevitExternalEventHandler externalEventHandler;
+    private static readonly Process currentProcess = Process.GetCurrentProcess();
     private static readonly string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 
 
@@ -41,8 +44,10 @@ internal sealed class Application : IExternalApplication
 
                 if (TaskRequestContainer.Instance.ValidateTaskData(versionNumber))
                 {
+                    application.Idling += new EventHandler<IdlingEventArgs>(OnIdling);
                     Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
                     externalEventHandler = new RevitExternalEventHandler(versionNumber);
+
                     if (ExternalEventRequest.Denied != externalEventHandler.Raise())
                     {
                         Log.Information($"Revit {versionNumber} started...");
@@ -75,6 +80,43 @@ internal sealed class Application : IExternalApplication
                 retainedFileCountLimit: 5)
             .MinimumLevel.Debug()
             .CreateLogger();
+    }
+
+    #endregion
+
+
+    #region IdlingEventHandler
+
+    private void OnIdling(object sender, IdlingEventArgs e)
+    {
+        Log.Debug($"Idling session called");
+
+        if (sender is UIApplication uiapp)
+        {
+            CloseRevitApplication(uiapp);
+        }
+    }
+
+
+    private void CloseRevitApplication(UIApplication uiapp)
+    {
+        UIDocument uidoc = uiapp.ActiveUIDocument;
+
+        if (uidoc is null)
+        {
+            try
+            {
+                Log.Warning("Ñlose Revit ...");
+                uiapp.Application.PurgeReleasedAPIObjects();
+                uiapp.Idling -= new EventHandler<IdlingEventArgs>(OnIdling);
+            }
+            finally
+            {
+                Thread.Sleep(1000);
+                currentProcess?.Kill();
+                currentProcess?.Dispose();
+            }
+        }
     }
 
     #endregion
