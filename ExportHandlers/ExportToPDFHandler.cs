@@ -35,7 +35,7 @@ internal static class ExportToPDFHandler
 
         if (!ExportPathHelper.IsTargetFileUpdated(exportFullPath, revitFilePath))
         {
-            Log.Information("Start export to PDF...");
+            Log.Debug("Start export to PDF...");
             Log.Debug($"TEMP directory: {tempFolder}");
 
             RevitPathHelper.EnsureDirectory(tempFolder);
@@ -48,7 +48,9 @@ internal static class ExportToPDFHandler
                 throw new ArgumentException(printerName + "is not defined");
             }
 
-            Dictionary<string, List<SheetModel>> sheetData = PrintPdfHandler.GetSheetPrintedData(doc, revitFileName);
+            ColorDepthType colorType = ColorDepthType.GrayScale;
+
+            Dictionary<string, List<SheetModel>> sheetData = PrintPdfHandler.GetSheetPrintedData(doc, revitFileName, );
             List<SheetModel> sheetModels = PrintPdfHandler.PrintSheetData(ref doc, sheetData, tempFolder);
             Log.Information($"Total valid sheet count: ({sheetModels.Count})");
 

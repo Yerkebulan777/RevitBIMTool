@@ -12,15 +12,15 @@ internal static class RevitPrinterUtil
     }
 
 
-    public static void SetPrintSettings(Document doc, SheetModel sheetModel, string formatName)
+    public static void SetPrintSettings(Document doc, SheetModel sheetModel, string formatName, ColorDepthType colorType)
     {
         PrintManager printManager = doc.PrintManager;
         PrintSetup printSetup = printManager.PrintSetup;
         printSetup.CurrentPrintSetting = printSetup.InSession;
         IPrintSetting currentPrintSetting = printSetup.CurrentPrintSetting;
 
+        currentPrintSetting.PrintParameters.ColorDepth = colorType;
         currentPrintSetting.PrintParameters.ZoomType = ZoomType.Zoom;
-        currentPrintSetting.PrintParameters.ColorDepth = ColorDepthType.Color;
         currentPrintSetting.PrintParameters.RasterQuality = RasterQualityType.Medium;
         currentPrintSetting.PrintParameters.PaperPlacement = PaperPlacementType.Margins;
         currentPrintSetting.PrintParameters.HiddenLineViews = HiddenLineViewsType.VectorProcessing;

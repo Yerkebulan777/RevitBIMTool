@@ -53,7 +53,7 @@ internal static class PrintPdfHandler
     }
 
 
-    public static Dictionary<string, List<SheetModel>> GetSheetPrintedData(Document doc, string revitFileName)
+    public static Dictionary<string, List<SheetModel>> GetSheetPrintedData(Document doc, string revitFileName, ColorDepthType colorType)
     {
         FilteredElementCollector collector = new(doc);
         collector = collector.OfCategory(BuiltInCategory.OST_TitleBlocks);
@@ -100,7 +100,7 @@ internal static class PrintPdfHandler
 
                             if (!sheetPrintData.TryGetValue(formatName, out List<SheetModel> sheetList))
                             {
-                                RevitPrinterUtil.SetPrintSettings(doc, model, formatName);
+                                RevitPrinterUtil.SetPrintSettings(doc, model, formatName, colorType);
                                 sheetList = [model];
                             }
                             else
