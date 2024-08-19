@@ -1,8 +1,6 @@
 ﻿using Autodesk.Revit.UI;
-using Autodesk.Revit.UI.Events;
 using CommunicationService.Models;
 using Serilog;
-using System.Diagnostics;
 using System.IO;
 
 
@@ -12,7 +10,7 @@ namespace RevitBIMTool.Core
     {
         private readonly string versionNumber;
         private readonly ExternalEvent externalEvent;
-                
+
         public static object SyncLocker { get; set; } = new();
 
 
@@ -32,14 +30,14 @@ namespace RevitBIMTool.Core
             {
                 if (File.Exists(taskRequest.RevitFilePath))
                 {
-                    string result = autoHandler.ExecuteTask(taskRequest);
+                    string output = autoHandler.ExecuteTask(taskRequest);
 
-                    Log.Information($"Task result:\r\n\t{result}");
+                    Log.Information($"Task output:\r\n\t{output}");
 
                     Task task = new(async () =>
                     {
                         await Task.Delay(taskRequest.CommandNumber * 1000);
-                        await RevitMessageManager.SendInfoAsync(taskRequest.ChatId, result);
+                        await RevitMessageManager.SendInfoAsync(taskRequest.ChatId, output);
                     });
 
                     task.RunSynchronously();

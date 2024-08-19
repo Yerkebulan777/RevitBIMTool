@@ -9,7 +9,6 @@ using System.IO;
 
 
 namespace RevitBIMTool;
-
 internal sealed class Application : IExternalApplication
 {
     private RevitExternalEventHandler externalEventHandler;
@@ -120,6 +119,5 @@ internal sealed class Application : IExternalApplication
     }
 
     #endregion
-
 
 }
