@@ -29,13 +29,14 @@ public sealed class AutomationHandler
 
         DateTime startedTime = DateTime.Now;
 
-        Log.Debug($"Run file: {taskRequest.RevitFileName}");
+        Log.Debug($"Run file: {taskRequest.RevitFileName} ");
 
         string output = RunDocumentAction(uiapp, taskRequest, RunTaskByNumber);
 
         string formattedTime = (DateTime.Now - startedTime).ToString(@"h\:mm\:ss");
-        _ = builder.Append($"{taskRequest.RevitFileName}");
-        _ = builder.Append($"[{formattedTime}]");
+
+        _ = builder.Append($" {taskRequest.RevitFileName} ");
+        _ = builder.Append($" [{formattedTime}] ");
         _ = builder.AppendLine(output);
 
         return builder.ToString();
