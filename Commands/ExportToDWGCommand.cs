@@ -27,7 +27,8 @@ internal sealed class ExportToDWGCommand : IExternalCommand, IExternalCommandAva
         {
             RevitLinkHelper.CheckAndRemoveUnloadedLinks(doc);
             string revitFilePath = RevitPathHelper.GetRevitFilePath(doc);
-            message = ExportToDWGHandler.ExportExecute(uidoc, revitFilePath);
+            string sectionName = RevitPathHelper.GetSectionName(revitFilePath);
+            message = ExportToDWGHandler.ExportExecute(uidoc, revitFilePath, sectionName);
         }
         catch (Exception ex)
         {

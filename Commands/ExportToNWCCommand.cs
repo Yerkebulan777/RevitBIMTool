@@ -27,11 +27,12 @@ internal sealed class ExportToNWCCommand : IExternalCommand, IExternalCommandAva
         {
             RevitLinkHelper.CheckAndRemoveUnloadedLinks(doc);
             string revitFilePath = RevitPathHelper.GetRevitFilePath(doc);
-            message = ExportToNWCHandler.ExportToNWC(uidoc, revitFilePath);
+            string sectionName = RevitPathHelper.GetSectionName(revitFilePath);
+            message = ExportToNWCHandler.ExportToNWC(uidoc, revitFilePath, sectionName);
         }
         catch (Exception ex)
         {
-            TaskDialog.Show("Exception", "Exception: \n" + ex);
+            _ = TaskDialog.Show("Exception", "Exception: \n" + ex);
             Clipboard.SetText(ex.ToString());
             return Result.Failed;
         }
