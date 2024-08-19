@@ -50,7 +50,7 @@ public static class RevitPathHelper
     }
 
 
-    public static string GetPathFromRoot(string filePath, string searchName)
+    private static string GetPathFromRoot(string filePath, string searchName)
     {
         StringComparison comparison = StringComparison.OrdinalIgnoreCase;
 
