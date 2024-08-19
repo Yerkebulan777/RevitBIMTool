@@ -4,9 +4,10 @@ using System.IO;
 
 
 namespace RevitBIMTool.ExportHandlers;
-internal class AutoHelper
+internal static class GlobalSaveHelper
 {
-    public void SaveAsBIM(Document doc, string filePath)
+
+    public static void SaveAsBIM(Document doc, string filePath)
     {
         if (File.Exists(filePath))
         {
@@ -18,9 +19,12 @@ internal class AutoHelper
             }
 
             string fileName = Path.GetFileName(filePath);
-            WorksharingSaveAsOptions options = new WorksharingSaveAsOptions();
+            WorksharingSaveAsOptions options = new();
             string newFilePath = Path.Combine(bimDirectoryPath, fileName);
             RevitFileHelper.SaveAs(doc, newFilePath, options, 50);
         }
     }
+
+
+
 }

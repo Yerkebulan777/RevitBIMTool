@@ -54,7 +54,7 @@ public static class RevitPathHelper
     {
         StringComparison compr = StringComparison.OrdinalIgnoreCase;
 
-        DirectoryInfo dirInfo = new DirectoryInfo(filePath);
+        DirectoryInfo dirInfo = new(filePath);
 
         if (dirInfo.Name.EndsWith(searchName, compr))
         {
@@ -80,18 +80,22 @@ public static class RevitPathHelper
     }
 
 
+    public static string GetSectionName(string filePath)
+    {
+        string sectionDirectory = GetSectionDirectoryPath(filePath);
+        return Path.GetFileName(sectionDirectory);
+    }
+
+
     public static string GetSectionDirectoryPath(string filePath)
     {
-        if (!string.IsNullOrEmpty(filePath))
+        foreach (string section in sectionAcronyms)
         {
-            foreach (string section in sectionAcronyms)
-            {
-                string tempPath = GetPathFromRoot(filePath, section);
+            string tempPath = GetPathFromRoot(filePath, section);
 
-                if (!string.IsNullOrEmpty(tempPath))
-                {
-                    return tempPath;
-                }
+            if (!string.IsNullOrEmpty(tempPath))
+            {
+                return tempPath;
             }
         }
 

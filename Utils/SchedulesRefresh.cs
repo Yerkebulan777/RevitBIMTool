@@ -1,7 +1,7 @@
 ﻿using Autodesk.Revit.DB;
 
 
-namespace RevitBIMTool.ExportHandlers
+namespace RevitBIMTool.Utils
 {
     public static class SchedulesRefresh
     {
