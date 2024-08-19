@@ -1,12 +1,11 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Mechanical;
 using Autodesk.Revit.DB.Plumbing;
-using RevitBIMTool.Utils;
 
 
-namespace RevitBIMTool.ExportHandlers
+namespace RevitBIMTool.Utils
 {
-    internal static class BIMHelper
+    internal static class HVACHelper
     {
         private static List<Element> GetPipesAndDucts(Document doc)
         {

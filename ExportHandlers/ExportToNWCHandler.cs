@@ -62,7 +62,7 @@ internal static class ExportToNWCHandler
                 const BuiltInCategory ductCat = BuiltInCategory.OST_DuctAccessory;
                 const BuiltInCategory strFCat = BuiltInCategory.OST_StructuralFraming;
 
-                instansesToHide.AddRange(BIMHelper.FilterPipesAndFittingsByMaxDiameter(doc, 30));
+                instansesToHide.AddRange(HVACHelper.FilterPipesAndFittingsByMaxDiameter(doc, 30));
                 instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, strFCat, "(Отверстия)").ToElements());
                 instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, strFCat, "(Отверстия)").ToElements());
                 instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, strFCat, "(элемент_перемычки)").ToElements());

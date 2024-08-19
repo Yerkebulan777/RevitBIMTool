@@ -1,7 +1,7 @@
 ﻿using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using RevitBIMTool.ExportHandlers;
+using RevitBIMTool.Utils;
 using System.Globalization;
 
 
@@ -24,7 +24,7 @@ namespace RevitBIMTool.Commands
 
             string[] paramNames = { "Диаметр", "Размер" };
 
-            List<Element> elems = BIMHelper.FilterPipesAndFittingsByMaxDiameter(doc, 30);
+            List<Element> elems = HVACHelper.FilterPipesAndFittingsByMaxDiameter(doc, 30);
 
             uidoc.Selection.SetElementIds(elems.Select(elem => elem.Id).ToList());
 
