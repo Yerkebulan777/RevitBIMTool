@@ -57,9 +57,9 @@ public sealed class AutomationHandler
 
             sb = taskModel.CommandNumber switch
             {
-                1 => sb.AppendLine(ExportToPDFHandler.ExportToPDF(uidoc, taskModel.RevitFilePath)),
-                2 => sb.AppendLine(ExportToDWGHandler.ExportExecute(uidoc, taskModel.RevitFilePath)),
-                3 => sb.AppendLine(ExportToNWCHandler.ExportToNWC(uidoc, taskModel.RevitFilePath)),
+                1 => sb.AppendLine(ExportToPDFHandler.ExportToPDF(uidoc, taskModel.RevitFilePath, sectionName)),
+                2 => sb.AppendLine(ExportToDWGHandler.ExportExecute(uidoc, taskModel.RevitFilePath, sectionName)),
+                3 => sb.AppendLine(ExportToNWCHandler.ExportToNWC(uidoc, taskModel.RevitFilePath, sectionName)),
                 _ => sb.AppendLine($"Failed command: {taskModel.CommandNumber}"),
             };
         }

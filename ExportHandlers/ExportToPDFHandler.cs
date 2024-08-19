@@ -16,7 +16,7 @@ internal static class ExportToPDFHandler
 {
     private const string printerName = "PDFCreator";
 
-    public static string ExportToPDF(UIDocument uidoc, string revitFilePath)
+    public static string ExportToPDF(UIDocument uidoc, string revitFilePath, string sectionName)
     {
         StringBuilder sb = new();
         Document doc = uidoc.Document;
@@ -48,9 +48,12 @@ internal static class ExportToPDFHandler
                 throw new ArgumentException(printerName + "is not defined");
             }
 
-            ColorDepthType colorType = ColorDepthType.BlackLine;
+            ColorDepthType colorType = ColorDepthType.Color;
 
-            //if (colorType == ColorDepthType.BlackLine)
+            if (sectionName.Equals("KJ") || sectionName.Equals("KR") || sectionName.Equals("KG"))
+            {
+                colorType = ColorDepthType.BlackLine;
+            }
 
             Dictionary<string, List<SheetModel>> sheetData = PrintPdfHandler.GetSheetPrintedData(doc, revitFileName, colorType);
             List<SheetModel> sheetModels = PrintPdfHandler.PrintSheetData(ref doc, sheetData, tempFolder);

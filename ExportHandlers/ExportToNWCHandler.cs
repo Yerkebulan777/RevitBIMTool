@@ -12,7 +12,7 @@ namespace RevitBIMTool.ExportHandlers;
 
 internal static class ExportToNWCHandler
 {
-    public static string ExportToNWC(UIDocument uidoc, string revitFilePath)
+    public static string ExportToNWC(UIDocument uidoc, string revitFilePath, string sectionName)
     {
         StringBuilder sb = new();
         Document doc = uidoc.Document;
