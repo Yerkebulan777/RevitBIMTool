@@ -48,7 +48,9 @@ internal static class ExportToPDFHandler
                 throw new ArgumentException(printerName + "is not defined");
             }
 
-            ColorDepthType colorType = ColorDepthType.GrayScale;
+            ColorDepthType colorType = ColorDepthType.BlackLine;
+
+            //if (colorType == ColorDepthType.BlackLine)
 
             Dictionary<string, List<SheetModel>> sheetData = PrintPdfHandler.GetSheetPrintedData(doc, revitFileName, colorType);
             List<SheetModel> sheetModels = PrintPdfHandler.PrintSheetData(ref doc, sheetData, tempFolder);
