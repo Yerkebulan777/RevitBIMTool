@@ -25,6 +25,4 @@ internal static class GlobalSaveHelper
         }
     }
 
-
-
 }
