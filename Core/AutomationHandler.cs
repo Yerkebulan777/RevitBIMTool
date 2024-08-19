@@ -1,6 +1,7 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using CommunicationService.Models;
+using Org.BouncyCastle.Asn1.Ocsp;
 using RevitBIMTool.ExportHandlers;
 using RevitBIMTool.Utils;
 using Serilog;
@@ -29,7 +30,7 @@ public sealed class AutomationHandler
 
         DateTime startedTime = DateTime.Now;
 
-        Log.Debug($"Run file: {taskRequest.RevitFileName} ");
+        
 
         string output = RunDocumentAction(uiapp, taskRequest, RunTaskByNumber);
 
@@ -47,9 +48,10 @@ public sealed class AutomationHandler
     {
         StringBuilder sb = new();
 
-        RevitLinkHelper.CheckAndRemoveUnloadedLinks(uidoc.Document);
+        Log.Debug($"Run file: {taskModel.RevitFileName} ");
+        Log.Debug($"Command number: {taskModel.CommandNumber}");
 
-        Log.Information($"Command number: {taskModel.CommandNumber}");
+        RevitLinkHelper.CheckAndRemoveUnloadedLinks(uidoc.Document);
 
         sb = taskModel.CommandNumber switch
         {
