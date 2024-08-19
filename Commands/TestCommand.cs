@@ -24,7 +24,7 @@ namespace RevitBIMTool.Commands
 
             string[] paramNames = { "Диаметр", "Размер" };
 
-            List<Element> elems = HVACHelper.FilterPipesAndFittingsByMaxDiameter(doc, 30);
+            List<Element> elems = RevitSystemsHelper.FilterPipesAndFittingsByMaxDiameter(doc, 30);
 
             uidoc.Selection.SetElementIds(elems.Select(elem => elem.Id).ToList());
 

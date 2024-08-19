@@ -5,7 +5,7 @@ using Autodesk.Revit.DB.Plumbing;
 
 namespace RevitBIMTool.Utils
 {
-    internal static class HVACHelper
+    internal static class RevitSystemsHelper
     {
         private static List<Element> GetPipesAndDucts(Document doc)
         {

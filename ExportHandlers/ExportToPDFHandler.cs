@@ -27,12 +27,11 @@ internal static class ExportToPDFHandler
             throw new ArgumentNullException(nameof(revitFilePath));
         }
 
-
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
-        string randName = Regex.Replace(Path.GetRandomFileName(), @"[\p{P}\p{S}]", string.Empty);
+        string randomName = Regex.Replace(Path.GetRandomFileName(), @"[\p{P}\p{S}]", string.Empty);
         string baseDirectory = ExportPathHelper.ExportDirectory(revitFilePath, "03_PDF", true);
         string exportFullPath = Path.Combine(baseDirectory, $"{revitFileName}.pdf");
-        string tempFolder = Path.Combine(temp, randName);
+        string tempFolder = Path.Combine(temp, randomName);
 
         if (!ExportPathHelper.IsTargetFileUpdated(exportFullPath, revitFilePath))
         {

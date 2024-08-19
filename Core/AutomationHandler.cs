@@ -45,18 +45,24 @@ public sealed class AutomationHandler
     {
         StringBuilder sb = new();
 
-        Log.Debug($"Run file: {taskModel.RevitFileName} ");
-        Log.Debug($"Command number: {taskModel.CommandNumber} ");
+        string sectionName = RevitPathHelper.GetSectionName(taskModel.RevitFilePath);
 
-        RevitLinkHelper.CheckAndRemoveUnloadedLinks(uidoc.Document);
-
-        sb = taskModel.CommandNumber switch
+        if (!string.IsNullOrEmpty(sectionName))
         {
-            1 => sb.AppendLine(ExportToPDFHandler.ExportToPDF(uidoc, taskModel.RevitFilePath)),
-            2 => sb.AppendLine(ExportToDWGHandler.ExportExecute(uidoc, taskModel.RevitFilePath)),
-            3 => sb.AppendLine(ExportToNWCHandler.ExportToNWC(uidoc, taskModel.RevitFilePath)),
-            _ => sb.AppendLine($"Failed command: {taskModel.CommandNumber}"),
-        };
+            Log.Debug($"Section: {sectionName}");
+            Log.Debug($"Revit name: {taskModel.RevitFileName}");
+            Log.Debug($"Command number: {taskModel.CommandNumber}");
+
+            RevitLinkHelper.CheckAndRemoveUnloadedLinks(uidoc.Document);
+
+            sb = taskModel.CommandNumber switch
+            {
+                1 => sb.AppendLine(ExportToPDFHandler.ExportToPDF(uidoc, taskModel.RevitFilePath)),
+                2 => sb.AppendLine(ExportToDWGHandler.ExportExecute(uidoc, taskModel.RevitFilePath)),
+                3 => sb.AppendLine(ExportToNWCHandler.ExportToNWC(uidoc, taskModel.RevitFilePath)),
+                _ => sb.AppendLine($"Failed command: {taskModel.CommandNumber}"),
+            };
+        }
 
         return sb.ToString();
     }
