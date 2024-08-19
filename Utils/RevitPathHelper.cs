@@ -82,8 +82,17 @@ public static class RevitPathHelper
 
     public static string GetSectionName(string filePath)
     {
-        string sectionDirectory = GetSectionDirectoryPath(filePath);
-        return Path.GetFileName(sectionDirectory);
+        foreach (string section in sectionAcronyms)
+        {
+            string tempPath = GetPathFromRoot(filePath, section);
+
+            if (!string.IsNullOrEmpty(tempPath))
+            {
+                return section;
+            }
+        }
+
+        return null;
     }
 
 
