@@ -4,7 +4,6 @@ using CommunicationService.Models;
 using RevitBIMTool.ExportHandlers;
 using RevitBIMTool.Utils;
 using Serilog;
-using System.IO;
 using System.Text;
 using Document = Autodesk.Revit.DB.Document;
 
@@ -27,20 +26,17 @@ public sealed class AutomationHandler
     public string ExecuteTask(TaskRequest taskRequest)
     {
         builder = new StringBuilder();
+
         DateTime startedTime = DateTime.Now;
-        string sourceFilePath = taskRequest.RevitFilePath;
 
-        if (File.Exists(sourceFilePath))
-        {
-            Log.Information($"Run file: {Path.GetFileName(sourceFilePath)}");
-            string output = RunDocumentAction(uiapp, taskRequest, RunTaskByNumber);
+        Log.Debug($"Run file: {taskRequest.RevitFileName}");
 
-            TimeSpan elapsedTime = DateTime.Now - startedTime;
-            string fileName = Path.GetFileNameWithoutExtension(sourceFilePath);
-            string formattedTime = elapsedTime.ToString(@"h\:mm\:ss");
-            _ = builder.AppendLine($"{fileName}  [{formattedTime}]");
-            _ = builder.AppendLine(output);
-        }
+        string output = RunDocumentAction(uiapp, taskRequest, RunTaskByNumber);
+
+        string formattedTime = (DateTime.Now - startedTime).ToString(@"h\:mm\:ss");
+        _ = builder.Append($"{taskRequest.RevitFileName}");
+        _ = builder.Append($"[{formattedTime}]");
+        _ = builder.AppendLine(output);
 
         return builder.ToString();
     }

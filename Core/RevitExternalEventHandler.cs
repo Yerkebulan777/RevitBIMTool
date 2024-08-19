@@ -32,7 +32,7 @@ namespace RevitBIMTool.Core
                 {
                     string output = autoHandler.ExecuteTask(taskRequest);
 
-                    Log.Information($"Task output:\r\n\t{output}");
+                    Log.Information($"Task result:\r\n\t{output}");
 
                     Task task = new(async () =>
                     {
