@@ -1,45 +1,66 @@
 ﻿using Autodesk.Revit.DB;
-using System.IO;
+using Autodesk.Revit.UI;
+using System.Diagnostics;
 
 
 namespace RevitBIMTool.Utils;
 internal static class RevitFileHelper
 {
-    public static void SaveAs(Document doc, string filePath, WorksharingSaveAsOptions worksharingSaveAsOptions = null, int maximumBackups = 25)
+
+    public static void SaveAs(Document doc, string filePath, WorksharingSaveAsOptions options = null, int maxBackups = 25)
     {
         ModelPath modelPathObj = ModelPathUtils.ConvertUserVisiblePathToModelPath(filePath);
 
-        SaveAsOptions saveAsOptions = new SaveAsOptions
+        SaveAsOptions saveAsOptions = new()
         {
             Compact = true,
             OverwriteExistingFile = true
         };
 
-        if (worksharingSaveAsOptions != null)
+        if (options != null)
         {
-            worksharingSaveAsOptions.SaveAsCentral = true;
-            saveAsOptions.SetWorksharingOptions(worksharingSaveAsOptions);
-            saveAsOptions.MaximumBackups = maximumBackups;
+            options.SaveAsCentral = true;
+            saveAsOptions.SetWorksharingOptions(options);
+            saveAsOptions.MaximumBackups = maxBackups;
         }
 
         doc.SaveAs(modelPathObj, saveAsOptions);
     }
 
-    public static void SaveAsBIM(Document doc, string filePath)
-    {
-        if (File.Exists(filePath))
-        {
-            string directoryName = Path.GetDirectoryName(filePath);
-            string bimDirectoryPath = Path.Combine(directoryName, "BIM");
-            if (!Directory.Exists(bimDirectoryPath))
-            {
-                _ = Directory.CreateDirectory(bimDirectoryPath);
-            }
 
-            string fileName = Path.GetFileName(filePath);
-            WorksharingSaveAsOptions options = new();
-            string newFilePath = Path.Combine(bimDirectoryPath, fileName);
-            RevitFileHelper.SaveAs(doc, newFilePath, options, 50);
+    public static void ClosePreviousDocument(UIApplication uiapp, ref Document doc)
+    {
+        try
+        {
+            if (doc is not null && doc.IsValidObject && doc.Close(false))
+            {
+                uiapp.Application.PurgeReleasedAPIObjects();
+                doc?.Dispose();
+            }
+        }
+        finally
+        {
+            doc = uiapp.ActiveUIDocument.Document;
+        }
+    }
+
+
+    public static void CloseRevitApplication(UIApplication uiapp)
+    {
+        Process currentProcess = Process.GetCurrentProcess();
+        Document doc = uiapp?.ActiveUIDocument?.Document;
+        if (doc is null || doc.Close(false))
+        {
+            try
+            {
+                uiapp.Application.PurgeReleasedAPIObjects();
+            }
+            finally
+            {
+                doc?.Dispose();
+                currentProcess?.Kill();
+                currentProcess?.Dispose();
+            }
         }
     }
 

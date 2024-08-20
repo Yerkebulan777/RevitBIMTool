@@ -4,6 +4,7 @@ using CommunicationService.Models;
 using RevitBIMTool.ExportHandlers;
 using RevitBIMTool.Utils;
 using Serilog;
+using System.Diagnostics;
 using System.Text;
 using Document = Autodesk.Revit.DB.Document;
 
@@ -15,7 +16,7 @@ public sealed class AutomationHandler
     private const int waitTimeout = 1000;
     private readonly UIApplication uiapp;
     private StringBuilder builder = new();
-
+    
 
     public AutomationHandler(UIApplication application)
     {
@@ -101,45 +102,11 @@ public sealed class AutomationHandler
         }
         finally
         {
-            if (ClosePreviousDocument(uidoc))
-            {
-                output = output.AppendLine(revitAction(uidoc, taskModel));
-            }
+            RevitFileHelper.ClosePreviousDocument(uiapp, ref document);
+            output = output.AppendLine(revitAction(uidoc, taskModel));
         }
 
         return output.ToString();
-    }
-
-
-    private bool ClosePreviousDocument(UIDocument uidoc)
-    {
-        bool result = false;
-
-        if (uidoc != null)
-        {
-            try
-            {
-                if (document is null)
-                {
-                    result = true;
-                }
-                else if (document.IsValidObject)
-                {
-                    result = document.Close(false);
-                    Log.Warning("Start purge api objects ...");
-                    uiapp.Application.PurgeReleasedAPIObjects();
-                }
-            }
-            finally
-            {
-                Thread.Sleep(1000);
-                document?.Dispose();
-                document = uidoc.Document;
-                Log.Information("Closed document");
-            }
-        }
-
-        return result;
     }
 
 
