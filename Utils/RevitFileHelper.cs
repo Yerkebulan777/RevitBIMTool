@@ -48,7 +48,7 @@ internal static class RevitFileHelper
     public static void CloseRevitApplication()
     {
         Process currentProcess = Process.GetCurrentProcess();
-        Log.Warning($"Start Close Revit Application");
+        Log.Warning($"Close Revit Application");
         if (!currentProcess.HasExited)
         {
             Log.CloseAndFlush();

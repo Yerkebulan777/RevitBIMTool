@@ -17,31 +17,30 @@ internal sealed class Application : IExternalApplication
 
     #region IExternalApplication
 
-    public Result OnStartup(UIControlledApplication application)
+    public Result OnStartup(UIControlledApplication uiapp)
     {
         try
         {
-            versionNumber = application.ControlledApplication.VersionNumber;
-            SetupUIPanel.Initialize(application);
+            uiapp = uiapp ?? throw new ArgumentNullException(nameof(uiapp));
+            versionNumber = uiapp.ControlledApplication.VersionNumber;
+            SetupUIPanel.Initialize(uiapp);
             Log.Logger = ConfigureLogger();
         }
         catch (Exception ex)
         {
             System.Windows.Clipboard.SetText(ex.Message);
-            application.ControlledApplication.WriteJournalComment(ex.Message, true);
+            uiapp.ControlledApplication.WriteJournalComment(ex.Message, true);
             return Result.Failed;
         }
         finally
         {
             if (TaskRequestContainer.Instance.ValidateTaskData(versionNumber))
             {
-                application.Idling += new EventHandler<IdlingEventArgs>(OnIdling);
-
                 externalEventHandler = new RevitExternalEventHandler(versionNumber);
 
                 if (ExternalEventRequest.Denied != externalEventHandler.Raise())
                 {
-                    Log.Information($"Revit {versionNumber} started...");
+                    uiapp.Idling += new EventHandler<IdlingEventArgs>(OnIdling);
                 }
             }
         }
@@ -50,9 +49,12 @@ internal sealed class Application : IExternalApplication
     }
 
 
-    public Result OnShutdown(UIControlledApplication application)
+    public Result OnShutdown(UIControlledApplication uiapp)
     {
+        uiapp.Idling -= new EventHandler<IdlingEventArgs>(OnIdling);
+
         Log.CloseAndFlush();
+
         return Result.Succeeded;
     }
 
@@ -80,13 +82,7 @@ internal sealed class Application : IExternalApplication
     private void OnIdling(object sender, IdlingEventArgs e)
     {
         Log.Debug($"Idling session called");
-
-        if (sender is UIApplication uiapp)
-        {
-            bool? closed = uiapp.ActiveUIDocument?.Document.Close(false);
-            uiapp.Idling -= new EventHandler<IdlingEventArgs>(OnIdling);
-            RevitFileHelper.CloseRevitApplication();
-        }
+        RevitFileHelper.CloseRevitApplication();
     }
 
     #endregion
