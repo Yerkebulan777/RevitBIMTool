@@ -101,11 +101,11 @@ internal static class ExportToNWCHandler
                 {
                     doc.Export(exportBaseDirectory, revitFileName, options);
                     SystemFolderOpener.OpenFolder(exportBaseDirectory);
-                    _ = sb.AppendLine(exportBaseDirectory);
+                    sb.AppendLine(exportBaseDirectory);
                 }
                 catch (Exception ex)
                 {
-                    _ = sb.AppendLine(ex.Message);
+                    sb.AppendLine(ex.Message);
                 }
                 finally
                 {
