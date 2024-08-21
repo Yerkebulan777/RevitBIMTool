@@ -4,13 +4,13 @@ using CommunicationService.Models;
 using RevitBIMTool.Core;
 using RevitBIMTool.Utils;
 using Serilog;
-using System.Globalization;
 using System.IO;
 
 
 namespace RevitBIMTool;
 internal sealed class Application : IExternalApplication
 {
+    private string versionNumber;
     private RevitExternalEventHandler externalEventHandler;
     private static readonly string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 
@@ -19,37 +19,29 @@ internal sealed class Application : IExternalApplication
 
     public Result OnStartup(UIControlledApplication application)
     {
-        string versionNumber = application.ControlledApplication.VersionNumber;
-
-        using Mutex mutex = new(true, $"Global\\Revit{versionNumber}");
-
-        if (mutex.WaitOne(TimeSpan.FromSeconds(1000)))
+        try
         {
-            try
+            versionNumber = application.ControlledApplication.VersionNumber;
+            SetupUIPanel.Initialize(application);
+            Log.Logger = ConfigureLogger();
+        }
+        catch (Exception ex)
+        {
+            System.Windows.Clipboard.SetText(ex.Message);
+            application.ControlledApplication.WriteJournalComment(ex.Message, true);
+            return Result.Failed;
+        }
+        finally
+        {
+            if (TaskRequestContainer.Instance.ValidateTaskData(versionNumber))
             {
-                SetupUIPanel.Initialize(application);
-                Log.Logger = ConfigureLogger(versionNumber);
-            }
-            catch (Exception ex)
-            {
-                System.Windows.Clipboard.SetText(ex.Message);
-                application.ControlledApplication.WriteJournalComment(ex.Message, true);
-                return Result.Failed;
-            }
-            finally
-            {
-                mutex.ReleaseMutex();
+                application.Idling += new EventHandler<IdlingEventArgs>(OnIdling);
 
-                if (TaskRequestContainer.Instance.ValidateTaskData(versionNumber))
+                externalEventHandler = new RevitExternalEventHandler(versionNumber);
+
+                if (ExternalEventRequest.Denied != externalEventHandler.Raise())
                 {
-                    application.Idling += new EventHandler<IdlingEventArgs>(OnIdling);
-
-                    externalEventHandler = new RevitExternalEventHandler(versionNumber);
-
-                    if (ExternalEventRequest.Denied != externalEventHandler.Raise())
-                    {
-                        Log.Information($"Revit {versionNumber} started...");
-                    }
+                    Log.Information($"Revit {versionNumber} started...");
                 }
             }
         }
@@ -69,7 +61,7 @@ internal sealed class Application : IExternalApplication
 
     #region ConfigureLogger
 
-    internal ILogger ConfigureLogger(string versionNumber)
+    internal ILogger ConfigureLogger()
     {
         return new LoggerConfiguration()
             .WriteTo.File(Path.Combine(docPath, $"RevitBIMTool {versionNumber}.txt"),
