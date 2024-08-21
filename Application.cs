@@ -43,7 +43,6 @@ internal sealed class Application : IExternalApplication
                 if (TaskRequestContainer.Instance.ValidateTaskData(versionNumber))
                 {
                     application.Idling += new EventHandler<IdlingEventArgs>(OnIdling);
-                    Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
                     externalEventHandler = new RevitExternalEventHandler(versionNumber);
 
                     if (ExternalEventRequest.Denied != externalEventHandler.Raise())
@@ -89,7 +88,7 @@ internal sealed class Application : IExternalApplication
     {
         if (sender is UIApplication uiapp)
         {
-            Log.Debug($"Idling session called");
+            Log.Warning($"Idling session called");
             uiapp.Idling -= new EventHandler<IdlingEventArgs>(OnIdling);
             RevitFileHelper.CloseRevitApplication(uiapp);
         }

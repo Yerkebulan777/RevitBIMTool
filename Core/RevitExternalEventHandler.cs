@@ -1,6 +1,7 @@
 ﻿using Autodesk.Revit.UI;
 using CommunicationService.Models;
 using Serilog;
+using System.Globalization;
 using System.IO;
 
 
@@ -25,6 +26,8 @@ namespace RevitBIMTool.Core
         public void Execute(UIApplication uiapp)
         {
             AutomationHandler autoHandler = new(uiapp);
+
+            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
 
             while (TaskRequestContainer.Instance.PopTaskModel(versionNumber, out TaskRequest taskRequest))
             {
