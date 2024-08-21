@@ -4,7 +4,6 @@ using CommunicationService.Models;
 using RevitBIMTool.ExportHandlers;
 using RevitBIMTool.Utils;
 using Serilog;
-using System.Diagnostics;
 using System.Text;
 using Document = Autodesk.Revit.DB.Document;
 
@@ -16,7 +15,7 @@ public sealed class AutomationHandler
     private const int waitTimeout = 1000;
     private readonly UIApplication uiapp;
     private StringBuilder builder = new();
-    
+
 
     public AutomationHandler(UIApplication application)
     {
