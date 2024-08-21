@@ -88,7 +88,7 @@ internal sealed class Application : IExternalApplication
     private void OnIdling(object sender, IdlingEventArgs e)
     {
         Log.Debug($"Idling session called");
-
+        Log.Debug($"Sender is {sender.GetType()}");
         if (sender is UIControlledApplication app)
         {
             app.Idling -= new EventHandler<IdlingEventArgs>(OnIdling);
