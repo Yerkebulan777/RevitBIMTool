@@ -1,5 +1,6 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
+using Serilog;
 using System.Diagnostics;
 
 
@@ -45,22 +46,15 @@ internal static class RevitFileHelper
     }
 
 
-    public static void CloseRevitApplication(UIApplication uiapp)
+    public static void CloseRevitApplication()
     {
         Process currentProcess = Process.GetCurrentProcess();
-        Document doc = uiapp?.ActiveUIDocument?.Document;
-        if (doc is null || doc.Close(false))
+        Log.Warning($"Start Close Revit Application");
+        if (!currentProcess.HasExited)
         {
-            try
-            {
-                uiapp.Application.PurgeReleasedAPIObjects();
-            }
-            finally
-            {
-                doc?.Dispose();
-                currentProcess?.Kill();
-                currentProcess?.Dispose();
-            }
+            Log.CloseAndFlush();
+            currentProcess?.Kill();
+            currentProcess?.Dispose();
         }
     }
 

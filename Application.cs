@@ -89,11 +89,10 @@ internal sealed class Application : IExternalApplication
     {
         Log.Debug($"Idling session called");
 
-        if (sender is UIApplication uiapp)
+        if (sender is UIControlledApplication app)
         {
-            Log.Warning($"Idling sender is UIApplication");
-            uiapp.Idling -= new EventHandler<IdlingEventArgs>(OnIdling);
-            RevitFileHelper.CloseRevitApplication(uiapp);
+            app.Idling -= new EventHandler<IdlingEventArgs>(OnIdling);
+            RevitFileHelper.CloseRevitApplication();
         }
     }
 
