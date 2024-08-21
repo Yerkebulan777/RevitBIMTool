@@ -36,7 +36,6 @@ internal static class RevitFileHelper
             if (doc is not null && doc.IsValidObject && doc.Close(false))
             {
                 uiapp.Application.PurgeReleasedAPIObjects();
-                doc?.Dispose();
             }
         }
         finally

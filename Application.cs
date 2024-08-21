@@ -80,10 +80,11 @@ internal sealed class Application : IExternalApplication
     private void OnIdling(object sender, IdlingEventArgs e)
     {
         Log.Debug($"Idling session called");
-        Log.Debug($"Sender is {sender.GetType()}");
-        if (sender is UIControlledApplication app)
+
+        if (sender is UIApplication uiapp)
         {
-            app.Idling -= new EventHandler<IdlingEventArgs>(OnIdling);
+            bool? closed = uiapp.ActiveUIDocument?.Document.Close(false);
+            uiapp.Idling -= new EventHandler<IdlingEventArgs>(OnIdling);
             RevitFileHelper.CloseRevitApplication();
         }
     }
