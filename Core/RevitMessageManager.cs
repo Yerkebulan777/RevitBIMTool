@@ -25,7 +25,7 @@ public static class RevitMessageManager
                 if (proxy is IClientChannel channel)
                 {
                     CloseIfFaultedChannel(channel);
-                    proxy.SendMessageAsync(chatId, message);
+                    proxy.SendMessage(chatId, message);
                     Log.Information($"Send message: {message}");
                 }
             }
