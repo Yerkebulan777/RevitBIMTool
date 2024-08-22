@@ -11,21 +11,22 @@ public static class RevitMessageManager
     private const string serviceUrlTcp = "net.tcp://localhost:9000/RevitExternalService";
 
 
-    public static void SendInfo(long chatId, string text)
+    public static void SendInfo(long chatId, string message)
     {
         try
         {
-            Log.Information("Send: " + text);
             EndpointAddress endpoint = new(serviceUrlTcp);
             NetTcpBinding tspBinding = new(SecurityMode.Message);
 
             using (var factory = new ChannelFactory<IRevitHostService>(tspBinding))
             {
-                IRevitHostService proxyService = factory.CreateChannel(endpoint);
+                IRevitHostService proxy = factory.CreateChannel(endpoint);
 
-                if (proxyService is IClientChannel channel)
+                if (proxy is IClientChannel channel)
                 {
                     CloseIfFaultedChannel(channel);
+                    proxy.SendMessageAsync(chatId, message);
+                    Log.Information($"Send message: {message}");
                 }
             }
         }
