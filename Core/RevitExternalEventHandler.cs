@@ -12,7 +12,7 @@ namespace RevitBIMTool.Core
         private readonly string versionNumber;
         private readonly ExternalEvent externalEvent;
 
-        public static object SyncLocker { get; set; } = new();
+        public static object SyncLocker { get; } = new();
 
 
         public RevitExternalEventHandler(string version)
@@ -35,15 +35,9 @@ namespace RevitBIMTool.Core
                 {
                     string output = autoHandler.ExecuteTask(taskRequest);
 
+                    RevitMessageManager.SendInfo(taskRequest.ChatId, output);
+
                     Log.Information($"Task result:\r\n\t{output}");
-
-                    Task task = new(async () =>
-                    {
-                        await Task.Delay(taskRequest.CommandNumber * 1000);
-                        await RevitMessageManager.SendInfoAsync(taskRequest.ChatId, output);
-                    });
-
-                    task.RunSynchronously();
                 }
             }
 
@@ -60,6 +54,7 @@ namespace RevitBIMTool.Core
         {
             return externalEvent.Raise();
         }
+
 
     }
 

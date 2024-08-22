@@ -9,25 +9,23 @@ namespace RevitBIMTool.Core;
 public static class RevitMessageManager
 {
     private const string serviceUrlTcp = "net.tcp://localhost:9000/RevitExternalService";
-    private static ChannelFactory<IRevitHostService> factory;
 
-    public static async Task SendInfoAsync(long chatId, string text)
+
+    public static void SendInfo(long chatId, string text)
     {
         try
         {
             Log.Information("Send: " + text);
             EndpointAddress endpoint = new(serviceUrlTcp);
             NetTcpBinding tspBinding = new(SecurityMode.Message);
-            using (factory = new ChannelFactory<IRevitHostService>(tspBinding))
+
+            using (var factory = new ChannelFactory<IRevitHostService>(tspBinding))
             {
                 IRevitHostService proxyService = factory.CreateChannel(endpoint);
 
                 if (proxyService is IClientChannel channel)
                 {
                     CloseIfFaultedChannel(channel);
-                    await proxyService.SendMessageAsync(chatId, text);
-                    await Task.Delay(5000);
-                    channel.Dispose();
                 }
             }
         }
@@ -37,7 +35,7 @@ public static class RevitMessageManager
         }
         finally
         {
-            await Task.Yield();
+            Thread.Sleep(1000);
         }
     }
 
