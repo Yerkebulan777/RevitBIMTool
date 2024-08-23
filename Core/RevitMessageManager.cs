@@ -29,7 +29,7 @@ public static class RevitMessageManager
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, $"Failed to send message: {ex.Message}");
+                    Log.Error(ex, $"Failed send message: {ex.Message}");
                 }
                 finally
                 {
