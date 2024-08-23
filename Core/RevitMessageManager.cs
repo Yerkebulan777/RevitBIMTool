@@ -13,7 +13,7 @@ public static class RevitMessageManager
 
     public static void SendInfo(long chatId, string message)
     {
-        Uri baseAddress = new Uri($"net.tcp://{Environment.MachineName}:{port}/{serviceName}");
+        Uri baseAddress = new Uri($"net.tcp://localhost:{port}/{serviceName}");
 
         EndpointAddress endpoint = new(baseAddress);
         NetTcpBinding tspBinding = new(SecurityMode.None);
