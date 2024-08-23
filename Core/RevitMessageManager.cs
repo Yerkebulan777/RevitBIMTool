@@ -2,7 +2,6 @@
 using CommunicationService.Core;
 using Serilog;
 using System.ServiceModel;
-using System.Windows;
 
 
 namespace RevitBIMTool.Core;
@@ -24,8 +23,8 @@ public static class RevitMessageManager
             if (proxy is IClientChannel channel)
             {
                 CloseIfFaultedChannel(channel);
-                proxy.SendMessageAsync(chatId, message).Wait();
                 Log.Information($"Send message: {message}");
+                proxy.SendMessageAsync(chatId, message).Wait();
             }
         }
         catch (Exception ex)
@@ -37,6 +36,8 @@ public static class RevitMessageManager
 
     private static void CloseIfFaultedChannel(IClientChannel channel)
     {
+        Log.Debug($"ClientChannel state: {channel.State}");
+
         if (channel.State == CommunicationState.Faulted)
         {
             channel.Abort();
@@ -53,7 +54,6 @@ public static class RevitMessageManager
         if (!string.IsNullOrEmpty(text))
         {
             Log.Information(text);
-            Clipboard.SetText(text);
             TaskDialog dialog = new("Revit")
             {
                 MainContent = text,
