@@ -46,7 +46,7 @@ public static class RevitMessageManager
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"{ex.GetType().Name}: {ex.Message} {ex.InnerException?.Message}");
+            Log.Error(ex, $"{ex.Message} {ex.InnerException?.Message}");
         }
     }
 
