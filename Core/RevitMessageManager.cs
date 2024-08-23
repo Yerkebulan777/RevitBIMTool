@@ -1,5 +1,6 @@
 ﻿using Autodesk.Revit.UI;
 using CommunicationService.Core;
+using CommunicationService.Helpers;
 using Serilog;
 using System.ServiceModel;
 
@@ -7,14 +8,16 @@ using System.ServiceModel;
 namespace RevitBIMTool.Core;
 public static class RevitMessageManager
 {
-
-    private const string serviceUrlTcp = "net.tcp://localhost:9000/RevitExternalService";
-
+    private const int port = ServiceHelper.Port;
+    private const string serviceName = ServiceHelper.ServiceName;
 
     public static void SendInfo(long chatId, string message)
     {
-        EndpointAddress endpoint = new(serviceUrlTcp);
-        NetTcpBinding tspBinding = new(SecurityMode.Message);
+        Uri baseAddress = new Uri($"net.tcp://{Environment.MachineName}:{port}/{serviceName}");
+
+        EndpointAddress endpoint = new(baseAddress);
+        NetTcpBinding tspBinding = new(SecurityMode.None);
+
         using ChannelFactory<IRevitHostService> client = new(tspBinding);
 
         try
