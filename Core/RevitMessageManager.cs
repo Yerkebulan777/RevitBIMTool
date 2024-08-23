@@ -18,25 +18,19 @@ public static class RevitMessageManager
             EndpointAddress endpoint = new(serviceUrlTcp);
             NetTcpBinding tspBinding = new(SecurityMode.Message);
 
-            using (var factory = new ChannelFactory<IRevitHostService>(tspBinding))
-            {
-                IRevitHostService proxy = factory.CreateChannel(endpoint);
+            using ChannelFactory<IRevitHostService> factory = new(tspBinding);
+            IRevitHostService proxy = factory.CreateChannel(endpoint);
 
-                if (proxy is IClientChannel channel)
-                {
-                    CloseIfFaultedChannel(channel);
-                    proxy.SendMessage(chatId, message);
-                    Log.Information($"Send message: {message}");
-                }
+            if (proxy is IClientChannel channel)
+            {
+                CloseIfFaultedChannel(channel);
+                proxy.SendMessageAsync(chatId, message).Wait();
+                Log.Information($"Send message: {message}");
             }
         }
         catch (Exception ex)
         {
             Log.Error(ex, ex.ToString());
-        }
-        finally
-        {
-            Thread.Sleep(1000);
         }
     }
 
@@ -49,14 +43,7 @@ public static class RevitMessageManager
         }
         else
         {
-            try
-            {
-                channel.Close();
-            }
-            catch
-            {
-                channel.Abort();
-            }
+            channel.Close();
         }
     }
 
