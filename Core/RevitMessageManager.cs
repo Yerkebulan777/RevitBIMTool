@@ -13,39 +13,43 @@ public static class RevitMessageManager
 
     public static void SendInfo(long chatId, string message)
     {
+        EndpointAddress endpoint = new(serviceUrlTcp);
+        NetTcpBinding tspBinding = new(SecurityMode.Message);
+        using ChannelFactory<IRevitHostService> client = new(tspBinding);
+
         try
         {
-            EndpointAddress endpoint = new(serviceUrlTcp);
-            NetTcpBinding tspBinding = new(SecurityMode.Message);
+            Log.Information($"Start send message: {message}");
 
-            using ChannelFactory<IRevitHostService> factory = new(tspBinding);
-            IRevitHostService proxy = factory.CreateChannel(endpoint);
+            IRevitHostService proxy = client.CreateChannel(endpoint);
 
             if (proxy is IClientChannel channel)
             {
-                CloseIfFaultedChannel(channel);
-                Log.Information($"Send message: {message}");
+                AbortIfFaulted(channel);
                 proxy.SendMessageAsync(chatId, message).Wait();
+                AbortIfFaulted(channel);
             }
         }
         catch (Exception ex)
         {
-            Log.Error(ex, ex.ToString());
+            client.Abort();
+            Type excType = ex.GetType();
+            Log.Error(ex, $"{excType.Name} : {ex.Message}");
+        }
+        finally
+        {
+            client.Close();
         }
     }
 
 
-    private static void CloseIfFaultedChannel(IClientChannel channel)
+    private static void AbortIfFaulted(IClientChannel channel)
     {
         Log.Debug($"ClientChannel state: {channel.State}");
 
         if (channel.State == CommunicationState.Faulted)
         {
             channel.Abort();
-        }
-        else
-        {
-            channel.Close();
         }
     }
 
