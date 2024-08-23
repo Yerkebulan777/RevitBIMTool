@@ -19,37 +19,34 @@ public static class RevitMessageManager
 
         try
         {
-            Log.Information($"Start send message: {message}");
-
             IRevitHostService proxy = client.CreateChannel(endpoint);
 
             if (proxy is IClientChannel channel)
             {
-                AbortIfFaulted(channel);
-                proxy.SendMessageAsync(chatId, message).Wait();
-                AbortIfFaulted(channel);
+                try
+                {
+                    proxy.SendMessageAsync(chatId, message).Wait();
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, $"Failed to send message: {ex.Message}");
+                }
+                finally
+                {
+                    if (channel.State == CommunicationState.Faulted)
+                    {
+                        channel.Abort();
+                    }
+                    else
+                    {
+                        channel.Close();
+                    }
+                }
             }
         }
         catch (Exception ex)
         {
-            client.Abort();
-            Type excType = ex.GetType();
-            Log.Error(ex, $"{excType.Name} : {ex.Message}");
-        }
-        finally
-        {
-            client.Close();
-        }
-    }
-
-
-    private static void AbortIfFaulted(IClientChannel channel)
-    {
-        Log.Debug($"ClientChannel state: {channel.State}");
-
-        if (channel.State == CommunicationState.Faulted)
-        {
-            channel.Abort();
+            Log.Error(ex, $"{ex.GetType().Name}: {ex.Message} {ex.InnerException?.Message}");
         }
     }
 
