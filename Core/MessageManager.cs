@@ -38,6 +38,10 @@ public static class MessageManager
             {
                 Log.Error(ex, ex.Message);
             }
+            finally
+            {
+                Thread.Sleep(1000);
+            }
 
             //Task asyncTask = Task.Run(async () =>
             //{
