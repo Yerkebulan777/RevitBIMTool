@@ -8,7 +8,6 @@ using System.ServiceModel.Channels;
 namespace RevitBIMTool.Core;
 public static class MessageManager
 {
-
     public static void SendInfo(long chatId, string message)
     {
         TimeSpan timeStamp = TimeSpan.FromMinutes(5);
