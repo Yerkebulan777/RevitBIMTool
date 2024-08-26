@@ -11,45 +11,40 @@ public static class MessageManager
 
     public static void SendInfo(long chatId, string message)
     {
-        try
+        TimeSpan timeStamp = TimeSpan.FromMinutes(5);
+
+        EndpointAddress endpoint = new(new Uri("net.tcp://localhost:9001/"));
+
+        Binding binding = new NetTcpBinding(SecurityMode.None)
         {
-            TimeSpan timeStamp = TimeSpan.FromMinutes(5);
+            SendTimeout = timeStamp,
+            OpenTimeout = timeStamp,
+            CloseTimeout = timeStamp,
+            ReceiveTimeout = timeStamp,
+        };
 
-            EndpointAddress endpoint = new(new Uri("net.tcp://localhost:9001/"));
+        using ChannelFactory<IRevitService> client = new(binding, endpoint);
 
-            Binding binding = new NetTcpBinding(SecurityMode.None)
-            {
-                SendTimeout = timeStamp,
-                OpenTimeout = timeStamp,
-                CloseTimeout = timeStamp,
-                ReceiveTimeout = timeStamp,
-            };
+        IRevitService proxy = client.CreateChannel();
 
-            using ChannelFactory<IRevitService> client = new(binding, endpoint);
-
-            IRevitService proxy = client.CreateChannel();
-
-            if (proxy is IClientChannel channel)
+        if (proxy is IClientChannel channel)
+        {
+            Task asyncTask = Task.Run(async () =>
             {
                 try
                 {
-                    Log.Debug($"Channel state {channel.State}");
-                    proxy.SendMessageAsync(chatId, message).Wait();
-                    Log.Debug($"The message was sent successfully");
-                }
-                catch (AggregateException ae)
-                {
-                    foreach (Exception ex in ae.InnerExceptions)
-                    {
-                        Log.Error(ex, $"Failed to send: {ex.Message}");
-                    }
+                    Log.Debug($"State before: {channel.State}");
+                    await proxy.SendMessageAsync(chatId, message);
+                    Log.Debug("The message was sent successfully");
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, $"Failed to send: {ex.Message}");
+                    Log.Error(ex, $"{ex.Message}\nStackTrace: {ex.StackTrace}");
                 }
                 finally
                 {
+                    Log.Debug($"State after: {channel.State}");
+
                     if (channel.State == CommunicationState.Faulted)
                     {
                         channel.Abort();
@@ -59,12 +54,12 @@ public static class MessageManager
                         channel.Close();
                     }
                 }
-            }
+            });
+
+            asyncTask.RunSynchronously();
+
         }
-        catch (Exception ex)
-        {
-            Log.Error(ex, $"{ex.Message}");
-        }
+
     }
 
 
