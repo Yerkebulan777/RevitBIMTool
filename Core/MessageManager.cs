@@ -26,6 +26,7 @@ public static class MessageManager
             };
 
             using ChannelFactory<IRevitService> client = new(binding, endpoint);
+
             IRevitService proxy = client.CreateChannel();
 
             if (proxy is IClientChannel channel)
