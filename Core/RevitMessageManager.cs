@@ -2,6 +2,7 @@
 using Serilog;
 using ServiceLibrary;
 using System.ServiceModel;
+using System.ServiceModel.Channels;
 
 
 namespace RevitBIMTool.Core;
@@ -11,41 +12,42 @@ public static class RevitMessageManager
     {
         try
         {
-            Uri baseAddress = new Uri($"net.tcp://localhost:9001/ ");
-
-            EndpointAddress endpoint = new(baseAddress);
-            NetTcpBinding tspBinding = new(SecurityMode.None);
-
-            using ChannelFactory<IRevitService> client = new(tspBinding);
-
-            IRevitService proxy = client.CreateChannel(endpoint);
-
-            if (proxy is IClientChannel channel)
+            Uri baseAddress = new Uri("net.tcp://localhost:9001/"); 
+            EndpointAddress endpoint = new EndpointAddress(baseAddress);
+            Binding binding = new NetTcpBinding(SecurityMode.None);
+ 
+            using (ChannelFactory<IRevitService> client = new ChannelFactory<IRevitService>(binding, endpoint))
             {
-                try
+                IRevitService proxy = client.CreateChannel();
+
+                if (proxy is IClientChannel channel)
                 {
-                    proxy.SendMessageAsync(chatId, message).Wait();
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, $"Failed send message: {ex.Message}");
-                }
-                finally
-                {
-                    if (channel.State == CommunicationState.Faulted)
+                    try
                     {
-                        channel.Abort();
+                        proxy.SendMessageAsync(chatId, message).Wait();
+                        Log.Debug($"Sending message: {message}");
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        channel.Close();
+                        Log.Error(ex, $"Failed to send: {ex.Message}");
+                    }
+                    finally
+                    {
+                        if (channel.State == CommunicationState.Faulted)
+                        {
+                            channel.Abort();
+                        }
+                        else
+                        {
+                            channel.Close();
+                        }
                     }
                 }
             }
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"{ex.Message} {ex.InnerException?.Message}");
+            Log.Error(ex, $"{ex.Message}");
         }
     }
 
