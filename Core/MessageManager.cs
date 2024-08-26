@@ -13,35 +13,49 @@ public static class MessageManager
     {
         try
         {
-            Uri baseAddress = new Uri("net.tcp://localhost:9001/"); 
-            EndpointAddress endpoint = new EndpointAddress(baseAddress);
-            Binding binding = new NetTcpBinding(SecurityMode.None);
- 
-            using (ChannelFactory<IRevitService> client = new ChannelFactory<IRevitService>(binding, endpoint))
-            {
-                IRevitService proxy = client.CreateChannel();
+            TimeSpan timeStamp = TimeSpan.FromMinutes(5);
+            Uri baseAddress = new("net.tcp://localhost:9001/");
+            EndpointAddress endpoint = new(baseAddress);
 
-                if (proxy is IClientChannel channel)
+            Binding binding = new NetTcpBinding(SecurityMode.None)
+            {
+                SendTimeout = timeStamp,
+                OpenTimeout = timeStamp,
+                CloseTimeout = timeStamp,
+                ReceiveTimeout = timeStamp,
+            };
+
+            using ChannelFactory<IRevitService> client = new(binding, endpoint);
+            IRevitService proxy = client.CreateChannel();
+
+            if (proxy is IClientChannel channel)
+            {
+                try
                 {
-                    try
-                    {
-                        proxy.SendMessageAsync(chatId, message).Wait();
-                        Log.Debug($"The message was sent successfully");
-                    }
-                    catch (Exception ex)
+                    Log.Debug($"Channel state {channel.State}");
+                    proxy.SendMessageAsync(chatId, message).Wait();
+                    Log.Debug($"The message was sent successfully");
+                }
+                catch (AggregateException ae)
+                {
+                    foreach (Exception ex in ae.InnerExceptions)
                     {
                         Log.Error(ex, $"Failed to send: {ex.Message}");
                     }
-                    finally
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, $"Failed to send: {ex.Message}");
+                }
+                finally
+                {
+                    if (channel.State == CommunicationState.Faulted)
                     {
-                        if (channel.State == CommunicationState.Faulted)
-                        {
-                            channel.Abort();
-                        }
-                        else
-                        {
-                            channel.Close();
-                        }
+                        channel.Abort();
+                    }
+                    else
+                    {
+                        channel.Close();
                     }
                 }
             }
