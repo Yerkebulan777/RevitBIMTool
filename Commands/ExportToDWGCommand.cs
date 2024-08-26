@@ -37,7 +37,7 @@ internal sealed class ExportToDWGCommand : IExternalCommand, IExternalCommandAva
             return Result.Failed;
         }
 
-        RevitMessageManager.ShowInfo(message);
+        MessageManager.ShowInfo(message);
 
         return Result.Succeeded;
     }

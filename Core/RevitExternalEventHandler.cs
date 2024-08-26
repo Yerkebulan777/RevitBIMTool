@@ -1,5 +1,6 @@
 ﻿using Autodesk.Revit.UI;
 using Serilog;
+using ServiceLibrary.Helpers;
 using ServiceLibrary.Models;
 using System.Globalization;
 using System.IO;
@@ -31,14 +32,14 @@ namespace RevitBIMTool.Core
 
             while (TaskRequestContainer.Instance.PopTaskModel(versionNumber, out TaskRequest taskRequest))
             {
-                if (File.Exists(taskRequest.RevitFilePath))
+                if (PathHelper.IsFileAccessible(taskRequest.RevitFilePath, out string output))
                 {
-                    string output = autoHandler.ExecuteTask(taskRequest);
-
-                    RevitMessageManager.SendInfo(taskRequest.ChatId, output);
-
+                    output = autoHandler.ExecuteTask(taskRequest);
                     Log.Information($"Task result:\r\n\t{output}");
                 }
+
+                MessageManager.SendInfo(taskRequest.ChatId, output);
+
             }
 
         }

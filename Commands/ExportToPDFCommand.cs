@@ -38,7 +38,7 @@ internal sealed class ExportToPDFCommand : IExternalCommand, IExternalCommandAva
             return Result.Failed;
         }
 
-        RevitMessageManager.ShowInfo(message);
+        MessageManager.ShowInfo(message);
 
         return Result.Succeeded;
     }
