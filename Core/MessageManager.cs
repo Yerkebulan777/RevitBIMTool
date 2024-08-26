@@ -14,8 +14,8 @@ public static class MessageManager
         try
         {
             TimeSpan timeStamp = TimeSpan.FromMinutes(5);
-            Uri baseAddress = new("net.tcp://localhost:9001/");
-            EndpointAddress endpoint = new(baseAddress);
+
+            EndpointAddress endpoint = new(new Uri("net.tcp://localhost:9001/"));
 
             Binding binding = new NetTcpBinding(SecurityMode.None)
             {
