@@ -10,17 +10,9 @@ public static class MessageManager
 {
     public static void SendInfo(long chatId, string message)
     {
-        TimeSpan timeStamp = TimeSpan.FromMinutes(5);
+        Binding binding = new NetTcpBinding(SecurityMode.None);
 
         EndpointAddress endpoint = new(new Uri("net.tcp://localhost:9001/"));
-
-        Binding binding = new NetTcpBinding(SecurityMode.None)
-        {
-            SendTimeout = timeStamp,
-            OpenTimeout = timeStamp,
-            CloseTimeout = timeStamp,
-            ReceiveTimeout = timeStamp,
-        };
 
         using ChannelFactory<IRevitService> client = new(binding, endpoint);
 
@@ -28,25 +20,36 @@ public static class MessageManager
 
         if (proxy is IClientChannel channel)
         {
-            Task asyncTask = Task.Run(async () =>
+            try
             {
-                try
-                {
-                    Log.Debug($"State before: {channel.State}");
-                    await proxy.SendMessageAsync(chatId, message);
-                    Log.Debug($"State after: {channel.State}");
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, $"{ex.Message}\nStackTrace: {ex.StackTrace}");
-                }
-                finally
-                {
-                    await Task.Yield();
-                }
-            });
+                Log.Debug($"State {channel.State}");
+                proxy.SendMessage(chatId, message);
+                Log.Debug($"State {channel.State}");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+            }
 
-            asyncTask.RunSynchronously();
+            //Task asyncTask = Task.Run(async () =>
+            //{
+            //    try
+            //    {
+            //        Log.Debug($"State before: {channel.State}");
+            //        await proxy.SendMessageAsync(chatId, message);
+            //        Log.Debug($"State after: {channel.State}");
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        Log.Error(ex, $"{ex.Message}\nStackTrace: {ex.StackTrace}");
+            //    }
+            //    finally
+            //    {
+            //        await Task.Yield();
+            //    }
+            //});
+
+            //asyncTask.RunSynchronously();
 
         }
 
