@@ -59,7 +59,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\CommunicationService\CommunicationService.csproj" />
+      <ProjectReference Include="..\TelegramBotAutomationService\ServiceLibrary\ServiceLibrary.csproj" />
     </ItemGroup>
 
     <ItemGroup>

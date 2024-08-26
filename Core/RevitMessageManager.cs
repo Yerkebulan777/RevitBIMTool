@@ -1,28 +1,24 @@
 ﻿using Autodesk.Revit.UI;
-using CommunicationService.Core;
-using CommunicationService.Helpers;
 using Serilog;
+using ServiceLibrary;
 using System.ServiceModel;
 
 
 namespace RevitBIMTool.Core;
 public static class RevitMessageManager
 {
-    private const int port = ServiceHelper.Port;
-    private const string serviceName = ServiceHelper.ServiceName;
-
     public static void SendInfo(long chatId, string message)
     {
-        Uri baseAddress = new Uri($"net.tcp://localhost:{port}/{serviceName}");
-
-        EndpointAddress endpoint = new(baseAddress);
-        NetTcpBinding tspBinding = new(SecurityMode.None);
-
-        using ChannelFactory<IRevitHostService> client = new(tspBinding);
-
         try
         {
-            IRevitHostService proxy = client.CreateChannel(endpoint);
+            Uri baseAddress = new Uri($"net.tcp://localhost:9001/ ");
+
+            EndpointAddress endpoint = new(baseAddress);
+            NetTcpBinding tspBinding = new(SecurityMode.None);
+
+            using ChannelFactory<IRevitService> client = new(tspBinding);
+
+            IRevitService proxy = client.CreateChannel(endpoint);
 
             if (proxy is IClientChannel channel)
             {
