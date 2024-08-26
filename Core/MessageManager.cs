@@ -32,7 +32,6 @@ public static class MessageManager
             {
                 try
                 {
-                    await Task.Delay(timeStamp);
                     Log.Debug($"State before: {channel.State}");
                     await proxy.SendMessageAsync(chatId, message);
                     Log.Debug($"State after: {channel.State}");
@@ -43,14 +42,7 @@ public static class MessageManager
                 }
                 finally
                 {
-                    if (channel.State == CommunicationState.Faulted)
-                    {
-                        channel.Abort();
-                    }
-                    else
-                    {
-                        channel.Close();
-                    }
+                    await Task.Yield();
                 }
             });
 

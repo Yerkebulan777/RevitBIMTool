@@ -3,7 +3,6 @@ using Serilog;
 using ServiceLibrary.Helpers;
 using ServiceLibrary.Models;
 using System.Globalization;
-using System.IO;
 
 
 namespace RevitBIMTool.Core
