@@ -10,17 +10,9 @@ public static class MessageManager
 {
     public static void SendInfo(long chatId, string message)
     {
-        TimeSpan timeStamp = TimeSpan.FromMinutes(5);
+        Binding binding = new NetTcpBinding(SecurityMode.None);
 
-        Binding binding = new NetTcpBinding(SecurityMode.None)
-        {
-            SendTimeout = timeStamp,
-            OpenTimeout = timeStamp,
-            CloseTimeout = timeStamp,
-            ReceiveTimeout = timeStamp,
-        };
-
-        EndpointAddress endpoint = new(new Uri("net.tcp://localhost:9001/"));
+        EndpointAddress endpoint = new(new Uri("net.tcp://localhost:9002/"));
 
         using ChannelFactory<IRevitService> client = new(binding, endpoint);
 

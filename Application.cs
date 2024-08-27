@@ -10,7 +10,9 @@ using System.IO;
 namespace RevitBIMTool;
 internal sealed class Application : IExternalApplication
 {
+    private int counter;
     private string versionNumber;
+    TaskRequestContainer container;
     private RevitExternalEventHandler externalEventHandler;
     private static readonly string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 
@@ -81,8 +83,19 @@ internal sealed class Application : IExternalApplication
 
     private void OnIdling(object sender, IdlingEventArgs e)
     {
-        Log.Debug($"Idling session called");
-        RevitFileHelper.CloseRevitApplication();
+        Log.Debug($"Idling session called {counter++}");
+
+        container = TaskRequestContainer.Instance;
+
+        if (counter > 100)
+        {
+            RevitFileHelper.CloseRevitApplication();
+        }
+        else if (!container.ValidateTaskData(versionNumber))
+        {
+            RevitFileHelper.CloseRevitApplication();
+        }
+
     }
 
     #endregion
