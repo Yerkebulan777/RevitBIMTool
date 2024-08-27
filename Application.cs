@@ -11,6 +11,7 @@ namespace RevitBIMTool;
 internal sealed class Application : IExternalApplication
 {
     private int counter;
+    int lenth;
     private string versionNumber;
     TaskRequestContainer container;
     private RevitExternalEventHandler externalEventHandler;
@@ -36,7 +37,7 @@ internal sealed class Application : IExternalApplication
         }
         finally
         {
-            if (TaskRequestContainer.Instance.ValidateTaskData(versionNumber))
+            if (TaskRequestContainer.Instance.ValidateTaskData(versionNumber, out lenth))
             {
                 externalEventHandler = new RevitExternalEventHandler(versionNumber);
 
@@ -87,11 +88,7 @@ internal sealed class Application : IExternalApplication
 
         container = TaskRequestContainer.Instance;
 
-        if (counter > 100)
-        {
-            RevitFileHelper.CloseRevitApplication();
-        }
-        else if (!container.ValidateTaskData(versionNumber))
+        if (!container.ValidateTaskData(versionNumber, out lenth) || counter > lenth)
         {
             RevitFileHelper.CloseRevitApplication();
         }
