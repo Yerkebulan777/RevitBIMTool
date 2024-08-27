@@ -8,6 +8,7 @@ using System.ServiceModel.Channels;
 namespace RevitBIMTool.Core;
 public static class MessageManager
 {
+
     public static void SendInfo(long chatId, string message)
     {
         Binding binding = new NetTcpBinding(SecurityMode.None);
@@ -74,5 +75,6 @@ public static class MessageManager
             _ = dialog.Show();
         }
     }
+
 
 }
