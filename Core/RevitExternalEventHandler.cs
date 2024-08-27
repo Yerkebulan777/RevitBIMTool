@@ -39,7 +39,7 @@ namespace RevitBIMTool.Core
                     Log.Information($"Task result:\r\n\t{output}");
                 }
 
-                MessageManager.SendInfo(taskRequest.ChatId, output);
+                //MessageManager.SendInfo(taskRequest.ChatId, output);
             }
 
         }
