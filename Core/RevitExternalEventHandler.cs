@@ -31,6 +31,8 @@ namespace RevitBIMTool.Core
 
             while (TaskRequestContainer.Instance.PopTaskModel(versionNumber, out TaskRequest taskRequest))
             {
+                Log.Information($"Started command: ({taskRequest.CommandNumber}) file name: {taskRequest.RevitFileName}");
+
                 if (PathHelper.IsFileAccessible(taskRequest.RevitFilePath, out string output))
                 {
                     output = autoHandler.ExecuteTask(taskRequest);
@@ -38,7 +40,6 @@ namespace RevitBIMTool.Core
                 }
 
                 MessageManager.SendInfo(taskRequest.ChatId, output);
-
             }
 
         }
