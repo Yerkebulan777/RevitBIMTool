@@ -10,10 +10,9 @@ using System.IO;
 namespace RevitBIMTool;
 internal sealed class Application : IExternalApplication
 {
+    private int length;
     private int counter;
-    int lenth;
     private string versionNumber;
-    TaskRequestContainer container;
     private RevitExternalEventHandler externalEventHandler;
     private static readonly string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 
@@ -37,7 +36,7 @@ internal sealed class Application : IExternalApplication
         }
         finally
         {
-            if (TaskRequestContainer.Instance.ValidateTaskData(versionNumber, out lenth))
+            if (TaskRequestContainer.Instance.DataAvailable(versionNumber, out length))
             {
                 externalEventHandler = new RevitExternalEventHandler(versionNumber);
 
@@ -86,9 +85,11 @@ internal sealed class Application : IExternalApplication
     {
         Log.Debug($"Idling session called {counter++}");
 
-        container = TaskRequestContainer.Instance;
+        TaskRequestContainer container = TaskRequestContainer.Instance;
 
-        if (!container.ValidateTaskData(versionNumber, out lenth) || counter > lenth)
+        bool available = container.DataAvailable(versionNumber, out _);
+
+        if (!available || counter > length)
         {
             RevitFileHelper.CloseRevitApplication();
         }
