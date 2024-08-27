@@ -87,16 +87,14 @@ internal sealed class Application : IExternalApplication
 
         TaskRequestContainer container = TaskRequestContainer.Instance;
 
-        bool available = container.DataAvailable(versionNumber, out _);
-
-        if (!available || counter > length)
+        if (counter > length || !container.DataAvailable(versionNumber, out _))
         {
             RevitFileHelper.CloseRevitApplication();
         }
 
     }
 
-    #endregion
 
+    #endregion
 
 }
