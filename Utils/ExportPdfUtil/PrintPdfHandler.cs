@@ -199,7 +199,7 @@ internal static class PrintPdfHandler
 
     private static bool ExportSheet(Document doc, string tempFolder, SheetModel model)
     {
-        Thread.Sleep(1000);
+        Thread.Sleep(100);
 
         lock (syncLocker)
         {
