@@ -1,5 +1,6 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Events;
+using Serilog;
 using System.Text;
 
 
@@ -161,8 +162,13 @@ public static class FailuresHanding
 
             if (!string.IsNullOrWhiteSpace(output))
             {
-                result += "\n FailuresProcessingHandler: " + output;
+                result += $"\n FailuresProcessingHandler: {output}";
             }
+        }
+        catch (Exception ex)
+        {
+            result = ex.Message;
+            Log.Fatal(result);
         }
         finally
         {

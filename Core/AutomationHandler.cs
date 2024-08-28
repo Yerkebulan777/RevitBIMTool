@@ -129,8 +129,8 @@ public sealed class AutomationHandler
         }
         catch (Exception ex)
         {
-            result = $"\nError: {ex.Source} {ex.Message}\n{ex.StackTrace}";
-            Log.Error(result);
+            result = ex.Message;
+            Log.Fatal(result);
         }
 
         return result;
