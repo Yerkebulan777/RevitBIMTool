@@ -3,7 +3,6 @@ using RevitBIMTool.Model;
 using RevitBIMTool.Utils.PrintUtil;
 using Serilog;
 using System.IO;
-using System.Windows.Threading;
 using Document = Autodesk.Revit.DB.Document;
 using Element = Autodesk.Revit.DB.Element;
 using PaperSize = System.Drawing.Printing.PaperSize;
@@ -69,56 +68,50 @@ internal static class PrintPdfHandler
 
         foreach (FamilyInstance titleBlock in collector.Cast<FamilyInstance>())
         {
-            lock (syncLocker)
+            double sheetWidth = titleBlock.get_Parameter(BuiltInParameter.SHEET_WIDTH).AsDouble();
+            double sheetHeigh = titleBlock.get_Parameter(BuiltInParameter.SHEET_HEIGHT).AsDouble();
+            string sheetNumber = titleBlock.get_Parameter(BuiltInParameter.SHEET_NUMBER).AsString();
+
+            double widthInMm = UnitManager.FootToMm(sheetWidth);
+            double heighInMm = UnitManager.FootToMm(sheetHeigh);
+
+            Element sheetElem = GetViewSheetByNumber(ref doc, sheetNumber);
+
+            if (sheetElem is ViewSheet viewSheet && viewSheet.CanBePrinted)
             {
-                double sheetWidth = titleBlock.get_Parameter(BuiltInParameter.SHEET_WIDTH).AsDouble();
-                double sheetHeigh = titleBlock.get_Parameter(BuiltInParameter.SHEET_HEIGHT).AsDouble();
-                string sheetNumber = titleBlock.get_Parameter(BuiltInParameter.SHEET_NUMBER).AsString();
-
-                double widthInMm = UnitManager.FootToMm(sheetWidth);
-                double heighInMm = UnitManager.FootToMm(sheetHeigh);
-
-                Element sheetElem = GetViewSheetByNumber(ref doc, sheetNumber);
-
-                if (sheetElem is ViewSheet viewSheet && viewSheet.CanBePrinted)
+                if (!PrinterApiUtility.GetPaperSize(widthInMm, heighInMm, out _))
                 {
-                    if (!PrinterApiUtility.GetPaperSize(widthInMm, heighInMm, out _))
-                    {
-                        PrinterApiUtility.AddFormat(defaultPrinterName, widthInMm, heighInMm);
-                    }
-
-                    if (PrinterApiUtility.GetPaperSize(widthInMm, heighInMm, out PaperSize papeSize))
-                    {
-                        PageOrientationType orientType = RevitPrinterUtil.GetOrientation(widthInMm, heighInMm);
-
-                        SheetModel model = new(viewSheet, papeSize, orientType);
-
-                        model.SetSheetName(doc, revitFileName, "pdf");
-
-                        if (model.IsValid)
-                        {
-                            string formatName = model.GetFormatNameWithSheetOrientation();
-
-                            if (!sheetPrintData.TryGetValue(formatName, out List<SheetModel> sheetList))
-                            {
-                                RevitPrinterUtil.SetPrintSettings(doc, model, formatName, colorType);
-                                sheetList = [model];
-                            }
-                            else
-                            {
-                                sheetList.Add(model);
-                            }
-
-                            sheetPrintData[formatName] = sheetList;
-                        }
-                    }
-                    else
-                    {
-                        throw new Exception($"Not defined: " + viewSheet.Name);
-                    }
-
+                    PrinterApiUtility.AddFormat(defaultPrinterName, widthInMm, heighInMm);
                 }
+
+                if (PrinterApiUtility.GetPaperSize(widthInMm, heighInMm, out PaperSize papeSize))
+                {
+                    PageOrientationType orientType = RevitPrinterUtil.GetOrientation(widthInMm, heighInMm);
+
+                    SheetModel model = new(viewSheet, papeSize, orientType);
+
+                    model.SetSheetName(doc, revitFileName, "pdf");
+
+                    if (model.IsValid)
+                    {
+                        string formatName = model.GetFormatNameWithSheetOrientation();
+
+                        if (!sheetPrintData.TryGetValue(formatName, out List<SheetModel> sheetList))
+                        {
+                            RevitPrinterUtil.SetPrintSettings(doc, model, formatName, colorType);
+                            sheetList = [model];
+                        }
+                        else
+                        {
+                            sheetList.Add(model);
+                        }
+
+                        sheetPrintData[formatName] = sheetList;
+                    }
+                }
+
             }
+
         }
 
         return sheetPrintData;
@@ -147,8 +140,6 @@ internal static class PrintPdfHandler
     {
         List<PrintSetting> printAllSettings = RevitPrinterUtil.GetPrintSettings(doc);
 
-        using Mutex mutex = new(false, "Global\\{{{ExportToPDFMutex}}}");
-
         List<SheetModel> resultFilePaths = new(sheetDict.Values.Count);
 
         using Transaction trx = new(doc, "ExportToPDF");
@@ -169,41 +160,11 @@ internal static class PrintPdfHandler
 
                     for (int idx = 0; idx < sheetModels.Count; idx++)
                     {
-                        if (mutex.WaitOne(Timeout.InfiniteTimeSpan))
+                        SheetModel model = sheetModels[idx];
+
+                        if (ExportSheet(tempFolder, printManager, model))
                         {
-                            try
-                            {
-                                SheetModel model = sheetModels[idx];
-
-                                string sheetFullName = model.SheetName;
-
-                                string sheetTempPath = Path.Combine(tempFolder, sheetFullName);
-
-                                RegistryHelper.ActivateSettingsForPDFCreator(tempFolder);
-
-                                RevitPathHelper.DeleteExistsFile(sheetTempPath);
-
-                                printManager.PrintToFileName = sheetTempPath;
-
-                                Log.Debug($"Start print file {sheetFullName}");
-
-                                if (printManager.SubmitPrint(model.ViewSheet))
-                                {
-                                    if (RevitPathHelper.AwaitExistsFile(sheetTempPath))
-                                    {
-                                        Log.Debug($"File {sheetFullName} printed");
-                                        resultFilePaths.Add(model);
-                                    }
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                Log.Error(ex, ex.Message);
-                            }
-                            finally
-                            {
-                                mutex.ReleaseMutex();
-                            }
+                            resultFilePaths.Add(model);
                         }
                     }
                 }
@@ -213,6 +174,45 @@ internal static class PrintPdfHandler
         }
 
         return resultFilePaths;
+    }
+
+
+    private static bool ExportSheet(string tempFolder, PrintManager printManager, SheetModel model)
+    {
+        using Mutex mutex = new(false, "Global\\{{{ExportToPDFMutex}}}");
+
+        if (mutex.WaitOne(Timeout.InfiniteTimeSpan))
+        {
+            lock (syncLocker)
+            {
+                try
+                {
+                    string tempPath = Path.Combine(tempFolder, model.SheetName);
+
+                    RegistryHelper.ActivateSettingsForPDFCreator(tempFolder);
+
+                    RevitPathHelper.DeleteExistsFile(tempPath);
+
+                    printManager.PrintToFileName = tempPath;
+
+                    if (printManager.SubmitPrint(model.ViewSheet))
+                    {
+                        Log.Debug($"Start print file {model.SheetName}");
+                        return RevitPathHelper.AwaitExistsFile(tempPath);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, ex.Message);
+                }
+                finally
+                {
+                    mutex.ReleaseMutex();
+                }
+            }
+        }
+
+        return false;
     }
 
 
