@@ -3,7 +3,6 @@ using RevitBIMTool.Model;
 using RevitBIMTool.Utils.PrintUtil;
 using Serilog;
 using System.IO;
-using System.Windows.Controls;
 using Document = Autodesk.Revit.DB.Document;
 using Element = Autodesk.Revit.DB.Element;
 using PaperSize = System.Drawing.Printing.PaperSize;
