@@ -33,12 +33,14 @@ namespace RevitBIMTool.Core
 
             RevitPathHelper.EnsureDirectory(directory);
 
-            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+            SynchronizationContext context = SynchronizationContext.Current;
 
             while (TaskRequestContainer.Instance.PopTaskModel(versionNumber, out TaskRequest request))
             {
                 if (PathHelper.IsFileAccessible(request.RevitFilePath, out string output))
                 {
+                    SynchronizationContext.SetSynchronizationContext(context);
+
                     Log.Logger = ConfigureLogger(request.RevitFileName);
 
                     output += autoHandler.RunExecuteTask(request);
@@ -46,7 +48,6 @@ namespace RevitBIMTool.Core
 
                     Log.CloseAndFlush();
                 }
-
             }
 
         }
