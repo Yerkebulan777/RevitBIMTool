@@ -79,10 +79,6 @@ namespace RevitBIMTool.Utils
             {
                 Log.Debug("Failed Reload: " + ex.Message);
             }
-            finally
-            {
-                Log.Debug("Reload: " + linkTypeName);
-            }
         }
 
 
@@ -95,10 +91,6 @@ namespace RevitBIMTool.Utils
             catch (Exception ex)
             {
                 Log.Debug("Failed Delete: " + ex.Message);
-            }
-            finally
-            {
-                Log.Debug("Deleted: " + linkTypeName);
             }
         }
 
