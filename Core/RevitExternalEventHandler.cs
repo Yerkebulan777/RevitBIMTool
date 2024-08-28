@@ -43,7 +43,6 @@ namespace RevitBIMTool.Core
 
                     output += autoHandler.RunExecuteTask(request);
                     Log.Information($"Task result:\r\n\t{output}");
-                    //MessageManager.SendInfo(request.ChatId, output);
 
                     Log.CloseAndFlush();
                 }
