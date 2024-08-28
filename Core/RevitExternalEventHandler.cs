@@ -31,6 +31,8 @@ namespace RevitBIMTool.Core
         {
             AutomationHandler autoHandler = new(uiapp);
 
+            RevitPathHelper.EnsureDirectory(directory);
+
             Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
 
             while (TaskRequestContainer.Instance.PopTaskModel(versionNumber, out TaskRequest request))
@@ -53,8 +55,6 @@ namespace RevitBIMTool.Core
 
         internal ILogger ConfigureLogger(string path)
         {
-            RevitPathHelper.EnsureDirectory(directory);
-
             return new LoggerConfiguration()
                 .WriteTo.File(path, rollingInterval: RollingInterval.Infinite)
                 .MinimumLevel.Debug()

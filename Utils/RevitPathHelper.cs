@@ -1,6 +1,7 @@
 ﻿using Autodesk.Revit.DB;
 using Microsoft.Win32;
 using Serilog;
+using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
 using Path = System.IO.Path;
@@ -175,15 +176,9 @@ public static class RevitPathHelper
             {
                 _ = Directory.CreateDirectory(directoryPath);
             }
-            catch (Exception ex)
-            {
-                Log.Error($"Directory: {directoryPath}");
-                Log.Error(ex, $"{ex.Message}");
-                return;
-            }
             finally
             {
-                Log.Debug($"Created directory");
+                Debug.WriteLine($"Created directory {directoryPath}");
             }
         }
     }
