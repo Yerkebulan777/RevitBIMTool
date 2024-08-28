@@ -10,34 +10,28 @@ internal static class RegistryHelper
 
     private static void SetRegistryValue(RegistryKey regRoot, string regPath, string keyName, string value)
     {
-        object result = null;
-
-        try
+        lock (Registry.LocalMachine)
         {
-            using RegistryKey registryKey = regRoot.OpenSubKey(regPath, true);
-            if (registryKey is null)
+            try
             {
-                throw new Exception("RegistryKey not bу null");
-            }
+                using RegistryKey registryKey = regRoot.OpenSubKey(regPath, true);
 
-            if (int.TryParse(value, out int intValue))
-            {
-                registryKey.SetValue(keyName, intValue, RegistryValueKind.DWord);
+                if (registryKey is not null)
+                {
+                    if (int.TryParse(value, out int intValue))
+                    {
+                        registryKey.SetValue(keyName, intValue, RegistryValueKind.DWord);
+                    }
+                    else if (!string.IsNullOrWhiteSpace(value))
+                    {
+                        registryKey.SetValue(keyName, value, RegistryValueKind.String);
+                    }
+                }
             }
-            else if (!string.IsNullOrWhiteSpace(value))
+            catch (Exception ex)
             {
-                registryKey.SetValue(keyName, value, RegistryValueKind.String);
+                Log.Error(ex, ex.Message);
             }
-
-            result = registryKey.GetValue(keyName);
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, $"Failed to set {keyName} regValue {value}: {ex.Message}");
-        }
-        finally
-        {
-            Log.Verbose($"Registry {keyName} set value: {result}");
         }
     }
 
