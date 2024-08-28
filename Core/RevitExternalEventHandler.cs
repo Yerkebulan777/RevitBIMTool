@@ -39,7 +39,7 @@ namespace RevitBIMTool.Core
             {
                 if (PathHelper.IsFileAccessible(request.RevitFilePath, out string output))
                 {
-                    Log.Logger = ConfigureLogger(Path.Combine(directory, request.RevitFileName));
+                    Log.Logger = ConfigureLogger(request.RevitFileName);
 
                     output += autoHandler.RunExecuteTask(request);
                     Log.Information($"Task result:\r\n\t{output}");
@@ -53,10 +53,12 @@ namespace RevitBIMTool.Core
         }
 
 
-        internal ILogger ConfigureLogger(string path)
+        internal ILogger ConfigureLogger(string logName)
         {
+            string logPath = Path.Combine(directory, $"{logName}.txt");
+
             return new LoggerConfiguration()
-                .WriteTo.File(path, rollingInterval: RollingInterval.Infinite)
+                .WriteTo.File(logPath)
                 .MinimumLevel.Debug()
                 .CreateLogger();
         }
