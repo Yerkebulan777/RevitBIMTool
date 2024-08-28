@@ -36,7 +36,6 @@ internal static class ExportToPDFHandler
         if (!ExportPathHelper.IsTargetFileUpdated(exportFullPath, revitFilePath))
         {
             Log.Debug("Start export to PDF...");
-            Log.Debug($"TEMP directory: {tempFolder}");
 
             RevitPathHelper.EnsureDirectory(tempFolder);
             PrintPdfHandler.ResetPrintSettings(doc, printerName);

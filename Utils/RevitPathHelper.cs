@@ -211,15 +211,16 @@ public static class RevitPathHelper
 
         while (counter < maxDuration)
         {
-            counter++;
-
             lock (sectionAcronyms)
             {
+                counter++;
+
                 Thread.Sleep(counter * 1000);
 
                 if (File.Exists(filePath))
                 {
-                    Log.Debug($"\tPrinted in {counter} sec");
+                    Log.Debug($"\tExist in {counter} seconds");
+
                     return true;
                 }
             }
@@ -227,5 +228,6 @@ public static class RevitPathHelper
 
         return false;
     }
+
 
 }

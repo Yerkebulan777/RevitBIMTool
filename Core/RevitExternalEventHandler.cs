@@ -31,7 +31,7 @@ namespace RevitBIMTool.Core
 
             while (TaskRequestContainer.Instance.PopTaskModel(versionNumber, out TaskRequest taskRequest))
             {
-                Log.Information($"Started command: ({taskRequest.CommandNumber}) file name: {taskRequest.RevitFileName}");
+                Log.Information($"Start execute file: {taskRequest.RevitFilePath}...");
 
                 if (PathHelper.IsFileAccessible(taskRequest.RevitFilePath, out string output))
                 {

@@ -49,7 +49,6 @@ public sealed class AutomationHandler
 
         if (!string.IsNullOrEmpty(sectionName))
         {
-            Log.Debug($"Section: {sectionName}");
             Log.Debug($"Revit name: {taskModel.RevitFileName}");
             Log.Debug($"Command number: {taskModel.CommandNumber}");
 
