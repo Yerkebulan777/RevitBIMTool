@@ -56,18 +56,11 @@ internal sealed class Application : IExternalApplication
     #endregion
 
 
-
     #region IdlingEventHandler
 
     private void OnIdling(object sender, IdlingEventArgs e)
     {
-        TaskRequestContainer container = TaskRequestContainer.Instance;
-
-        if (!container.DataAvailable(versionNumber, out _))
-        {
-            RevitFileHelper.CloseRevitApplication();
-        }
-
+        RevitFileHelper.CloseRevitApplication();
     }
 
     #endregion
