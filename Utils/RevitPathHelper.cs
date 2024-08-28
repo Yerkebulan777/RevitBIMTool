@@ -219,7 +219,7 @@ public static class RevitPathHelper
 
                 if (File.Exists(filePath))
                 {
-                    Log.Debug($"{counter} sec");
+                    Log.Debug($"\tPrinted in {counter} sec");
                     return true;
                 }
             }
