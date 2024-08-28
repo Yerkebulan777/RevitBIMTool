@@ -10,8 +10,6 @@ using System.IO;
 namespace RevitBIMTool;
 internal sealed class Application : IExternalApplication
 {
-    private int length;
-    private int counter;
     private string versionNumber;
     private RevitExternalEventHandler externalEventHandler;
     private static readonly string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
@@ -26,7 +24,6 @@ internal sealed class Application : IExternalApplication
             uiapp = uiapp ?? throw new ArgumentNullException(nameof(uiapp));
             versionNumber = uiapp.ControlledApplication.VersionNumber;
             SetupUIPanel.Initialize(uiapp);
-            Log.Logger = ConfigureLogger();
         }
         catch (Exception ex)
         {
@@ -36,7 +33,7 @@ internal sealed class Application : IExternalApplication
         }
         finally
         {
-            if (TaskRequestContainer.Instance.DataAvailable(versionNumber, out length))
+            if (TaskRequestContainer.Instance.DataAvailable(versionNumber, out int length))
             {
                 externalEventHandler = new RevitExternalEventHandler(versionNumber);
 
@@ -55,44 +52,25 @@ internal sealed class Application : IExternalApplication
     {
         uiapp.Idling -= new EventHandler<IdlingEventArgs>(OnIdling);
 
-        Log.CloseAndFlush();
-
         return Result.Succeeded;
     }
 
     #endregion
 
 
-    #region ConfigureLogger
-
-    internal ILogger ConfigureLogger()
-    {
-        return new LoggerConfiguration()
-            .WriteTo.File(Path.Combine(docPath, $"RevitBIMTool {versionNumber}.txt"),
-                rollingInterval: RollingInterval.Infinite,
-                retainedFileCountLimit: 5)
-            .MinimumLevel.Debug()
-            .CreateLogger();
-    }
-
-    #endregion
-
 
     #region IdlingEventHandler
 
     private void OnIdling(object sender, IdlingEventArgs e)
     {
-        Log.Debug($"Idling session called {counter++}");
-
         TaskRequestContainer container = TaskRequestContainer.Instance;
 
-        if (counter > length || !container.DataAvailable(versionNumber, out _))
+        if (!container.DataAvailable(versionNumber, out _))
         {
             RevitFileHelper.CloseRevitApplication();
         }
 
     }
-
 
     #endregion
 
