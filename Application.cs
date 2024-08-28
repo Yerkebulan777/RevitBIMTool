@@ -70,7 +70,7 @@ internal sealed class Application : IExternalApplication
         return new LoggerConfiguration()
             .WriteTo.File(Path.Combine(docPath, $"RevitBIMTool {versionNumber}.txt"),
                 rollingInterval: RollingInterval.Infinite,
-                fileSizeLimitBytes: 10_000_000,
+                fileSizeLimitBytes: 100_000_000,
                 retainedFileCountLimit: 5)
             .MinimumLevel.Debug()
             .CreateLogger();
