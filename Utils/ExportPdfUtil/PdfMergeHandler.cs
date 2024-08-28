@@ -22,48 +22,41 @@ internal static class PdfMergeHandler
 
         foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
         {
-            Log.Debug($"Sheet name: {model.SheetName}");
-            Log.Debug($"Organization group name: {model.OrganizationGroupName}");
-            Log.Debug($"Sheet number: {model.StringNumber} ({model.DigitNumber})");
-
             string filePath = SheetModel.FindFileInDirectory(directory, model.SheetName);
 
-            if (!File.Exists(filePath))
+            if (File.Exists(filePath))
             {
-                Log.Warning($"Not founded file: {filePath}");
-                continue;
-            }
+                PdfReader reader = new(filePath);
+                reader.ConsolidateNamedDestinations();
 
-            PdfReader reader = new(filePath);
-            reader.ConsolidateNamedDestinations();
-
-            try
-            {
-                for (int num = 1; num <= reader.NumberOfPages; num++)
+                try
                 {
-                    PdfImportedPage page = copy.GetImportedPage(reader, num);
-
-                    if (page != null && outputDocument.IsOpen())
+                    for (int num = 1; num <= reader.NumberOfPages; num++)
                     {
-                        copy.AddPage(page);
+                        PdfImportedPage page = copy.GetImportedPage(reader, num);
+
+                        if (page != null && outputDocument.IsOpen())
+                        {
+                            copy.AddPage(page);
+                        }
                     }
+
+                    copy.FreeReader(reader);
+
                 }
-
-                copy.FreeReader(reader);
-
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, ex.Message);
-            }
-            finally
-            {
-                reader.Close();
-                model.Dispose();
-
-                if (deleted)
+                catch (Exception ex)
                 {
-                    File.Delete(filePath);
+                    Log.Error(ex, ex.Message);
+                }
+                finally
+                {
+                    reader.Close();
+                    model.Dispose();
+
+                    if (deleted)
+                    {
+                        File.Delete(filePath);
+                    }
                 }
             }
         }
