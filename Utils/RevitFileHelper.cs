@@ -52,7 +52,6 @@ internal static class RevitFileHelper
         if (!currentProcess.HasExited)
         {
             Thread.Sleep(1000);
-            Log.CloseAndFlush();
             currentProcess?.Kill();
             currentProcess?.Dispose();
         }
