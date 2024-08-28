@@ -55,7 +55,7 @@ internal static class ExportToPDFHandler
             }
 
             Dictionary<string, List<SheetModel>> sheetData = PrintPdfHandler.GetSheetPrintedData(doc, revitFileName, colorType);
-            List<SheetModel> sheetModels = PrintPdfHandler.PrintSheetData(ref doc, sheetData, tempFolder);
+            List<SheetModel> sheetModels = PrintPdfHandler.PrintSheetData(doc, sheetData, tempFolder);
             Log.Information($"Total valid sheet count: ({sheetModels.Count})");
 
             if (sheetModels.Count > 0)

@@ -3,6 +3,7 @@ using RevitBIMTool.Model;
 using RevitBIMTool.Utils.PrintUtil;
 using Serilog;
 using System.IO;
+using System.Windows.Controls;
 using Document = Autodesk.Revit.DB.Document;
 using Element = Autodesk.Revit.DB.Element;
 using PaperSize = System.Drawing.Printing.PaperSize;
@@ -75,7 +76,7 @@ internal static class PrintPdfHandler
             double widthInMm = UnitManager.FootToMm(sheetWidth);
             double heighInMm = UnitManager.FootToMm(sheetHeigh);
 
-            Element sheetElem = GetViewSheetByNumber(ref doc, sheetNumber);
+            Element sheetElem = GetViewSheetByNumber(doc, sheetNumber);
 
             if (sheetElem is ViewSheet viewSheet && viewSheet.CanBePrinted)
             {
@@ -118,7 +119,7 @@ internal static class PrintPdfHandler
     }
 
 
-    private static Element GetViewSheetByNumber(ref Document document, string sheetNumber)
+    private static Element GetViewSheetByNumber(Document document, string sheetNumber)
     {
         ParameterValueProvider pvp = new(new ElementId(BuiltInParameter.SHEET_NUMBER));
 
@@ -136,69 +137,45 @@ internal static class PrintPdfHandler
     }
 
 
-    public static List<SheetModel> PrintSheetData(ref Document doc, Dictionary<string, List<SheetModel>> sheetDict, string tempFolder)
+    public static List<SheetModel> PrintSheetData(Document doc, Dictionary<string, List<SheetModel>> sheetDict, string tempFolder)
     {
         List<PrintSetting> printAllSettings = RevitPrinterUtil.GetPrintSettings(doc);
 
         List<SheetModel> resultFilePaths = new(sheetDict.Values.Count);
 
-        using Transaction trx = new(doc, "ExportToPDF");
-
-        if (TransactionStatus.Started == trx.Start())
-        {
-            PrintManager printManager = doc.PrintManager;
-
-            foreach (string settingName in sheetDict.Keys)
-            {
-                PrintSetting printSetting = printAllSettings.FirstOrDefault(set => set.Name == settingName);
-
-                if (printSetting != null && sheetDict.TryGetValue(settingName, out List<SheetModel> sheetModels))
-                {
-                    printManager.PrintSetup.CurrentPrintSetting = printSetting;
-
-                    printManager.Apply(); // Set print settings
-
-                    for (int idx = 0; idx < sheetModels.Count; idx++)
-                    {
-                        SheetModel model = sheetModels[idx];
-
-                        if (ExportSheet(tempFolder, printManager, model))
-                        {
-                            resultFilePaths.Add(model);
-                        }
-                    }
-                }
-            }
-
-            _ = trx.Commit();
-        }
-
-        return resultFilePaths;
-    }
-
-
-    private static bool ExportSheet(string tempFolder, PrintManager printManager, SheetModel model)
-    {
         using Mutex mutex = new(false, $"Global\\{{{printerName}}}");
+
+        using Transaction trx = new(doc, "ExportToPDF");
 
         if (mutex.WaitOne(Timeout.InfiniteTimeSpan))
         {
-            lock (syncLocker)
+            if (TransactionStatus.Started == trx.Start())
             {
                 try
                 {
-                    string tempPath = Path.Combine(tempFolder, model.SheetName);
-
-                    RegistryHelper.ActivateSettingsForPDFCreator(tempFolder);
-
-                    RevitPathHelper.DeleteExistsFile(tempPath);
-
-                    printManager.PrintToFileName = tempPath;
-
-                    if (printManager.SubmitPrint(model.ViewSheet))
+                    foreach (string settingName in sheetDict.Keys)
                     {
-                        Log.Debug($"Start print file {model.SheetName}");
-                        return RevitPathHelper.AwaitExistsFile(tempPath);
+                        PrintManager printManager = doc.PrintManager;
+
+                        PrintSetting printSetting = printAllSettings.FirstOrDefault(set => set.Name == settingName);
+
+                        if (printSetting != null && sheetDict.TryGetValue(settingName, out List<SheetModel> sheetModels))
+                        {
+                            printManager.PrintSetup.CurrentPrintSetting = printSetting;
+
+                            printManager.Apply(); // Set print settings
+
+                            for (int idx = 0; idx < sheetModels.Count; idx++)
+                            {
+                                if (sheetModels[idx] is SheetModel model)
+                                {
+                                    if (ExportSheet(doc, tempFolder, model))
+                                    {
+                                        resultFilePaths.Add(model);
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -208,8 +185,39 @@ internal static class PrintPdfHandler
                 finally
                 {
                     mutex.ReleaseMutex();
+
+                    if (!trx.HasEnded())
+                    {
+                        _ = trx.RollBack();
+                    }
                 }
             }
+        }
+
+        return resultFilePaths;
+    }
+
+
+    private static bool ExportSheet(Document doc, string tempFolder, SheetModel model)
+    {
+        lock (syncLocker)
+        {
+            PrintManager printManager = doc.PrintManager;
+
+            string tempPath = Path.Combine(tempFolder, model.SheetName);
+
+            RegistryHelper.ActivateSettingsForPDFCreator(tempFolder);
+
+            RevitPathHelper.DeleteExistsFile(tempPath);
+
+            printManager.PrintToFileName = tempPath;
+
+            if (printManager.SubmitPrint(model.ViewSheet))
+            {
+                Log.Debug($"Start print file {model.SheetName}");
+                return RevitPathHelper.AwaitExistsFile(tempPath);
+            }
+
         }
 
         return false;
