@@ -215,18 +215,15 @@ public static class RevitPathHelper
 
             lock (sectionAcronyms)
             {
-                Thread.Sleep(1000);
+                Thread.Sleep(counter * 1000);
 
                 if (File.Exists(filePath))
                 {
+                    Log.Debug($"{counter} sec");
                     return true;
                 }
             }
         }
-
-        Log.Debug($"File not found {filePath}");
-
-        Thread.Sleep(counter * 1000);
 
         return false;
     }
