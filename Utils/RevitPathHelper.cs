@@ -10,7 +10,7 @@ namespace RevitBIMTool.Utils;
 public static class RevitPathHelper
 {
 
-    private static readonly string[] sectionAcronyms = { "AR", "AS", "KJ", "KR", "KG", "OV", "VK", "EOM", "EM", "PS", "SS", "OViK", "APT" };
+    private static readonly string[] sectionAcronyms = { "AR", "AS", "KJ", "KR", "KG", "OV", "VK", "EOM", "EM", "PS", "SS", "OViK", "APT", "BIM" };
 
 
     public static string GetUNCPath(string inputPath)
