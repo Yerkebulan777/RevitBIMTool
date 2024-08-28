@@ -217,10 +217,10 @@ public static class RevitPathHelper
 
                 Thread.Sleep(counter * 1000);
 
+                Log.Debug($"Waiting {counter} seconds");
+
                 if (File.Exists(filePath))
                 {
-                    Log.Debug($"\tExist in {counter} seconds");
-
                     return true;
                 }
             }
