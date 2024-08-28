@@ -3,6 +3,7 @@ using RevitBIMTool.Model;
 using RevitBIMTool.Utils.PrintUtil;
 using Serilog;
 using System.IO;
+using System.Windows.Threading;
 using Document = Autodesk.Revit.DB.Document;
 using Element = Autodesk.Revit.DB.Element;
 using PaperSize = System.Drawing.Printing.PaperSize;
@@ -190,8 +191,8 @@ internal static class PrintPdfHandler
                                 {
                                     if (RevitPathHelper.AwaitExistsFile(sheetTempPath))
                                     {
+                                        Log.Debug($"File {sheetFullName} printed");
                                         resultFilePaths.Add(model);
-                                        Thread.Sleep(1000);
                                     }
                                 }
                             }
