@@ -23,7 +23,7 @@ public sealed class AutomationHandler
     }
 
 
-    public string ExecuteTask(TaskRequest taskRequest)
+    public string RunExecuteTask(TaskRequest taskRequest)
     {
         builder = new StringBuilder();
 

@@ -33,34 +33,33 @@ namespace RevitBIMTool.Core
 
             Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
 
-            while (TaskRequestContainer.Instance.PopTaskModel(versionNumber, out TaskRequest taskRequest))
+            while (TaskRequestContainer.Instance.PopTaskModel(versionNumber, out TaskRequest request))
             {
-                if (PathHelper.IsFileAccessible(taskRequest.RevitFilePath, out string output))
+                if (PathHelper.IsFileAccessible(request.RevitFilePath, out string output))
                 {
-                    Log.Logger = ConfigureLogger(taskRequest);
-                    output = autoHandler.ExecuteTask(taskRequest);
+                    Log.Logger = ConfigureLogger(Path.Combine(directory, request.RevitFileName));
+
+                    output += autoHandler.RunExecuteTask(request);
                     Log.Information($"Task result:\r\n\t{output}");
+                    MessageManager.SendInfo(request.ChatId, output);
+
                     Log.CloseAndFlush();
                 }
 
-                //MessageManager.SendInfo(taskRequest.ChatId, output);
             }
 
         }
 
 
-
-        internal ILogger ConfigureLogger(TaskRequest taskRequest)
+        internal ILogger ConfigureLogger(string path)
         {
             RevitPathHelper.EnsureDirectory(directory);
 
             return new LoggerConfiguration()
-                .WriteTo.File(Path.Combine(directory, $"{taskRequest.RevitFileName}.txt"),
-                    rollingInterval: RollingInterval.Infinite)
+                .WriteTo.File(path, rollingInterval: RollingInterval.Infinite)
                 .MinimumLevel.Debug()
                 .CreateLogger();
         }
-
 
 
         public string GetName()
