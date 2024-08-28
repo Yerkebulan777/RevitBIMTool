@@ -13,15 +13,15 @@ using PrintRange = Autodesk.Revit.DB.PrintRange;
 namespace RevitBIMTool.Utils.ExportPdfUtil;
 internal static class PrintPdfHandler
 {
+    private static string printerName;
 
-    private static string defaultPrinterName;
 
     private static readonly object syncLocker = new();
 
 
     public static void ResetPrintSettings(Document doc, string printerName)
     {
-        defaultPrinterName = printerName;
+        PrintPdfHandler.printerName = printerName;
         PrintManager printManager = doc.PrintManager;
         PrinterApiUtility.ResetDefaultPrinter(printerName);
         List<PrintSetting> printSettings = RevitPrinterUtil.GetPrintSettings(doc);
@@ -81,7 +81,7 @@ internal static class PrintPdfHandler
             {
                 if (!PrinterApiUtility.GetPaperSize(widthInMm, heighInMm, out _))
                 {
-                    PrinterApiUtility.AddFormat(defaultPrinterName, widthInMm, heighInMm);
+                    PrinterApiUtility.AddFormat(printerName, widthInMm, heighInMm);
                 }
 
                 if (PrinterApiUtility.GetPaperSize(widthInMm, heighInMm, out PaperSize papeSize))
@@ -179,7 +179,7 @@ internal static class PrintPdfHandler
 
     private static bool ExportSheet(string tempFolder, PrintManager printManager, SheetModel model)
     {
-        using Mutex mutex = new(false, "Global\\{{{ExportToPDFMutex}}}");
+        using Mutex mutex = new(false, $"Global\\{{{printerName}}}");
 
         if (mutex.WaitOne(Timeout.InfiniteTimeSpan))
         {
