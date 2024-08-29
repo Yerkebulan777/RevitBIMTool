@@ -33,12 +33,13 @@ internal static class ExportToPDFHandler
         string exportFullPath = Path.Combine(baseDirectory, $"{revitFileName}.pdf");
         string tempFolder = Path.Combine(temp, randomName);
 
+
         if (!ExportPathHelper.IsTargetFileUpdated(exportFullPath, revitFilePath))
         {
             Log.Debug("Start export to PDF...");
 
             RevitPathHelper.EnsureDirectory(tempFolder);
-            PrintPdfHandler.ResetPrintSettings(doc, printerName);
+            PrintHandler.ResetPrintSettings(doc, printerName);
 
             string defaultPrinter = PrinterApiUtility.GetDefaultPrinter();
 
@@ -54,16 +55,26 @@ internal static class ExportToPDFHandler
                 colorType = ColorDepthType.BlackLine;
             }
 
-            Dictionary<string, List<SheetModel>> sheetData = PrintPdfHandler.GetSheetPrintedData(doc, revitFileName, colorType);
-            List<SheetModel> sheetModels = PrintPdfHandler.PrintSheetData(doc, sheetData, tempFolder);
-            Log.Information($"Total valid sheet count: ({sheetModels.Count})");
+            Dictionary<string, List<SheetModel>> sheetData = PrintHandler.GetSheetData(doc, revitFileName, colorType);
 
-            if (sheetModels.Count > 0)
+            if (sheetData.Count > 0)
             {
-                _ = sb.AppendLine(Path.GetDirectoryName(baseDirectory));
-                PdfMergeHandler.CombinePDFsFromFolder(sheetModels, tempFolder, exportFullPath);
-                SystemFolderOpener.OpenFolder(baseDirectory);
-                RevitPathHelper.DeleteDirectory(tempFolder);
+                List<SheetModel> sheetModels = PrintHandler.PrintSheetData(doc, sheetData, tempFolder);
+
+                Log.Information($"Total valid sheets: ({sheetModels.Count})");
+
+                if (sheetModels.Count > 0)
+                {
+                    sheetModels = SheetModel.SortSheetModels(sheetModels);
+                    sheetModels.ForEach(model => Log.Debug(model.SheetName));
+
+                    MergeHandler.CombinePDFsFromFolder(sheetModels, tempFolder, exportFullPath);
+
+                    _ = sb.AppendLine(Path.GetDirectoryName(baseDirectory));
+
+                    SystemFolderOpener.OpenFolder(baseDirectory);
+                    RevitPathHelper.DeleteDirectory(tempFolder);
+                }
             }
 
             return sb.ToString();

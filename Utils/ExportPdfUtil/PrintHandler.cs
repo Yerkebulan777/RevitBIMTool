@@ -11,7 +11,7 @@ using PrintRange = Autodesk.Revit.DB.PrintRange;
 
 
 namespace RevitBIMTool.Utils.ExportPdfUtil;
-internal static class PrintPdfHandler
+internal static class PrintHandler
 {
     private static string printerName;
 
@@ -21,7 +21,7 @@ internal static class PrintPdfHandler
 
     public static void ResetPrintSettings(Document doc, string printerName)
     {
-        PrintPdfHandler.printerName = printerName;
+        PrintHandler.printerName = printerName;
         PrintManager printManager = doc.PrintManager;
         PrinterApiUtility.ResetDefaultPrinter(printerName);
         List<PrintSetting> printSettings = RevitPrinterUtil.GetPrintSettings(doc);
@@ -53,16 +53,15 @@ internal static class PrintPdfHandler
     }
 
 
-    public static Dictionary<string, List<SheetModel>> GetSheetPrintedData(Document doc, string revitFileName, ColorDepthType colorType)
+    public static Dictionary<string, List<SheetModel>> GetSheetData(Document doc, string revitFileName, ColorDepthType colorType)
     {
         FilteredElementCollector collector = new(doc);
+
         collector = collector.OfCategory(BuiltInCategory.OST_TitleBlocks);
         collector = collector.OfClass(typeof(FamilyInstance));
         collector = collector.WhereElementIsNotElementType();
 
         int sheetCount = collector.GetElementCount();
-
-        Log.Information($"Found {sheetCount} sheets");
 
         Dictionary<string, List<SheetModel>> sheetPrintData = new(sheetCount);
 
@@ -108,6 +107,7 @@ internal static class PrintPdfHandler
 
                         sheetPrintData[formatName] = sheetList;
                     }
+
                 }
 
             }
@@ -167,8 +167,6 @@ internal static class PrintPdfHandler
                             for (int idx = 0; idx < sheetModels.Count; idx++)
                             {
                                 SheetModel model = sheetModels[idx];
-
-                                Log.Debug($"Sheet {model.SheetName} is being prepared...");
 
                                 if (ExportSheet(doc, tempFolder, model))
                                 {
