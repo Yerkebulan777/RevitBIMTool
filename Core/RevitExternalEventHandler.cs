@@ -36,7 +36,6 @@ namespace RevitBIMTool.Core
 
             while (TaskRequestContainer.Instance.PopTaskModel(versionNumber, out TaskRequest request))
             {
-
                 Log.Logger = ConfigureLogger(request);
 
                 if (PathHelper.IsFileAccessible(request.RevitFilePath, out string output))
