@@ -38,9 +38,9 @@ namespace RevitBIMTool.Core
             {
                 if (PathHelper.IsFileAccessible(request.RevitFilePath, out string output))
                 {
-                    Log.Logger = ConfigureLogger(request);
-
                     SynchronizationContext.SetSynchronizationContext(context);
+
+                    Log.Logger = ConfigureLogger(request);
 
                     output += autoHandler.RunExecuteTask(request);
                     Log.Information($"Task result:\r\n\t{output}");
