@@ -172,6 +172,7 @@ internal static class PrintPdfHandler
 
                                 if (ExportSheet(doc, tempFolder, model))
                                 {
+
                                     resultFilePaths.Add(model);
                                 }
                             }
@@ -217,9 +218,13 @@ internal static class PrintPdfHandler
             if (printManager.SubmitPrint(model.ViewSheet))
             {
                 Log.Debug($"Start print file {model.SheetName}");
-                return RevitPathHelper.AwaitExistsFile(tempPath);
-            }
 
+                if (RevitPathHelper.AwaitExistsFile(tempPath))
+                {
+                    model.SheetTempPath = tempPath;
+                    return true;
+                }
+            }
         }
 
         return false;

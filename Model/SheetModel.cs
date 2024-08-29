@@ -30,9 +30,10 @@ internal class SheetModel : IDisposable
     public string SheetName { get; private set; }
     public double DigitNumber { get; private set; }
     public string StringNumber { get; private set; }
+    public string SheetTempPath { get; internal set; }
     public string PaperName => SheetPapeSize.PaperName;
     public object OrganizationGroupName { get; internal set; }
-
+    
 
     public static string GetSheetNumber(ViewSheet sequenceSheet)
     {
@@ -112,27 +113,6 @@ internal class SheetModel : IDisposable
         string formatName = $"{PaperName} {orientationText}";
 
         return formatName;
-    }
-
-
-    public static string FindFileInDirectory(string directory, string fileName)
-    {
-        string foundFile = null;
-
-        if (!Directory.Exists(directory))
-        {
-            Log.Error($"Not founded directory: {directory}");
-        }
-
-        IEnumerable<string> files = Directory.EnumerateFiles(directory);
-        foundFile = files.FirstOrDefault(file => file.Contains(fileName));
-
-        if (foundFile is null)
-        {
-            Log.Error($"Not founded file: {fileName}");
-        }
-
-        return foundFile;
     }
 
 

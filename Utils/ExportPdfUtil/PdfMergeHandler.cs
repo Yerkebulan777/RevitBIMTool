@@ -22,12 +22,13 @@ internal static class PdfMergeHandler
 
         foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
         {
-            string filePath = SheetModel.FindFileInDirectory(directory, model.SheetName);
-
-            if (File.Exists(filePath))
+            if (File.Exists(model.SheetTempPath))
             {
-                PdfReader reader = new(filePath);
+                PdfReader reader = new(model.SheetTempPath);
+
                 reader.ConsolidateNamedDestinations();
+
+                Log.Debug(model.SheetName);
 
                 try
                 {
