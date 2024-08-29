@@ -56,17 +56,14 @@ internal static class PdfMergeHandler
 
                     if (deleted)
                     {
-                        File.Delete(filePath);
+                        File.Delete(model.SheetTempPath);
                     }
                 }
             }
-
-
         }
 
         copy.Close();
         outputDocument.Close();
     }
-
 
 }
