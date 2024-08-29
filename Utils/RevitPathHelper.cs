@@ -30,8 +30,8 @@ public static class RevitPathHelper
 
     public static List<string> GetRevitFilePaths(string inputpath)
     {
-        string seachRvtPattern = $"*.rvt";
         List<string> output = new(10);
+        string seachRvtPattern = $"*.rvt";
         SearchOption allFiles = SearchOption.AllDirectories;
         SearchOption topFiles = SearchOption.TopDirectoryOnly;
         string backupPattern = "\\.\\d\\d\\d\\d\\.(rvt|rfa)$";

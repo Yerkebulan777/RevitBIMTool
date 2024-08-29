@@ -166,12 +166,13 @@ internal static class PrintPdfHandler
 
                             for (int idx = 0; idx < sheetModels.Count; idx++)
                             {
-                                if (sheetModels[idx] is SheetModel model)
+                                SheetModel model = sheetModels[idx];
+
+                                Log.Debug($"{model.SheetName} is being prepared...");
+
+                                if (ExportSheet(doc, tempFolder, model))
                                 {
-                                    if (ExportSheet(doc, tempFolder, model))
-                                    {
-                                        resultFilePaths.Add(model);
-                                    }
+                                    resultFilePaths.Add(model);
                                 }
                             }
                         }
