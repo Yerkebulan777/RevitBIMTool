@@ -168,7 +168,7 @@ internal static class PrintPdfHandler
                             {
                                 SheetModel model = sheetModels[idx];
 
-                                Log.Debug($"{model.SheetName} is being prepared...");
+                                Log.Debug($"Sheet {model.SheetName} is being prepared...");
 
                                 if (ExportSheet(doc, tempFolder, model))
                                 {
