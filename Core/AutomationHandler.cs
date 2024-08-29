@@ -33,8 +33,8 @@ public sealed class AutomationHandler
 
         string formattedTime = (DateTime.Now - startedTime).ToString(@"h\:mm\:ss");
 
-        _ = builder.Append($" {taskRequest.RevitFileName} ");
-        _ = builder.Append($" [{formattedTime}] ");
+        _ = builder.Append($"{taskRequest.RevitFileName}");
+        _ = builder.Append($"[{formattedTime}]");
         _ = builder.AppendLine(output);
 
         return builder.ToString();
@@ -49,7 +49,7 @@ public sealed class AutomationHandler
 
         if (!string.IsNullOrEmpty(sectionName))
         {
-            Log.Debug($"Revit name: {taskModel.RevitFileName}");
+            Log.Debug(taskModel.RevitFileName);
             Log.Debug($"Command number: {taskModel.CommandNumber}");
 
             RevitLinkHelper.CheckAndRemoveUnloadedLinks(uidoc.Document);
