@@ -3,7 +3,6 @@ using RevitBIMTool.Utils;
 using Serilog;
 using ServiceLibrary.Helpers;
 using ServiceLibrary.Models;
-using System.Globalization;
 using System.IO;
 
 
@@ -37,11 +36,12 @@ namespace RevitBIMTool.Core
 
             while (TaskRequestContainer.Instance.PopTaskModel(versionNumber, out TaskRequest request))
             {
+
+                Log.Logger = ConfigureLogger(request);
+
                 if (PathHelper.IsFileAccessible(request.RevitFilePath, out string output))
                 {
                     SynchronizationContext.SetSynchronizationContext(context);
-
-                    Log.Logger = ConfigureLogger(request.RevitFileName);
 
                     output += autoHandler.RunExecuteTask(request);
                     Log.Information($"Task result:\r\n\t{output}");
@@ -53,9 +53,11 @@ namespace RevitBIMTool.Core
         }
 
 
-        internal ILogger ConfigureLogger(string logName)
+        internal ILogger ConfigureLogger(TaskRequest request)
         {
-            string logPath = Path.Combine(directory, $"{logName}.txt");
+            string logName = $"{request.RevitFileName}[{request.CommandNumber}].txt";
+            string logPath = Path.Combine(directory, logName);
+            RevitPathHelper.DeleteExistsFile(logPath);
 
             return new LoggerConfiguration()
                 .WriteTo.File(logPath)

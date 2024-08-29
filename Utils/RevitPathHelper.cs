@@ -192,9 +192,9 @@ public static class RevitPathHelper
             {
                 Directory.Delete(dirPath, true);
             }
-            finally
+            catch (Exception ex)
             {
-                Log.Debug($"Deleted directory: {dirPath}");
+                Log.Error($"Error deleting dir: {ex.Message}");
             }
         }
     }
