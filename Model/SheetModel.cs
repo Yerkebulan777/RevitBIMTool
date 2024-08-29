@@ -1,6 +1,6 @@
 ﻿using Autodesk.Revit.DB;
 using RevitBIMTool.Utils;
-using System.Diagnostics;
+using Serilog;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -119,13 +119,18 @@ internal class SheetModel : IDisposable
     {
         string foundFile = null;
 
-        if (Directory.Exists(directory))
+        if (!Directory.Exists(directory))
         {
-            IEnumerable<string> files = Directory.EnumerateFiles(directory);
-            foundFile = files.FirstOrDefault(file => file.Contains(fileName));
+            Log.Error($"Not founded directory: {directory}");
         }
 
-        Debug.WriteLineIf(string.IsNullOrEmpty(foundFile), $"Not founded file: {fileName}");
+        IEnumerable<string> files = Directory.EnumerateFiles(directory);
+        foundFile = files.FirstOrDefault(file => file.Contains(fileName));
+
+        if (foundFile is null)
+        {
+            Log.Error($"Not founded file: {fileName}");
+        }
 
         return foundFile;
     }
