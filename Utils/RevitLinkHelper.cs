@@ -1,5 +1,4 @@
 ﻿using Autodesk.Revit.DB;
-using RevitBIMTool.Core;
 using Serilog;
 using System.Diagnostics;
 
@@ -8,7 +7,7 @@ namespace RevitBIMTool.Utils
 {
     internal static class RevitLinkHelper
     {
-        private static readonly object syncLocker = RevitExternalEventHandler.SyncLocker;
+        private static readonly object syncLocker = Application.SyncLocker;
 
 
         public static void CheckAndRemoveUnloadedLinks(Document doc)

@@ -15,9 +15,6 @@ namespace RevitBIMTool.Core
         private readonly string directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), $"RevitBIMTool");
 
 
-        public static object SyncLocker { get; } = new();
-
-
         public RevitExternalEventHandler(string version)
         {
             externalEvent = ExternalEvent.Create(this);

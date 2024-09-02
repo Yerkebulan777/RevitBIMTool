@@ -6,13 +6,14 @@ using RevitBIMTool.Utils.SystemUtil;
 using Serilog;
 using System.IO;
 using System.Text;
-using System.Windows.Threading;
 
 
 namespace RevitBIMTool.ExportHandlers;
 
 internal static class ExportToNWCHandler
 {
+    static readonly object locker = Application.SyncLocker;
+
     public static string ExportToNWC(UIDocument uidoc, string revitFilePath, string sectionName)
     {
         StringBuilder sb = new();
@@ -100,19 +101,21 @@ internal static class ExportToNWCHandler
 
                 try
                 {
-                    Log.Debug($"Start export to nwc...");
-                    Dispatcher.CurrentDispatcher.Invoke(() => doc.Export(exportBaseDirectory, revitFileName, options));
-                    SystemFolderOpener.OpenFolder(exportBaseDirectory);
+                    lock (locker)
+                    {
+                        Log.Debug($"Start export to nwc...");
+                        doc.Export(exportBaseDirectory, revitFileName, options);
+                    }
                 }
                 catch (Exception ex)
                 {
-                    _ = sb.AppendLine($"Failed export to nwc {ex.Message}");
                     Log.Error(ex, $"Failed export to nwc {ex.Message}");
                 }
                 finally
                 {
                     if (RevitPathHelper.AwaitExistsFile(exportFullPath))
                     {
+                        SystemFolderOpener.OpenFolder(exportBaseDirectory);
                         _ = sb.AppendLine(exportBaseDirectory);
                     }
                 }
@@ -121,6 +124,7 @@ internal static class ExportToNWCHandler
 
         return sb.ToString();
     }
+
 
 }
 
