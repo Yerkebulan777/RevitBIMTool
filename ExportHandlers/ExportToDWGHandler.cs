@@ -104,8 +104,6 @@ internal static class ExportToDWGHandler
 
                 Dispatcher.CurrentDispatcher.Invoke(() => RevitViewHelper.OpenSheet(uidoc, sheet));
 
-                //var titleBlockId = new FilteredElementCollector(doc, sheet.Id).OfCategory(BuiltInCategory.OST_TitleBlocks).FirstElementId();
-
                 if (doc.Export(exportFolder, sheetName, elementIds, dwgOptions))
                 {
                     Log.Debug($"Exported sheet {sheetName} to DWG");
