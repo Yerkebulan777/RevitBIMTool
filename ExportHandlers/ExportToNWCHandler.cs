@@ -6,6 +6,7 @@ using RevitBIMTool.Utils.SystemUtil;
 using Serilog;
 using System.IO;
 using System.Text;
+using System.Windows.Threading;
 
 
 namespace RevitBIMTool.ExportHandlers;
@@ -100,7 +101,7 @@ internal static class ExportToNWCHandler
                 try
                 {
                     Log.Debug($"Start export to nwc...");
-                    doc.Export(exportBaseDirectory, revitFileName, options);
+                    Dispatcher.CurrentDispatcher.Invoke(() => doc.Export(exportBaseDirectory, revitFileName, options));
                     SystemFolderOpener.OpenFolder(exportBaseDirectory);
                 }
                 catch (Exception ex)
