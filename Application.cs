@@ -2,6 +2,7 @@ using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
 using RevitBIMTool.Core;
 using RevitBIMTool.Utils;
+using Serilog;
 using ServiceLibrary.Models;
 
 
@@ -60,6 +61,12 @@ internal sealed class Application : IExternalApplication
 
     private void OnIdling(object sender, IdlingEventArgs e)
     {
+        if (Log.Logger != null)
+        {
+            Log.Debug("Idling event triggered");
+            Log.CloseAndFlush();
+        }
+
         RevitFileHelper.CloseRevitApplication();
     }
 

@@ -170,7 +170,6 @@ internal static class PrintHandler
 
                                 if (ExportSheet(doc, tempFolder, model))
                                 {
-
                                     resultFilePaths.Add(model);
                                 }
                             }

@@ -1,5 +1,6 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
+using Serilog;
 using System.Diagnostics;
 
 
@@ -48,13 +49,13 @@ internal static class RevitFileHelper
     {
         Process currentProcess = Process.GetCurrentProcess();
 
-        if (!currentProcess.HasExited)
+        if (Log.Logger is null)
         {
             Thread.Sleep(1000);
             currentProcess?.Kill();
             currentProcess?.Dispose();
         }
-    }
 
+    }
 
 }

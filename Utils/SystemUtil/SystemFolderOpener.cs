@@ -15,14 +15,12 @@ internal static class SystemFolderOpener
     {
         string inputName = Path.GetFileName(inputPath);
 
-        Log.Debug($"Input folder name: ({inputName})");
+        StringComparison comparison = StringComparison.OrdinalIgnoreCase;
 
         foreach (Process proc in Process.GetProcessesByName("explorer"))
         {
-            if (inputName.EndsWith(proc.MainWindowTitle, StringComparison.OrdinalIgnoreCase))
+            if (inputName.EndsWith(proc.MainWindowTitle, comparison))
             {
-                Log.Debug($"Process {proc.MainWindowTitle} will be close");
-
                 proc?.Kill();
                 proc?.Dispose();
             }
@@ -32,8 +30,6 @@ internal static class SystemFolderOpener
 
     public static void OpenFolder(string directoryPath)
     {
-        Log.Debug($"Start method {nameof(OpenFolder)}");
-
         if (Directory.Exists(directoryPath))
         {
             CloseDirectory(directoryPath);
@@ -42,11 +38,10 @@ internal static class SystemFolderOpener
 
             if (proc.WaitForExit(1000))
             {
-                Log.Debug($"Opened folder ({directoryPath})");
+                Log.Debug($"Opened: {directoryPath}");
             }
 
         }
-
     }
 
 

@@ -4,7 +4,6 @@ using RevitBIMTool.Utils;
 using RevitBIMTool.Utils.Performance;
 using RevitBIMTool.Utils.SystemUtil;
 using Serilog;
-using ServiceLibrary.Models;
 using System.IO;
 using System.Text;
 
@@ -25,7 +24,7 @@ internal static class ExportToNWCHandler
 
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
         string exportBaseDirectory = ExportPathHelper.ExportDirectory(revitFilePath, "05_NWC");
-        string exportFullPath = Path.Combine(exportBaseDirectory, revitFileName + ".nwc");
+        string exportFullPath = Path.Combine(exportBaseDirectory, $"{revitFileName}.nwc");
 
         if (!ExportPathHelper.IsTargetFileUpdated(exportFullPath, revitFilePath))
         {
@@ -103,16 +102,18 @@ internal static class ExportToNWCHandler
                     Log.Debug($"Start export to nwc...");
                     doc.Export(exportBaseDirectory, revitFileName, options);
                     SystemFolderOpener.OpenFolder(exportBaseDirectory);
-                    sb.AppendLine(exportBaseDirectory);
                 }
                 catch (Exception ex)
                 {
-                    sb.AppendLine(ex.Message);
-                    Log.Error(ex, ex.Message);
+                    _ = sb.AppendLine($"Failed export to nwc {ex.Message}");
+                    Log.Error(ex, $"Failed export to nwc {ex.Message}");
                 }
                 finally
                 {
-                    view3d?.Dispose();
+                    if (RevitPathHelper.AwaitExistsFile(exportFullPath))
+                    {
+                        _ = sb.AppendLine(exportBaseDirectory);
+                    }
                 }
             }
         }
