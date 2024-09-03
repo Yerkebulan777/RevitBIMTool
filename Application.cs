@@ -2,7 +2,6 @@ using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
 using RevitBIMTool.Core;
 using RevitBIMTool.Utils;
-using Serilog;
 using ServiceLibrary.Models;
 
 
@@ -12,7 +11,7 @@ internal sealed class Application : IExternalApplication
     private string versionNumber;
     private RevitExternalEventHandler externalEventHandler;
     private static readonly string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-    
+
 
     #region IExternalApplication
 
