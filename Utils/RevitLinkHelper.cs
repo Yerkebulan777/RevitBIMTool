@@ -7,9 +7,6 @@ namespace RevitBIMTool.Utils
 {
     internal static class RevitLinkHelper
     {
-        private static readonly object syncLocker = Application.SyncLocker;
-
-
         public static void CheckAndRemoveUnloadedLinks(Document doc)
         {
             Log.Debug($"Start check links ...");
@@ -29,7 +26,7 @@ namespace RevitBIMTool.Utils
                         {
                             string linkTypeName = linkType.Name;
 
-                            lock (syncLocker)
+                            lock (doc)
                             {
                                 if (!linkNames.ContainsKey(linkTypeName))
                                 {
@@ -98,24 +95,22 @@ namespace RevitBIMTool.Utils
         {
             RevitLinkOptions options = new(false);
 
-            using (Transaction transaction = new Transaction(doc))
+            using Transaction transaction = new(doc);
+            if (transaction.Start("InsertRevitLinks") == TransactionStatus.Started)
             {
-                if (transaction.Start("InsertRevitLinks") == TransactionStatus.Started)
+                foreach (string filePath in filePaths)
                 {
-                    foreach (string filePath in filePaths)
+                    ModelPath modelPath = ModelPathUtils.ConvertUserVisiblePathToModelPath(filePath);
+                    LinkLoadResult result = RevitLinkType.Create(doc, modelPath, options);
+
+                    if (result.LoadResult == LinkLoadResultType.LinkLoaded)
                     {
-                        ModelPath modelPath = ModelPathUtils.ConvertUserVisiblePathToModelPath(filePath);
-                        LinkLoadResult result = RevitLinkType.Create(doc, modelPath, options);
+                        RevitLinkInstance linkInstance = RevitLinkInstance.Create(doc, result.ElementId);
 
-                        if (result.LoadResult == LinkLoadResultType.LinkLoaded)
+                        if (!IsSharedCoordinates(linkInstance))
                         {
-                            RevitLinkInstance linkInstance = RevitLinkInstance.Create(doc, result.ElementId);
-
-                            if (!IsSharedCoordinates(linkInstance))
-                            {
-                                XYZ linkCoordinates = GetLinkCoordinates(linkInstance);
-                                SetProjectCoordinates(doc, linkCoordinates);
-                            }
+                            XYZ linkCoordinates = GetLinkCoordinates(linkInstance);
+                            SetProjectCoordinates(doc, linkCoordinates);
                         }
                     }
                 }

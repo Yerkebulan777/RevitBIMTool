@@ -88,20 +88,23 @@ public sealed class AutomationHandler
             Audit = true,
         };
 
-        try
+        lock (uiapp)
         {
-            openOptions.SetOpenWorksetsConfiguration(new WorksetConfiguration(WorksetConfigurationOption.OpenAllWorksets));
-            ModelPath modelPath = ModelPathUtils.ConvertUserVisiblePathToModelPath(taskModel.RevitFilePath);
-            uidoc = uiapp.OpenAndActivateDocument(modelPath, openOptions, false);
-        }
-        catch (Exception ex)
-        {
-            throw new Exception("Error while opening the document", ex);
-        }
-        finally
-        {
-            RevitFileHelper.ClosePreviousDocument(uiapp, ref document);
-            output = output.AppendLine(revitAction(uidoc, taskModel));
+            try
+            {
+                openOptions.SetOpenWorksetsConfiguration(new WorksetConfiguration(WorksetConfigurationOption.OpenAllWorksets));
+                ModelPath modelPath = ModelPathUtils.ConvertUserVisiblePathToModelPath(taskModel.RevitFilePath);
+                uidoc = uiapp.OpenAndActivateDocument(modelPath, openOptions, false);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error while opening the document", ex);
+            }
+            finally
+            {
+                RevitFileHelper.ClosePreviousDocument(uiapp, ref document);
+                output = output.AppendLine(revitAction(uidoc, taskModel));
+            }
         }
 
         return output.ToString();

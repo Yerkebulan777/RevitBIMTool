@@ -12,8 +12,7 @@ internal sealed class Application : IExternalApplication
     private string versionNumber;
     private RevitExternalEventHandler externalEventHandler;
     private static readonly string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-    public static object SyncLocker { get; } = new();
-
+    
 
     #region IExternalApplication
 

@@ -12,9 +12,6 @@ namespace RevitBIMTool.ExportHandlers;
 
 internal static class ExportToNWCHandler
 {
-    private static readonly object locker = Application.SyncLocker;
-
-
     public static string ExportToNWC(UIDocument uidoc, string revitFilePath, string sectionName)
     {
         StringBuilder sb = new();
@@ -100,10 +97,10 @@ internal static class ExportToNWCHandler
                     ViewId = view3d.Id
                 };
 
-                lock (locker)
+                lock (uidoc)
                 {
-                    Export(doc, revitFileName, exportBaseDirectory, exportFullPath, options);
                     _ = sb.AppendLine(exportBaseDirectory);
+                    Export(doc, exportFullPath, options);
                 }
             }
         }
@@ -112,12 +109,15 @@ internal static class ExportToNWCHandler
     }
 
 
-    private static void Export(Document doc, string revitFileName, string exportBaseDirectory, string exportFullPath, NavisworksExportOptions options)
+    private static void Export(Document doc, string exportFullPath, NavisworksExportOptions options)
     {
+        string exportDirectory = Path.GetDirectoryName(exportFullPath);
+        string revitFileName = Path.GetFileNameWithoutExtension(exportFullPath);
+
         try
         {
-            Log.Debug($"Start export to nwc...");
-            doc.Export(exportBaseDirectory, revitFileName, options);
+            Log.Debug($"Start exporting to nwc in {exportDirectory}");
+            doc.Export(exportDirectory, revitFileName, options);
         }
         catch (Exception ex)
         {
@@ -127,7 +127,7 @@ internal static class ExportToNWCHandler
         {
             if (RevitPathHelper.AwaitExistsFile(exportFullPath))
             {
-                SystemFolderOpener.OpenFolder(exportBaseDirectory);
+                SystemFolderOpener.OpenFolder(exportDirectory);
             }
         }
     }
