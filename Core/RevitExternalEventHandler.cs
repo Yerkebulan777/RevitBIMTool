@@ -51,14 +51,14 @@ namespace RevitBIMTool.Core
 
         internal ILogger ConfigureLogger(TaskRequest request)
         {
-            string logName = $"{request.RevitFileName}[{request.CommandNumber}].txt";
-            string logPath = Path.Combine(directory, logName);
-            RevitPathHelper.DeleteExistsFile(logPath);
-
             if (Log.Logger != null)
             {
                 Log.CloseAndFlush();
             }
+
+            string logName = $"{request.RevitFileName}[{request.CommandNumber}].txt";
+            string logPath = Path.Combine(directory, logName);
+            RevitPathHelper.DeleteExistsFile(logPath);
 
             return new LoggerConfiguration()
                 .WriteTo.File(logPath)
