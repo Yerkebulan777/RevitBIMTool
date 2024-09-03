@@ -61,11 +61,6 @@ internal sealed class Application : IExternalApplication
 
     private void OnIdling(object sender, IdlingEventArgs e)
     {
-        if (Log.Logger != null)
-        {
-            Log.CloseAndFlush();
-        }
-
         RevitFileHelper.CloseRevitApplication();
     }
 
