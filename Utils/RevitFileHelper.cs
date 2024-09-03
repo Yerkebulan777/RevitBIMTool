@@ -47,11 +47,17 @@ internal static class RevitFileHelper
 
     public static void CloseRevitApplication()
     {
-        Process currentProcess = Process.GetCurrentProcess();
+        Process currentProcess = null;
 
-        if (Log.Logger is null)
+        try
         {
+            currentProcess = Process.GetCurrentProcess();
+            Log.Debug("Close Revit...");
+            Log.CloseAndFlush();
             Thread.Sleep(1000);
+        }
+        finally
+        {
             currentProcess?.Kill();
             currentProcess?.Dispose();
         }

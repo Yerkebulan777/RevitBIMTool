@@ -12,7 +12,7 @@ namespace RevitBIMTool.ExportHandlers;
 
 internal static class ExportToNWCHandler
 {
-    static readonly object locker = Application.SyncLocker;
+    private static readonly object locker = Application.SyncLocker;
 
     public static string ExportToNWC(UIDocument uidoc, string revitFilePath, string sectionName)
     {
@@ -99,25 +99,10 @@ internal static class ExportToNWCHandler
                     ViewId = view3d.Id
                 };
 
-                try
+                lock (locker)
                 {
-                    lock (locker)
-                    {
-                        Log.Debug($"Start export to nwc...");
-                        doc.Export(exportBaseDirectory, revitFileName, options);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, $"Failed export to nwc {ex.Message}");
-                }
-                finally
-                {
-                    if (RevitPathHelper.AwaitExistsFile(exportFullPath))
-                    {
-                        SystemFolderOpener.OpenFolder(exportBaseDirectory);
-                        _ = sb.AppendLine(exportBaseDirectory);
-                    }
+                    Export(doc, revitFileName, exportBaseDirectory, exportFullPath, options);
+                    _ = sb.AppendLine(exportBaseDirectory);
                 }
             }
         }
@@ -126,5 +111,24 @@ internal static class ExportToNWCHandler
     }
 
 
+    private static void Export(Document doc, string revitFileName, string exportBaseDirectory, string exportFullPath, NavisworksExportOptions options)
+    {
+        try
+        {
+            Log.Debug($"Start export to nwc...");
+            doc.Export(exportBaseDirectory, revitFileName, options);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, $"Failed export to nwc {ex.Message}");
+        }
+        finally
+        {
+            if (RevitPathHelper.AwaitExistsFile(exportFullPath))
+            {
+                SystemFolderOpener.OpenFolder(exportBaseDirectory);
+            }
+        }
+    }
 }
 

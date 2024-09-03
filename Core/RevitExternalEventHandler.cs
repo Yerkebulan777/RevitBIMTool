@@ -35,15 +35,17 @@ namespace RevitBIMTool.Core
             {
                 if (PathHelper.IsFileAccessible(request.RevitFilePath, out string output))
                 {
-                    SynchronizationContext.SetSynchronizationContext(context);
-
                     Log.Logger = ConfigureLogger(request);
+
+                    Log.Debug("Start set synchronization context...");
+
+                    SynchronizationContext.SetSynchronizationContext(context);
 
                     output += autoHandler.RunExecuteTask(request);
                     Log.Information($"Task result:\r\n\t{output}");
 
-                    Log.CloseAndFlush();
                 }
+
             }
 
         }
@@ -54,6 +56,11 @@ namespace RevitBIMTool.Core
             string logName = $"{request.RevitFileName}[{request.CommandNumber}].txt";
             string logPath = Path.Combine(directory, logName);
             RevitPathHelper.DeleteExistsFile(logPath);
+
+            if (Log.Logger != null)
+            {
+                Log.CloseAndFlush();
+            }
 
             return new LoggerConfiguration()
                 .WriteTo.File(logPath)

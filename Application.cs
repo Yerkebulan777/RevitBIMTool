@@ -64,7 +64,6 @@ internal sealed class Application : IExternalApplication
     {
         if (Log.Logger != null)
         {
-            Log.Debug("Idling event triggered");
             Log.CloseAndFlush();
         }
 
