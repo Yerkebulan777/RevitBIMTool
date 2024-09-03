@@ -246,9 +246,9 @@ internal sealed class RevitViewHelper
 
     #region Colorize
 
-    //public static void ColorizeElements(Document docunent, Transform trf, ViewElement sheet, ICollection<ElementId> ids, string styleName)
+    //public static void ColorizeElements(Document docunent, Transform trf, ViewElement view, ICollection<ElementId> ids, string styleName)
     //{
-    //    SpatialFieldManager sfm = SpatialFieldManager.GetSpatialFieldManager(sheet) ?? SpatialFieldManager.CreateSpatialFieldManager(sheet, 1);
+    //    SpatialFieldManager sfm = SpatialFieldManager.GetSpatialFieldManager(view) ?? SpatialFieldManager.CreateSpatialFieldManager(view, 1);
     //    AnalysisResultSchema resultSchema = new AnalysisResultSchema(styleName, "Changes analisis");
     //    foreach (ElementId changedId in ids)
     //    {
@@ -294,7 +294,7 @@ internal sealed class RevitViewHelper
     //}
 
 
-    //public static void CreateAVFDisplayStyle(Document docunent, ViewElement sheet, string styleName)
+    //public static void CreateAVFDisplayStyle(Document docunent, ViewElement view, string styleName)
     //{
     //    FilteredElementCollector collector = new FilteredElementCollector(docunent).OfClass(typeof(AnalysisDisplayStyle));
 
@@ -310,7 +310,7 @@ internal sealed class RevitViewHelper
 
     //        AnalysisDisplayStyle displayStyle = AnalysisDisplayStyle.CreateAnalysisDisplayStyle(docunent, styleName, markerSettings, colorSettings, legendSettings);
 
-    //        sheet.AnalysisDisplayStyleId = displayStyle.Id;
+    //        view.AnalysisDisplayStyleId = displayStyle.Id;
     //    }
     //}
 
@@ -350,19 +350,19 @@ internal sealed class RevitViewHelper
 
     #region ViewSheet
 
-    public static void OpenSheet(UIDocument uidoc, ViewSheet sheet)
+    public static void OpenView(UIDocument uidoc, View view)
     {
-        ActivateSheet(uidoc, sheet);
+        ActivateView(uidoc, view);
 
         IList<UIView> allviews = uidoc.GetOpenUIViews();
 
-        if (sheet.IsValidObject && allviews.Count > 1)
+        if (view.IsValidObject && allviews.Count > 1)
         {
             foreach (UIView uv in allviews)
             {
                 try
                 {
-                    if (sheet.Id == uv.ViewId)
+                    if (view.Id == uv.ViewId)
                     {
                         uv.ZoomSheetSize();
                     }
@@ -381,25 +381,20 @@ internal sealed class RevitViewHelper
     }
 
 
-    private static void ActivateSheet(UIDocument uidoc, ViewSheet sheet)
+    private static void ActivateView(UIDocument uidoc, View view)
     {
-        ICollection<ElementId> vportIds = sheet.GetAllViewports();
-
-        if (0 < vportIds.Count)
+        try
         {
-            try
-            {
-                uidoc.ActiveView = sheet;
-                uidoc.RefreshActiveView();
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, ex.Message);
-            }
-            finally
-            {
-                Log.Debug($"Activated sheet: {sheet.Name}");
-            }
+            uidoc.ActiveView = view;
+            uidoc.RefreshActiveView();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, ex.Message);
+        }
+        finally
+        {
+            Log.Debug($"Activated view: {view.Name}");
         }
     }
 

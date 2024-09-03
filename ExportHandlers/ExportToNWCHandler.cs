@@ -6,6 +6,7 @@ using RevitBIMTool.Utils.SystemUtil;
 using Serilog;
 using System.IO;
 using System.Text;
+using System.Windows.Threading;
 
 
 namespace RevitBIMTool.ExportHandlers;
@@ -49,18 +50,12 @@ internal static class ExportToNWCHandler
 
             if (view3d is View view)
             {
-                uidoc.ActiveView = view;
-
-                if (doc.ActiveView == view)
-                {
-                    uidoc.RefreshActiveView();
-                    Log.Debug("3D view activated");
-                }
-
                 List<Element> instansesToHide = [];
 
                 const BuiltInCategory ductCat = BuiltInCategory.OST_DuctAccessory;
                 const BuiltInCategory strFCat = BuiltInCategory.OST_StructuralFraming;
+
+                Dispatcher.CurrentDispatcher.Invoke(() => RevitViewHelper.OpenView(uidoc, view));
 
                 instansesToHide.AddRange(RevitSystemsHelper.FilterPipesAndFittingsByMaxDiameter(doc, 30));
                 instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, strFCat, "(Отверстия)").ToElements());

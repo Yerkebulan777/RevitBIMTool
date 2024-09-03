@@ -102,7 +102,7 @@ internal static class ExportToDWGHandler
                 string sheetName = sheetModel.SheetName;
                 ICollection<ElementId> elementIds = [sheet.Id];
 
-                Dispatcher.CurrentDispatcher.Invoke(() => RevitViewHelper.OpenSheet(uidoc, sheet));
+                Dispatcher.CurrentDispatcher.Invoke(() => RevitViewHelper.OpenView(uidoc, sheet));
 
                 if (doc.Export(exportFolder, sheetName, elementIds, dwgOptions))
                 {
