@@ -82,14 +82,15 @@ public sealed class AutomationHandler
     {
         UIDocument uidoc = null;
         StringBuilder output = new();
-        OpenOptions openOptions = new()
-        {
-            DetachFromCentralOption = DetachFromCentralOption.DetachAndPreserveWorksets,
-            Audit = true,
-        };
 
         lock (uiapp)
         {
+            OpenOptions openOptions = new()
+            {
+                DetachFromCentralOption = DetachFromCentralOption.DetachAndPreserveWorksets,
+                Audit = true,
+            };
+
             try
             {
                 openOptions.SetOpenWorksetsConfiguration(new WorksetConfiguration(WorksetConfigurationOption.OpenAllWorksets));
