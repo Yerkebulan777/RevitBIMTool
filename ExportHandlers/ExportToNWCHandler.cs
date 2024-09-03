@@ -14,6 +14,7 @@ internal static class ExportToNWCHandler
 {
     private static readonly object locker = Application.SyncLocker;
 
+
     public static string ExportToNWC(UIDocument uidoc, string revitFilePath, string sectionName)
     {
         StringBuilder sb = new();
@@ -130,5 +131,7 @@ internal static class ExportToNWCHandler
             }
         }
     }
+
+
 }
 
