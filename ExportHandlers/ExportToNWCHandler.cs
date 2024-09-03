@@ -59,7 +59,6 @@ internal static class ExportToNWCHandler
 
                 instansesToHide.AddRange(RevitSystemsHelper.FilterPipesAndFittingsByMaxDiameter(doc, 30));
                 instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, strFCat, "(Отверстия)").ToElements());
-                instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, strFCat, "(Отверстия)").ToElements());
                 instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, strFCat, "(элемент_перемычки)").ToElements());
                 instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, ductCat, "(клапан)kazvent_bm-h").ToElements());
                 instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, strFCat, "(задание)на _отверстие").ToElements());
