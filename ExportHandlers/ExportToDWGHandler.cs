@@ -105,18 +105,37 @@ internal static class ExportToDWGHandler
 
                 Dispatcher.CurrentDispatcher.Invoke(() => RevitViewHelper.OpenView(uidoc, sheet));
 
-                lock (doc)
-                {
-                    RevitPathHelper.DeleteExistsFile(exportFullPath);
+                RevitPathHelper.DeleteExistsFile(exportFullPath);
 
-                    if (doc.Export(exportFolder, sheetName, elementIds, dwgOptions))
+                using Transaction trx = new(doc, "Export DWG");
+
+                try
+                {
+                    TransactionStatus status = trx.Start();
+
+                    if (status == TransactionStatus.Started)
                     {
-                        if (RevitPathHelper.AwaitExistsFile(exportFullPath))
+                        if (doc.Export(exportFolder, sheetName, elementIds, dwgOptions))
                         {
-                            Log.Debug($"Exported sheet {sheetName} to DWG");
+                            if (RevitPathHelper.AwaitExistsFile(exportFullPath))
+                            {
+                                status = trx.Commit();
+                            }
                         }
                     }
                 }
+                catch (Exception ex)
+                {
+                    Log.Error($"Error exporting sheet {sheetName} to DWG: {ex.Message}");
+                }
+                finally
+                {
+                    if (!trx.HasEnded())
+                    {
+                        _ = trx.RollBack();
+                    }
+                }
+
             }
         }
     }

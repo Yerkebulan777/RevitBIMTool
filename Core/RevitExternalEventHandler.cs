@@ -37,8 +37,6 @@ namespace RevitBIMTool.Core
                 {
                     Log.Logger = ConfigureLogger(request);
 
-                    Log.Debug("Start set synchronization context...");
-
                     SynchronizationContext.SetSynchronizationContext(context);
 
                     output += autoHandler.RunExecuteTask(request);
