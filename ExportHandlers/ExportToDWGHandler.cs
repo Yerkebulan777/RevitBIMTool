@@ -105,10 +105,10 @@ internal static class ExportToDWGHandler
 
                 Dispatcher.CurrentDispatcher.Invoke(() => RevitViewHelper.OpenView(uidoc, sheet));
 
+                RevitPathHelper.DeleteExistsFile(exportFullPath);
+
                 lock (doc)
                 {
-                    RevitPathHelper.DeleteExistsFile(exportFullPath);
-
                     if (doc.Export(exportFolder, sheetName, elementIds, dwgOptions))
                     {
                         if (RevitPathHelper.AwaitExistsFile(exportFullPath))
@@ -120,6 +120,5 @@ internal static class ExportToDWGHandler
             }
         }
     }
-
 
 }
