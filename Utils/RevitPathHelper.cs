@@ -200,13 +200,13 @@ public static class RevitPathHelper
     }
 
 
-    public static bool AwaitExistsFile(string filePath, int maxDuration = 100)
+    public static bool AwaitExistsFile(string filePath, int duration = 100)
     {
         int counter = 0;
         int totalWaitTime = 0;
         bool awaitResult = false;
 
-        while (counter < maxDuration)
+        while (counter < duration)
         {
             lock (sectionAcronyms)
             {
