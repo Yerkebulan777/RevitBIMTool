@@ -90,64 +90,50 @@ internal static class ExportToDWGHandler
 
     private static void ExportToDWG(UIDocument uidoc, string exportFolder, List<SheetModel> sheetModels)
     {
-        Document doc = uidoc.Document;
-
         if (sheetModels.Count > 0)
         {
-            _ = globalMutex.WaitOne();
+            Document doc = uidoc.Document;
 
-            try
+            if (globalMutex.WaitOne())
             {
-                foreach (SheetModel sheetModel in SheetModel.SortSheetModels(sheetModels))
+                try
                 {
-                    using Transaction trx = new(doc, $"Export {sheetModel.SheetName} to DWG");
-
-                    string exportFullPath = Path.Combine(exportFolder, $"{sheetModel.SheetName}.dwg");
-
-                    ICollection<ElementId> elementIds = [sheetModel.ViewSheet.Id];
-
-                    RevitPathHelper.DeleteExistsFile(exportFullPath);
-
-                    Dispatcher.CurrentDispatcher.Invoke(() =>
+                    foreach (SheetModel sheetModel in SheetModel.SortSheetModels(sheetModels))
                     {
-                        TransactionStatus status = trx.Start();
+                        using Transaction trx = new(doc, $"Export {sheetModel.SheetName} to DWG");
 
-                        if (status == TransactionStatus.Started)
+                        string exportFullPath = Path.Combine(exportFolder, $"{sheetModel.SheetName}.dwg");
+
+                        ICollection<ElementId> elementIds = [sheetModel.ViewSheet.Id];
+
+                        RevitPathHelper.DeleteExistsFile(exportFullPath);
+
+                        Dispatcher.CurrentDispatcher.Invoke(() =>
                         {
-                            int count = 0;
+                            TransactionStatus status = trx.Start();
 
-                            while (count < 100)
+                            if (status == TransactionStatus.Started)
                             {
-                                Thread.Sleep(count++ * 100);
-
-                                Log.Debug($"Counter test: {count}");
-
-                                if (doc.Export(exportFolder, sheetModel.SheetName, elementIds, dwgOptions))
-                                {
-                                    Log.Debug($"YES");
-                                    break;
-                                }
+                                Log.Debug($"Result: {doc.Export(exportFolder, sheetModel.SheetName, elementIds, dwgOptions)}");
                             }
-                        }
 
-                        if (!trx.HasEnded())
-                        {
-                            _ = trx.RollBack();
-                        }
+                            if (!trx.HasEnded())
+                            {
+                                _ = trx.RollBack();
+                            }
 
-                    });
-
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, ex.Message);
+                }
+                finally
+                {
+                    globalMutex.ReleaseMutex();
                 }
             }
-            catch (Exception ex)
-            {
-                Log.Error(ex, ex.Message);
-            }
-            finally
-            {
-                globalMutex.ReleaseMutex();
-            }
-
         }
     }
 
