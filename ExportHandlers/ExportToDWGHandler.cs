@@ -96,47 +96,60 @@ internal static class ExportToDWGHandler
 
             foreach (SheetModel sheetModel in sheetModels)
             {
-                ViewSheet sheet = sheetModel.ViewSheet;
-                string sheetName = sheetModel.SheetName;
-
-                ICollection<ElementId> elementIds = [sheet.Id];
-
-                string exportFullPath = Path.Combine(exportFolder, $"{sheetName}.dwg");
-
-                Dispatcher.CurrentDispatcher.Invoke(() => RevitViewHelper.OpenView(uidoc, sheet));
-
-                RevitPathHelper.DeleteExistsFile(exportFullPath);
-
-                using Transaction trx = new(doc, "Export DWG");
-
-                try
+                Dispatcher.CurrentDispatcher.Invoke(() =>
                 {
-                    TransactionStatus status = trx.Start();
+                    ViewSheet sheet = sheetModel.ViewSheet;
+                    string sheetName = sheetModel.SheetName;
 
-                    if (status == TransactionStatus.Started)
+                    ICollection<ElementId> elementIds = new List<ElementId> { sheet.Id };
+
+                    string exportFullPath = Path.Combine(exportFolder, $"{sheetName}.dwg");
+
+                    using Transaction trx = new(doc, $"Export {sheetName} to DWG");
+
+                    try
                     {
-                        if (doc.Export(exportFolder, sheetName, elementIds, dwgOptions))
+                        TransactionStatus status = trx.Start();
+
+                        if (status == TransactionStatus.Started)
                         {
-                            if (RevitPathHelper.AwaitExistsFile(exportFullPath))
+                            RevitViewHelper.OpenView(uidoc, sheet);
+
+                            RevitPathHelper.DeleteExistsFile(exportFullPath);
+
+                            bool exportSuccess = doc.Export(exportFolder, sheetName, elementIds, dwgOptions);
+
+                            Log.Error($"Export success result: {exportSuccess}");
+
+                            if (exportSuccess)
                             {
-                                status = trx.Commit();
+                                if (RevitPathHelper.AwaitExistsFile(exportFullPath))
+                                {
+                                    Log.Debug($"Exported sheet {sheetName} to DWG");
+                                    status = trx.Commit();
+                                }
+                                else
+                                {
+                                    Log.Error($"Failed to find exported file for sheet {sheetName}");
+                                    trx.RollBack();
+                                }
                             }
                         }
                     }
-                }
-                catch (Exception ex)
-                {
-                    Log.Error($"Error exporting sheet {sheetName} to DWG: {ex.Message}");
-                }
-                finally
-                {
-                    if (!trx.HasEnded())
+                    catch (Exception ex)
                     {
-                        _ = trx.RollBack();
+                        Log.Error(ex, ex.Message);
                     }
-                }
-
+                    finally
+                    {
+                        if (!trx.HasEnded())
+                        {
+                            trx.RollBack();
+                        }
+                    }
+                });
             }
+
         }
     }
 
