@@ -98,14 +98,13 @@ internal static class ExportToDWGHandler
             {
                 Dispatcher.CurrentDispatcher.Invoke(() =>
                 {
-                    ViewSheet sheet = sheetModel.ViewSheet;
-                    string sheetName = sheetModel.SheetName;
+                    RevitViewHelper.OpenView(uidoc, sheetModel.ViewSheet);
 
-                    ICollection<ElementId> elementIds = [sheet.Id];
+                    ICollection<ElementId> elementIds = [sheetModel.ViewSheet.Id];
 
-                    string exportFullPath = Path.Combine(exportFolder, $"{sheetName}.dwg");
+                    string exportFullPath = Path.Combine(exportFolder, $"{sheetModel.SheetName}.dwg");
 
-                    using Transaction trx = new(doc, $"Export {sheetName} to DWG");
+                    using Transaction trx = new(doc, $"Export {sheetModel.SheetName} to DWG");
 
                     try
                     {
@@ -113,15 +112,12 @@ internal static class ExportToDWGHandler
 
                         if (status == TransactionStatus.Started)
                         {
-                            RevitViewHelper.OpenView(uidoc, sheet);
-
                             RevitPathHelper.DeleteExistsFile(exportFullPath);
 
-                            Log.Error($"Export result: {doc.Export(exportFolder, sheetName, elementIds, dwgOptions)}");
+                            Log.Error($"Export result: {doc.Export(exportFolder, sheetModel.SheetName, elementIds, dwgOptions)}");
 
                             if (RevitPathHelper.AwaitExistsFile(exportFullPath))
                             {
-                                Log.Debug($"Exported sheet {sheetName} to DWG");
                                 status = trx.Commit();
                             }
                         }
