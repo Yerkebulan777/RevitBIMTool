@@ -94,8 +94,6 @@ internal static class ExportToDWGHandler
         {
             sheetModels = SheetModel.SortSheetModels(sheetModels);
 
-            using Transaction trx = new(doc, "ExportToDWG");
-
             foreach (SheetModel sheetModel in sheetModels)
             {
                 ViewSheet sheet = sheetModel.ViewSheet;
@@ -111,5 +109,6 @@ internal static class ExportToDWGHandler
             }
         }
     }
+
 
 }
