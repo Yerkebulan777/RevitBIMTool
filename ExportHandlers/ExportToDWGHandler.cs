@@ -101,7 +101,7 @@ internal static class ExportToDWGHandler
                     ViewSheet sheet = sheetModel.ViewSheet;
                     string sheetName = sheetModel.SheetName;
 
-                    ICollection<ElementId> elementIds = new List<ElementId> { sheet.Id };
+                    ICollection<ElementId> elementIds = [sheet.Id];
 
                     string exportFullPath = Path.Combine(exportFolder, $"{sheetName}.dwg");
 
@@ -117,22 +117,12 @@ internal static class ExportToDWGHandler
 
                             RevitPathHelper.DeleteExistsFile(exportFullPath);
 
-                            bool exportSuccess = doc.Export(exportFolder, sheetName, elementIds, dwgOptions);
+                            Log.Error($"Export result: {doc.Export(exportFolder, sheetName, elementIds, dwgOptions)}");
 
-                            Log.Error($"Export success result: {exportSuccess}");
-
-                            if (exportSuccess)
+                            if (RevitPathHelper.AwaitExistsFile(exportFullPath))
                             {
-                                if (RevitPathHelper.AwaitExistsFile(exportFullPath))
-                                {
-                                    Log.Debug($"Exported sheet {sheetName} to DWG");
-                                    status = trx.Commit();
-                                }
-                                else
-                                {
-                                    Log.Error($"Failed to find exported file for sheet {sheetName}");
-                                    trx.RollBack();
-                                }
+                                Log.Debug($"Exported sheet {sheetName} to DWG");
+                                status = trx.Commit();
                             }
                         }
                     }
@@ -144,7 +134,7 @@ internal static class ExportToDWGHandler
                     {
                         if (!trx.HasEnded())
                         {
-                            trx.RollBack();
+                            _ = trx.RollBack();
                         }
                     }
                 });
