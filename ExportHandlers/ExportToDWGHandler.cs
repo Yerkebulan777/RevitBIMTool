@@ -114,7 +114,10 @@ internal static class ExportToDWGHandler
 
                             if (status == TransactionStatus.Started)
                             {
-                                Log.Debug($"Result: {doc.Export(exportFolder, sheetModel.SheetName, elementIds, dwgOptions)}");
+                                while (!doc.Export(exportFolder, sheetModel.SheetName, elementIds, dwgOptions))
+                                {
+                                    Thread.Sleep(1000);
+                                }
                             }
 
                             if (!trx.HasEnded())
@@ -132,6 +135,7 @@ internal static class ExportToDWGHandler
                 finally
                 {
                     globalMutex.ReleaseMutex();
+                    Log.Debug("Test");
                 }
             }
         }
