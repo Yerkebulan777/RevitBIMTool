@@ -98,13 +98,19 @@ internal static class ExportToDWGHandler
             {
                 ViewSheet sheet = sheetModel.ViewSheet;
                 string sheetName = sheetModel.SheetName;
+
                 ICollection<ElementId> elementIds = [sheet.Id];
 
                 Dispatcher.CurrentDispatcher.Invoke(() => RevitViewHelper.OpenView(uidoc, sheet));
 
+                string exportFullPath = Path.Combine(exportFolder, $"{sheetName}.dwg");
+
                 if (doc.Export(exportFolder, sheetName, elementIds, dwgOptions))
                 {
-                    Log.Debug($"Exported sheet {sheetName} to DWG");
+                    if (RevitPathHelper.AwaitExistsFile(exportFullPath))
+                    {
+                        Log.Debug($"Exported sheet {sheetName} to DWG");
+                    }
                 }
             }
         }
