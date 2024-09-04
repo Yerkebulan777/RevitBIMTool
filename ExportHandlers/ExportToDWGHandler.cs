@@ -104,12 +104,11 @@ internal static class ExportToDWGHandler
 
                 RevitPathHelper.DeleteExistsFile(exportFullPath);
 
-                _ = globalMutex.WaitOne();
-
-                try
+                Dispatcher.CurrentDispatcher.Invoke(() =>
                 {
-                    Dispatcher.CurrentDispatcher.Invoke(() =>
+                    try
                     {
+
                         TransactionStatus status = trx.Start();
 
                         if (status == TransactionStatus.Started)
@@ -130,21 +129,20 @@ internal static class ExportToDWGHandler
                             }
                         }
 
-                    });
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, ex.Message);
-                }
-                finally
-                {
-                    globalMutex.ReleaseMutex();
 
-                    if (!trx.HasEnded())
-                    {
-                        _ = trx.RollBack();
                     }
-                }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, ex.Message);
+                    }
+                    finally
+                    {
+                        if (!trx.HasEnded())
+                        {
+                            _ = trx.RollBack();
+                        }
+                    }
+                });
             }
 
         }
