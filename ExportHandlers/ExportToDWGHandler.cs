@@ -94,21 +94,22 @@ internal static class ExportToDWGHandler
 
         if (sheetModels.Count > 0)
         {
-            foreach (SheetModel sheetModel in SheetModel.SortSheetModels(sheetModels))
+            _ = globalMutex.WaitOne();
+
+            try
             {
-                using Transaction trx = new(doc, $"Export {sheetModel.SheetName} to DWG");
-
-                string exportFullPath = Path.Combine(exportFolder, $"{sheetModel.SheetName}.dwg");
-
-                ICollection<ElementId> elementIds = [sheetModel.ViewSheet.Id];
-
-                RevitPathHelper.DeleteExistsFile(exportFullPath);
-
-                Dispatcher.CurrentDispatcher.Invoke(() =>
+                foreach (SheetModel sheetModel in SheetModel.SortSheetModels(sheetModels))
                 {
-                    try
-                    {
+                    using Transaction trx = new(doc, $"Export {sheetModel.SheetName} to DWG");
 
+                    string exportFullPath = Path.Combine(exportFolder, $"{sheetModel.SheetName}.dwg");
+
+                    ICollection<ElementId> elementIds = [sheetModel.ViewSheet.Id];
+
+                    RevitPathHelper.DeleteExistsFile(exportFullPath);
+
+                    Dispatcher.CurrentDispatcher.Invoke(() =>
+                    {
                         TransactionStatus status = trx.Start();
 
                         if (status == TransactionStatus.Started)
@@ -129,20 +130,22 @@ internal static class ExportToDWGHandler
                             }
                         }
 
-
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error(ex, ex.Message);
-                    }
-                    finally
-                    {
                         if (!trx.HasEnded())
                         {
                             _ = trx.RollBack();
                         }
-                    }
-                });
+
+                    });
+
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+            }
+            finally
+            {
+                globalMutex.ReleaseMutex();
             }
 
         }
