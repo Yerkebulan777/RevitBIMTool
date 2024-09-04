@@ -12,6 +12,8 @@ using System.Windows.Threading;
 namespace RevitBIMTool.ExportHandlers;
 internal static class ExportToDWGHandler
 {
+    private static readonly Mutex globalMutex = new(false, "Global\\ExportToDWGMutex");
+
 
     private static readonly DWGExportOptions dwgOptions = new()
     {
@@ -92,50 +94,57 @@ internal static class ExportToDWGHandler
 
         if (sheetModels.Count > 0)
         {
-            sheetModels = SheetModel.SortSheetModels(sheetModels);
-
-            foreach (SheetModel sheetModel in sheetModels)
+            foreach (SheetModel sheetModel in SheetModel.SortSheetModels(sheetModels))
             {
-                Dispatcher.CurrentDispatcher.Invoke(() =>
+                using Transaction trx = new(doc, $"Export {sheetModel.SheetName} to DWG");
+
+                string exportFullPath = Path.Combine(exportFolder, $"{sheetModel.SheetName}.dwg");
+
+                ICollection<ElementId> elementIds = [sheetModel.ViewSheet.Id];
+
+                RevitPathHelper.DeleteExistsFile(exportFullPath);
+
+                _ = globalMutex.WaitOne();
+
+                try
                 {
-                    RevitViewHelper.OpenView(uidoc, sheetModel.ViewSheet);
-
-                    ICollection<ElementId> elementIds = [sheetModel.ViewSheet.Id];
-
-                    string exportFullPath = Path.Combine(exportFolder, $"{sheetModel.SheetName}.dwg");
-
-                    using Transaction trx = new(doc, $"Export {sheetModel.SheetName} to DWG");
-
-                    try
+                    Dispatcher.CurrentDispatcher.Invoke(() =>
                     {
-                        Thread.Sleep(1000);
-
                         TransactionStatus status = trx.Start();
 
                         if (status == TransactionStatus.Started)
                         {
-                            RevitPathHelper.DeleteExistsFile(exportFullPath);
+                            int count = 0;
 
-                            Log.Error($"Export result: {doc.Export(exportFolder, sheetModel.SheetName, elementIds, dwgOptions)}");
-
-                            if (RevitPathHelper.AwaitExistsFile(exportFullPath))
+                            while (count < 100)
                             {
-                                status = trx.Commit();
+                                Thread.Sleep(count++ * 100);
+
+                                Log.Debug($"Counter test: {count}");
+
+                                if (doc.Export(exportFolder, sheetModel.SheetName, elementIds, dwgOptions))
+                                {
+                                    Log.Debug($"YES");
+                                    break;
+                                }
                             }
                         }
-                    }
-                    catch (Exception ex)
+
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, ex.Message);
+                }
+                finally
+                {
+                    globalMutex.ReleaseMutex();
+
+                    if (!trx.HasEnded())
                     {
-                        Log.Error(ex, ex.Message);
+                        _ = trx.RollBack();
                     }
-                    finally
-                    {
-                        if (!trx.HasEnded())
-                        {
-                            _ = trx.RollBack();
-                        }
-                    }
-                });
+                }
             }
 
         }
