@@ -98,8 +98,6 @@ internal static class ExportToDWGHandler
             {
                 Dispatcher.CurrentDispatcher.Invoke(() =>
                 {
-                    RevitViewHelper.OpenView(uidoc, sheetModel.ViewSheet);
-
                     ICollection<ElementId> elementIds = [sheetModel.ViewSheet.Id];
 
                     string exportFullPath = Path.Combine(exportFolder, $"{sheetModel.SheetName}.dwg");
