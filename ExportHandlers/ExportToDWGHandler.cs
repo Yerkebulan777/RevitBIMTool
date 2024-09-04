@@ -94,51 +94,47 @@ internal static class ExportToDWGHandler
         {
             Document doc = uidoc.Document;
 
-            if (globalMutex.WaitOne())
+            foreach (SheetModel sheetModel in SheetModel.SortSheetModels(sheetModels))
             {
-                try
+                using Transaction trx = new(doc, $"Export {sheetModel.SheetName} to DWG");
+
+                string exportFullPath = Path.Combine(exportFolder, $"{sheetModel.SheetName}.dwg");
+
+                ICollection<ElementId> elementIds = [sheetModel.ViewSheet.Id];
+
+                RevitPathHelper.DeleteExistsFile(exportFullPath);
+
+                Dispatcher.CurrentDispatcher.Invoke(() =>
                 {
-                    foreach (SheetModel sheetModel in SheetModel.SortSheetModels(sheetModels))
+                    TransactionStatus status = trx.Start();
+
+                    if (status == TransactionStatus.Started)
                     {
-                        using Transaction trx = new(doc, $"Export {sheetModel.SheetName} to DWG");
+                        bool result = false;
 
-                        string exportFullPath = Path.Combine(exportFolder, $"{sheetModel.SheetName}.dwg");
-
-                        ICollection<ElementId> elementIds = [sheetModel.ViewSheet.Id];
-
-                        RevitPathHelper.DeleteExistsFile(exportFullPath);
-
-                        Dispatcher.CurrentDispatcher.Invoke(() =>
+                        while (!result)
                         {
-                            TransactionStatus status = trx.Start();
+                            result = doc.Export(exportFolder, sheetModel.SheetName, elementIds, dwgOptions);
 
-                            if (status == TransactionStatus.Started)
+                            Log.Debug($"Result: {result}");
+
+                            if (!result)
                             {
-                                while (!doc.Export(exportFolder, sheetModel.SheetName, elementIds, dwgOptions))
-                                {
-                                    Thread.Sleep(1000);
-                                }
+                                Thread.Sleep(1000);
                             }
-
-                            if (!trx.HasEnded())
-                            {
-                                _ = trx.RollBack();
-                            }
-
-                        });
+                        }
                     }
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, ex.Message);
-                }
-                finally
-                {
-                    globalMutex.ReleaseMutex();
-                    Log.Debug("Test");
-                }
+
+                    if (!trx.HasEnded())
+                    {
+                        _ = trx.RollBack();
+                    }
+
+                });
             }
+
+
         }
     }
-
 }
+
