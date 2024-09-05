@@ -6,7 +6,6 @@ using RevitBIMTool.Utils.SystemUtil;
 using Serilog;
 using System.IO;
 using System.Text;
-using System.Windows.Threading;
 
 
 namespace RevitBIMTool.ExportHandlers;
@@ -92,45 +91,30 @@ internal static class ExportToDWGHandler
         {
             Document doc = uidoc.Document;
 
+            ICollection<ElementId> elementIds = [];
+
             foreach (SheetModel sheetModel in SheetModel.SortSheetModels(sheetModels))
             {
-                using Transaction trx = new(doc, $"Export {sheetModel.SheetName} to DWG");
-
                 string exportFullPath = Path.Combine(exportFolder, $"{sheetModel.SheetName}.dwg");
-
-                ICollection<ElementId> elementIds = [sheetModel.ViewSheet.Id];
 
                 RevitPathHelper.DeleteExistsFile(exportFullPath);
 
-                Dispatcher.CurrentDispatcher.Invoke(() =>
-                {
-                    TransactionStatus status = trx.Start();
-
-                    if (status == TransactionStatus.Started)
-                    {
-                        bool result = false;
-
-                        while (!result)
-                        {
-                            result = doc.Export(exportFolder, sheetModel.SheetName, elementIds, dwgOptions);
-
-                            Log.Debug($"Result: {result}");
-
-                            if (!result)
-                            {
-                                Thread.Sleep(1000);
-                            }
-                        }
-                    }
-
-                    if (!trx.HasEnded())
-                    {
-                        _ = trx.RollBack();
-                    }
-
-                });
+                elementIds.Add(sheetModel.ViewSheet.Id);
             }
 
+            using Transaction trx = new(doc, $"Export to DWG");
+
+            TransactionStatus status = trx.Start();
+
+            if (status == TransactionStatus.Started)
+            {
+                Log.Debug($"Result: {doc.Export(exportFolder, "Test", elementIds, dwgOptions)}");
+            }
+
+            if (!trx.HasEnded())
+            {
+                _ = trx.RollBack();
+            }
 
         }
     }
