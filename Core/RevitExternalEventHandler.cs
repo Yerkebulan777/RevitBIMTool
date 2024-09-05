@@ -10,14 +10,18 @@ namespace RevitBIMTool.Core
 {
     public sealed class RevitExternalEventHandler : IExternalEventHandler
     {
+        private readonly DateTime startTime;
         private readonly string versionNumber;
         private readonly ExternalEvent externalEvent;
-        private readonly string directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), $"RevitBIMTool");
+        private readonly SynchronizationContext context;
+        private readonly string logDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), $"RevitBIMTool");
 
 
         public RevitExternalEventHandler(string version)
         {
             externalEvent = ExternalEvent.Create(this);
+            context = SynchronizationContext.Current;
+            startTime = DateTime.Now;
             versionNumber = version;
         }
 
@@ -27,20 +31,20 @@ namespace RevitBIMTool.Core
         {
             AutomationHandler autoHandler = new(uiapp);
 
-            RevitPathHelper.EnsureDirectory(directory);
-
-            SynchronizationContext context = SynchronizationContext.Current;
-
             while (TaskRequestContainer.Instance.PopTaskModel(versionNumber, out TaskRequest request))
             {
                 if (PathHelper.IsFileAccessible(request.RevitFilePath, out string output))
                 {
                     Log.Logger = ConfigureLogger(request);
 
-                    SynchronizationContext.SetSynchronizationContext(context);
-
-                    output += autoHandler.RunExecuteTask(request);
+                    output += autoHandler.RunExecuteTask(request, context);
                     Log.Information($"Task result:\r\n\t{output}");
+
+                    if (RevitFileHelper.IsTimedOut(startTime))
+                    {
+                        break;
+                    }
+
                 }
             }
 
@@ -49,13 +53,16 @@ namespace RevitBIMTool.Core
 
         internal ILogger ConfigureLogger(TaskRequest request)
         {
+            Thread.Sleep(1000);
+
             if (Log.Logger != null)
             {
                 Log.CloseAndFlush();
             }
 
             string logName = $"{request.RevitFileName}[{request.CommandNumber}].txt";
-            string logPath = Path.Combine(directory, logName);
+            string logPath = Path.Combine(logDirectory, logName);
+            RevitPathHelper.EnsureDirectory(logDirectory);
             RevitPathHelper.DeleteExistsFile(logPath);
 
             return new LoggerConfiguration()

@@ -23,11 +23,13 @@ public sealed class AutomationHandler
     }
 
 
-    public string RunExecuteTask(TaskRequest taskRequest)
+    public string RunExecuteTask(TaskRequest taskRequest, SynchronizationContext context)
     {
         builder = new StringBuilder();
 
         DateTime startedTime = DateTime.Now;
+
+        SynchronizationContext.SetSynchronizationContext(context);
 
         string output = RunDocumentAction(uiapp, taskRequest, RunTask);
 

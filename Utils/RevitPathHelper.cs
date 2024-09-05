@@ -178,7 +178,7 @@ public static class RevitPathHelper
             }
             finally
             {
-                Debug.WriteLine($"Created directory {directoryPath}");
+                Debug.WriteLine($"Created logDirectory {directoryPath}");
             }
         }
     }

@@ -7,6 +7,22 @@ using System.Diagnostics;
 namespace RevitBIMTool.Utils;
 internal static class RevitFileHelper
 {
+    public static bool IsTimedOut(DateTime startTime, int timeout = 100)
+    {
+        bool result = false;
+
+        TimeSpan maximum = TimeSpan.FromMinutes(timeout);
+
+        if ((DateTime.Now - startTime) > maximum)
+        {
+            Log.Debug("Time limit reached");
+            Thread.Sleep(1000);
+            result = true;
+        }
+
+        return result;
+    }
+
 
     public static void SaveAs(Document doc, string filePath, WorksharingSaveAsOptions options = null, int maxBackups = 25)
     {
