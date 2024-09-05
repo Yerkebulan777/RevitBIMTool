@@ -73,9 +73,12 @@ internal static class ExportToDWGHandler
                     }
                 }
 
-                ExportToDWG(uidoc, exportFolder, sheetModels);
-                SystemFolderOpener.OpenFolder(baseDwgDirectory);
-                ExportPathHelper.CreateZipTheFolder(exportFolder, baseDwgDirectory);
+                if (ExportToDWG(uidoc, exportFolder, sheetModels))
+                {
+                    SystemFolderOpener.OpenFolder(baseDwgDirectory);
+                    ExportPathHelper.CreateZipTheFolder(exportFolder, baseDwgDirectory);
+                }
+
             }
         }
 
@@ -85,13 +88,15 @@ internal static class ExportToDWGHandler
     }
 
 
-    private static void ExportToDWG(UIDocument uidoc, string exportFolder, List<SheetModel> sheetModels)
+    private static bool ExportToDWG(UIDocument uidoc, string exportFolder, List<SheetModel> sheetModels)
     {
+        bool result = false;
+
         if (sheetModels.Count > 0)
         {
-            Document doc = uidoc.Document;
+            result = true;
 
-            ICollection<ElementId> elementIds = [];
+            Document doc = uidoc.Document;
 
             foreach (SheetModel sheetModel in SheetModel.SortSheetModels(sheetModels))
             {
@@ -99,24 +104,35 @@ internal static class ExportToDWGHandler
 
                 RevitPathHelper.DeleteExistsFile(exportFullPath);
 
-                elementIds.Add(sheetModel.ViewSheet.Id);
-            }
+                using Transaction trx = new(doc, $"Export to DWG");
 
-            using Transaction trx = new(doc, $"Export to DWG");
+                try
+                {
+                    ViewSheet sheet = sheetModel.ViewSheet;
 
-            TransactionStatus status = trx.Start();
+                    if (TransactionStatus.Started == trx.Start())
+                    {
+                        ICollection<ElementId> elementIds = [sheet.Id];
 
-            if (status == TransactionStatus.Started)
-            {
-                Log.Debug($"Result: {doc.Export(exportFolder, "Test", elementIds, dwgOptions)}");
-            }
+                        if (!doc.Export(exportFolder, sheetModel.SheetName, elementIds, dwgOptions))
+                        {
+                            result = false;
+                        }
+                    }
+                }
+                finally
+                {
+                    if (!trx.HasEnded())
+                    {
+                        _ = trx.RollBack();
+                    }
+                }
 
-            if (!trx.HasEnded())
-            {
-                _ = trx.RollBack();
             }
 
         }
+
+        return result;
     }
 }
 
