@@ -143,6 +143,5 @@ internal static class ExportToDWGHandler
         return result;
     }
 
-
 }
 
