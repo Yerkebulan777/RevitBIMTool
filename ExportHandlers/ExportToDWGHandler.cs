@@ -6,6 +6,7 @@ using RevitBIMTool.Utils.SystemUtil;
 using Serilog;
 using System.IO;
 using System.Text;
+using System.Windows.Threading;
 
 
 namespace RevitBIMTool.ExportHandlers;
@@ -102,33 +103,45 @@ internal static class ExportToDWGHandler
             {
                 string exportFullPath = Path.Combine(exportFolder, $"{sheetModel.SheetName}.dwg");
 
-
-
-                RevitPathHelper.DeleteExistsFile(exportFullPath);
-
-                using Transaction trx = new(doc, $"Export to DWG");
-
-                try
+                Dispatcher.CurrentDispatcher.Invoke(() =>
                 {
-                    ViewSheet sheet = sheetModel.ViewSheet;
+                    using Transaction trx = new(doc, $"Export to DWG");
 
-                    if (TransactionStatus.Started == trx.Start())
+                    try
                     {
-                        ICollection<ElementId> elementIds = [sheet.Id];
-
-                        if (!doc.Export(exportFolder, sheetModel.SheetName, elementIds, dwgOptions))
+                        if (File.Exists(exportFullPath))
                         {
-                            result = false;
+                            File.Delete(exportFullPath);
+                        }
+
+                        if (TransactionStatus.Started == trx.Start())
+                        {
+                            ViewSheet sheet = sheetModel.ViewSheet;
+
+                            ICollection<ElementId> elementId = [sheet.Id];
+
+                            if (!doc.Export(exportFolder, sheetModel.SheetName, elementId, dwgOptions))
+                            {
+                                Log.Error($"Неудачный экспорт в DWG {sheetModel.SheetName}");
+
+                                _ = trx.Commit();
+
+                                result = false;
+                            }
                         }
                     }
-                }
-                finally
-                {
-                    if (!trx.HasEnded())
+                    catch (Exception ex)
                     {
-                        _ = trx.RollBack();
+                        Log.Error(ex, ex.Message);
                     }
-                }
+                    finally
+                    {
+                        if (!trx.HasEnded())
+                        {
+                            _ = trx.RollBack();
+                        }
+                    }
+                });
 
             }
 

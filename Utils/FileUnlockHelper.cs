@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using Serilog;
+using System.Diagnostics;
 
 
 namespace RevitBIMTool.Utils
@@ -6,7 +7,7 @@ namespace RevitBIMTool.Utils
     public static class FileUnlockHelper
     {
 
-        public static bool UnlockFile(string filePath)
+        public static bool TryUnlockFile(string filePath)
         {
             try
             {
@@ -16,33 +17,36 @@ namespace RevitBIMTool.Utils
                 handleProcess.StartInfo.RedirectStandardOutput = true;
                 handleProcess.StartInfo.UseShellExecute = false;
                 handleProcess.StartInfo.CreateNoWindow = true;
-                _ = handleProcess.Start();
 
-                string output = handleProcess.StandardOutput.ReadToEnd();
-
-                handleProcess.WaitForExit();
-
-                int pid = ParseHandleOutput(output);
-
-                if (pid > 0)
+                if (handleProcess.Start())
                 {
-                    try
+                    string output = handleProcess.StandardOutput.ReadToEnd();
+
+                    handleProcess.WaitForExit();
+
+                    int pid = ParseHandleOutput(output);
+
+                    if (pid > 0)
                     {
-                        Process.GetProcessById(pid).Kill();
-                        return true;
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine($"Ошибка при завершении процесса {pid}: {ex.Message}");
+                        try
+                        {
+                            Process.GetProcessById(pid).Kill();
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error($"Ошибка при завершении процесса: {ex.Message}");
+                            return false;
+                        }
                     }
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Ошибка при разблокировке файла: {ex.Message}");
+                Log.Error($"Ошибка при разблокировке файла: {ex.Message}");
+                return false;
             }
 
-            return false;
+            return true;
         }
 
 

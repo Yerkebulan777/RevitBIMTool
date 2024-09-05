@@ -137,15 +137,19 @@ public static class RevitPathHelper
         if (Directory.Exists(directoryPath))
         {
             DirectoryInfo directory = new(directoryPath);
-            foreach (FileInfo file in directory.EnumerateFiles())
+
+            foreach (FileInfo info in directory.EnumerateFiles())
             {
-                try
+                if (FileUnlockHelper.TryUnlockFile(info.FullName))
                 {
-                    file.Delete();
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex.Message);
+                    try
+                    {
+                        info.Delete();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex.Message);
+                    }
                 }
             }
         }
@@ -162,7 +166,7 @@ public static class RevitPathHelper
             }
             catch (Exception ex)
             {
-                Log.Error($"Error deleting file: {ex.Message}");
+                Log.Error($"Error deleting info: {ex.Message}");
             }
         }
     }
