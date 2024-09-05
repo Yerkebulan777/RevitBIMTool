@@ -91,60 +91,53 @@ internal static class ExportToDWGHandler
 
     private static bool ExportToDWG(UIDocument uidoc, string exportFolder, List<SheetModel> sheetModels)
     {
-        bool result = false;
+        Document doc = uidoc.Document;
 
-        if (sheetModels.Count > 0)
+        bool result = sheetModels.Count > 0;
+
+        foreach (SheetModel sheetModel in SheetModel.SortSheetModels(sheetModels))
         {
-            result = true;
+            string exportFullPath = Path.Combine(exportFolder, $"{sheetModel.SheetName}.dwg");
 
-            Document doc = uidoc.Document;
-
-            foreach (SheetModel sheetModel in SheetModel.SortSheetModels(sheetModels))
+            Dispatcher.CurrentDispatcher.Invoke(() =>
             {
-                string exportFullPath = Path.Combine(exportFolder, $"{sheetModel.SheetName}.dwg");
+                using Transaction trx = new(doc, $"ExportToDWG");
 
-                Dispatcher.CurrentDispatcher.Invoke(() =>
+                try
                 {
-                    using Transaction trx = new(doc, $"Export to DWG");
-
-                    try
+                    if (File.Exists(exportFullPath))
                     {
-                        if (File.Exists(exportFullPath))
+                        File.Delete(exportFullPath);
+                    }
+
+                    if (TransactionStatus.Started == trx.Start())
+                    {
+                        ViewSheet sheet = sheetModel.ViewSheet;
+
+                        ICollection<ElementId> elementId = [sheet.Id];
+
+                        if (!doc.Export(exportFolder, sheetModel.SheetName, elementId, dwgOptions))
                         {
-                            File.Delete(exportFullPath);
+                            Log.Error($"Неудачный экспорт в DWG {sheetModel.SheetName}");
+
+                            result = false;
                         }
 
-                        if (TransactionStatus.Started == trx.Start())
-                        {
-                            ViewSheet sheet = sheetModel.ViewSheet;
-
-                            ICollection<ElementId> elementId = [sheet.Id];
-
-                            if (!doc.Export(exportFolder, sheetModel.SheetName, elementId, dwgOptions))
-                            {
-                                Log.Error($"Неудачный экспорт в DWG {sheetModel.SheetName}");
-
-                                _ = trx.Commit();
-
-                                result = false;
-                            }
-                        }
+                        _ = trx.Commit();
                     }
-                    catch (Exception ex)
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, ex.Message);
+                }
+                finally
+                {
+                    if (!trx.HasEnded())
                     {
-                        Log.Error(ex, ex.Message);
+                        _ = trx.RollBack();
                     }
-                    finally
-                    {
-                        if (!trx.HasEnded())
-                        {
-                            _ = trx.RollBack();
-                        }
-                    }
-                });
-
-            }
-
+                }
+            });
         }
 
         return result;
