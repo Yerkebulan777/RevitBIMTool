@@ -52,7 +52,6 @@ public sealed class AutomationHandler
             RevitLinkHelper.CheckAndRemoveUnloadedLinks(uidoc.Document);
         }
 
-        
 
         StringBuilder sb = new();
 
