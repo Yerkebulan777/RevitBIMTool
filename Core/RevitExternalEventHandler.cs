@@ -3,16 +3,13 @@ using RevitBIMTool.ExportHandlers;
 using RevitBIMTool.Utils;
 using Serilog;
 using ServiceLibrary.Models;
-using System.Diagnostics;
 using System.IO;
-using System.Text;
 
 
 namespace RevitBIMTool.Core
 {
     public sealed class RevitExternalEventHandler : IExternalEventHandler
     {
-        private readonly SpinWait spinWait;
         private readonly DateTime startTime;
         private readonly string versionNumber;
         private readonly ExternalEvent externalEvent;
@@ -22,7 +19,6 @@ namespace RevitBIMTool.Core
         public RevitExternalEventHandler(string version)
         {
             externalEvent = ExternalEvent.Create(this);
-            spinWait = new SpinWait();
             startTime = DateTime.Now;
             versionNumber = version;
         }
@@ -30,32 +26,28 @@ namespace RevitBIMTool.Core
 
         public void Execute(UIApplication uiapp)
         {
-            SynchronizationContext context = SynchronizationContext.Current;
-            TaskRequestContainer container = TaskRequestContainer.Instance;
-
             RevitActionHandler actionHandler = new(uiapp);
 
-            while (!RevitFileHelper.IsTimedOut(startTime))
+            SynchronizationContext context = SynchronizationContext.Current;
+            TaskRequestContainer taskContainer = TaskRequestContainer.Instance;
+
+            while (taskContainer.PopTaskModel(versionNumber, out TaskRequest model))
             {
-                if (container.PopTaskModel(versionNumber, out TaskRequest model))
+                if (GeneralTaskHandler.IsValidTask(ref model))
                 {
-                    if (GeneralTaskHandler.IsValidTask(ref model))
+                    Log.Logger = ConfigureLogger(model);
+
+                    SynchronizationContext.SetSynchronizationContext(context);
+
+                    string output = actionHandler.RunDocumentAction(uiapp, model, GeneralTaskHandler.RunTask);
+
+                    Log.Information($"Task result:\r\n\t{output}");
+
+                    if (RevitFileHelper.IsTimedOut(startTime))
                     {
-                        Log.Logger = ConfigureLogger(model);
-
-                        SynchronizationContext.SetSynchronizationContext(context);
-
-                        string output = actionHandler.RunDocumentAction(uiapp, model, GeneralTaskHandler.RunTask);
-
-                         Log.Information($"Task result:\r\n\t{output}");
+                        return;
                     }
-
-                    spinWait.SpinOnce();
-
-                    continue;
                 }
-
-                return;
 
             }
 
