@@ -1,7 +1,7 @@
 ﻿using Autodesk.Revit.UI;
-using Serilog;
 using ServiceLibrary.Models;
 using System.IO;
+using System.Text;
 
 
 namespace RevitBIMTool.ExportHandlers
@@ -41,28 +41,36 @@ namespace RevitBIMTool.ExportHandlers
 
         public static string RunTask(UIDocument uidoc, TaskRequest model)
         {
-            Log.Debug($"Run: {model.RevitFileName} [{model.CommandNumber}]");
+            StringBuilder sb = new();
+
+            _ = sb.Append($"[{model.CommandNumber}]");
+            _ = sb.AppendLine(model.RevitFileName);
+            _ = sb.AppendLine(model.ExportFolder);
 
             switch (model.CommandNumber)
             {
                 case 1: // PDF
 
-                    return ExportToPDFHandler.ExportToPDF(uidoc, model.RevitFilePath, model.ExportFolder);
+                    _ = sb.AppendLine(ExportToPDFHandler.ExportToPDF(uidoc, model.RevitFilePath, model.ExportFolder));
+                    break;
 
                 case 2: // DWG
 
-                    return ExportToDWGHandler.ExportExecute(uidoc, model.RevitFilePath, model.ExportFolder);
+                    _ = sb.AppendLine(ExportToDWGHandler.ExportExecute(uidoc, model.RevitFilePath, model.ExportFolder));
+                    break;
 
                 case 3: // NWC
 
-                    return ExportToNWCHandler.ExportToNWC(uidoc, model.RevitFilePath, model.ExportFolder);
+                    _ = sb.AppendLine(ExportToNWCHandler.ExportToNWC(uidoc, model.RevitFilePath, model.ExportFolder));
+                    break;
 
                 default:
 
-                    return $"Failed command: {model.CommandNumber}";
+                    break;
             }
-        }
 
+            return sb.ToString();
+        }
 
     }
 
