@@ -8,7 +8,6 @@ using RevitBIMTool.Utils.SystemUtil;
 using Serilog;
 using System.IO;
 using System.Text;
-using System.Text.RegularExpressions;
 
 
 namespace RevitBIMTool.ExportHandlers;
@@ -16,69 +15,59 @@ internal static class ExportToPDFHandler
 {
     private const string printerName = "PDFCreator";
 
-    public static string ExportToPDF(UIDocument uidoc, string revitFilePath, string sectionName)
+    public static string ExportToPDF(UIDocument uidoc, string revitFilePath, string exportDirectory)
     {
         StringBuilder sb = new();
         Document doc = uidoc.Document;
-        string temp = Path.GetTempPath();
 
-        if (string.IsNullOrEmpty(revitFilePath))
+        Log.Debug("Start export to PDF...");
+
+        string sectionName = RevitPathHelper.GetSectionName(revitFilePath);
+        string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
+        string tempFolder = Path.Combine(Path.GetTempPath(), $"{revitFileName}TMP");
+        string targetFullPath = Path.Combine(exportDirectory, $"{revitFileName}.pdf");
+        
+        RevitPathHelper.EnsureDirectory(tempFolder);
+        RevitPathHelper.EnsureDirectory(exportDirectory);
+        PrintHandler.ResetPrintSettings(doc, printerName);
+
+        string defaultPrinter = PrinterApiUtility.GetDefaultPrinter();
+
+        if (!defaultPrinter.Equals(printerName))
         {
-            throw new ArgumentNullException(nameof(revitFilePath));
+            throw new ArgumentException(printerName + "is not defined");
         }
 
-        string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
-        //string randomName = Regex.Replace(Path.GetRandomFileName(), @"[\p{P}\p{S}]", string.Empty);
-        string baseDirectory = ExportHelper.SetDirectory(revitFilePath, "03_PDF", true);
-        string exportFullPath = Path.Combine(baseDirectory, $"{revitFileName}.pdf");
-        string tempFolder = Path.Combine(Path.GetTempPath(), revitFileName);
+        ColorDepthType colorType = ColorDepthType.Color;
 
-        if (!ExportHelper.IsTargetFileUpdated(exportFullPath, revitFilePath))
+        if (sectionName.Equals("KJ") || sectionName.Equals("KR") || sectionName.Equals("KG"))
         {
-            Log.Debug("Start export to PDF...");
+            colorType = ColorDepthType.BlackLine;
+        }
 
-            RevitPathHelper.EnsureDirectory(tempFolder);
-            PrintHandler.ResetPrintSettings(doc, printerName);
+        Dictionary<string, List<SheetModel>> sheetData = PrintHandler.GetSheetData(doc, revitFileName, colorType);
 
-            string defaultPrinter = PrinterApiUtility.GetDefaultPrinter();
+        if (sheetData.Count > 0)
+        {
+            List<SheetModel> sheetModels = PrintHandler.PrintSheetData(doc, sheetData, tempFolder);
 
-            if (!defaultPrinter.Equals(printerName))
+            Log.Information($"Total valid sheets: ({sheetModels.Count})");
+
+            if (sheetModels.Count > 0)
             {
-                throw new ArgumentException(printerName + "is not defined");
+                sheetModels = SheetModel.SortSheetModels(sheetModels);
+                sheetModels.ForEach(model => Log.Debug(model.SheetName));
+
+                MergeHandler.CombinePDFsFromFolder(sheetModels, tempFolder, targetFullPath);
+
+                _ = sb.AppendLine(Path.GetDirectoryName(exportDirectory));
+
+                SystemFolderOpener.OpenFolder(exportDirectory);
+                RevitPathHelper.DeleteDirectory(tempFolder);
             }
-
-            ColorDepthType colorType = ColorDepthType.Color;
-
-            if (sectionName.Equals("KJ") || sectionName.Equals("KR") || sectionName.Equals("KG"))
-            {
-                colorType = ColorDepthType.BlackLine;
-            }
-
-            Dictionary<string, List<SheetModel>> sheetData = PrintHandler.GetSheetData(doc, revitFileName, colorType);
-
-            if (sheetData.Count > 0)
-            {
-                List<SheetModel> sheetModels = PrintHandler.PrintSheetData(doc, sheetData, tempFolder);
-
-                Log.Information($"Total valid sheets: ({sheetModels.Count})");
-
-                if (sheetModels.Count > 0)
-                {
-                    sheetModels = SheetModel.SortSheetModels(sheetModels);
-                    sheetModels.ForEach(model => Log.Debug(model.SheetName));
-
-                    MergeHandler.CombinePDFsFromFolder(sheetModels, tempFolder, exportFullPath);
-
-                    _ = sb.AppendLine(Path.GetDirectoryName(baseDirectory));
-
-                    SystemFolderOpener.OpenFolder(baseDirectory);
-                    RevitPathHelper.DeleteDirectory(tempFolder);
-                }
-            }
-
-            return sb.ToString();
         }
 
         return sb.ToString();
+
     }
 }

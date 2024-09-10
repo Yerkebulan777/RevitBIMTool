@@ -10,66 +10,65 @@ using Document = Autodesk.Revit.DB.Document;
 
 
 namespace RevitBIMTool.Core;
-public sealed class AutomationHandler
+public sealed class RevitTaskHandler
 {
     private Document document;
     private const int waitTimeout = 1000;
     private readonly UIApplication uiapp;
 
 
-    public AutomationHandler(UIApplication application)
+    public RevitTaskHandler(UIApplication application)
     {
         uiapp = application;
     }
 
 
-    #region RevitTaskHandler
+    #region Methods
 
-    public string RunTask(UIDocument uidoc, TaskRequest taskModel)
+    public string RunTask(UIDocument uidoc, TaskRequest model)
     {
-        string revitFilePath = taskModel.RevitFilePath;
-        string revitFileName = taskModel.RevitFileName;
-        Log.Debug($"{revitFileName} [{taskModel.CommandNumber}]");
-        string sectionName = RevitPathHelper.GetSectionName(taskModel.RevitFilePath);
-        
-        switch (taskModel.CommandNumber)
+        string revitFilePath = model.RevitFilePath;
+        string revitFileName = model.RevitFileName;
+        Log.Debug($"{revitFileName} [{model.CommandNumber}]");
+
+        switch (model.CommandNumber)
         {
             case 1: // PDF
 
-                taskModel.ExportFolder = ExportHelper.SetDirectory(revitFilePath, "03_PDF", true);
-                taskModel.ExportFullPath = Path.Combine(taskModel.ExportFolder, $"{revitFileName}.pdf");
-                if (!ExportHelper.IsTargetFileUpdated(taskModel.ExportFullPath, revitFilePath))
+                model.ExportFolder = ExportHelper.SetDirectory(revitFilePath, "03_PDF", true);
+                model.TargetFullPath = Path.Combine(model.ExportFolder, $"{revitFileName}.pdf");
+                if (!ExportHelper.IsTargetFileUpdated(model.TargetFullPath, revitFilePath))
                 {
-                    return ExportToPDFHandler.ExportToPDF(uidoc, taskModel.RevitFilePath, sectionName);
+                    return ExportToPDFHandler.ExportToPDF(uidoc, model.RevitFilePath, model.ExportFolder);
                 }
 
                 break;
 
             case 2: // DWG
 
-                taskModel.ExportFolder = ExportHelper.SetDirectory(revitFilePath, "02_DWG", true);
-                taskModel.ExportFullPath = Path.Combine(taskModel.ExportFolder, $"{revitFileName}.zip");
-                if (!ExportHelper.IsTargetFileUpdated(taskModel.ExportFullPath, revitFilePath))
+                model.ExportFolder = ExportHelper.SetDirectory(revitFilePath, "02_DWG", true);
+                model.TargetFullPath = Path.Combine(model.ExportFolder, $"{revitFileName}.zip");
+                if (!ExportHelper.IsTargetFileUpdated(model.TargetFullPath, revitFilePath))
                 {
-                    return ExportToDWGHandler.ExportExecute(uidoc, taskModel.RevitFilePath, sectionName);
+                    return ExportToDWGHandler.ExportExecute(uidoc, model.RevitFilePath, model.ExportFolder);
                 }
 
                 break;
 
             case 3: // NWC
 
-                taskModel.ExportFolder = ExportHelper.SetDirectory(revitFilePath, "05_NWC", false);
-                taskModel.ExportFullPath = Path.Combine(taskModel.ExportFolder, $"{revitFileName}.nwc");
-                if (!ExportHelper.IsTargetFileUpdated(taskModel.ExportFullPath, revitFilePath))
+                model.ExportFolder = ExportHelper.SetDirectory(revitFilePath, "05_NWC", false);
+                model.TargetFullPath = Path.Combine(model.ExportFolder, $"{revitFileName}.nwc");
+                if (!ExportHelper.IsTargetFileUpdated(model.TargetFullPath, revitFilePath))
                 {
-                    return ExportToNWCHandler.ExportToNWC(uidoc, taskModel.RevitFilePath, sectionName);
+                    return ExportToNWCHandler.ExportToNWC(uidoc, model.RevitFilePath, model.ExportFolder);
                 }
 
                 break;
 
             default:
 
-                return $"Failed command: {taskModel.CommandNumber}";
+                return $"Failed command: {model.CommandNumber}";
         }
 
         return null;

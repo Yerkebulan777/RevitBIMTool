@@ -31,56 +31,47 @@ internal static class ExportToDWGHandler
     };
 
 
-    public static string ExportExecute(UIDocument uidoc, string revitFilePath, string sectionName)
+    public static string ExportExecute(UIDocument uidoc, string revitFilePath, string exportDirectory)
     {
         StringBuilder sb = new();
-
         Document doc = uidoc.Document;
 
-        if (string.IsNullOrEmpty(revitFilePath))
-        {
-            throw new ArgumentNullException(nameof(revitFilePath));
-        }
-
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
-        string baseDwgDirectory = ExportHelper.SetDirectory(revitFilePath, "02_DWG", true);
-        string exportZipPath = Path.Combine(baseDwgDirectory, revitFileName + ".zip");
-        string exportFolder = Path.Combine(baseDwgDirectory, revitFileName);
+        string targetFullPath = Path.Combine(exportDirectory, revitFileName + ".zip");
+        string exportFolder = Path.Combine(exportDirectory, revitFileName);
 
-        if (!ExportHelper.IsTargetFileUpdated(exportZipPath, revitFilePath))
+        RevitPathHelper.EnsureDirectory(exportDirectory);
+        RevitPathHelper.EnsureDirectory(exportFolder);
+        RevitPathHelper.ClearDirectory(exportFolder);
+
+        Log.Information("Start export to DWG...");
+
+        FilteredElementCollector collector = new(doc);
+        collector = collector.OfClass(typeof(ViewSheet));
+
+        if (0 < collector.GetElementCount())
         {
-            RevitPathHelper.EnsureDirectory(exportFolder);
-            RevitPathHelper.ClearDirectory(exportFolder);
+            List<SheetModel> sheetModels = [];
 
-            Log.Information("Start export to DWG...");
-
-            FilteredElementCollector collector = new(doc);
-            collector = collector.OfClass(typeof(ViewSheet));
-
-            if (0 < collector.GetElementCount())
+            foreach (Element element in collector.ToElements())
             {
-                List<SheetModel> sheetModels = [];
-
-                foreach (Element element in collector.ToElements())
+                if (element is ViewSheet sheet)
                 {
-                    if (element is ViewSheet sheet)
+                    SheetModel model = new(sheet);
+                    model.SetSheetName(doc, revitFileName);
+                    if (model.IsValid)
                     {
-                        SheetModel model = new(sheet);
-                        model.SetSheetName(doc, revitFileName);
-                        if (model.IsValid)
-                        {
-                            sheetModels.Add(model);
-                        }
+                        sheetModels.Add(model);
                     }
                 }
-
-                if (ExportToDWG(uidoc, exportFolder, sheetModels))
-                {
-                    SystemFolderOpener.OpenFolder(baseDwgDirectory);
-                    ExportHelper.CreateZipTheFolder(exportFolder, baseDwgDirectory);
-                }
-
             }
+
+            if (ExportToDWG(uidoc, exportFolder, sheetModels))
+            {
+                SystemFolderOpener.OpenFolder(exportDirectory);
+                ExportHelper.CreateZipTheFolder(exportFolder, exportDirectory);
+            }
+
         }
 
         _ = sb.AppendLine("Задание выполнено");

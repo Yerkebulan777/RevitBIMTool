@@ -26,8 +26,6 @@ internal static class ExportHelper
             exportDirectory = Path.Combine(exportDirectory, formatedDate);
         }
 
-        RevitPathHelper.EnsureDirectory(exportDirectory);
-
         return exportDirectory;
     }
 

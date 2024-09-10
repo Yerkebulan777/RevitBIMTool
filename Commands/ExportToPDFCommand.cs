@@ -5,6 +5,7 @@ using RevitBIMTool.Core;
 using RevitBIMTool.ExportHandlers;
 using RevitBIMTool.Utils;
 using System.Globalization;
+using System.IO;
 using System.Windows;
 
 
@@ -28,8 +29,8 @@ internal sealed class ExportToPDFCommand : IExternalCommand, IExternalCommandAva
         {
             RevitLinkHelper.CheckAndRemoveUnloadedLinks(doc);
             string revitFilePath = RevitPathHelper.GetRevitFilePath(doc);
-            string sectionName = RevitPathHelper.GetSectionName(revitFilePath);
-            message = ExportToPDFHandler.ExportToPDF(uidoc, revitFilePath, sectionName);
+            string exportDirectory = ExportHelper.SetDirectory(revitFilePath, "03_PDF", true);
+            message = ExportToPDFHandler.ExportToPDF(uidoc, revitFilePath, exportDirectory);
         }
         catch (Exception ex)
         {

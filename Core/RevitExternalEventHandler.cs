@@ -29,7 +29,7 @@ namespace RevitBIMTool.Core
         {
             DateTime startTime = DateTime.Now;
 
-            AutomationHandler autoHandler = new(uiapp);
+            RevitTaskHandler autoHandler = new(uiapp);
 
             SynchronizationContext context = SynchronizationContext.Current;
 
