@@ -13,61 +13,49 @@ namespace RevitBIMTool.Core
     public sealed class RevitExternalEventHandler : IExternalEventHandler
     {
         private readonly SpinWait spinWait;
+        private readonly DateTime startTime;
         private readonly string versionNumber;
         private readonly ExternalEvent externalEvent;
-        private readonly string logDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), $"RevitBIMTool");
+        private readonly string logDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), $"RevitBIMTool");
 
 
         public RevitExternalEventHandler(string version)
         {
             externalEvent = ExternalEvent.Create(this);
             spinWait = new SpinWait();
+            startTime = DateTime.Now;
             versionNumber = version;
         }
 
 
         public void Execute(UIApplication uiapp)
         {
-            StringBuilder builder = new();
-
-            DateTime startTime = DateTime.Now;
-
-            Stopwatch stopwatch = new Stopwatch();
-
-            RevitActionHandler autoHandler = new(uiapp);
-
             SynchronizationContext context = SynchronizationContext.Current;
+            TaskRequestContainer container = TaskRequestContainer.Instance;
 
-            while (TaskRequestContainer.Instance.PopTaskModel(versionNumber, out TaskRequest request))
+            RevitActionHandler actionHandler = new(uiapp);
+
+            while (!RevitFileHelper.IsTimedOut(startTime))
             {
-                spinWait.SpinOnce();
-
-                if (RevitFileHelper.IsTimedOut(startTime))
+                if (container.PopTaskModel(versionNumber, out TaskRequest model))
                 {
-                    Log.Warning("Timeout reached");
-                    return;
+                    if (GeneralTaskHandler.IsValidTask(ref model))
+                    {
+                        Log.Logger = ConfigureLogger(model);
+
+                        SynchronizationContext.SetSynchronizationContext(context);
+
+                        string output = actionHandler.RunDocumentAction(uiapp, model, GeneralTaskHandler.RunTask);
+
+                         Log.Information($"Task result:\r\n\t{output}");
+                    }
+
+                    spinWait.SpinOnce();
+
+                    continue;
                 }
 
-                if (GeneralTaskHandler.IsValidTask(ref request))
-                {
-                    stopwatch.Restart();
-
-                    Log.Logger = ConfigureLogger(request);
-
-                    SynchronizationContext.SetSynchronizationContext(context);
-
-                    string output = autoHandler.RunDocumentAction(uiapp, request, GeneralTaskHandler.RunTask);
-
-                    stopwatch.Stop();
-
-                    string formattedTime = stopwatch.Elapsed.ToString(@"h\:mm\:ss");
-
-                    _ = builder.Append($"{request.RevitFileName}");
-                    _ = builder.Append($"[{formattedTime}]");
-                    _ = builder.AppendLine(output);
-
-                    Log.Information($"Task result:\r\n\t{builder}");
-                }
+                return;
 
             }
 
@@ -77,8 +65,8 @@ namespace RevitBIMTool.Core
         internal ILogger ConfigureLogger(TaskRequest request)
         {
             string logName = $"{request.RevitFileName}[{request.CommandNumber}].txt";
-            string logPath = Path.Combine(logDirectory, logName);
-            RevitPathHelper.EnsureDirectory(logDirectory);
+            string logPath = Path.Combine(logDir, logName);
+            RevitPathHelper.EnsureDirectory(logDir);
             RevitPathHelper.DeleteExistsFile(logPath);
 
             if (Log.Logger != null)

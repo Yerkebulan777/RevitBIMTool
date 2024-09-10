@@ -1,10 +1,10 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using RevitBIMTool.ExportHandlers;
 using RevitBIMTool.Utils;
 using Serilog;
 using ServiceLibrary.Models;
-using System.IO;
+using System.Diagnostics;
+using System.Text;
 using Document = Autodesk.Revit.DB.Document;
 
 
@@ -12,7 +12,6 @@ namespace RevitBIMTool.Core;
 public sealed class RevitActionHandler
 {
     private Document document;
-    private const int waitTimeout = 1000;
     private readonly UIApplication uiapp;
 
 
@@ -22,7 +21,7 @@ public sealed class RevitActionHandler
     }
 
 
-    #region Methods
+    #region AllMethods
 
     public string RunDocumentAction(UIApplication uiapp, TaskRequest taskModel, Func<UIDocument, TaskRequest, string> revitAction)
     {
@@ -62,19 +61,26 @@ public sealed class RevitActionHandler
     {
         string WithOpeningErrorReporting()
         {
-            string result = string.Empty;
+            StringBuilder sb = new();
+            Stopwatch stopwatch = new();
+            stopwatch.Start();
 
             try
             {
-                result = revitAction();
+                sb.AppendLine(revitAction());
             }
             catch (Exception ex)
             {
-                result += ex.Message;
-                Log.Fatal(ex, result);
+                sb.AppendLine(ex.Message);
+            }
+            finally 
+            { 
+                stopwatch.Stop();
             }
 
-            return result;
+            sb.AppendLine($"[{stopwatch.Elapsed.ToString(@"h\:mm\:ss")}]");
+
+            return sb.ToString();
         }
 
         return WithAutomatedErrorHandling(uiapp, WithOpeningErrorReporting);
