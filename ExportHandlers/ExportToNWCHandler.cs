@@ -52,6 +52,8 @@ internal static class ExportToNWCHandler
             {
                 List<Element> instansesToHide = [];
 
+                _ = sb.AppendLine(exportBaseDirectory);
+
                 const BuiltInCategory ductCat = BuiltInCategory.OST_DuctAccessory;
                 const BuiltInCategory sfrmCat = BuiltInCategory.OST_StructuralFraming;
                 const BuiltInCategory mechCat = BuiltInCategory.OST_MechanicalEquipment;
@@ -82,9 +84,9 @@ internal static class ExportToNWCHandler
                     Coordinates = NavisworksCoordinates.Shared,
 
                     ConvertElementProperties = true,
-                    DivideFileIntoLevels = true,
 
                     ExportRoomAsAttribute = true,
+                    DivideFileIntoLevels = true,
                     ExportRoomGeometry = false,
 
                     ExportParts = false,
@@ -96,7 +98,6 @@ internal static class ExportToNWCHandler
 
                 lock (uidoc)
                 {
-                    _ = sb.AppendLine(exportBaseDirectory);
                     Export(doc, exportFullPath, options);
                 }
             }

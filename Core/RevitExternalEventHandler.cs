@@ -26,7 +26,6 @@ namespace RevitBIMTool.Core
         }
 
 
-        [STAThread]
         public void Execute(UIApplication uiapp)
         {
             AutomationHandler autoHandler = new(uiapp);
@@ -35,6 +34,8 @@ namespace RevitBIMTool.Core
             {
                 if (PathHelper.IsFileAccessible(request.RevitFilePath, out string output))
                 {
+                    Thread.SpinWait(1000);
+
                     Log.Logger = ConfigureLogger(request);
 
                     output += autoHandler.RunExecuteTask(request, context);
@@ -53,8 +54,6 @@ namespace RevitBIMTool.Core
 
         internal ILogger ConfigureLogger(TaskRequest request)
         {
-            Thread.Sleep(1000);
-
             if (Log.Logger != null)
             {
                 Log.CloseAndFlush();
