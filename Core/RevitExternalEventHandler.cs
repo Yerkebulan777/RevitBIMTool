@@ -1,8 +1,9 @@
 ﻿using Autodesk.Revit.UI;
-using Org.BouncyCastle.Asn1.Ocsp;
+using RevitBIMTool.ExportHandlers;
 using RevitBIMTool.Utils;
 using Serilog;
 using ServiceLibrary.Models;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 
@@ -27,9 +28,13 @@ namespace RevitBIMTool.Core
 
         public void Execute(UIApplication uiapp)
         {
+            StringBuilder builder = new();
+
             DateTime startTime = DateTime.Now;
 
-            RevitTaskHandler autoHandler = new(uiapp);
+            Stopwatch stopwatch = new Stopwatch();
+
+            RevitActionHandler autoHandler = new(uiapp);
 
             SynchronizationContext context = SynchronizationContext.Current;
 
@@ -37,28 +42,31 @@ namespace RevitBIMTool.Core
             {
                 spinWait.SpinOnce();
 
-                var builder = new StringBuilder();
-
-                DateTime startedTime = DateTime.Now;
-
-                Log.Logger = ConfigureLogger(request);
-
-                SynchronizationContext.SetSynchronizationContext(context);
-
-                string output = autoHandler.RunDocumentAction(uiapp, request, autoHandler.RunTask);
-
-                string formattedTime = (DateTime.Now - startedTime).ToString(@"h\:mm\:ss");
-
-                _ = builder.Append($"{request.RevitFileName}");
-                _ = builder.Append($"[{formattedTime}]");
-                _ = builder.AppendLine(output);
-
-                Log.Information($"Task result:\r\n\t{builder.ToString()}");
-
                 if (RevitFileHelper.IsTimedOut(startTime))
                 {
                     Log.Warning("Timeout reached");
                     return;
+                }
+
+                if (GeneralTaskHandler.IsValidTask(ref request))
+                {
+                    stopwatch.Restart();
+
+                    Log.Logger = ConfigureLogger(request);
+
+                    SynchronizationContext.SetSynchronizationContext(context);
+
+                    string output = autoHandler.RunDocumentAction(uiapp, request, GeneralTaskHandler.RunTask);
+
+                    stopwatch.Stop();
+
+                    string formattedTime = stopwatch.Elapsed.ToString(@"h\:mm\:ss");
+
+                    _ = builder.Append($"{request.RevitFileName}");
+                    _ = builder.Append($"[{formattedTime}]");
+                    _ = builder.AppendLine(output);
+
+                    Log.Information($"Task result:\r\n\t{builder}");
                 }
 
             }

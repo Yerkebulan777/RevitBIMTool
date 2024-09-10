@@ -1,16 +1,15 @@
-﻿using Autodesk.Revit.DB;
-using RevitBIMTool.Utils;
+﻿using RevitBIMTool.Utils;
 using Serilog;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Security.Permissions;
-using System.Text;
 
 
 namespace RevitBIMTool.ExportHandlers;
 internal static class ExportHelper
 {
+
     public static string SetDirectory(string revitFilePath, string folderName, bool folderDate)
     {
         string exportDirectory = RevitPathHelper.DetermineDirectory(revitFilePath, folderName);
@@ -131,57 +130,6 @@ internal static class ExportHelper
             }
         }
 
-    }
-
-
-    private static string HideElementBySymbolName(Document doc, BuiltInCategory bic, string symbolName)
-    {
-        List<ElementId> hideIds = [];
-
-        StringBuilder builder = new();
-
-        View activeView = doc.ActiveView;
-
-        FilteredElementCollector instanses = CollectorHelper.GetInstancesBySymbolName(doc, bic, symbolName);
-
-        foreach (Element instance in instanses.ToElements())
-        {
-            _ = builder.AppendLine($"Name: {instance.Name}");
-
-            if (instance.CanBeHidden(activeView))
-            {
-                if (instance.IsHidden(activeView))
-                {
-                    hideIds.Add(instance.Id);
-                }
-            }
-        }
-
-        if (hideIds.Count > 0)
-        {
-            using Transaction trx = new(doc, "HideElements");
-            TransactionStatus status = trx.Start();
-
-            try
-            {
-                if (status == TransactionStatus.Started)
-                {
-                    activeView.HideElements(hideIds);
-                    status = trx.Commit();
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, ex.Message);
-
-                if (!trx.HasEnded())
-                {
-                    status = trx.RollBack();
-                }
-            }
-        }
-
-        return builder.ToString();
     }
 
 

@@ -5,75 +5,24 @@ using RevitBIMTool.Utils;
 using Serilog;
 using ServiceLibrary.Models;
 using System.IO;
-using System.Text;
 using Document = Autodesk.Revit.DB.Document;
 
 
 namespace RevitBIMTool.Core;
-public sealed class RevitTaskHandler
+public sealed class RevitActionHandler
 {
     private Document document;
     private const int waitTimeout = 1000;
     private readonly UIApplication uiapp;
 
 
-    public RevitTaskHandler(UIApplication application)
+    public RevitActionHandler(UIApplication application)
     {
         uiapp = application;
     }
 
 
     #region Methods
-
-    public string RunTask(UIDocument uidoc, TaskRequest model)
-    {
-        string revitFilePath = model.RevitFilePath;
-        string revitFileName = model.RevitFileName;
-        Log.Debug($"{revitFileName} [{model.CommandNumber}]");
-
-        switch (model.CommandNumber)
-        {
-            case 1: // PDF
-
-                model.ExportFolder = ExportHelper.SetDirectory(revitFilePath, "03_PDF", true);
-                model.TargetFullPath = Path.Combine(model.ExportFolder, $"{revitFileName}.pdf");
-                if (!ExportHelper.IsTargetFileUpdated(model.TargetFullPath, revitFilePath))
-                {
-                    return ExportToPDFHandler.ExportToPDF(uidoc, model.RevitFilePath, model.ExportFolder);
-                }
-
-                break;
-
-            case 2: // DWG
-
-                model.ExportFolder = ExportHelper.SetDirectory(revitFilePath, "02_DWG", true);
-                model.TargetFullPath = Path.Combine(model.ExportFolder, $"{revitFileName}.zip");
-                if (!ExportHelper.IsTargetFileUpdated(model.TargetFullPath, revitFilePath))
-                {
-                    return ExportToDWGHandler.ExportExecute(uidoc, model.RevitFilePath, model.ExportFolder);
-                }
-
-                break;
-
-            case 3: // NWC
-
-                model.ExportFolder = ExportHelper.SetDirectory(revitFilePath, "05_NWC", false);
-                model.TargetFullPath = Path.Combine(model.ExportFolder, $"{revitFileName}.nwc");
-                if (!ExportHelper.IsTargetFileUpdated(model.TargetFullPath, revitFilePath))
-                {
-                    return ExportToNWCHandler.ExportToNWC(uidoc, model.RevitFilePath, model.ExportFolder);
-                }
-
-                break;
-
-            default:
-
-                return $"Failed command: {model.CommandNumber}";
-        }
-
-        return null;
-    }
-
 
     public string RunDocumentAction(UIApplication uiapp, TaskRequest taskModel, Func<UIDocument, TaskRequest, string> revitAction)
     {
