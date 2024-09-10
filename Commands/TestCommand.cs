@@ -22,13 +22,11 @@ namespace RevitBIMTool.Commands
             UIDocument uidoc = uiapp.ActiveUIDocument;
             Document doc = uidoc.Document;
 
-            string[] paramNames = { "Диаметр", "Размер" };
-
-            List<Element> elems = RevitSystemsHelper.FilterPipesAndFittingsByMaxDiameter(doc, 30);
+            IEnumerable<Element> elems = CollectorHelper.GetInstancesByFamilyName(doc, "");
 
             uidoc.Selection.SetElementIds(elems.Select(elem => elem.Id).ToList());
 
-            output += $"\n Total elements count: {elems.Count}";
+            output += $"\n Total elements count: {elems.Count()}";
 
             _ = TaskDialog.Show("RevitBIMTool", output);
 

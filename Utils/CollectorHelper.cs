@@ -73,4 +73,34 @@ public static class CollectorHelper
 
     #endregion
 
+
+
+    public static IEnumerable<Element> GetInstancesByFamilyName(Document doc, string constain)
+    {
+        using FilteredElementCollector collector = new FilteredElementCollector(doc).OfClass(typeof(Family));
+
+        StringComparison comparison = StringComparison.OrdinalIgnoreCase;
+
+        foreach (Family family in collector.OfType<Family>())
+        {
+            bool matchStart = family.Name.StartsWith(constain, comparison);
+
+            if (matchStart || family.Name.EndsWith(constain, comparison))
+            {
+                FamilySymbolFilter symbolFilter = new(family.Id);
+
+                FilteredElementCollector symbolCollector = new FilteredElementCollector(doc).WherePasses(symbolFilter);
+
+                foreach (Element elem in symbolCollector.WhereElementIsNotElementType())
+                {
+                    if (elem is FamilyInstance)
+                    {
+                        yield return elem;
+                    }
+                }
+            }
+        }
+    }
+
+
 }
