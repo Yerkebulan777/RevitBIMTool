@@ -10,7 +10,6 @@ namespace RevitBIMTool.Core
 {
     public sealed class RevitExternalEventHandler : IExternalEventHandler
     {
-        private DateTime startTime;
         private readonly string versionNumber;
         private readonly ExternalEvent externalEvent;
         private readonly SynchronizationContext context;
@@ -27,9 +26,9 @@ namespace RevitBIMTool.Core
 
         public void Execute(UIApplication uiapp)
         {
-            startTime = DateTime.Now;
+            SpinWait spinWait = new();
 
-            SpinWait spinWait = new SpinWait();
+            DateTime startTime = DateTime.Now;
 
             AutomationHandler autoHandler = new(uiapp);
 
@@ -46,7 +45,8 @@ namespace RevitBIMTool.Core
 
                     if (RevitFileHelper.IsTimedOut(startTime))
                     {
-                        break;
+                        Log.Warning("Timeout reached");
+                        return;
                     }
 
                 }
@@ -57,15 +57,15 @@ namespace RevitBIMTool.Core
 
         internal ILogger ConfigureLogger(TaskRequest request)
         {
-            if (Log.Logger != null)
-            {
-                Log.CloseAndFlush();
-            }
-
             string logName = $"{request.RevitFileName}[{request.CommandNumber}].txt";
             string logPath = Path.Combine(logDirectory, logName);
             RevitPathHelper.EnsureDirectory(logDirectory);
             RevitPathHelper.DeleteExistsFile(logPath);
+
+            if (Log.Logger != null)
+            {
+                Log.CloseAndFlush();
+            }
 
             return new LoggerConfiguration()
                 .WriteTo.File(logPath)
