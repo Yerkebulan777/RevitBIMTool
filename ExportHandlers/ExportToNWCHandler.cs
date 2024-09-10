@@ -53,16 +53,19 @@ internal static class ExportToNWCHandler
                 List<Element> instansesToHide = [];
 
                 const BuiltInCategory ductCat = BuiltInCategory.OST_DuctAccessory;
-                const BuiltInCategory strFCat = BuiltInCategory.OST_StructuralFraming;
+                const BuiltInCategory sfrmCat = BuiltInCategory.OST_StructuralFraming;
+                const BuiltInCategory mechCat = BuiltInCategory.OST_MechanicalEquipment;
 
                 Dispatcher.CurrentDispatcher.Invoke(() => RevitViewHelper.OpenView(uidoc, view));
 
                 instansesToHide.AddRange(RevitSystemsHelper.FilterPipesAndFittingsByMaxDiameter(doc, 30));
-                instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, strFCat, "(Отверстия)").ToElements());
-                instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, strFCat, "(элемент_перемычки)").ToElements());
+
+                instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, sfrmCat, "(Отверстия)").ToElements());
+                instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, sfrmCat, "(элемент_перемычки)").ToElements());
                 instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, ductCat, "(клапан)kazvent_bm-h").ToElements());
-                instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, strFCat, "(задание)на _отверстие").ToElements());
+                instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, sfrmCat, "(задание)на _отверстие").ToElements());
                 instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, ductCat, "(клапан)анемостат_10авп").ToElements());
+                instansesToHide.AddRange(CollectorHelper.GetInstancesByFamilyName(doc, mechCat, "Задание на отверстие").ToElements());
 
                 _ = sb.AppendLine($"Total number of items found for hiding: {instansesToHide.Count}");
 

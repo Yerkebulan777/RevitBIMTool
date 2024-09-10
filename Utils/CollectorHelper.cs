@@ -10,7 +10,7 @@ public static class CollectorHelper
 
     #region FilteredByFamilylName
 
-    public static FilteredElementCollector GetInstancesByFamilyName(Document doc, string nameStartWith)
+    public static FilteredElementCollector GetInstancesByFamilyName(Document doc, BuiltInCategory bic, string nameStartWith)
     {
         IList<ElementFilter> filters = [];
 
@@ -28,7 +28,8 @@ public static class CollectorHelper
         }
 
         LogicalOrFilter orFilter = new(filters);
-        FilteredElementCollector symbolCollector = new(doc);
+        FilteredElementCollector symbolCollector;
+        symbolCollector = new FilteredElementCollector(doc).OfCategory(bic);
         symbolCollector = symbolCollector.WherePasses(orFilter);
         return symbolCollector.WhereElementIsViewIndependent();
     }

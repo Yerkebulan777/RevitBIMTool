@@ -22,7 +22,9 @@ namespace RevitBIMTool.Commands
             UIDocument uidoc = uiapp.ActiveUIDocument;
             Document doc = uidoc.Document;
 
-            IList<Element> elems = CollectorHelper.GetInstancesByFamilyName(doc, "Задание на отверстие").ToElements();
+            const BuiltInCategory mechCat = BuiltInCategory.OST_MechanicalEquipment;
+
+            IList<Element> elems = CollectorHelper.GetInstancesByFamilyName(doc, mechCat, "Задание на отверстие").ToElements();
 
             uidoc.Selection.SetElementIds(elems.Select(elem => elem.Id).ToList());
 
