@@ -15,9 +15,8 @@ internal static class ExportToPDFHandler
 {
     private const string printerName = "PDFCreator";
 
-    public static string ExportToPDF(UIDocument uidoc, string revitFilePath, string exportDirectory)
+    public static void ExportToPDF(UIDocument uidoc, string revitFilePath, string exportDirectory)
     {
-        StringBuilder sb = new();
         Document doc = uidoc.Document;
 
         Log.Debug("Start export to PDF...");
@@ -60,14 +59,10 @@ internal static class ExportToPDFHandler
 
                 MergeHandler.CombinePDFsFromFolder(sheetModels, tempFolder, targetFullPath);
 
-                _ = sb.AppendLine(Path.GetDirectoryName(exportDirectory));
-
                 SystemFolderOpener.OpenFolder(exportDirectory);
                 RevitPathHelper.DeleteDirectory(tempFolder);
             }
         }
-
-        return sb.ToString();
 
     }
 }

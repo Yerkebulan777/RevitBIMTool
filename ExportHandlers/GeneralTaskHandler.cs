@@ -8,6 +8,7 @@ namespace RevitBIMTool.ExportHandlers
 {
     internal static class GeneralTaskHandler
     {
+
         public static bool IsValidTask(ref TaskRequest model)
         {
             string revitFilePath = model.RevitFilePath;
@@ -51,17 +52,17 @@ namespace RevitBIMTool.ExportHandlers
             {
                 case 1: // PDF
 
-                    _ = sb.AppendLine(ExportToPDFHandler.ExportToPDF(uidoc, model.RevitFilePath, model.ExportFolder));
+                    ExportToPDFHandler.ExportToPDF(uidoc, model.RevitFilePath, model.ExportFolder);
                     break;
 
                 case 2: // DWG
 
-                    _ = sb.AppendLine(ExportToDWGHandler.ExportExecute(uidoc, model.RevitFilePath, model.ExportFolder));
+                    ExportToDWGHandler.ExportExecute(uidoc, model.RevitFilePath, model.ExportFolder);
                     break;
 
                 case 3: // NWC
 
-                    _ = sb.AppendLine(ExportToNWCHandler.ExportToNWC(uidoc, model.RevitFilePath, model.ExportFolder));
+                    ExportToNWCHandler.ExportToNWC(uidoc, model.RevitFilePath, model.ExportFolder);
                     break;
 
                 default:

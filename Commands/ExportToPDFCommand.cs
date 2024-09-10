@@ -30,7 +30,7 @@ internal sealed class ExportToPDFCommand : IExternalCommand, IExternalCommandAva
             RevitLinkHelper.CheckAndRemoveUnloadedLinks(doc);
             string revitFilePath = RevitPathHelper.GetRevitFilePath(doc);
             string exportDirectory = ExportHelper.SetDirectory(revitFilePath, "03_PDF", true);
-            message = ExportToPDFHandler.ExportToPDF(uidoc, revitFilePath, exportDirectory);
+            ExportToPDFHandler.ExportToPDF(uidoc, revitFilePath, exportDirectory);
         }
         catch (Exception ex)
         {
@@ -38,8 +38,6 @@ internal sealed class ExportToPDFCommand : IExternalCommand, IExternalCommandAva
             Clipboard.SetText(ex.ToString());
             return Result.Failed;
         }
-
-        MessageManager.ShowInfo(message);
 
         return Result.Succeeded;
     }

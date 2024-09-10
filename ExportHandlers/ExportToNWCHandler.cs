@@ -13,20 +13,16 @@ namespace RevitBIMTool.ExportHandlers;
 
 internal static class ExportToNWCHandler
 {
-    public static string ExportToNWC(UIDocument uidoc, string revitFilePath, string exportDirectory)
+    public static void ExportToNWC(UIDocument uidoc, string revitFilePath, string exportDirectory)
     {
-        StringBuilder sb = new();
         Document doc = uidoc.Document;
 
-        if (string.IsNullOrEmpty(revitFilePath))
-        {
-            throw new ArgumentNullException(nameof(revitFilePath));
-        }
+        Log.Debug("Start export to NWC...");
+
+        RevitPathHelper.EnsureDirectory(exportDirectory);
 
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
         string targetFullPath = Path.Combine(exportDirectory, $"{revitFileName}.nwc");
-
-        RevitPathHelper.EnsureDirectory(exportDirectory);
 
         ICollection<ElementId> cadImportIds = RevitPurginqHelper.GetLinkedAndImportedCADIds(doc);
 
@@ -51,8 +47,6 @@ internal static class ExportToNWCHandler
         {
             List<Element> instansesToHide = [];
 
-            _ = sb.AppendLine(exportDirectory);
-
             const BuiltInCategory ductCat = BuiltInCategory.OST_DuctAccessory;
             const BuiltInCategory sfrmCat = BuiltInCategory.OST_StructuralFraming;
             const BuiltInCategory mechCat = BuiltInCategory.OST_MechanicalEquipment;
@@ -68,7 +62,7 @@ internal static class ExportToNWCHandler
             instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, ductCat, "(клапан)анемостат_10авп").ToElements());
             instansesToHide.AddRange(CollectorHelper.GetInstancesByFamilyName(doc, mechCat, "Задание на отверстие").ToElements());
 
-            _ = sb.AppendLine($"Total number of items found for hiding: {instansesToHide.Count}");
+            Log.Debug($"Total number of items found for hiding: {instansesToHide.Count}");
 
             RevitViewHelper.SetViewSettings(doc, view, discipline, displayStyle, detailLevel);
             RevitViewHelper.SetCategoriesToVisible(doc, view, builtCatsToHide);
@@ -101,7 +95,7 @@ internal static class ExportToNWCHandler
             }
         }
 
-        return sb.ToString();
+
     }
 
 

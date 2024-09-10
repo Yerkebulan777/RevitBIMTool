@@ -1,9 +1,10 @@
 ﻿using RevitBIMTool.Utils;
+using RevitBIMTool.Utils.SystemUtil;
 using Serilog;
+using ServiceLibrary.Helpers;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
-using System.Security.Permissions;
 
 
 namespace RevitBIMTool.ExportHandlers;
@@ -39,7 +40,7 @@ internal static class ExportHelper
             TimeSpan timeDifference = targetFileDate - sourceFileDate;
             long targetFileSize = new FileInfo(targetFilePath).Length;
 
-            Log.Debug($"target last date: {targetFileDate:dd.MM.yyyy HH:mm}");
+            Log.Debug($"targetPath last date: {targetFileDate:dd.MM.yyyy HH:mm}");
             Log.Debug($"source last date: {sourceFileDate:dd.MM.yyyy HH:mm}");
 
             bool isUpdated = timeDifference.TotalSeconds > minimum;
@@ -73,64 +74,35 @@ internal static class ExportHelper
     }
 
 
-    public static void CreateZipTheFolder(string sourceDir, string targetDir)
+    public static void CreateZipTheFolder(string revitFileName, string exportDirectory)
     {
-        string filename = Path.GetFileNameWithoutExtension(sourceDir);
-        string destinationPath = Path.Combine(targetDir, filename + ".zip");
+        string exportFolder = Path.Combine(exportDirectory, revitFileName);
 
-        if (Directory.Exists(sourceDir))
+        SystemFolderOpener.OpenFolder(exportDirectory);
+
+        if (PathHelper.IsFileAccessible(exportFolder))
         {
-            if (File.Exists(destinationPath))
-            {
-                File.Delete(destinationPath);
-            }
+            using ZipArchive archive = ZipFile.Open($"{exportFolder}.zip", ZipArchiveMode.Create);
 
-            try
+            foreach (string filePath in Directory.GetFiles(exportFolder))
             {
-                // Check if there is access to sourceDir
-                FileIOPermission readPermission = new(FileIOPermissionAccess.Read, sourceDir);
-                readPermission.Demand();
+                FileInfo info = new(filePath);
 
-                // Check if there is access to targetDir
-                FileIOPermission writePermission = new(FileIOPermissionAccess.Write, targetDir);
-                writePermission.Demand();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"No access to the folder: {ex.Message}");
-            }
-            finally
-            {
-                using ZipArchive archive = ZipFile.Open(destinationPath, ZipArchiveMode.Create);
-
-                StringComparison comparison = StringComparison.OrdinalIgnoreCase;
-
-                foreach (string filePath in Directory.GetFiles(sourceDir))
+                if (info.Length > 0)
                 {
-                    FileInfo info = new(filePath);
-
-                    if (info.Length > 0)
+                    try
                     {
-                        string entryName = info.Name;
-                        string extension = info.Extension;
-
-                        if (extension.EndsWith("dwg", comparison) || extension.EndsWith("jpg", comparison))
-                        {
-                            try
-                            {
-                                _ = archive.CreateEntryFromFile(filePath, entryName, CompressionLevel.Fastest);
-                            }
-                            catch (Exception ex)
-                            {
-                                Debug.WriteLine($"Failed: {entryName} {ex.Message}");
-                            }
-                        }
+                        _ = archive.CreateEntryFromFile(filePath, info.Name, CompressionLevel.Fastest);
                     }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"Failed: {info.Name} {ex.Message}");
+                    }
+
                 }
             }
+
         }
-
     }
-
 
 }

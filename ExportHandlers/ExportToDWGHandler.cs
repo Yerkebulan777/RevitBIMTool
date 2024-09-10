@@ -31,20 +31,19 @@ internal static class ExportToDWGHandler
     };
 
 
-    public static string ExportExecute(UIDocument uidoc, string revitFilePath, string exportDirectory)
+    public static void ExportExecute(UIDocument uidoc, string revitFilePath, string exportDirectory)
     {
-        StringBuilder sb = new();
         Document doc = uidoc.Document;
 
+        Log.Information("Start export to DWG...");
+
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
-        string targetFullPath = Path.Combine(exportDirectory, revitFileName + ".zip");
+
         string exportFolder = Path.Combine(exportDirectory, revitFileName);
 
         RevitPathHelper.EnsureDirectory(exportDirectory);
         RevitPathHelper.EnsureDirectory(exportFolder);
         RevitPathHelper.ClearDirectory(exportFolder);
-
-        Log.Information("Start export to DWG...");
 
         FilteredElementCollector collector = new(doc);
         collector = collector.OfClass(typeof(ViewSheet));
@@ -68,15 +67,11 @@ internal static class ExportToDWGHandler
 
             if (ExportToDWG(uidoc, exportFolder, sheetModels))
             {
-                SystemFolderOpener.OpenFolder(exportDirectory);
-                ExportHelper.CreateZipTheFolder(exportFolder, exportDirectory);
+                ExportHelper.CreateZipTheFolder(revitFileName, exportDirectory);
             }
 
         }
 
-        _ = sb.AppendLine("Задание выполнено");
-
-        return sb.ToString();
     }
 
 
@@ -133,6 +128,7 @@ internal static class ExportToDWGHandler
 
         return result;
     }
+
 
 }
 
