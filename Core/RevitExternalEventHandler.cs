@@ -10,7 +10,7 @@ namespace RevitBIMTool.Core
 {
     public sealed class RevitExternalEventHandler : IExternalEventHandler
     {
-        private readonly DateTime startTime;
+        private DateTime startTime;
         private readonly string versionNumber;
         private readonly ExternalEvent externalEvent;
         private readonly SynchronizationContext context;
@@ -21,20 +21,23 @@ namespace RevitBIMTool.Core
         {
             externalEvent = ExternalEvent.Create(this);
             context = SynchronizationContext.Current;
-            startTime = DateTime.Now;
             versionNumber = version;
         }
 
 
         public void Execute(UIApplication uiapp)
         {
+            startTime = DateTime.Now;
+
+            SpinWait spinWait = new SpinWait();
+
             AutomationHandler autoHandler = new(uiapp);
 
             while (TaskRequestContainer.Instance.PopTaskModel(versionNumber, out TaskRequest request))
             {
                 if (PathHelper.IsFileAccessible(request.RevitFilePath, out string output))
                 {
-                    Thread.SpinWait(1000);
+                    spinWait.SpinOnce();
 
                     Log.Logger = ConfigureLogger(request);
 
