@@ -22,7 +22,7 @@ namespace RevitBIMTool.Commands
             UIDocument uidoc = uiapp.ActiveUIDocument;
             Document doc = uidoc.Document;
 
-            IEnumerable<Element> elems = CollectorHelper.GetInstancesByFamilyName(doc, "");
+            IList<Element> elems = CollectorHelper.GetInstancesByFamilyName(doc, "Задание на отверстие").ToElements();
 
             uidoc.Selection.SetElementIds(elems.Select(elem => elem.Id).ToList());
 

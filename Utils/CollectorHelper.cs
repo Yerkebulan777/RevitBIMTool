@@ -8,6 +8,34 @@ namespace RevitBIMTool.Utils;
 public static class CollectorHelper
 {
 
+    #region FilteredByFamilylName
+
+    public static FilteredElementCollector GetInstancesByFamilyName(Document doc, string nameStartWith)
+    {
+        IList<ElementFilter> filters = [];
+
+        FilteredElementCollector collector = new FilteredElementCollector(doc).OfClass(typeof(Family));
+
+        foreach (Family family in collector.OfType<Family>())
+        {
+            if (family.Name.StartsWith(nameStartWith, StringComparison.OrdinalIgnoreCase))
+            {
+                foreach (ElementId symbolId in family.GetFamilySymbolIds())
+                {
+                    filters.Add(new FamilyInstanceFilter(doc, symbolId));
+                }
+            }
+        }
+
+        LogicalOrFilter orFilter = new(filters);
+        FilteredElementCollector symbolCollector = new(doc);
+        symbolCollector = symbolCollector.WherePasses(orFilter);
+        return symbolCollector.WhereElementIsViewIndependent();
+    }
+
+    #endregion
+
+
     #region FilteredBySymbolName
 
     public static FilteredElementCollector GetInstancesBySymbolName(Document doc, BuiltInCategory bic, string symbolName)
@@ -72,35 +100,5 @@ public static class CollectorHelper
     }
 
     #endregion
-
-
-
-    public static IEnumerable<Element> GetInstancesByFamilyName(Document doc, string constain)
-    {
-        using FilteredElementCollector collector = new FilteredElementCollector(doc).OfClass(typeof(Family));
-
-        StringComparison comparison = StringComparison.OrdinalIgnoreCase;
-
-        foreach (Family family in collector.OfType<Family>())
-        {
-            bool matchStart = family.Name.StartsWith(constain, comparison);
-
-            if (matchStart || family.Name.EndsWith(constain, comparison))
-            {
-                FamilySymbolFilter symbolFilter = new(family.Id);
-
-                FilteredElementCollector symbolCollector = new FilteredElementCollector(doc).WherePasses(symbolFilter);
-
-                foreach (Element elem in symbolCollector.WhereElementIsNotElementType())
-                {
-                    if (elem is FamilyInstance)
-                    {
-                        yield return elem;
-                    }
-                }
-            }
-        }
-    }
-
 
 }
