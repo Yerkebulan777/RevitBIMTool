@@ -45,15 +45,9 @@ public sealed class AutomationHandler
 
     private string RunTask(UIDocument uidoc, TaskRequest taskModel)
     {
-        lock (uiapp)
-        {
-            Log.Debug(taskModel.RevitFileName);
-            Log.Debug($"Command number: {taskModel.CommandNumber}");
-            RevitLinkHelper.CheckAndRemoveUnloadedLinks(uidoc.Document);
-        }
-
-
         StringBuilder sb = new();
+
+        Log.Debug($"{taskModel.RevitFileName} [{taskModel.CommandNumber}]");
 
         string sectionName = RevitPathHelper.GetSectionName(taskModel.RevitFilePath);
 
@@ -105,6 +99,7 @@ public sealed class AutomationHandler
             }
             finally
             {
+                RevitLinkHelper.CheckAndRemoveUnloadedLinks(uidoc.Document);
                 RevitFileHelper.ClosePreviousDocument(uiapp, ref document);
                 output = output.AppendLine(revitAction(uidoc, taskModel));
             }
