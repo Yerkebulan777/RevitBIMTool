@@ -1,9 +1,10 @@
 ﻿using Autodesk.Revit.UI;
+using Org.BouncyCastle.Asn1.Ocsp;
 using RevitBIMTool.Utils;
 using Serilog;
-using ServiceLibrary.Helpers;
 using ServiceLibrary.Models;
 using System.IO;
+using System.Text;
 
 
 namespace RevitBIMTool.Core
@@ -36,20 +37,30 @@ namespace RevitBIMTool.Core
             {
                 spinWait.SpinOnce();
 
+                var builder = new StringBuilder();
+
+                DateTime startedTime = DateTime.Now;
+
                 Log.Logger = ConfigureLogger(request);
 
-                if (PathHelper.IsFileAccessible(request.RevitFilePath, out string output))
+                SynchronizationContext.SetSynchronizationContext(context);
+
+                string output = autoHandler.RunDocumentAction(uiapp, request, autoHandler.RunTask);
+
+                string formattedTime = (DateTime.Now - startedTime).ToString(@"h\:mm\:ss");
+
+                _ = builder.Append($"{request.RevitFileName}");
+                _ = builder.Append($"[{formattedTime}]");
+                _ = builder.AppendLine(output);
+
+                Log.Information($"Task result:\r\n\t{builder.ToString()}");
+
+                if (RevitFileHelper.IsTimedOut(startTime))
                 {
-                    output += autoHandler.RunExecuteTask(request, context);
-                    Log.Information($"Task result:\r\n\t{output}");
-
-                    if (RevitFileHelper.IsTimedOut(startTime))
-                    {
-                        Log.Warning("Timeout reached");
-                        return;
-                    }
-
+                    Log.Warning("Timeout reached");
+                    return;
                 }
+
             }
 
         }

@@ -9,19 +9,10 @@ using System.Text;
 
 
 namespace RevitBIMTool.ExportHandlers;
-internal static class ExportPathHelper
+internal static class ExportHelper
 {
-
-    public static readonly string formatedDate = DateTime.Today.ToString("yyyy-MM-dd");
-
-
-    public static string ExportDirectory(string revitFilePath, string folderName, bool folderDate = false)
+    public static string SetDirectory(string revitFilePath, string folderName, bool folderDate)
     {
-        if (string.IsNullOrEmpty(revitFilePath) || !File.Exists(revitFilePath))
-        {
-            throw new Exception("Revit file path cannot be null or empty");
-        }
-
         string exportDirectory = RevitPathHelper.DetermineDirectory(revitFilePath, folderName);
 
         if (string.IsNullOrEmpty(exportDirectory))
@@ -31,6 +22,7 @@ internal static class ExportPathHelper
 
         if (folderDate)
         {
+            string formatedDate = DateTime.Today.ToString("yyyy-MM-dd");
             exportDirectory = Path.Combine(exportDirectory, formatedDate);
         }
 
@@ -64,9 +56,9 @@ internal static class ExportPathHelper
                 Log.Debug($"Target file valid");
                 return true;
             }
-
-            RevitPathHelper.DeleteExistsFile(targetFilePath);
         }
+
+        RevitPathHelper.DeleteExistsFile(targetFilePath);
 
         return false;
     }

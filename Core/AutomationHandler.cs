@@ -4,6 +4,7 @@ using RevitBIMTool.ExportHandlers;
 using RevitBIMTool.Utils;
 using Serilog;
 using ServiceLibrary.Models;
+using System.IO;
 using System.Text;
 using Document = Autodesk.Revit.DB.Document;
 
@@ -14,7 +15,6 @@ public sealed class AutomationHandler
     private Document document;
     private const int waitTimeout = 1000;
     private readonly UIApplication uiapp;
-    private StringBuilder builder = new();
 
 
     public AutomationHandler(UIApplication application)
@@ -23,47 +23,60 @@ public sealed class AutomationHandler
     }
 
 
-    public string RunExecuteTask(TaskRequest taskRequest, SynchronizationContext context)
+    #region RevitTaskHandler
+
+    public string RunTask(UIDocument uidoc, TaskRequest taskModel)
     {
-        builder = new StringBuilder();
-
-        DateTime startedTime = DateTime.Now;
-
-        SynchronizationContext.SetSynchronizationContext(context);
-
-        string output = RunDocumentAction(uiapp, taskRequest, RunTask);
-
-        string formattedTime = (DateTime.Now - startedTime).ToString(@"h\:mm\:ss");
-
-        _ = builder.Append($"{taskRequest.RevitFileName}");
-        _ = builder.Append($"[{formattedTime}]");
-        _ = builder.AppendLine(output);
-
-        return builder.ToString();
-    }
-
-
-    private string RunTask(UIDocument uidoc, TaskRequest taskModel)
-    {
-        StringBuilder sb = new();
-
-        Log.Debug($"{taskModel.RevitFileName} [{taskModel.CommandNumber}]");
-
+        string revitFilePath = taskModel.RevitFilePath;
+        string revitFileName = taskModel.RevitFileName;
+        Log.Debug($"{revitFileName} [{taskModel.CommandNumber}]");
         string sectionName = RevitPathHelper.GetSectionName(taskModel.RevitFilePath);
-
-        sb = taskModel.CommandNumber switch
+        
+        switch (taskModel.CommandNumber)
         {
-            1 => sb.AppendLine(ExportToPDFHandler.ExportToPDF(uidoc, taskModel.RevitFilePath, sectionName)),
-            2 => sb.AppendLine(ExportToDWGHandler.ExportExecute(uidoc, taskModel.RevitFilePath, sectionName)),
-            3 => sb.AppendLine(ExportToNWCHandler.ExportToNWC(uidoc, taskModel.RevitFilePath, sectionName)),
-            _ => sb.AppendLine($"Failed command: {taskModel.CommandNumber}"),
-        };
+            case 1: // PDF
 
-        return sb.ToString();
+                taskModel.ExportFolder = ExportHelper.SetDirectory(revitFilePath, "03_PDF", true);
+                taskModel.ExportFullPath = Path.Combine(taskModel.ExportFolder, $"{revitFileName}.pdf");
+                if (!ExportHelper.IsTargetFileUpdated(taskModel.ExportFullPath, revitFilePath))
+                {
+                    return ExportToPDFHandler.ExportToPDF(uidoc, taskModel.RevitFilePath, sectionName);
+                }
+
+                break;
+
+            case 2: // DWG
+
+                taskModel.ExportFolder = ExportHelper.SetDirectory(revitFilePath, "02_DWG", true);
+                taskModel.ExportFullPath = Path.Combine(taskModel.ExportFolder, $"{revitFileName}.zip");
+                if (!ExportHelper.IsTargetFileUpdated(taskModel.ExportFullPath, revitFilePath))
+                {
+                    return ExportToDWGHandler.ExportExecute(uidoc, taskModel.RevitFilePath, sectionName);
+                }
+
+                break;
+
+            case 3: // NWC
+
+                taskModel.ExportFolder = ExportHelper.SetDirectory(revitFilePath, "05_NWC", false);
+                taskModel.ExportFullPath = Path.Combine(taskModel.ExportFolder, $"{revitFileName}.nwc");
+                if (!ExportHelper.IsTargetFileUpdated(taskModel.ExportFullPath, revitFilePath))
+                {
+                    return ExportToNWCHandler.ExportToNWC(uidoc, taskModel.RevitFilePath, sectionName);
+                }
+
+                break;
+
+            default:
+
+                return $"Failed command: {taskModel.CommandNumber}";
+        }
+
+        return null;
     }
 
 
-    private string RunDocumentAction(UIApplication uiapp, TaskRequest taskModel, Func<UIDocument, TaskRequest, string> revitAction)
+    public string RunDocumentAction(UIApplication uiapp, TaskRequest taskModel, Func<UIDocument, TaskRequest, string> revitAction)
     {
         string revitTaskAction()
         {
@@ -76,8 +89,7 @@ public sealed class AutomationHandler
 
     private string WithOpenedDocument(UIApplication uiapp, TaskRequest taskModel, Func<UIDocument, TaskRequest, string> revitAction)
     {
-        UIDocument uidoc = null;
-        StringBuilder output = new();
+        UIDocument uidoc;
 
         lock (uiapp)
         {
@@ -87,54 +99,37 @@ public sealed class AutomationHandler
                 Audit = true,
             };
 
-            try
-            {
-                openOptions.SetOpenWorksetsConfiguration(new WorksetConfiguration(WorksetConfigurationOption.OpenAllWorksets));
-                ModelPath modelPath = ModelPathUtils.ConvertUserVisiblePathToModelPath(taskModel.RevitFilePath);
-                uidoc = uiapp.OpenAndActivateDocument(modelPath, openOptions, false);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Error while opening the document", ex);
-            }
-            finally
-            {
-                RevitLinkHelper.CheckAndRemoveUnloadedLinks(uidoc.Document);
-                RevitFileHelper.ClosePreviousDocument(uiapp, ref document);
-                output = output.AppendLine(revitAction(uidoc, taskModel));
-            }
+            openOptions.SetOpenWorksetsConfiguration(new WorksetConfiguration(WorksetConfigurationOption.OpenAllWorksets));
+            ModelPath modelPath = ModelPathUtils.ConvertUserVisiblePathToModelPath(taskModel.RevitFilePath);
+            uidoc = uiapp.OpenAndActivateDocument(modelPath, openOptions, false);
+            RevitFileHelper.ClosePreviousDocument(uiapp, ref document);
+            RevitLinkHelper.CheckAndRemoveUnloadedLinks(document);
         }
 
-        return output.ToString();
+        return revitAction(uidoc, taskModel);
     }
 
 
     private string WithErrorReportingAndHandling(UIApplication uiapp, Func<string> revitAction)
     {
-        string revitTaskAction()
+        string WithOpeningErrorReporting()
         {
-            return WithOpeningErrorReporting(revitAction);
+            string result = string.Empty;
+
+            try
+            {
+                result = revitAction();
+            }
+            catch (Exception ex)
+            {
+                result += ex.Message;
+                Log.Fatal(ex, result);
+            }
+
+            return result;
         }
 
-        return WithAutomatedErrorHandling(uiapp, revitTaskAction);
-    }
-
-
-    private string WithOpeningErrorReporting(Func<string> documentOpeningAction)
-    {
-        string result;
-
-        try
-        {
-            result = documentOpeningAction();
-        }
-        catch (Exception ex)
-        {
-            result = ex.Message;
-            Log.Fatal(result);
-        }
-
-        return result;
+        return WithAutomatedErrorHandling(uiapp, WithOpeningErrorReporting);
     }
 
 
@@ -148,6 +143,7 @@ public sealed class AutomationHandler
         return FailuresHanding.WithFailuresProcessingHandler(uiapp.Application, revitTaskAction);
     }
 
+    #endregion
 
 }
 
