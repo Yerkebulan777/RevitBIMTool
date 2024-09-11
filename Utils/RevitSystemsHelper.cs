@@ -105,8 +105,6 @@ namespace RevitBIMTool.Utils
                 {
                     double value = UnitManager.FootToMm(paramCalcSize.AsDouble());
 
-                    Log.Debug($"{bipCalcSize}{catName}");
-
                     if (0 < value && value < diameter)
                     {
                         result.Add(elem);
@@ -117,8 +115,6 @@ namespace RevitBIMTool.Utils
                 if (paramDiameter != null && paramDiameter.HasValue)
                 {
                     double value = UnitManager.FootToMm(paramDiameter.AsDouble());
-
-                    Log.Debug($"{bipCalcSize}{catName}");
 
                     if (0 < value && value < diameter)
                     {
