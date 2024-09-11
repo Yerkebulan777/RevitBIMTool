@@ -1,4 +1,5 @@
-﻿using RevitBIMTool.Utils;
+﻿using Autodesk.Revit.UI;
+using RevitBIMTool.Utils;
 using RevitBIMTool.Utils.SystemUtil;
 using Serilog;
 using ServiceLibrary.Helpers;
@@ -32,34 +33,40 @@ internal static class ExportHelper
 
     public static bool IsTargetFileUpdated(string targetFilePath, string sourceFilePath, int minimum = 100)
     {
+        bool isTargetFileUpdated = false;
+
+        Log.Debug($"Target file path: {targetFilePath}");
+
         if (File.Exists(targetFilePath) && File.Exists(sourceFilePath))
         {
-            if (PathHelper.IsFileAccessible(targetFilePath)) 
+            bool targetAcessible = PathHelper.IsFileAccessible(targetFilePath);
+
+            Log.Debug($"{Path.GetFileName(targetFilePath)} acessible: {targetAcessible}");
+
+            DateTime targetFileDate = File.GetLastWriteTime(targetFilePath);
+            DateTime sourceFileDate = File.GetLastWriteTime(sourceFilePath);
+
+            Log.Debug($"Target last date: {targetFileDate:dd.MM.yyyy HH:mm}");
+            Log.Debug($"Source last date: {sourceFileDate:dd.MM.yyyy HH:mm}");
+
+            TimeSpan timeDifference = targetFileDate - sourceFileDate;
+            long targetFileSize = new FileInfo(targetFilePath).Length;
+
+            bool isUpdated = timeDifference.TotalSeconds > minimum;
+            bool isOutdated = timeDifference.TotalDays > minimum;
+
+            bool isModifiedValid = isUpdated && !isOutdated;
+            bool isFileSizeValid = targetFileSize > minimum;
+
+            if (isModifiedValid && isFileSizeValid)
             {
-                DateTime targetFileDate = File.GetLastWriteTime(targetFilePath);
-                DateTime sourceFileDate = File.GetLastWriteTime(sourceFilePath);
-
-                Log.Debug($"Target last date: {targetFileDate:dd.MM.yyyy HH:mm}");
-                Log.Debug($"Source last date: {sourceFileDate:dd.MM.yyyy HH:mm}");
-
-                TimeSpan timeDifference = targetFileDate - sourceFileDate;
-                long targetFileSize = new FileInfo(targetFilePath).Length;
-
-                bool isUpdated = timeDifference.TotalSeconds > minimum;
-                bool isOutdated = timeDifference.TotalDays > minimum;
-
-                bool isModifiedValid = isUpdated && !isOutdated;
-                bool isFileSizeValid = targetFileSize > minimum;
-
-                if (isModifiedValid && isFileSizeValid)
-                {
-                    Log.Information($"File updated!");
-                    return true;
-                }
+                isTargetFileUpdated = true;
             }
         }
 
-        return false;
+        Log.Debug($"Is updated: {isTargetFileUpdated}");
+
+        return isTargetFileUpdated;
     }
 
 

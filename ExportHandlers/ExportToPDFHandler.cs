@@ -53,11 +53,7 @@ internal static class ExportToPDFHandler
 
             if (sheetModels.Count > 0)
             {
-                sheetModels = SheetModel.SortSheetModels(sheetModels);
-                sheetModels.ForEach(model => Log.Debug(model.SheetName));
-
                 MergeHandler.CombinePDFsFromFolder(sheetModels, tempFolder, targetFullPath);
-
                 SystemFolderOpener.OpenFolder(exportDirectory);
                 RevitPathHelper.DeleteDirectory(tempFolder);
             }

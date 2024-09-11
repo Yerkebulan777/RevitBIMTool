@@ -383,18 +383,21 @@ internal sealed class RevitViewHelper
 
     private static void ActivateView(UIDocument uidoc, View view)
     {
-        try
+        lock (uidoc)
         {
-            uidoc.ActiveView = view;
-            uidoc.RefreshActiveView();
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, ex.Message);
-        }
-        finally
-        {
-            Log.Debug($"Activated view: {view.Name}");
+            try
+            {
+                uidoc.ActiveView = view;
+                uidoc.RefreshActiveView();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+            }
+            finally
+            {
+                Log.Debug($"Activated view: {view.Name}");
+            }
         }
     }
 
