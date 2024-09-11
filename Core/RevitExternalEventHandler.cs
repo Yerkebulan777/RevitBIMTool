@@ -34,12 +34,12 @@ namespace RevitBIMTool.Core
 
             while (requestContainer.PopTaskModel(versionNumber, out TaskRequest model))
             {
-                Log.Logger = ConfigureLogger(model);
-
-                SynchronizationContext.SetSynchronizationContext(context);
+                ConfigureLogger(context, model);
 
                 if (GeneralTaskHandler.IsValidTask(ref model))
                 {
+                    SynchronizationContext.SetSynchronizationContext(context);
+
                     string output = handler.RunDocumentAction(uiapp, model, GeneralTaskHandler.RunTask);
 
                     Log.Information($"Task result:\t{output}");
@@ -55,24 +55,27 @@ namespace RevitBIMTool.Core
         }
 
 
-        internal ILogger ConfigureLogger(TaskRequest request)
+        internal void ConfigureLogger(SynchronizationContext context, TaskRequest request)
         {
-            string logDir = Path.Combine(myDocuments, $"RevitBIMTool");
-            string logName = $"{request.RevitFileName}[{request.CommandNumber}].txt";
-            string logPath = Path.Combine(logDir, logName);
-            RevitPathHelper.EnsureDirectory(logDir);
-            RevitPathHelper.DeleteExistsFile(logPath);
-
-            if (Log.Logger != null)
+            lock (context)
             {
-                Thread.Sleep(100);
-                Log.CloseAndFlush();
-            }
+                string logDir = Path.Combine(myDocuments, $"RevitBIMTool");
+                string logName = $"{request.RevitFileName}[{request.CommandNumber}].txt";
+                string logPath = Path.Combine(logDir, logName);
+                RevitPathHelper.DeleteExistsFile(logPath);
+                RevitPathHelper.EnsureDirectory(logDir);
 
-            return new LoggerConfiguration()
-                .WriteTo.File(logPath)
-                .MinimumLevel.Debug()
-                .CreateLogger();
+                if (Log.Logger != null)
+                {
+                    Thread.Sleep(100);
+                    Log.CloseAndFlush();
+                }
+
+                Log.Logger = new LoggerConfiguration()
+                    .WriteTo.File(logPath)
+                    .MinimumLevel.Debug()
+                    .CreateLogger();
+            }
         }
 
 
