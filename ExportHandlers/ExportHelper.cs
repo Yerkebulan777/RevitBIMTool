@@ -48,8 +48,6 @@ internal static class ExportHelper
             TimeSpan timeDifference = targetFileDate - sourceFileDate;
             long targetFileSize = new FileInfo(targetFilePath).Length;
 
-            Log.Debug($"Target last date: {targetFileDate:dd.MM.yyyy HH:mm}");
-            Log.Debug($"Source last date: {sourceFileDate:dd.MM.yyyy HH:mm}");
             Log.Debug($"Time difference: {timeDifference:dd.MM.yyyy HH:mm}");
 
             bool isUpdated = timeDifference.TotalSeconds > minimum;
