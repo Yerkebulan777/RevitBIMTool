@@ -2,10 +2,8 @@
 using Autodesk.Revit.UI;
 using RevitBIMTool.Model;
 using RevitBIMTool.Utils;
-using RevitBIMTool.Utils.SystemUtil;
 using Serilog;
 using System.IO;
-using System.Text;
 using System.Windows.Threading;
 
 
@@ -65,7 +63,7 @@ internal static class ExportToDWGHandler
                 }
             }
 
-            if (ExportToDWG(uidoc, exportFolder, sheetModels))
+            if (ExportFileToDWG(uidoc, exportFolder, sheetModels))
             {
                 ExportHelper.CreateZipTheFolder(revitFileName, exportDirectory);
             }
@@ -75,7 +73,7 @@ internal static class ExportToDWGHandler
     }
 
 
-    private static bool ExportToDWG(UIDocument uidoc, string exportFolder, List<SheetModel> sheetModels)
+    private static bool ExportFileToDWG(UIDocument uidoc, string exportFolder, List<SheetModel> sheetModels)
     {
         Document doc = uidoc.Document;
 
@@ -87,7 +85,7 @@ internal static class ExportToDWGHandler
 
             Dispatcher.CurrentDispatcher.Invoke(() =>
             {
-                using Transaction trx = new(doc, $"ExportToDWG");
+                using Transaction trx = new(doc, $"ExportFileToDWG");
 
                 try
                 {

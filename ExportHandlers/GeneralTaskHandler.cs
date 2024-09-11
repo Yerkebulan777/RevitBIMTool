@@ -1,4 +1,5 @@
 ﻿using Autodesk.Revit.UI;
+using RevitBIMTool.Utils;
 using ServiceLibrary.Models;
 using System.IO;
 using System.Text;
@@ -20,23 +21,38 @@ namespace RevitBIMTool.ExportHandlers
 
                     model.ExportFolder = ExportHelper.SetDirectory(revitFilePath, "03_PDF", true);
                     model.TargetFullPath = Path.Combine(model.ExportFolder, $"{revitFileName}.pdf");
-                    return !ExportHelper.IsTargetFileUpdated(model.TargetFullPath, revitFilePath);
+                    if (!ExportHelper.IsTargetFileUpdated(model.TargetFullPath, revitFilePath))
+                    {
+                        RevitPathHelper.DeleteExistsFile(model.TargetFullPath);
+                        return true;
+                    }
+                    break;
 
                 case 2: // DWG
 
                     model.ExportFolder = ExportHelper.SetDirectory(revitFilePath, "02_DWG", true);
                     model.TargetFullPath = Path.Combine(model.ExportFolder, $"{revitFileName}.zip");
-                    return !ExportHelper.IsTargetFileUpdated(model.TargetFullPath, revitFilePath);
+                    if (!ExportHelper.IsTargetFileUpdated(model.TargetFullPath, revitFilePath))
+                    {
+                        RevitPathHelper.DeleteExistsFile(model.TargetFullPath);
+                        return true;
+                    }
+                    break;
 
                 case 3: // NWC
 
                     model.ExportFolder = ExportHelper.SetDirectory(revitFilePath, "05_NWC", false);
                     model.TargetFullPath = Path.Combine(model.ExportFolder, $"{revitFileName}.nwc");
-                    return !ExportHelper.IsTargetFileUpdated(model.TargetFullPath, revitFilePath);
+                    if (!ExportHelper.IsTargetFileUpdated(model.TargetFullPath, revitFilePath))
+                    {
+                        RevitPathHelper.DeleteExistsFile(model.TargetFullPath);
+                        return true;
+                    }
+                    break;
 
-                default: return false;
             }
 
+            return false;
         }
 
 
@@ -52,7 +68,7 @@ namespace RevitBIMTool.ExportHandlers
             {
                 case 1: // PDF
 
-                    ExportToPDFHandler.ExportToPDF(uidoc, model.RevitFilePath, model.ExportFolder);
+                    ExportToPDFHandler.ExportExecute(uidoc, model.RevitFilePath, model.ExportFolder);
                     break;
 
                 case 2: // DWG

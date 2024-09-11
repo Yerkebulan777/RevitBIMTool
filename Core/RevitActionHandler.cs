@@ -1,7 +1,6 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using RevitBIMTool.Utils;
-using Serilog;
 using ServiceLibrary.Models;
 using System.Diagnostics;
 using System.Text;
@@ -73,8 +72,8 @@ public sealed class RevitActionHandler
             {
                 sb.AppendLine(ex.Message);
             }
-            finally 
-            { 
+            finally
+            {
                 stopwatch.Stop();
             }
 

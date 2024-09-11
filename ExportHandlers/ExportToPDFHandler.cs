@@ -7,7 +7,6 @@ using RevitBIMTool.Utils.PrintUtil;
 using RevitBIMTool.Utils.SystemUtil;
 using Serilog;
 using System.IO;
-using System.Text;
 
 
 namespace RevitBIMTool.ExportHandlers;
@@ -15,7 +14,7 @@ internal static class ExportToPDFHandler
 {
     private const string printerName = "PDFCreator";
 
-    public static void ExportToPDF(UIDocument uidoc, string revitFilePath, string exportDirectory)
+    public static void ExportExecute(UIDocument uidoc, string revitFilePath, string exportDirectory)
     {
         Document doc = uidoc.Document;
 
@@ -25,7 +24,7 @@ internal static class ExportToPDFHandler
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
         string tempFolder = Path.Combine(Path.GetTempPath(), $"{revitFileName}TMP");
         string targetFullPath = Path.Combine(exportDirectory, $"{revitFileName}.pdf");
-        
+
         RevitPathHelper.EnsureDirectory(tempFolder);
         RevitPathHelper.EnsureDirectory(exportDirectory);
         PrintHandler.ResetPrintSettings(doc, printerName);

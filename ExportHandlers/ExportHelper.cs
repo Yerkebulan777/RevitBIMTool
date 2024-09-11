@@ -56,8 +56,6 @@ internal static class ExportHelper
             }
         }
 
-        RevitPathHelper.DeleteExistsFile(targetFilePath);
-
         return false;
     }
 
@@ -104,5 +102,6 @@ internal static class ExportHelper
 
         }
     }
+
 
 }
