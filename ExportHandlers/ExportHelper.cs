@@ -36,11 +36,7 @@ internal static class ExportHelper
 
         if (File.Exists(targetFilePath) && File.Exists(sourceFilePath))
         {
-            Log.Debug($"Target file: {Path.GetFileName(targetFilePath)}");
-
             bool targetAcessible = PathHelper.IsFileAccessible(targetFilePath);
-
-            Log.Debug($"{Path.GetFileName(targetFilePath)} {targetAcessible}");
 
             DateTime targetFileDate = File.GetLastWriteTime(targetFilePath);
             DateTime sourceFileDate = File.GetLastWriteTime(sourceFilePath);
@@ -48,6 +44,7 @@ internal static class ExportHelper
             TimeSpan timeDifference = targetFileDate - sourceFileDate;
             long targetFileSize = new FileInfo(targetFilePath).Length;
 
+            Log.Debug($"Target file: {Path.GetFileName(targetFilePath)}");
             Log.Debug($"Difference: {timeDifference:dd.MM.yyyy HH:mm}");
 
             bool isUpdated = timeDifference.TotalSeconds > minimum;
@@ -55,9 +52,6 @@ internal static class ExportHelper
 
             bool isFileSizeValid = targetFileSize > minimum;
             bool isModifiedValid = isUpdated || isOldated;
-
-            Log.Debug($"Modified: {isModifiedValid}");
-            Log.Debug($"FileSize: {isFileSizeValid}");
 
             if (isModifiedValid && isFileSizeValid)
             {
