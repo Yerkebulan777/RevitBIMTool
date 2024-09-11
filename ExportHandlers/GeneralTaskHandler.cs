@@ -12,6 +12,8 @@ namespace RevitBIMTool.ExportHandlers
     {
         public static bool IsValidTask(ref TaskRequest model)
         {
+            bool result = false;
+
             string revitFilePath = model.RevitFilePath;
             string revitFileName = model.RevitFileName;
 
@@ -24,7 +26,7 @@ namespace RevitBIMTool.ExportHandlers
                     if (!ExportHelper.IsTargetFileUpdated(model.TargetPath, revitFilePath))
                     {
                         RevitPathHelper.DeleteExistsFile(model.TargetPath);
-                        return true;
+                        result = true;
                     }
                     break;
 
@@ -35,7 +37,7 @@ namespace RevitBIMTool.ExportHandlers
                     if (!ExportHelper.IsTargetFileUpdated(model.TargetPath, revitFilePath))
                     {
                         RevitPathHelper.DeleteExistsFile(model.TargetPath);
-                        return true;
+                        result = true;
                     }
                     break;
 
@@ -46,13 +48,13 @@ namespace RevitBIMTool.ExportHandlers
                     if (!ExportHelper.IsTargetFileUpdated(model.TargetPath, revitFilePath))
                     {
                         RevitPathHelper.DeleteExistsFile(model.TargetPath);
-                        return true;
+                        result = true;
                     }
                     break;
 
             }
 
-            return true;
+            return result;
         }
 
 
@@ -64,7 +66,7 @@ namespace RevitBIMTool.ExportHandlers
             _ = sb.AppendLine($"File name: {model.RevitFileName}");
             _ = sb.AppendLine($"Directory: {model.ExportFolder}");
 
-            Log.Debug($"Start task {sb.ToString()}");
+            Log.Debug($"Start task {sb}");
 
             switch (model.CommandNumber)
             {
