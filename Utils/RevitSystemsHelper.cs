@@ -1,6 +1,7 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Mechanical;
 using Autodesk.Revit.DB.Plumbing;
+using Serilog;
 
 
 namespace RevitBIMTool.Utils
@@ -95,12 +96,16 @@ namespace RevitBIMTool.Utils
             {
                 Element elem = elements[idx];
 
+                var catName =  elem.Category.Name;
+
                 Parameter paramCalcSize = elem.get_Parameter(bipCalcSize);
                 Parameter paramDiameter = elem.get_Parameter(bipDiameter);
 
                 if (paramCalcSize != null && paramCalcSize.HasValue)
                 {
                     double value = UnitManager.FootToMm(paramCalcSize.AsDouble());
+
+                    Log.Debug($"{bipCalcSize}{catName}");
 
                     if (0 < value && value < diameter)
                     {
@@ -112,6 +117,8 @@ namespace RevitBIMTool.Utils
                 if (paramDiameter != null && paramDiameter.HasValue)
                 {
                     double value = UnitManager.FootToMm(paramDiameter.AsDouble());
+
+                    Log.Debug($"{bipCalcSize}{catName}");
 
                     if (0 < value && value < diameter)
                     {

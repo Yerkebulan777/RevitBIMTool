@@ -1,4 +1,5 @@
 ﻿using Autodesk.Revit.DB;
+using Serilog;
 using Document = Autodesk.Revit.DB.Document;
 using Level = Autodesk.Revit.DB.Level;
 
@@ -16,6 +17,8 @@ public static class CollectorHelper
 
         FilteredElementCollector collector = new FilteredElementCollector(doc).OfClass(typeof(Family));
 
+        FilteredElementCollector symbolCollector = new(doc);
+
         foreach (Family family in collector.OfType<Family>())
         {
             if (family.Name.StartsWith(nameStartWith, StringComparison.OrdinalIgnoreCase))
@@ -29,12 +32,11 @@ public static class CollectorHelper
 
         if (filters.Count == 0)
         {
-            return null;
+            return symbolCollector;
         }
 
         LogicalOrFilter orFilter = new(filters);
-        FilteredElementCollector symbolCollector;
-        symbolCollector = new FilteredElementCollector(doc).OfCategory(bic);
+        symbolCollector = symbolCollector.OfCategory(bic);
         symbolCollector = symbolCollector.WherePasses(orFilter);
         return symbolCollector.WhereElementIsViewIndependent();
     }
@@ -59,9 +61,14 @@ public static class CollectorHelper
 
         ElementParameterFilter typeFilter = new(typeRule);
         ElementParameterFilter symbolFilter = new(symbolRule);
-        LogicalOrFilter logicFilter = new(typeFilter, symbolFilter);
+        LogicalOrFilter logicOrFilter = new(typeFilter, symbolFilter);
 
-        return new FilteredElementCollector(doc).OfCategory(bic).WherePasses(logicFilter).WhereElementIsNotElementType();
+        FilteredElementCollector collector = new FilteredElementCollector(doc).OfCategory(bic);
+        collector = collector.WherePasses(logicOrFilter).WhereElementIsNotElementType();
+
+        Log.Debug($"Instances {symbolName} {collector.GetElementCount()} count");
+
+        return collector;
     }
 
     #endregion
