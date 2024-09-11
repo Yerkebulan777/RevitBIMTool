@@ -32,7 +32,7 @@ public static class CollectorHelper
 
         if (filters.Count == 0)
         {
-            return symbolCollector;
+            return null;
         }
 
         LogicalOrFilter orFilter = new(filters);
