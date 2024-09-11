@@ -51,7 +51,7 @@ internal static class ExportHelper
 
             if (isModifiedValid && isFileSizeValid)
             {
-                Log.Debug($"Target file valid");
+                Log.Information($"File updated!");
                 return true;
             }
         }

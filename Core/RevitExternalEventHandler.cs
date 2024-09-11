@@ -34,6 +34,8 @@ namespace RevitBIMTool.Core
 
             while (requestContainer.PopTaskModel(versionNumber, out TaskRequest model))
             {
+                Thread.Sleep(1000);
+
                 Log.Logger = ConfigureLogger(model);
 
                 if (GeneralTaskHandler.IsValidTask(ref model))
