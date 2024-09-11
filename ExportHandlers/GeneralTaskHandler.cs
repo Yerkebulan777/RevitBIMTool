@@ -1,5 +1,6 @@
 ﻿using Autodesk.Revit.UI;
 using RevitBIMTool.Utils;
+using Serilog;
 using ServiceLibrary.Models;
 using System.IO;
 using System.Text;
@@ -59,9 +60,11 @@ namespace RevitBIMTool.ExportHandlers
         {
             StringBuilder sb = new();
 
-            _ = sb.Append($"[{model.CommandNumber}]");
-            _ = sb.AppendLine(model.RevitFileName);
-            _ = sb.AppendLine(model.ExportFolder);
+            _ = sb.AppendLine($"Command: [{model.CommandNumber}]");
+            _ = sb.AppendLine($"File name: {model.RevitFileName}");
+            _ = sb.AppendLine($"Directory: {model.ExportFolder}");
+
+            Log.Debug($"Start task {sb.ToString()}");
 
             switch (model.CommandNumber)
             {

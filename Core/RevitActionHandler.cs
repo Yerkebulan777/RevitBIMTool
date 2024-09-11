@@ -1,6 +1,7 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using RevitBIMTool.Utils;
+using Serilog;
 using ServiceLibrary.Models;
 using System.Diagnostics;
 using System.Text;
@@ -26,22 +27,21 @@ internal sealed class RevitActionHandler
 
     private string WithOpenedDocument(UIApplication uiapp, TaskRequest taskModel, Func<UIDocument, TaskRequest, string> revitAction)
     {
-        lock (uiapp)
+        Log.Debug("Start opening document...");
+
+        OpenOptions openOptions = new()
         {
-            OpenOptions openOptions = new()
-            {
-                DetachFromCentralOption = DetachFromCentralOption.DetachAndPreserveWorksets,
-                Audit = true,
-            };
+            DetachFromCentralOption = DetachFromCentralOption.DetachAndPreserveWorksets,
+            Audit = true,
+        };
 
-            openOptions.SetOpenWorksetsConfiguration(new WorksetConfiguration(WorksetConfigurationOption.OpenAllWorksets));
-            ModelPath modelPath = ModelPathUtils.ConvertUserVisiblePathToModelPath(taskModel.RevitFilePath);
-            UIDocument uidoc = uiapp.OpenAndActivateDocument(modelPath, openOptions, false);
-            RevitFileHelper.ClosePreviousDocument(uiapp, ref document);
-            RevitLinkHelper.CheckAndRemoveUnloadedLinks(document);
-        }
+        openOptions.SetOpenWorksetsConfiguration(new WorksetConfiguration(WorksetConfigurationOption.OpenAllWorksets));
+        ModelPath modelPath = ModelPathUtils.ConvertUserVisiblePathToModelPath(taskModel.RevitFilePath);
+        UIDocument uidoc = uiapp.OpenAndActivateDocument(modelPath, openOptions, false);
+        RevitFileHelper.ClosePreviousDocument(uiapp, ref document);
+        RevitLinkHelper.CheckAndRemoveUnloadedLinks(document);
 
-        return revitAction(uiapp.ActiveUIDocument, taskModel);
+        return revitAction(uidoc, taskModel);
     }
 
 
@@ -59,7 +59,7 @@ internal sealed class RevitActionHandler
             }
             catch (Exception ex)
             {
-                _ = sb.AppendLine(ex.Message);
+                sb.AppendLine(ex.ToString());
             }
             finally
             {
