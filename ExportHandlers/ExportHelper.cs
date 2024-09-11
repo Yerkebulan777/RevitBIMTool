@@ -11,7 +11,7 @@ namespace RevitBIMTool.ExportHandlers;
 internal static class ExportHelper
 {
 
-    public static string SetDirectory(string revitFilePath, string folderName, bool folderDate)
+    public static string SetDirectory(string revitFilePath, string folderName, bool date)
     {
         string exportDirectory = RevitPathHelper.DetermineDirectory(revitFilePath, folderName);
 
@@ -20,7 +20,7 @@ internal static class ExportHelper
             exportDirectory = Path.Combine(Path.GetDirectoryName(revitFilePath), folderName);
         }
 
-        if (folderDate)
+        if (date)
         {
             string formatedDate = DateTime.Today.ToString("yyyy-MM-dd");
             exportDirectory = Path.Combine(exportDirectory, formatedDate);

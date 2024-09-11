@@ -46,7 +46,7 @@ namespace RevitBIMTool.Core
 
                     if (RevitFileHelper.IsTimedOut(startTime))
                     {
-                        return;
+                        RevitFileHelper.CloseRevitApplication();
                     }
                 }
 
