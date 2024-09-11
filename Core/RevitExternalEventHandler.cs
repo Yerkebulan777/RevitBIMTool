@@ -13,7 +13,7 @@ namespace RevitBIMTool.Core
         private readonly DateTime startTime;
         private readonly string versionNumber;
         private readonly ExternalEvent externalEvent;
-        private readonly string logDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), $"RevitBIMTool");
+        private static readonly string myDocuments = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 
 
         public RevitExternalEventHandler(string version)
@@ -34,8 +34,6 @@ namespace RevitBIMTool.Core
 
             while (requestContainer.PopTaskModel(versionNumber, out TaskRequest model))
             {
-                Thread.Sleep(1000);
-
                 Log.Logger = ConfigureLogger(model);
 
                 if (GeneralTaskHandler.IsValidTask(ref model))
@@ -44,7 +42,7 @@ namespace RevitBIMTool.Core
 
                     string output = handler.RunDocumentAction(uiapp, model, GeneralTaskHandler.RunTask);
 
-                    Log.Information($"Task result:\r\n\t{output}");
+                    Log.Information($"Task result:\t{output}");
 
                     if (RevitFileHelper.IsTimedOut(startTime))
                     {
@@ -59,6 +57,7 @@ namespace RevitBIMTool.Core
 
         internal ILogger ConfigureLogger(TaskRequest request)
         {
+            string logDir = Path.Combine(myDocuments, $"RevitBIMTool");
             string logName = $"{request.RevitFileName}[{request.CommandNumber}].txt";
             string logPath = Path.Combine(logDir, logName);
             RevitPathHelper.EnsureDirectory(logDir);
@@ -66,6 +65,7 @@ namespace RevitBIMTool.Core
 
             if (Log.Logger != null)
             {
+                Thread.Sleep(100);
                 Log.CloseAndFlush();
             }
 
