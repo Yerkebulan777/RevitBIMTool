@@ -98,11 +98,9 @@ internal static class ExportToNWCHandler
     {
         string exportDirectory = Path.GetDirectoryName(exportFullPath);
         string revitFileName = Path.GetFileNameWithoutExtension(exportFullPath);
-        Stopwatch stopwatch = new();
 
         try
         {
-            stopwatch.Start();
             Log.Debug($"Start exporting to nwc in {exportDirectory}");
             doc.Export(exportDirectory, revitFileName, options);
         }
@@ -112,9 +110,6 @@ internal static class ExportToNWCHandler
         }
         finally
         {
-            stopwatch.Stop();
-            TimeSpan elapsed = stopwatch.Elapsed;
-            Log.Debug($"Time elapsed: {elapsed:hh\\:mm\\:ss}");
             if (RevitPathHelper.AwaitExistsFile(exportFullPath))
             {
                 SystemFolderOpener.OpenFolder(exportDirectory);
