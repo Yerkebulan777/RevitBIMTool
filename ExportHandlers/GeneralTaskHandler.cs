@@ -68,17 +68,17 @@ namespace RevitBIMTool.ExportHandlers
             {
                 case 1: // PDF
 
-                    ExportToPDFHandler.ExportExecute(uidoc, model.RevitFilePath, model.ExportFolder);
+                    ExportToPDFHandler.Execute(uidoc, model.RevitFilePath, model.ExportFolder);
                     break;
 
                 case 2: // DWG
 
-                    ExportToDWGHandler.ExportExecute(uidoc, model.RevitFilePath, model.ExportFolder);
+                    ExportToDWGHandler.Execute(uidoc, model.RevitFilePath, model.ExportFolder);
                     break;
 
                 case 3: // NWC
 
-                    ExportToNWCHandler.ExportToNWC(uidoc, model.RevitFilePath, model.ExportFolder);
+                    ExportToNWCHandler.Execute(uidoc, model.RevitFilePath, model.ExportFolder);
                     break;
 
                 default:

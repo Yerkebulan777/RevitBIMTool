@@ -30,7 +30,7 @@ public static class SetupUIPanel
 
         if (ribbonPanel != null)
         {
-            if (ribbonPanel.CreatePushButton(typeof(ExportToPDFCommand), "Export to PDF") is PushButton button01)
+            if (ribbonPanel.CreatePushButton(typeof(ExportToPDFCommand), "ExportToNWC to PDF") is PushButton button01)
             {
                 button01.AvailabilityClassName = typeof(ExportToPDFCommand).FullName;
                 button01.SetImage("/RevitBIMTool;component/Resources/Icons/RibbonIcon16.png");
@@ -38,7 +38,7 @@ public static class SetupUIPanel
                 ribbonPanel.AddSeparator();
             }
 
-            if (ribbonPanel.CreatePushButton(typeof(ExportToDWGCommand), "Export to DWG") is PushButton button02)
+            if (ribbonPanel.CreatePushButton(typeof(ExportToDWGCommand), "ExportToNWC to DWG") is PushButton button02)
             {
                 button02.AvailabilityClassName = typeof(ExportToDWGCommand).FullName;
                 button02.SetImage("/RevitBIMTool;component/Resources/Icons/RibbonIcon16.png");
@@ -46,7 +46,7 @@ public static class SetupUIPanel
                 ribbonPanel.AddSeparator();
             }
 
-            if (ribbonPanel.CreatePushButton(typeof(ExportToNWCCommand), "Export to NWC") is PushButton button03)
+            if (ribbonPanel.CreatePushButton(typeof(ExportToNWCCommand), "ExportToNWC to NWC") is PushButton button03)
             {
                 button03.AvailabilityClassName = typeof(ExportToNWCCommand).FullName;
                 button03.SetImage("/RevitBIMTool;component/Resources/Icons/RibbonIcon16.png");

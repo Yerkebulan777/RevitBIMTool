@@ -29,7 +29,7 @@ internal static class ExportToDWGHandler
     };
 
 
-    public static void ExportExecute(UIDocument uidoc, string revitFilePath, string exportDirectory)
+    public static void Execute(UIDocument uidoc, string revitFilePath, string exportDirectory)
     {
         Document doc = uidoc.Document;
 

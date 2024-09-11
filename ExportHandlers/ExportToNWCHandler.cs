@@ -5,7 +5,6 @@ using RevitBIMTool.Utils.Performance;
 using RevitBIMTool.Utils.SystemUtil;
 using Serilog;
 using System.IO;
-using System.Text;
 using System.Windows.Threading;
 
 
@@ -13,7 +12,7 @@ namespace RevitBIMTool.ExportHandlers;
 
 internal static class ExportToNWCHandler
 {
-    public static void ExportToNWC(UIDocument uidoc, string revitFilePath, string exportDirectory)
+    public static void Execute(UIDocument uidoc, string revitFilePath, string exportDirectory)
     {
         Document doc = uidoc.Document;
 
@@ -22,7 +21,7 @@ internal static class ExportToNWCHandler
         RevitPathHelper.EnsureDirectory(exportDirectory);
 
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
-        string targetFullPath = Path.Combine(exportDirectory, $"{revitFileName}.nwc");
+        string targetPath = Path.Combine(exportDirectory, $"{revitFileName}.nwc");
 
         ICollection<ElementId> cadImportIds = RevitPurginqHelper.GetLinkedAndImportedCADIds(doc);
 
@@ -91,7 +90,7 @@ internal static class ExportToNWCHandler
 
             lock (uidoc)
             {
-                Export(doc, targetFullPath, options);
+                ExportToNWC(doc, targetPath, options);
             }
         }
 
@@ -99,7 +98,7 @@ internal static class ExportToNWCHandler
     }
 
 
-    private static void Export(Document doc, string exportFullPath, NavisworksExportOptions options)
+    private static void ExportToNWC(Document doc, string exportFullPath, NavisworksExportOptions options)
     {
         string exportDirectory = Path.GetDirectoryName(exportFullPath);
         string revitFileName = Path.GetFileNameWithoutExtension(exportFullPath);

@@ -14,7 +14,7 @@ internal static class ExportToPDFHandler
 {
     private const string printerName = "PDFCreator";
 
-    public static void ExportExecute(UIDocument uidoc, string revitFilePath, string exportDirectory)
+    public static void Execute(UIDocument uidoc, string revitFilePath, string exportDirectory)
     {
         Document doc = uidoc.Document;
 

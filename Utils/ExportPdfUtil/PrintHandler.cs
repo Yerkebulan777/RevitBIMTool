@@ -144,7 +144,7 @@ internal static class PrintHandler
 
         using Mutex mutex = new(false, $"Global\\{{{printerName}}}");
 
-        using Transaction trx = new(doc, "ExportExecute");
+        using Transaction trx = new(doc, "Execute");
 
         if (mutex.WaitOne(Timeout.InfiniteTimeSpan))
         {
