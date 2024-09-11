@@ -63,12 +63,12 @@ internal static class ExportToNWCHandler
 
             Log.Debug($"Total number of items found for hiding: {instansesToHide.Count}");
 
+            RevitWorksetHelper.SetWorksetsToVisible(doc, view);
+            RevitWorksetHelper.HideWorksetsByPattern(doc, view, @"^@.+");
+            RevitWorksetHelper.HideWorksetsByPattern(doc, view, @"^#.+");
             RevitViewHelper.SetViewSettings(doc, view, discipline, displayStyle, detailLevel);
             RevitViewHelper.SetCategoriesToVisible(doc, view, builtCatsToHide);
             RevitViewHelper.HideElementsInView(doc, instansesToHide, view);
-            RevitWorksetHelper.HideWorksetsByPattern(doc, view, @"^@.+");
-            RevitWorksetHelper.HideWorksetsByPattern(doc, view, @"^#.+");
-            RevitWorksetHelper.SetWorksetsToVisible(doc, view);
 
             NavisworksExportOptions options = new()
             {

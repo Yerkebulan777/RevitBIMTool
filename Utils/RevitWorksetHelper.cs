@@ -22,7 +22,7 @@ internal static class RevitWorksetHelper
             {
                 if (status == TransactionStatus.Started)
                 {
-                    Log.Debug($"Set Worksets to Visible");
+                    Log.Debug($"Set all worksets to Visible");
                     foreach (Workset workset in worksets)
                     {
                         if (workset.IsEditable)
@@ -70,6 +70,7 @@ internal static class RevitWorksetHelper
 
         if (worksetList.Count > 0)
         {
+            Log.Debug($"Hide worksets {pattern}");
             TransactionStatus status = trans.Start();
             if (status == TransactionStatus.Started)
             {
@@ -85,7 +86,6 @@ internal static class RevitWorksetHelper
 
                         strBuilder.Append("Name: " + workset.Name);
                         strBuilder.AppendLine("Kind: " + workset.Kind);
-                        strBuilder.AppendLine("Owner: " + workset.Owner);
                         strBuilder.AppendLine("Is open: " + workset.IsOpen);
                         strBuilder.AppendLine("UniqueId: " + workset.UniqueId);
                         strBuilder.AppendLine("Is editable: " + workset.IsEditable);
@@ -97,7 +97,7 @@ internal static class RevitWorksetHelper
                             view.SetWorksetVisibility(wid, WorksetVisibility.Hidden);
                         }
 
-                        Log.Debug($"Hide workset: {strBuilder}");
+                        Log.Debug($"Hided workset: {strBuilder}");
 
                         status = subTrans.Commit();
                     }

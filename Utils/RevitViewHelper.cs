@@ -116,6 +116,8 @@ internal sealed class RevitViewHelper
     {
         using (Transaction trans = new(doc))
         {
+            Log.Debug("Start set View settings ...");
+
             TransactionStatus status = trans.Start("SetViewSettings");
             if (status == TransactionStatus.Started && view is View3D view3D)
             {
@@ -178,15 +180,19 @@ internal sealed class RevitViewHelper
 
     #region Categories
 
-    public static void SetCategoriesToVisible(Document docunent, View view, IList<BuiltInCategory> catsToHide = null)
+    public static void SetCategoriesToVisible(Document doc, View view, IList<BuiltInCategory> catsToHide = null)
     {
+        using Transaction trx = new(doc);
+
         bool shouldBeHidden = catsToHide != null;
-        using Transaction trx = new(docunent);
-        TransactionStatus status = trx.Start("SetCategoriesVisible");
+
+        Log.Debug("Start set categories to visible ...");
+
+        TransactionStatus status = trx.Start("CategoriesVisible");
 
         foreach (ElementId catId in ParameterFilterUtilities.GetAllFilterableCategories())
         {
-            Category cat = Category.GetCategory(docunent, (BuiltInCategory)catId.IntegerValue);
+            Category cat = Category.GetCategory(doc, (BuiltInCategory)catId.IntegerValue);
 
             if (cat is Category category && view.CanCategoryBeHidden(category.Id))
             {
@@ -246,13 +252,13 @@ internal sealed class RevitViewHelper
 
     #region Colorize
 
-    //public static void ColorizeElements(Document docunent, Transform trf, ViewElement view, ICollection<ElementId> ids, string styleName)
+    //public static void ColorizeElements(Document doc, Transform trf, ViewElement view, ICollection<ElementId> ids, string styleName)
     //{
     //    SpatialFieldManager sfm = SpatialFieldManager.GetSpatialFieldManager(view) ?? SpatialFieldManager.CreateSpatialFieldManager(view, 1);
     //    AnalysisResultSchema resultSchema = new AnalysisResultSchema(styleName, "Changes analisis");
     //    foreach (ElementId changedId in ids)
     //    {
-    //        Element element = docunent.GetElement(changedId);
+    //        Element element = doc.GetElement(changedId);
     //        if (element != null)
     //        {
     //            List<Element> elements = new List<Element>
@@ -294,9 +300,9 @@ internal sealed class RevitViewHelper
     //}
 
 
-    //public static void CreateAVFDisplayStyle(Document docunent, ViewElement view, string styleName)
+    //public static void CreateAVFDisplayStyle(Document doc, ViewElement view, string styleName)
     //{
-    //    FilteredElementCollector collector = new FilteredElementCollector(docunent).OfClass(typeof(AnalysisDisplayStyle));
+    //    FilteredElementCollector collector = new FilteredElementCollector(doc).OfClass(typeof(AnalysisDisplayStyle));
 
     //    if (!collector.Any(a => a.Name == styleName))
     //    {
@@ -308,7 +314,7 @@ internal sealed class RevitViewHelper
 
     //        legendSettings.ShowLegend = true;
 
-    //        AnalysisDisplayStyle displayStyle = AnalysisDisplayStyle.CreateAnalysisDisplayStyle(docunent, styleName, markerSettings, colorSettings, legendSettings);
+    //        AnalysisDisplayStyle displayStyle = AnalysisDisplayStyle.CreateAnalysisDisplayStyle(doc, styleName, markerSettings, colorSettings, legendSettings);
 
     //        view.AnalysisDisplayStyleId = displayStyle.Id;
     //    }
@@ -434,12 +440,12 @@ internal sealed class RevitViewHelper
 
     public static void HideElementsInView(Document doc, IList<Element> elements, View activeView)
     {
+        List<ElementId> hideIds = [];
+
         using Transaction trx = new(doc, "HideElements");
 
         if (trx.Start() == TransactionStatus.Started)
         {
-            List<ElementId> hideIds = [];
-
             foreach (Element instance in elements)
             {
                 if (instance.CanBeHidden(activeView))
@@ -455,14 +461,10 @@ internal sealed class RevitViewHelper
             {
                 if (hideIds.Count > 0)
                 {
+                    Log.Debug("Set elements to hide ...");
                     activeView.HideElements(hideIds);
+                    _ = trx.Commit();
                 }
-
-                _ = trx.Commit();
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, ex.Message);
             }
             finally
             {
@@ -472,6 +474,7 @@ internal sealed class RevitViewHelper
                 }
             }
         }
+
     }
 
 }
