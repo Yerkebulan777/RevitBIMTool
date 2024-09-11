@@ -27,6 +27,11 @@ public static class CollectorHelper
             }
         }
 
+        if (filters.Count == 0)
+        {
+            return null;
+        }
+
         LogicalOrFilter orFilter = new(filters);
         FilteredElementCollector symbolCollector;
         symbolCollector = new FilteredElementCollector(doc).OfCategory(bic);

@@ -98,32 +98,28 @@ namespace RevitBIMTool.Utils
                 Parameter paramCalcSize = elem.get_Parameter(bipCalcSize);
                 Parameter paramDiameter = elem.get_Parameter(bipDiameter);
 
-                Parameter parameter = null;
-
-                if (paramCalcSize != null)
+                if (paramCalcSize != null && paramCalcSize.HasValue)
                 {
-                    parameter = paramCalcSize;
-                }
+                    double value = UnitManager.FootToMm(paramCalcSize.AsDouble());
 
-                if (paramDiameter != null)
-                {
-                    parameter = paramDiameter;
-                }
-
-                if (parameter is null)
-                {
-                    throw new Exception(elem.Category.Name);
-                }
-
-                if (parameter.HasValue)
-                {
-                    double value = UnitManager.FootToMm(parameter.AsDouble());
-
-                    if (value < diameter)
+                    if (0 < value && value < diameter)
                     {
                         result.Add(elem);
+                        continue;
                     }
                 }
+
+                if (paramDiameter != null && paramDiameter.HasValue)
+                {
+                    double value = UnitManager.FootToMm(paramDiameter.AsDouble());
+
+                    if (0 < value && value < diameter)
+                    {
+                        result.Add(elem);
+                        continue;
+                    }
+                }
+
             }
 
             return result;
