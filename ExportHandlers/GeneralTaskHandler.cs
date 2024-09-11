@@ -9,7 +9,6 @@ namespace RevitBIMTool.ExportHandlers
 {
     internal static class GeneralTaskHandler
     {
-
         public static bool IsValidTask(ref TaskRequest model)
         {
             string revitFilePath = model.RevitFilePath;
