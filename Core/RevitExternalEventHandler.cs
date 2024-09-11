@@ -36,10 +36,10 @@ namespace RevitBIMTool.Core
             {
                 Log.Logger = ConfigureLogger(model);
 
+                SynchronizationContext.SetSynchronizationContext(context);
+
                 if (GeneralTaskHandler.IsValidTask(ref model))
                 {
-                    SynchronizationContext.SetSynchronizationContext(context);
-
                     string output = handler.RunDocumentAction(uiapp, model, GeneralTaskHandler.RunTask);
 
                     Log.Information($"Task result:\t{output}");
