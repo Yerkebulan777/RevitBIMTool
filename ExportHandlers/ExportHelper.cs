@@ -34,25 +34,28 @@ internal static class ExportHelper
     {
         if (File.Exists(targetFilePath) && File.Exists(sourceFilePath))
         {
-            DateTime targetFileDate = File.GetLastWriteTime(targetFilePath);
-            DateTime sourceFileDate = File.GetLastWriteTime(sourceFilePath);
-
-            TimeSpan timeDifference = targetFileDate - sourceFileDate;
-            long targetFileSize = new FileInfo(targetFilePath).Length;
-
-            Log.Debug($"targetPath last date: {targetFileDate:dd.MM.yyyy HH:mm}");
-            Log.Debug($"source last date: {sourceFileDate:dd.MM.yyyy HH:mm}");
-
-            bool isUpdated = timeDifference.TotalSeconds > minimum;
-            bool isOutdated = timeDifference.TotalDays > minimum;
-
-            bool isModifiedValid = isUpdated && !isOutdated;
-            bool isFileSizeValid = targetFileSize > minimum;
-
-            if (isModifiedValid && isFileSizeValid)
+            if (PathHelper.IsFileAccessible(targetFilePath)) 
             {
-                Log.Information($"File updated!");
-                return true;
+                DateTime targetFileDate = File.GetLastWriteTime(targetFilePath);
+                DateTime sourceFileDate = File.GetLastWriteTime(sourceFilePath);
+
+                Log.Debug($"Target last date: {targetFileDate:dd.MM.yyyy HH:mm}");
+                Log.Debug($"Source last date: {sourceFileDate:dd.MM.yyyy HH:mm}");
+
+                TimeSpan timeDifference = targetFileDate - sourceFileDate;
+                long targetFileSize = new FileInfo(targetFilePath).Length;
+
+                bool isUpdated = timeDifference.TotalSeconds > minimum;
+                bool isOutdated = timeDifference.TotalDays > minimum;
+
+                bool isModifiedValid = isUpdated && !isOutdated;
+                bool isFileSizeValid = targetFileSize > minimum;
+
+                if (isModifiedValid && isFileSizeValid)
+                {
+                    Log.Information($"File updated!");
+                    return true;
+                }
             }
         }
 
