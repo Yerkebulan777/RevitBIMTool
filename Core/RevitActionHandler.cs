@@ -8,19 +8,10 @@ using Document = Autodesk.Revit.DB.Document;
 
 
 namespace RevitBIMTool.Core;
-public sealed class RevitActionHandler
+internal sealed class RevitActionHandler
 {
     private Document document;
-    private readonly UIApplication uiapp;
 
-
-    public RevitActionHandler(UIApplication application)
-    {
-        uiapp = application;
-    }
-
-
-    #region AllMethods
 
     public string RunDocumentAction(UIApplication uiapp, TaskRequest taskModel, Func<UIDocument, TaskRequest, string> revitAction)
     {
@@ -35,10 +26,10 @@ public sealed class RevitActionHandler
 
     private string WithOpenedDocument(UIApplication uiapp, TaskRequest taskModel, Func<UIDocument, TaskRequest, string> revitAction)
     {
-        UIDocument uidoc;
-
         lock (uiapp)
         {
+            UIDocument uidoc;
+
             OpenOptions openOptions = new()
             {
                 DetachFromCentralOption = DetachFromCentralOption.DetachAndPreserveWorksets,
@@ -52,7 +43,7 @@ public sealed class RevitActionHandler
             RevitLinkHelper.CheckAndRemoveUnloadedLinks(document);
         }
 
-        return revitAction(uidoc, taskModel);
+        return revitAction(uiapp.ActiveUIDocument, taskModel);
     }
 
 
@@ -95,8 +86,6 @@ public sealed class RevitActionHandler
 
         return FailuresHanding.WithFailuresProcessingHandler(uiapp.Application, revitTaskAction);
     }
-
-    #endregion
 
 }
 

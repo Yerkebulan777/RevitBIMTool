@@ -26,7 +26,7 @@ namespace RevitBIMTool.Core
 
         public void Execute(UIApplication uiapp)
         {
-            RevitActionHandler handler = new(uiapp);
+            RevitActionHandler handler = new();
 
             SynchronizationContext context = SynchronizationContext.Current;
 

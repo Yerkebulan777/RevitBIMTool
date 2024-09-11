@@ -45,18 +45,18 @@ internal static class RevitFileHelper
     }
 
 
-    public static void ClosePreviousDocument(UIApplication uiapp, ref Document doc)
+    public static void ClosePreviousDocument(UIApplication uiapp, ref Document document)
     {
         try
         {
-            if (doc is not null && doc.IsValidObject && doc.Close(false))
+            if (document != null && document.IsValidObject && document.Close(false))
             {
                 uiapp.Application.PurgeReleasedAPIObjects();
             }
         }
         finally
         {
-            doc = uiapp.ActiveUIDocument.Document;
+            document = uiapp.ActiveUIDocument.Document;
         }
     }
 
