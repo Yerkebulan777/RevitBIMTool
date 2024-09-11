@@ -28,8 +28,6 @@ internal sealed class RevitActionHandler
     {
         lock (uiapp)
         {
-            UIDocument uidoc;
-
             OpenOptions openOptions = new()
             {
                 DetachFromCentralOption = DetachFromCentralOption.DetachAndPreserveWorksets,
@@ -38,7 +36,7 @@ internal sealed class RevitActionHandler
 
             openOptions.SetOpenWorksetsConfiguration(new WorksetConfiguration(WorksetConfigurationOption.OpenAllWorksets));
             ModelPath modelPath = ModelPathUtils.ConvertUserVisiblePathToModelPath(taskModel.RevitFilePath);
-            uidoc = uiapp.OpenAndActivateDocument(modelPath, openOptions, false);
+            UIDocument uidoc = uiapp.OpenAndActivateDocument(modelPath, openOptions, false);
             RevitFileHelper.ClosePreviousDocument(uiapp, ref document);
             RevitLinkHelper.CheckAndRemoveUnloadedLinks(document);
         }
@@ -57,18 +55,18 @@ internal sealed class RevitActionHandler
 
             try
             {
-                sb.AppendLine(revitAction());
+                _ = sb.AppendLine(revitAction());
             }
             catch (Exception ex)
             {
-                sb.AppendLine(ex.Message);
+                _ = sb.AppendLine(ex.Message);
             }
             finally
             {
                 stopwatch.Stop();
             }
 
-            sb.AppendLine($"[{stopwatch.Elapsed.ToString(@"h\:mm\:ss")}]");
+            _ = sb.AppendLine($"[{stopwatch.Elapsed:h\\:mm\\:ss}]");
 
             return sb.ToString();
         }
