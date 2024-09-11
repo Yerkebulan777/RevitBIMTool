@@ -19,10 +19,10 @@ namespace RevitBIMTool.ExportHandlers
                 case 1: // PDF
 
                     model.ExportFolder = ExportHelper.SetDirectory(revitFilePath, "03_PDF", true);
-                    model.TargetFullPath = Path.Combine(model.ExportFolder, $"{revitFileName}.pdf");
-                    if (!ExportHelper.IsTargetFileUpdated(model.TargetFullPath, revitFilePath))
+                    model.TargetPath = Path.Combine(model.ExportFolder, $"{revitFileName}.pdf");
+                    if (!ExportHelper.IsTargetFileUpdated(model.TargetPath, revitFilePath))
                     {
-                        RevitPathHelper.DeleteExistsFile(model.TargetFullPath);
+                        RevitPathHelper.DeleteExistsFile(model.TargetPath);
                         return true;
                     }
                     break;
@@ -30,10 +30,10 @@ namespace RevitBIMTool.ExportHandlers
                 case 2: // DWG
 
                     model.ExportFolder = ExportHelper.SetDirectory(revitFilePath, "02_DWG", true);
-                    model.TargetFullPath = Path.Combine(model.ExportFolder, $"{revitFileName}.zip");
-                    if (!ExportHelper.IsTargetFileUpdated(model.TargetFullPath, revitFilePath))
+                    model.TargetPath = Path.Combine(model.ExportFolder, $"{revitFileName}.zip");
+                    if (!ExportHelper.IsTargetFileUpdated(model.TargetPath, revitFilePath))
                     {
-                        RevitPathHelper.DeleteExistsFile(model.TargetFullPath);
+                        RevitPathHelper.DeleteExistsFile(model.TargetPath);
                         return true;
                     }
                     break;
@@ -41,10 +41,10 @@ namespace RevitBIMTool.ExportHandlers
                 case 3: // NWC
 
                     model.ExportFolder = ExportHelper.SetDirectory(revitFilePath, "05_NWC", false);
-                    model.TargetFullPath = Path.Combine(model.ExportFolder, $"{revitFileName}.nwc");
-                    if (!ExportHelper.IsTargetFileUpdated(model.TargetFullPath, revitFilePath))
+                    model.TargetPath = Path.Combine(model.ExportFolder, $"{revitFileName}.nwc");
+                    if (!ExportHelper.IsTargetFileUpdated(model.TargetPath, revitFilePath))
                     {
-                        RevitPathHelper.DeleteExistsFile(model.TargetFullPath);
+                        RevitPathHelper.DeleteExistsFile(model.TargetPath);
                         return true;
                     }
                     break;
