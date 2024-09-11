@@ -1,5 +1,4 @@
-﻿using Autodesk.Revit.UI;
-using RevitBIMTool.Utils;
+﻿using RevitBIMTool.Utils;
 using RevitBIMTool.Utils.SystemUtil;
 using Serilog;
 using ServiceLibrary.Helpers;
@@ -41,7 +40,7 @@ internal static class ExportHelper
 
             bool targetAcessible = PathHelper.IsFileAccessible(targetFilePath);
 
-            Log.Debug($"{Path.GetFileName(targetFilePath)} acessible: {targetAcessible}");
+            Log.Debug($"{Path.GetFileName(targetFilePath)} {targetAcessible}");
 
             DateTime targetFileDate = File.GetLastWriteTime(targetFilePath);
             DateTime sourceFileDate = File.GetLastWriteTime(sourceFilePath);
@@ -54,10 +53,10 @@ internal static class ExportHelper
             Log.Debug($"Time difference: {timeDifference:dd.MM.yyyy HH:mm}");
 
             bool isUpdated = timeDifference.TotalSeconds > minimum;
-            bool isOutdated = timeDifference.TotalDays > minimum;
+            bool isOldated = timeDifference.TotalDays < minimum;
 
-            bool isModifiedValid = isUpdated && !isOutdated;
             bool isFileSizeValid = targetFileSize > minimum;
+            bool isModifiedValid = isUpdated || isOldated;
 
             Log.Debug($"Modified: {isModifiedValid}");
             Log.Debug($"FileSize: {isFileSizeValid}");
