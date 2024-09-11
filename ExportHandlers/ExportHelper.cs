@@ -59,6 +59,9 @@ internal static class ExportHelper
             bool isModifiedValid = isUpdated && !isOutdated;
             bool isFileSizeValid = targetFileSize > minimum;
 
+            Log.Debug($"Modified: {isModifiedValid}");
+            Log.Debug($"FileSize: {isFileSizeValid}");
+
             if (isModifiedValid && isFileSizeValid)
             {
                 isTargetFileUpdated = true;
