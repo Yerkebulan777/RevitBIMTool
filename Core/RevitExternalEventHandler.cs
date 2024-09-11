@@ -26,12 +26,13 @@ namespace RevitBIMTool.Core
 
         public void Execute(UIApplication uiapp)
         {
-            RevitActionHandler actionHandler = new(uiapp);
+            RevitActionHandler handler = new(uiapp);
 
             SynchronizationContext context = SynchronizationContext.Current;
-            TaskRequestContainer taskContainer = TaskRequestContainer.Instance;
 
-            while (taskContainer.PopTaskModel(versionNumber, out TaskRequest model))
+            TaskRequestContainer requestContainer = TaskRequestContainer.Instance;
+
+            while (requestContainer.PopTaskModel(versionNumber, out TaskRequest model))
             {
                 if (GeneralTaskHandler.IsValidTask(ref model))
                 {
@@ -39,7 +40,7 @@ namespace RevitBIMTool.Core
 
                     SynchronizationContext.SetSynchronizationContext(context);
 
-                    string output = actionHandler.RunDocumentAction(uiapp, model, GeneralTaskHandler.RunTask);
+                    string output = handler.RunDocumentAction(uiapp, model, GeneralTaskHandler.RunTask);
 
                     Log.Information($"Task result:\r\n\t{output}");
 
