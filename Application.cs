@@ -2,16 +2,16 @@ using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
 using RevitBIMTool.Core;
 using RevitBIMTool.Utils;
+using Serilog;
 using ServiceLibrary.Models;
 
 
 namespace RevitBIMTool;
 internal sealed class Application : IExternalApplication
 {
+    private int counter = 0;
     private string versionNumber;
     private RevitExternalEventHandler externalEventHandler;
-    private static readonly string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-
 
     #region IExternalApplication
 
@@ -60,7 +60,13 @@ internal sealed class Application : IExternalApplication
 
     private void OnIdling(object sender, IdlingEventArgs e)
     {
-        RevitFileHelper.CloseRevitApplication();
+        Log.Debug($"Idling session called {counter++}");
+
+        if (counter > 100)
+        {
+            RevitFileHelper.CloseRevitApplication();
+        }
+
     }
 
     #endregion
