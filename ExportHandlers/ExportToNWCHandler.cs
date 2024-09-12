@@ -58,7 +58,7 @@ internal static class ExportToNWCHandler
             instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, ductCat, "(клапан)kazvent_bm-h").ToElements());
             instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, sfrmCat, "(задание)на _отверстие").ToElements());
             instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, ductCat, "(клапан)анемостат_10авп").ToElements());
-            instansesToHide.AddRange(CollectorHelper.GetInstancesByFamilyName(doc, mechCat, "Задание на отверстие")?.ToElements() ?? []);
+            instansesToHide.AddRange(CollectorHelper.GetInstancesByFamilyName(doc, mechCat, "Задание на отверстие").ToElements());
 
             Log.Debug($"Total number of items found for hiding: {instansesToHide.Count}");
 
