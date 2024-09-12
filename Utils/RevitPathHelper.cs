@@ -1,6 +1,5 @@
 ﻿using Autodesk.Revit.DB;
 using Microsoft.Win32;
-using Serilog;
 using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -25,29 +24,6 @@ public static class RevitPathHelper
             }
         }
         return inputPath;
-    }
-
-
-    public static List<string> GetRevitFilePaths(string inputpath)
-    {
-        List<string> output = new(10);
-        string seachRvtPattern = $"*.rvt";
-        SearchOption allFiles = SearchOption.AllDirectories;
-        SearchOption topFiles = SearchOption.TopDirectoryOnly;
-        string backupPattern = "\\.\\d\\d\\d\\d\\.(rvt|rfa)$";
-        SearchOption option = inputpath.EndsWith("RVT") ? topFiles : allFiles;
-        foreach (string filePath in Directory.GetFiles(inputpath, seachRvtPattern, option))
-        {
-            if (!Regex.IsMatch(filePath, backupPattern))
-            {
-                if (!filePath.Contains("отсоединено"))
-                {
-                    output.Add(filePath);
-                }
-            }
-        }
-
-        return output;
     }
 
 
@@ -148,7 +124,7 @@ public static class RevitPathHelper
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex.Message);
+                        Debug.WriteLine(ex.Message);
                     }
                 }
             }
@@ -166,7 +142,7 @@ public static class RevitPathHelper
             }
             catch (Exception ex)
             {
-                Log.Error($"Error deleting info: {ex.Message}");
+                Debug.WriteLine($"Error deleting info: {ex.Message}");
             }
         }
     }
@@ -198,7 +174,7 @@ public static class RevitPathHelper
             }
             catch (Exception ex)
             {
-                Log.Error($"Error deleting dir: {ex.Message}");
+                Debug.WriteLine($"Error deleting dir: {ex.Message}");
             }
         }
     }
@@ -227,7 +203,7 @@ public static class RevitPathHelper
             }
         }
 
-        Log.Debug($"Total waiting time: {totalWaitTime} seconds");
+        Debug.WriteLine($"Total waiting: {totalWaitTime} seconds");
 
         return awaitResult;
     }

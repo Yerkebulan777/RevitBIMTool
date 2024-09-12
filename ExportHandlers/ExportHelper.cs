@@ -46,11 +46,11 @@ internal static class ExportHelper
             TimeSpan sourceDifference = targetLastDate - sourceLastDate;
             TimeSpan currentDifference = currentDateTime - targetLastDate;
 
-            Log.Debug($"Target last write date: {targetLastDate:yyyy-MM-dd}");
-            Log.Debug($"Source last write date: {sourceLastDate:yyyy-MM-dd}");
+            Debug.WriteLine($"Target last write: {targetLastDate:yyyy-MM-dd}");
+            Debug.WriteLine($"Source last write: {sourceLastDate:yyyy-MM-dd}");
 
-            Log.Debug($"Source difference in days: {sourceDifference.TotalDays}");
-            Log.Debug($"Current difference in days: {currentDifference.TotalDays}");
+            Debug.WriteLine($"Source difference in days: {sourceDifference.TotalDays}");
+            Debug.WriteLine($"Current difference in days: {currentDifference.TotalDays}");
 
             bool isSourceTimeGreate = sourceDifference.TotalSeconds > limit;
             bool isCurrentTimeGreate = currentDifference.TotalDays > limit;
@@ -61,7 +61,7 @@ internal static class ExportHelper
             }
         }
 
-        Log.Debug($"Is updated: {isUpdated}");
+        Debug.WriteLine($"Is updated: {isUpdated}");
 
         return isUpdated;
     }
