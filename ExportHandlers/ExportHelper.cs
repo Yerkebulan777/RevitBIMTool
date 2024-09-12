@@ -44,10 +44,10 @@ internal static class ExportHelper
             TimeSpan timeDifference = targetFileDate - sourceFileDate;
             long targetFileSize = new FileInfo(targetFilePath).Length;
 
+            Log.Debug($"Hours difference: {timeDifference.Hours}");
+
             bool isUpdated = timeDifference.TotalSeconds > minimum;
             bool isIndated = timeDifference.TotalDays < minimum;
-
-            Log.Debug($"Time difference: {timeDifference}");
 
             bool isFileSizeValid = targetFileSize > minimum;
             bool isModifiedValid = isUpdated && isIndated;
