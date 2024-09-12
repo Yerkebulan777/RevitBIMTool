@@ -51,7 +51,7 @@ internal static class ExportHelper
             bool isOldated = timeDifference.TotalDays < minimum;
 
             bool isFileSizeValid = targetFileSize > minimum;
-            bool isModifiedValid = isUpdated || isOldated;
+            bool isModifiedValid = isUpdated && isOldated;
 
             if (isModifiedValid && isFileSizeValid)
             {
