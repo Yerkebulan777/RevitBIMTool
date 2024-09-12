@@ -46,7 +46,7 @@ internal static class ExportHelper
 
             TimeSpan timeDifference = targetFileDate - sourceFileDate;
 
-            Log.Debug($"House difference: {timeDifference.TotalHours}");
+            Log.Debug($"Day difference: {timeDifference.TotalDays}");
 
             bool isTimeGreater = timeDifference.TotalSeconds > limit;
             bool isTimeDayLess = timeDifference.TotalDays < limit;
