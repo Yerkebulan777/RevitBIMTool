@@ -73,7 +73,7 @@ internal static class RevitWorksetHelper
 
             TransactionStatus status = trans.Start($"HideWorkset{pattern}");
 
-            _ = builder.AppendLine($"Hide worksets by {pattern}");
+            builder.AppendLine($"Start hide worksets by {pattern}");
 
             if (status == TransactionStatus.Started)
             {
@@ -87,13 +87,13 @@ internal static class RevitWorksetHelper
 
                         WorksetId wid = new(workset.Id.IntegerValue);
 
-                        _ = builder.AppendLine("Name: " + workset.Name);
-                        _ = builder.AppendLine("Kind: " + workset.Kind);
-                        _ = builder.AppendLine("Is open: " + workset.IsOpen);
-                        _ = builder.AppendLine("UniqueId: " + workset.UniqueId);
-                        _ = builder.AppendLine("Is editable: " + workset.IsEditable);
-                        _ = builder.AppendLine("Is default: " + workset.IsDefaultWorkset);
-                        _ = builder.AppendLine("Is visible: " + workset.IsVisibleByDefault);
+                        builder.AppendLine("Name: " + workset.Name);
+                        builder.AppendLine("Kind: " + workset.Kind);
+                        builder.AppendLine("Is open: " + workset.IsOpen);
+                        builder.AppendLine("UniqueId: " + workset.UniqueId);
+                        builder.AppendLine("Is editable: " + workset.IsEditable);
+                        builder.AppendLine("Is default: " + workset.IsDefaultWorkset);
+                        builder.AppendLine("Is visible: " + workset.IsVisibleByDefault);
 
                         if (view.GetWorksetVisibility(wid) == WorksetVisibility.Visible)
                         {
@@ -104,8 +104,8 @@ internal static class RevitWorksetHelper
                     }
                     catch (Exception ex)
                     {
+                        builder.AppendLine(ex.Message);
                         status = subTrans.RollBack();
-                        Log.Error(ex, ex.Message);
                     }
                     finally
                     {
