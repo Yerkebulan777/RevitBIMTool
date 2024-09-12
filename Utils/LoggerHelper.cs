@@ -5,7 +5,7 @@ using System.IO;
 
 namespace RevitBIMTool.Utils
 {
-    public static class LoggerHelper
+    internal static class LoggerHelper
     {
         private static readonly string MyDocuments = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 
