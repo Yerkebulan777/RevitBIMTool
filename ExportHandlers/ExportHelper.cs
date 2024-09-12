@@ -30,40 +30,36 @@ internal static class ExportHelper
     }
 
 
-    public static bool IsTargetFileUpdated(string targetFilePath, string sourceFilePath, int minimum = 100)
+    public static bool IsTargetFileUpdated(string targetFilePath, string sourceFilePath, int limit = 100)
     {
-        bool isTargetFileUpdated = false;
+        bool isUpdated = false;
 
-        if (File.Exists(targetFilePath) && File.Exists(sourceFilePath))
+        FileInfo targetFileInfo = new(targetFilePath);
+
+        if (targetFileInfo.Exists && targetFileInfo.Length > limit)
         {
             DateTime targetFileDate = File.GetLastWriteTime(targetFilePath);
             DateTime sourceFileDate = File.GetLastWriteTime(sourceFilePath);
 
+            Log.Debug($"Target last date: {targetFileDate:yyyy-MM-dd}");
+            Log.Debug($"Sourse last date: {sourceFileDate:yyyy-MM-dd}");
+
             TimeSpan timeDifference = targetFileDate - sourceFileDate;
 
-            long targetFileSize = new FileInfo(targetFilePath).Length;
+            Log.Debug($"House difference: {timeDifference.TotalHours}");
 
-            Log.Debug($"Difference sec: {timeDifference.TotalSeconds}");
-            Log.Debug($"Days difference: {timeDifference.TotalDays}");
-            
-            Log.Debug($"Target date: {targetFileDate:yyyy-MM-dd}");
-            Log.Debug($"Sourse date: {sourceFileDate:yyyy-MM-dd}");
+            bool isTimeGreater = timeDifference.TotalSeconds > limit;
+            bool isTimeDayLess = timeDifference.TotalDays < limit;
 
-            bool isUpdated = timeDifference.TotalSeconds > minimum;
-            bool isIndated = timeDifference.TotalDays < minimum;
-
-            bool isFileSizeValid = targetFileSize > minimum;
-            bool isModifiedValid = isUpdated && isIndated;
-
-            if (isModifiedValid && isFileSizeValid)
+            if (isTimeGreater && isTimeDayLess)
             {
-                isTargetFileUpdated = true;
+                isUpdated = true;
             }
         }
 
-        Log.Debug($"Is updated: {isTargetFileUpdated}");
+        Log.Debug($"Is updated: {isUpdated}");
 
-        return isTargetFileUpdated;
+        return isUpdated;
     }
 
 
