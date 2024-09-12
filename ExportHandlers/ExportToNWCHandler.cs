@@ -95,12 +95,12 @@ internal static class ExportToNWCHandler
 
     private static void ExportToNWC(Document doc, string exportFullPath, NavisworksExportOptions options)
     {
+        Log.Debug($"Start exporting to nwc ...");
         string exportDirectory = Path.GetDirectoryName(exportFullPath);
         string revitFileName = Path.GetFileNameWithoutExtension(exportFullPath);
 
         try
         {
-            Log.Debug($"Start exporting to nwc in {exportDirectory}");
             doc.Export(exportDirectory, revitFileName, options);
         }
         catch (Exception ex)
@@ -109,13 +109,12 @@ internal static class ExportToNWCHandler
         }
         finally
         {
-            if (RevitPathHelper.AwaitExistsFile(exportFullPath))
+            if (File.Exists(exportFullPath))
             {
                 SystemFolderOpener.OpenFolder(exportDirectory);
             }
         }
     }
-
 
 }
 
