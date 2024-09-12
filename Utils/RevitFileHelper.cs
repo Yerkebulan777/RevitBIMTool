@@ -67,9 +67,9 @@ internal static class RevitFileHelper
 
         try
         {
-            Log.Debug("Close Revit...");
-            Log.CloseAndFlush();
             Thread.Sleep(1000);
+            Log.Debug("Closed Revit...");
+            Log.CloseAndFlush();
         }
         finally
         {

@@ -30,28 +30,32 @@ internal static class ExportHelper
     }
 
 
-    public static bool IsTargetFileUpdated(string targetFilePath, string sourceFilePath, int limit = 100)
+    public static bool IsFileUpdated(string targetPath, string sourcePath, int limit = 100)
     {
         bool isUpdated = false;
 
-        FileInfo targetFileInfo = new(targetFilePath);
+        FileInfo targetFile = new(targetPath);
 
-        if (targetFileInfo.Exists && targetFileInfo.Length > limit)
+        DateTime currentDateTime = DateTime.Now;
+
+        if (targetFile.Exists && targetFile.Length > limit)
         {
-            DateTime targetFileDate = File.GetLastWriteTime(targetFilePath);
-            DateTime sourceFileDate = File.GetLastWriteTime(sourceFilePath);
+            DateTime targetLastDate = File.GetLastWriteTime(targetPath);
+            DateTime sourceLastDate = File.GetLastWriteTime(sourcePath);
 
-            Log.Debug($"Target last date: {targetFileDate:yyyy-MM-dd}");
-            Log.Debug($"Sourse last date: {sourceFileDate:yyyy-MM-dd}");
+            TimeSpan sourceDifference = targetLastDate - sourceLastDate;
+            TimeSpan currentDifference = currentDateTime - targetLastDate;
 
-            TimeSpan timeDifference = targetFileDate - sourceFileDate;
+            Log.Debug($"Target last write date: {targetLastDate:yyyy-MM-dd}");
+            Log.Debug($"Source last write date: {sourceLastDate:yyyy-MM-dd}");
 
-            Log.Debug($"Day difference: {timeDifference.TotalDays}");
+            Log.Debug($"Source difference in days: {sourceDifference.TotalDays}");
+            Log.Debug($"Current difference in days: {currentDifference.TotalDays}");
 
-            bool isTimeGreater = timeDifference.TotalSeconds > limit;
-            bool isTimeDayLess = timeDifference.TotalDays < limit;
+            bool isSourceTimeGreate = sourceDifference.TotalSeconds > limit;
+            bool isCurrentTimeGreate = currentDifference.TotalDays > limit;
 
-            if (isTimeGreater && isTimeDayLess)
+            if (isSourceTimeGreate && isCurrentTimeGreate)
             {
                 isUpdated = true;
             }

@@ -34,10 +34,10 @@ namespace RevitBIMTool.Core
 
             while (requestContainer.PopTaskModel(versionNumber, out TaskRequest model))
             {
-                ConfigureLogger(context, model);
-
                 if (GeneralTaskHandler.IsValidTask(ref model))
                 {
+                    LoggerHelper.SetupLogger(context, model);
+
                     SynchronizationContext.SetSynchronizationContext(context);
 
                     string output = handler.RunDocumentAction(uiapp, model, GeneralTaskHandler.RunTask);
@@ -52,30 +52,6 @@ namespace RevitBIMTool.Core
 
             }
 
-        }
-
-
-        internal void ConfigureLogger(SynchronizationContext context, TaskRequest request)
-        {
-            lock (context)
-            {
-                string logDir = Path.Combine(myDocuments, $"RevitBIMTool");
-                string logName = $"{request.RevitFileName}[{request.CommandNumber}].txt";
-                string logPath = Path.Combine(logDir, logName);
-                RevitPathHelper.DeleteExistsFile(logPath);
-                RevitPathHelper.EnsureDirectory(logDir);
-
-                if (Log.Logger != null)
-                {
-                    Thread.Sleep(100);
-                    Log.CloseAndFlush();
-                }
-
-                Log.Logger = new LoggerConfiguration()
-                    .WriteTo.File(logPath)
-                    .MinimumLevel.Debug()
-                    .CreateLogger();
-            }
         }
 
 
