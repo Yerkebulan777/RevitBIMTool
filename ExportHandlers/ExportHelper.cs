@@ -48,10 +48,10 @@ internal static class ExportHelper
             Log.Debug($"Difference: {timeDifference:dd.MM.yyyy HH:mm}");
 
             bool isUpdated = timeDifference.TotalSeconds > minimum;
-            bool isOldated = timeDifference.TotalDays < minimum;
+            bool isIndated = timeDifference.TotalDays < minimum;
 
             bool isFileSizeValid = targetFileSize > minimum;
-            bool isModifiedValid = isUpdated && isOldated;
+            bool isModifiedValid = isUpdated && isIndated;
 
             if (isModifiedValid && isFileSizeValid)
             {
