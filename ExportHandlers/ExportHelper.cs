@@ -47,7 +47,7 @@ internal static class ExportHelper
             Log.Debug($"Target file: {Path.GetFileName(targetFilePath)}");
             Log.Debug($"Difference: {timeDifference:dd.MM.yyyy HH:mm}");
 
-            bool isUpdated = timeDifference.TotalSeconds > minimum;
+            bool isUpdated = timeDifference.TotalSeconds < minimum;
             bool isIndated = timeDifference.TotalDays < minimum;
 
             bool isFileSizeValid = targetFileSize > minimum;
