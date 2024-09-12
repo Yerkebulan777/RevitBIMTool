@@ -125,6 +125,8 @@ namespace RevitBIMTool.Utils
 
             }
 
+            Log.Debug($"Total {result.Count} count");
+
             return result;
         }
 

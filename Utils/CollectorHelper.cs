@@ -37,7 +37,7 @@ public static class CollectorHelper
         instanceCollector = instanceCollector.WherePasses(orFilter);
         instanceCollector = instanceCollector.WhereElementIsViewIndependent();
 
-        Log.Debug($"Instances {nameStart} {instanceCollector.GetElementCount()} count");
+        Log.Debug($"Total elems by {nameStart} {instanceCollector.GetElementCount()} count");
 
         return instanceCollector;
     }
@@ -67,7 +67,7 @@ public static class CollectorHelper
         FilteredElementCollector collector = new FilteredElementCollector(doc).OfCategory(bic);
         collector = collector.WherePasses(logicOrFilter).WhereElementIsNotElementType();
 
-        Log.Debug($"Instances {symbolName} {collector.GetElementCount()} count");
+        Log.Debug($"Total elems by {symbolName} {collector.GetElementCount()} count");
 
         return collector;
     }
