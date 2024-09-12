@@ -62,16 +62,19 @@ internal static class RevitWorksetHelper
 
     public static void HideWorksetsByPattern(Document doc, View view, string pattern)
     {
-        StringBuilder strBuilder = new();
-
-        using Transaction trans = new(doc, $"HideWorkset{pattern}");
         IList<Workset> worksetList = new FilteredWorksetCollector(doc).OfKind(WorksetKind.UserWorkset).ToWorksets();
         worksetList = worksetList.Where(w => Regex.IsMatch(w.Name, pattern, RegexOptions.IgnoreCase)).ToList();
 
         if (worksetList.Count > 0)
         {
-            Log.Debug($"Hide worksets {pattern}");
-            TransactionStatus status = trans.Start();
+            StringBuilder builder = new();
+
+            using Transaction trans = new(doc);
+
+            TransactionStatus status = trans.Start($"HideWorkset{pattern}");
+
+            _ = builder.AppendLine($"Hide worksets by {pattern}");
+
             if (status == TransactionStatus.Started)
             {
                 foreach (Workset workset in worksetList)
@@ -84,20 +87,18 @@ internal static class RevitWorksetHelper
 
                         WorksetId wid = new(workset.Id.IntegerValue);
 
-                        strBuilder.AppendLine("Name: " + workset.Name);
-                        strBuilder.AppendLine("Kind: " + workset.Kind);
-                        strBuilder.AppendLine("Is open: " + workset.IsOpen);
-                        strBuilder.AppendLine("UniqueId: " + workset.UniqueId);
-                        strBuilder.AppendLine("Is editable: " + workset.IsEditable);
-                        strBuilder.AppendLine("Is default: " + workset.IsDefaultWorkset);
-                        strBuilder.AppendLine("Is visible: " + workset.IsVisibleByDefault);
+                        _ = builder.AppendLine("Name: " + workset.Name);
+                        _ = builder.AppendLine("Kind: " + workset.Kind);
+                        _ = builder.AppendLine("Is open: " + workset.IsOpen);
+                        _ = builder.AppendLine("UniqueId: " + workset.UniqueId);
+                        _ = builder.AppendLine("Is editable: " + workset.IsEditable);
+                        _ = builder.AppendLine("Is default: " + workset.IsDefaultWorkset);
+                        _ = builder.AppendLine("Is visible: " + workset.IsVisibleByDefault);
 
                         if (view.GetWorksetVisibility(wid) == WorksetVisibility.Visible)
                         {
                             view.SetWorksetVisibility(wid, WorksetVisibility.Hidden);
                         }
-
-                        Log.Debug($"Hided workset: {strBuilder}");
 
                         status = subTrans.Commit();
                     }
@@ -108,7 +109,7 @@ internal static class RevitWorksetHelper
                     }
                     finally
                     {
-                        strBuilder.Clear();
+                        Log.Debug($"\n{builder}");
                     }
                 }
 
