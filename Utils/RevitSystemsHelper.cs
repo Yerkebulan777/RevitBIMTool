@@ -125,7 +125,7 @@ namespace RevitBIMTool.Utils
 
             }
 
-            Log.Debug($"Total {result.Count} count");
+            Log.Debug($"Total pipes {result.Count} count");
 
             return result;
         }

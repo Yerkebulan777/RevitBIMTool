@@ -116,18 +116,26 @@ internal sealed class RevitViewHelper
     {
         using (Transaction trans = new(doc))
         {
-            Log.Debug("Start set View settings ...");
-
-            TransactionStatus status = trans.Start("SetViewSettings");
-            if (status == TransactionStatus.Started && view is View3D view3D)
+            try
             {
-                view3D.ViewTemplateId = ElementId.InvalidElementId;
-                view3D.IsSectionBoxActive = false;
-                view3D.Discipline = discipline;
-                view3D.DisplayStyle = style;
-                view3D.DetailLevel = detail;
-                _ = trans.Commit();
+                TransactionStatus status = trans.Start("SetViewSettings");
+                if (status == TransactionStatus.Started && view is View3D view3D)
+                {
+
+                    view3D.ViewTemplateId = ElementId.InvalidElementId;
+                    view3D.IsSectionBoxActive = false;
+                    view3D.Discipline = discipline;
+                    view3D.DisplayStyle = style;
+                    view3D.DetailLevel = detail;
+
+                    _ = trans.Commit();
+                }
             }
+            finally
+            {
+                Log.Debug("Set View settings");
+            }
+
         };
     }
 
@@ -180,33 +188,44 @@ internal sealed class RevitViewHelper
 
     #region Categories
 
-    public static void SetCategoriesToVisible(Document doc, View view, IList<BuiltInCategory> catsToHide = null)
+    public static void SetCategoriesToVisible(Document doc, View view, IList<BuiltInCategory> toHide = null)
     {
-        using Transaction trx = new(doc);
+        using Transaction trx = new(doc, "CategoriesVisible");
 
-        bool shouldBeHidden = catsToHide != null;
-
-        Log.Debug("Start set categories to visible ...");
-
-        TransactionStatus status = trx.Start("CategoriesVisible");
-
-        foreach (ElementId catId in ParameterFilterUtilities.GetAllFilterableCategories())
+        try
         {
-            Category cat = Category.GetCategory(doc, (BuiltInCategory)catId.IntegerValue);
-
-            if (cat is Category category && view.CanCategoryBeHidden(category.Id))
+            if (TransactionStatus.Started == trx.Start())
             {
-                if (shouldBeHidden && catsToHide.Contains((BuiltInCategory)catId.IntegerValue))
+                foreach (ElementId catId in ParameterFilterUtilities.GetAllFilterableCategories())
                 {
-                    view.SetCategoryHidden(catId, true);
+                    Category cat = Category.GetCategory(doc, (BuiltInCategory)catId.IntegerValue);
+
+                    if (cat is Category category && view.CanCategoryBeHidden(category.Id))
+                    {
+                        if (toHide != null && toHide.Contains((BuiltInCategory)catId.IntegerValue))
+                        {
+                            view.SetCategoryHidden(catId, true);
+                        }
+                        else if (cat.SubCategories.Size > 0)
+                        {
+                            view.SetCategoryHidden(catId, false);
+                        }
+                    }
                 }
-                else if (cat.SubCategories.Size > 0)
-                {
-                    view.SetCategoryHidden(catId, false);
-                }
+
+                _ = trx.Commit();
             }
         }
-        _ = trx.Commit();
+        finally
+        {
+            Log.Debug("Set categories to visible");
+
+            if (!trx.HasEnded())
+            {
+                _ = trx.RollBack();
+            }
+        }
+
     }
 
 
@@ -440,38 +459,39 @@ internal sealed class RevitViewHelper
 
     public static void HideElementsInView(Document doc, IList<Element> elements, View activeView)
     {
-        List<ElementId> hideIds = [];
-
         using Transaction trx = new(doc, "HideElements");
 
-        if (trx.Start() == TransactionStatus.Started)
+        try
         {
-            foreach (Element instance in elements)
+            List<ElementId> hideIds = [];
+
+            if (TransactionStatus.Started == trx.Start())
             {
-                if (instance.CanBeHidden(activeView))
+                foreach (Element instance in elements)
                 {
-                    if (!instance.IsHidden(activeView))
+                    if (instance.CanBeHidden(activeView))
                     {
-                        hideIds.Add(instance.Id);
+                        if (!instance.IsHidden(activeView))
+                        {
+                            hideIds.Add(instance.Id);
+                        }
                     }
                 }
-            }
 
-            try
-            {
                 if (hideIds.Count > 0)
                 {
-                    Log.Debug("Set elements to hide ...");
                     activeView.HideElements(hideIds);
                     _ = trx.Commit();
                 }
             }
-            finally
+        }
+        finally
+        {
+            Log.Debug("Hided elements");
+
+            if (!trx.HasEnded())
             {
-                if (!trx.HasEnded())
-                {
-                    _ = trx.RollBack();
-                }
+                _ = trx.RollBack();
             }
         }
 

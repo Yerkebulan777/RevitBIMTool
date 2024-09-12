@@ -13,8 +13,8 @@ internal static class RevitWorksetHelper
     {
         if (doc.IsWorkshared)
         {
-            using Transaction trans = new(doc);
-            TransactionStatus status = trans.Start("SetWorksetsToVisible");
+            using Transaction trx = new(doc);
+            TransactionStatus status = trx.Start("SetWorksetsToVisible");
             IList<Workset> worksets = new FilteredWorksetCollector(doc).OfKind(WorksetKind.UserWorkset).ToWorksets();
             WorksetDefaultVisibilitySettings defaultVisibility = WorksetDefaultVisibilitySettings.GetWorksetDefaultVisibilitySettings(doc);
 
@@ -22,7 +22,6 @@ internal static class RevitWorksetHelper
             {
                 if (status == TransactionStatus.Started)
                 {
-                    Log.Debug($"Set all worksets to Visible");
                     foreach (Workset workset in worksets)
                     {
                         if (workset.IsEditable)
@@ -42,7 +41,7 @@ internal static class RevitWorksetHelper
                         }
                     }
 
-                    status = trans.Commit();
+                    status = trx.Commit();
                 }
             }
             catch (Exception ex)
@@ -51,9 +50,11 @@ internal static class RevitWorksetHelper
             }
             finally
             {
-                if (!trans.HasEnded())
+                Log.Debug($"Set worksets to visible");
+
+                if (!trx.HasEnded())
                 {
-                    _ = trans.RollBack();
+                    _ = trx.RollBack();
                 }
             }
         }
