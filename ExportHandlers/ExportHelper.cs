@@ -44,7 +44,7 @@ internal static class ExportHelper
 
             Log.Debug($"Hours difference: {timeDifference.Hours}");
             Log.Debug($"Target date: {targetFileDate:yyyy-MM-dd}");
-            Log.Debug($"Sourse date: {targetFileDate:yyyy-MM-dd}");
+            Log.Debug($"Sourse date: {sourceFileDate:yyyy-MM-dd}");
 
             bool isUpdated = timeDifference.TotalSeconds > minimum;
             bool isIndated = timeDifference.TotalDays < minimum;
