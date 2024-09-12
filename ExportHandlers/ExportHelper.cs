@@ -42,7 +42,8 @@ internal static class ExportHelper
             TimeSpan timeDifference = targetFileDate - sourceFileDate;
             long targetFileSize = new FileInfo(targetFilePath).Length;
 
-            Log.Debug($"Hours difference: {timeDifference.Hours}");
+            Log.Debug($"Days difference: {timeDifference.TotalDays}");
+            Log.Debug($"Difference sec: {timeDifference.TotalSeconds}");
             Log.Debug($"Target date: {targetFileDate:yyyy-MM-dd}");
             Log.Debug($"Sourse date: {sourceFileDate:yyyy-MM-dd}");
 
