@@ -60,13 +60,14 @@ internal sealed class Application : IExternalApplication
 
     private void OnIdling(object sender, IdlingEventArgs e)
     {
-        Log.Debug($"Idling session called {counter++}");
+        counter++;
 
-        if (counter > 100)
+        if (counter > 0)
         {
+            Thread.Sleep(1000);
+            Log.Debug($"Idling session called");
             RevitFileHelper.CloseRevitApplication();
         }
-
     }
 
     #endregion
