@@ -3,18 +3,15 @@ using RevitBIMTool.ExportHandlers;
 using RevitBIMTool.Utils;
 using Serilog;
 using ServiceLibrary.Models;
-using System.IO;
 
 
 namespace RevitBIMTool.Core
 {
-    public sealed class RevitExternalEventHandler : IExternalEventHandler
+    internal sealed class RevitExternalEventHandler : IExternalEventHandler
     {
         private readonly DateTime startTime;
         private readonly string versionNumber;
         private readonly ExternalEvent externalEvent;
-        private static readonly string myDocuments = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-
 
         public RevitExternalEventHandler(string version)
         {
