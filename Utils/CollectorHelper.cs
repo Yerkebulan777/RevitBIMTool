@@ -11,17 +11,19 @@ public static class CollectorHelper
 
     #region FilteredByFamilylName
 
-    public static FilteredElementCollector GetInstancesByFamilyName(Document doc, BuiltInCategory bic, string nameStartWith)
+    public static FilteredElementCollector GetInstancesByFamilyName(Document doc, BuiltInCategory bic, string nameStart)
     {
         IList<ElementFilter> filters = [];
 
+        filters.Add(new Autodesk.Revit.DB.Architecture.RoomFilter());
+
         FilteredElementCollector collector = new FilteredElementCollector(doc).OfClass(typeof(Family));
 
-        FilteredElementCollector symbolCollector = new(doc);
+        FilteredElementCollector instanceCollector = new(doc);
 
         foreach (Family family in collector.OfType<Family>())
         {
-            if (family.Name.StartsWith(nameStartWith, StringComparison.OrdinalIgnoreCase))
+            if (family.Name.StartsWith(nameStart, StringComparison.OrdinalIgnoreCase))
             {
                 foreach (ElementId symbolId in family.GetFamilySymbolIds())
                 {
@@ -30,15 +32,14 @@ public static class CollectorHelper
             }
         }
 
-        if (filters.Count == 0)
-        {
-            return null;
-        }
-
         LogicalOrFilter orFilter = new(filters);
-        symbolCollector = symbolCollector.OfCategory(bic);
-        symbolCollector = symbolCollector.WherePasses(orFilter);
-        return symbolCollector.WhereElementIsViewIndependent();
+        instanceCollector = instanceCollector.OfCategory(bic);
+        instanceCollector = instanceCollector.WherePasses(orFilter);
+        instanceCollector = instanceCollector.WhereElementIsViewIndependent();
+
+        Log.Debug($"Instances {nameStart} {instanceCollector.GetElementCount()} count");
+
+        return instanceCollector;
     }
 
     #endregion
