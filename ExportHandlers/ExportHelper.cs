@@ -40,6 +40,7 @@ internal static class ExportHelper
             DateTime sourceFileDate = File.GetLastWriteTime(sourceFilePath);
 
             TimeSpan timeDifference = targetFileDate - sourceFileDate;
+
             long targetFileSize = new FileInfo(targetFilePath).Length;
 
             Log.Debug($"Difference sec: {timeDifference.TotalSeconds}");
