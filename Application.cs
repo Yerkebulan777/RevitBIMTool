@@ -4,7 +4,6 @@ using RevitBIMTool.Core;
 using RevitBIMTool.Utils;
 using Serilog;
 using ServiceLibrary.Models;
-using System.Runtime.Remoting.Contexts;
 
 
 namespace RevitBIMTool;
@@ -40,7 +39,6 @@ internal sealed class Application : IExternalApplication
                 if (ExternalEventRequest.Denied != externalEventHandler.Raise())
                 {
                     uiapp.Idling += new EventHandler<IdlingEventArgs>(OnIdling);
-
                 }
             }
         }
@@ -76,6 +74,5 @@ internal sealed class Application : IExternalApplication
     }
 
     #endregion
-
 
 }
