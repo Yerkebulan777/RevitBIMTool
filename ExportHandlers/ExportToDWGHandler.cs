@@ -1,10 +1,8 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using iTextSharp.text;
 using RevitBIMTool.Model;
 using RevitBIMTool.Utils;
 using Serilog;
-using System.Collections.Generic;
 using System.IO;
 using Element = Autodesk.Revit.DB.Element;
 
@@ -84,33 +82,31 @@ internal static class ExportToDWGHandler
         {
             string exportFullPath = Path.Combine(exportFolder, $"{sheetModel.SheetName}.dwg");
 
-            lock (uidoc)
+            try
             {
-                try
+                Task.Run(() =>
                 {
-                    Task.Run(() =>
+                    Thread.Sleep(1000);
+
+                    if (File.Exists(exportFullPath))
                     {
-                        Thread.Sleep(1000);
+                        File.Delete(exportFullPath);
+                    }
 
-                        if (File.Exists(exportFullPath))
-                        {
-                            File.Delete(exportFullPath);
-                        }
+                    ViewSheet sheet = sheetModel.ViewSheet;
 
-                        ViewSheet sheet = sheetModel.ViewSheet;
+                    ICollection<ElementId> elementId = [sheet.Id];
 
-                        ICollection<ElementId> elementId = [sheet.Id];
+                    result = uidoc.Document.Export(exportFolder, sheetModel.SheetName, elementId, dwgOptions);
 
-                        result = uidoc.Document.Export(exportFolder, sheetModel.SheetName, elementId, dwgOptions);
+                }).RunSynchronously();
 
-                    }).RunSynchronously();
-
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, ex.Message);
-                }
             }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+            }
+
         }
 
         return result;
