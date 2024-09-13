@@ -38,6 +38,7 @@ internal sealed class Application : IExternalApplication
                 if (ExternalEventRequest.Denied != externalEventHandler.Raise())
                 {
                     uiapp.Idling += new EventHandler<IdlingEventArgs>(OnIdling);
+
                 }
             }
         }
