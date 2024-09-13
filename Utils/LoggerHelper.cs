@@ -32,6 +32,19 @@ namespace RevitBIMTool.Utils
 
             }
         }
+
+
+        public static void SetupLogger()
+        {
+            string logDir = Path.Combine(MyDocuments, "RevitBIMTool");
+            string logPath = Path.Combine(logDir, "Default.txt");
+            RevitPathHelper.DeleteExistsFile(logPath);
+            RevitPathHelper.EnsureDirectory(logDir);
+            Log.Logger = new LoggerConfiguration()
+                .WriteTo.File(logPath)
+                .MinimumLevel.Debug()
+                .CreateLogger();
+        }
     }
 
 }
