@@ -74,8 +74,6 @@ internal static class ExportToDWGHandler
 
     private static bool ExportFileToDWG(UIDocument uidoc, string exportFolder, List<SheetModel> sheetModels)
     {
-        Document doc = uidoc.Document;
-
         bool result = sheetModels.Count > 0;
 
         foreach (SheetModel sheetModel in SheetModel.SortSheetModels(sheetModels))
