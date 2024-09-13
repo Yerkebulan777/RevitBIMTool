@@ -4,6 +4,7 @@ using RevitBIMTool.Core;
 using RevitBIMTool.Utils;
 using Serilog;
 using ServiceLibrary.Models;
+using System.Runtime.Remoting.Contexts;
 
 
 namespace RevitBIMTool;
@@ -22,6 +23,7 @@ internal sealed class Application : IExternalApplication
             uiapp = uiapp ?? throw new ArgumentNullException(nameof(uiapp));
             versionNumber = uiapp.ControlledApplication.VersionNumber;
             SetupUIPanel.Initialize(uiapp);
+            LoggerHelper.SetupLogger();
         }
         catch (Exception ex)
         {
@@ -50,6 +52,8 @@ internal sealed class Application : IExternalApplication
     public Result OnShutdown(UIControlledApplication uiapp)
     {
         uiapp.Idling -= new EventHandler<IdlingEventArgs>(OnIdling);
+
+        Log.CloseAndFlush();
 
         return Result.Succeeded;
     }
