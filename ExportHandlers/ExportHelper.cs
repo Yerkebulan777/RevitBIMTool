@@ -87,6 +87,8 @@ internal static class ExportHelper
 
         if (PathHelper.IsFileAccessible(exportFolder))
         {
+            Log.Debug("Satrt create Zip folder... ");
+
             using ZipArchive archive = ZipFile.Open($"{exportFolder}.zip", ZipArchiveMode.Create);
 
             foreach (string filePath in Directory.GetFiles(exportFolder))
