@@ -6,6 +6,7 @@ using RevitBIMTool.Utils;
 using Serilog;
 using System.Collections.Generic;
 using System.IO;
+using Element = Autodesk.Revit.DB.Element;
 
 
 namespace RevitBIMTool.ExportHandlers;
@@ -32,8 +33,6 @@ internal static class ExportToDWGHandler
 
     public static void Execute(UIDocument uidoc, string revitFilePath, string exportDirectory)
     {
-        Document doc = uidoc.Document;
-
         Log.Information("Start export to DWG...");
 
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
@@ -44,7 +43,8 @@ internal static class ExportToDWGHandler
         RevitPathHelper.EnsureDirectory(exportFolder);
         RevitPathHelper.ClearDirectory(exportFolder);
 
-        FilteredElementCollector collector = new(doc);
+        FilteredElementCollector collector = new(uidoc.Document);
+
         collector = collector.OfClass(typeof(ViewSheet));
 
         if (0 < collector.GetElementCount())
@@ -56,7 +56,9 @@ internal static class ExportToDWGHandler
                 if (element is ViewSheet sheet)
                 {
                     SheetModel model = new(sheet);
-                    model.SetSheetName(doc, revitFileName);
+
+                    model.SetSheetName(uidoc.Document, revitFileName);
+
                     if (model.IsValid)
                     {
                         sheetModels.Add(model);
@@ -82,18 +84,18 @@ internal static class ExportToDWGHandler
         {
             string exportFullPath = Path.Combine(exportFolder, $"{sheetModel.SheetName}.dwg");
 
-            if (result)
+            lock (uidoc)
             {
                 try
                 {
-                    if (File.Exists(exportFullPath))
-                    {
-                        File.Delete(exportFullPath);
-                    }
-
                     Task.Run(() =>
                     {
                         Thread.Sleep(1000);
+
+                        if (File.Exists(exportFullPath))
+                        {
+                            File.Delete(exportFullPath);
+                        }
 
                         ViewSheet sheet = sheetModel.ViewSheet;
 
