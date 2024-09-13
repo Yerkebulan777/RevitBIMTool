@@ -4,7 +4,6 @@ using RevitBIMTool.Model;
 using RevitBIMTool.Utils;
 using Serilog;
 using System.IO;
-using System.Windows.Threading;
 
 
 namespace RevitBIMTool.ExportHandlers;
@@ -83,36 +82,33 @@ internal static class ExportToDWGHandler
         {
             string exportFullPath = Path.Combine(exportFolder, $"{sheetModel.SheetName}.dwg");
 
-            Dispatcher.CurrentDispatcher.Invoke(() =>
+            try
             {
-                try
+                if (File.Exists(exportFullPath))
                 {
-                    if (File.Exists(exportFullPath))
-                    {
-                        File.Delete(exportFullPath);
-                    }
-
-                    ViewSheet sheet = sheetModel.ViewSheet;
-
-                    ICollection<ElementId> elementId = [sheet.Id];
-
-                    if (!doc.Export(exportFolder, sheetModel.SheetName, elementId, dwgOptions))
-                    {
-                        Log.Error($"Failed export to DWG {sheetModel.SheetName}");
-
-                        result = false;
-                    }
-
+                    File.Delete(exportFullPath);
                 }
-                catch (Exception ex)
+
+                ViewSheet sheet = sheetModel.ViewSheet;
+
+                ICollection<ElementId> elementId = [sheet.Id];
+
+                if (!uidoc.Document.Export(exportFolder, sheetModel.SheetName, elementId, dwgOptions))
                 {
-                    Log.Error(ex, ex.Message);
+                    Log.Error($"Failed export to DWG {sheetModel.SheetName}");
+
+                    result = false;
                 }
-                finally
-                {
-                    Thread.Sleep(1000);
-                }
-            });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+            }
+            finally
+            {
+                Thread.Sleep(100);
+            }
+
         }
 
         return result;
