@@ -85,8 +85,6 @@ internal static class ExportToDWGHandler
 
             Dispatcher.CurrentDispatcher.Invoke(() =>
             {
-                using Transaction trx = new(doc, $"ExportFileToDWG");
-
                 try
                 {
                     if (File.Exists(exportFullPath))
@@ -94,21 +92,17 @@ internal static class ExportToDWGHandler
                         File.Delete(exportFullPath);
                     }
 
-                    if (TransactionStatus.Started == trx.Start())
+                    ViewSheet sheet = sheetModel.ViewSheet;
+
+                    ICollection<ElementId> elementId = [sheet.Id];
+
+                    if (!doc.Export(exportFolder, sheetModel.SheetName, elementId, dwgOptions))
                     {
-                        ViewSheet sheet = sheetModel.ViewSheet;
+                        Log.Error($"Failed export to DWG {sheetModel.SheetName}");
 
-                        ICollection<ElementId> elementId = [sheet.Id];
-
-                        if (!doc.Export(exportFolder, sheetModel.SheetName, elementId, dwgOptions))
-                        {
-                            Log.Error($"Неудачный экспорт в DWG {sheetModel.SheetName}");
-
-                            result = false;
-                        }
-
-                        _ = trx.Commit();
+                        result = false;
                     }
+
                 }
                 catch (Exception ex)
                 {
@@ -116,10 +110,7 @@ internal static class ExportToDWGHandler
                 }
                 finally
                 {
-                    if (!trx.HasEnded())
-                    {
-                        _ = trx.RollBack();
-                    }
+                    Thread.Sleep(1000);
                 }
             });
         }
