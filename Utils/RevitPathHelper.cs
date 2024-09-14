@@ -2,7 +2,6 @@
 using Microsoft.Win32;
 using System.Diagnostics;
 using System.IO;
-using System.Text.RegularExpressions;
 using Path = System.IO.Path;
 
 
@@ -108,30 +107,6 @@ public static class RevitPathHelper
     }
 
 
-    public static void ClearDirectory(string directoryPath)
-    {
-        if (Directory.Exists(directoryPath))
-        {
-            DirectoryInfo directory = new(directoryPath);
-
-            foreach (FileInfo info in directory.EnumerateFiles())
-            {
-                if (FileUnlockHelper.TryUnlockFile(info.FullName))
-                {
-                    try
-                    {
-                        info.Delete();
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine(ex.Message);
-                    }
-                }
-            }
-        }
-    }
-
-
     public static void DeleteExistsFile(string sheetFullPath)
     {
         if (File.Exists(sheetFullPath))
@@ -207,5 +182,46 @@ public static class RevitPathHelper
 
         return awaitResult;
     }
+
+
+    public static void ClearDirectory(string directoryPath)
+    {
+        if (Directory.Exists(directoryPath))
+        {
+            DirectoryInfo directory = new(directoryPath);
+
+            foreach (FileInfo info in directory.EnumerateFiles())
+            {
+                if (FileUnlockHelper.TryUnlockFile(info.FullName))
+                {
+                    try
+                    {
+                        info.Delete();
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine(ex.Message);
+                    }
+                }
+            }
+        }
+    }
+
+
+    public static void Move(string source, string destination)
+    {
+        EnsureDirectory(destination);
+
+        ClearDirectory(destination);
+
+        foreach (string file in Directory.GetFiles(source))
+        {
+            string fileName = Path.GetFileName(file);
+            string path = Path.Combine(destination, fileName);
+
+            File.Move(file, path);
+        }
+    }
+
 
 }

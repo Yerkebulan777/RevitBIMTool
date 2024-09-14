@@ -35,11 +35,7 @@ internal static class ExportToDWGHandler
 
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
 
-        string exportFolder = Path.Combine(exportDirectory, revitFileName);
-
         RevitPathHelper.EnsureDirectory(exportDirectory);
-        RevitPathHelper.EnsureDirectory(exportFolder);
-        RevitPathHelper.ClearDirectory(exportFolder);
 
         FilteredElementCollector collector = new(uidoc.Document);
 
@@ -64,8 +60,12 @@ internal static class ExportToDWGHandler
                 }
             }
 
-            if (ExportFileToDWG(uidoc.Document, exportFolder, sheetModels))
+            string exportFolder = Path.Combine(exportDirectory, revitFileName);
+            string tempFolder = Path.Combine(Path.GetTempPath(), revitFileName);
+
+            if (ExportFileToDWG(uidoc.Document, tempFolder, sheetModels))
             {
+                RevitPathHelper.Move(tempFolder, exportFolder);
                 ExportHelper.CreateZipTheFolder(revitFileName, exportDirectory);
             }
 
@@ -74,45 +74,41 @@ internal static class ExportToDWGHandler
     }
 
 
-    private static bool ExportFileToDWG(Document doc, string exportFolder, List<SheetModel> sheetModels)
+    private static bool ExportFileToDWG(Document doc, string tempFolder, List<SheetModel> sheetModels)
     {
-        bool result = sheetModels.Count > 0;
+        int count = 0;
 
-        string tempFolder = Path.Combine(Path.GetTempPath(), Path.GetFileName(exportFolder));
+        SpinWait spinWait = new();
+
+        int totalSheets = sheetModels.Count;
+
+        RevitPathHelper.EnsureDirectory(tempFolder);
 
         foreach (SheetModel sheetModel in SheetModel.SortSheetModels(sheetModels))
         {
             try
             {
-                Thread.Sleep(1000);
+                spinWait.SpinOnce();
 
-                string tempExportPath = Path.Combine(tempFolder, $"{sheetModel.SheetName}.dwg");
-                string finalExportPath = Path.Combine(exportFolder, $"{sheetModel.SheetName}.dwg");
+                ICollection<ElementId> elementId = [sheetModel.ViewSheet.Id];
 
-                ICollection<ElementId> elementId = new List<ElementId> { sheetModel.ViewSheet.Id };
-
-                result = doc.Export(tempFolder, sheetModel.SheetName, elementId, dwgOptions);
-
-                if (result)
+                if (doc.Export(tempFolder, sheetModel.SheetName, elementId, dwgOptions))
                 {
-                    if (File.Exists(finalExportPath))
-                    {
-                        File.Delete(finalExportPath);
-                    }
-
-                    File.Move(tempExportPath, finalExportPath);
+                    count++;
                 }
             }
             catch (Exception ex)
             {
-                Log.Error(ex, ex.Message);
-                result = false;
+                Log.Error(ex.Message);
+            }
+            finally
+            {
+                Thread.Sleep(100);
             }
         }
 
-        return result;
+        return totalSheets == count;
     }
-
 
 
 
