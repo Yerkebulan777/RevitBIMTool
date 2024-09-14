@@ -64,7 +64,7 @@ internal static class ExportToDWGHandler
                 }
             }
 
-            if (ExportFileToDWG(uidoc, exportFolder, sheetModels))
+            if (ExportFileToDWG(uidoc.Document, exportFolder, sheetModels))
             {
                 ExportHelper.CreateZipTheFolder(revitFileName, exportDirectory);
             }
@@ -74,43 +74,46 @@ internal static class ExportToDWGHandler
     }
 
 
-    private static bool ExportFileToDWG(UIDocument uidoc, string exportFolder, List<SheetModel> sheetModels)
+    private static bool ExportFileToDWG(Document doc, string exportFolder, List<SheetModel> sheetModels)
     {
         bool result = sheetModels.Count > 0;
 
+        string tempFolder = Path.Combine(Path.GetTempPath(), Path.GetFileName(exportFolder));
+
         foreach (SheetModel sheetModel in SheetModel.SortSheetModels(sheetModels))
         {
-            string exportFullPath = Path.Combine(exportFolder, $"{sheetModel.SheetName}.dwg");
-
             try
             {
-                Task.Run(() =>
-                {
-                    Thread.Sleep(1000);
+                Thread.Sleep(1000);
 
-                    if (File.Exists(exportFullPath))
+                string tempExportPath = Path.Combine(tempFolder, $"{sheetModel.SheetName}.dwg");
+                string finalExportPath = Path.Combine(exportFolder, $"{sheetModel.SheetName}.dwg");
+
+                ICollection<ElementId> elementId = new List<ElementId> { sheetModel.ViewSheet.Id };
+
+                result = doc.Export(tempFolder, sheetModel.SheetName, elementId, dwgOptions);
+
+                if (result)
+                {
+                    if (File.Exists(finalExportPath))
                     {
-                        File.Delete(exportFullPath);
+                        File.Delete(finalExportPath);
                     }
 
-                    ViewSheet sheet = sheetModel.ViewSheet;
-
-                    ICollection<ElementId> elementId = [sheet.Id];
-
-                    result = uidoc.Document.Export(exportFolder, sheetModel.SheetName, elementId, dwgOptions);
-
-                }).RunSynchronously();
-
+                    File.Move(tempExportPath, finalExportPath);
+                }
             }
             catch (Exception ex)
             {
                 Log.Error(ex, ex.Message);
+                result = false;
             }
-
         }
 
         return result;
     }
+
+
 
 
 }
