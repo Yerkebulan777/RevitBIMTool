@@ -35,21 +35,21 @@ internal static class ExportHelper
     {
         FileInfo targetFile = new(targetPath);
 
-        DateTime currentDate = DateTime.Now;
+        DateTime currentNowDate = DateTime.Now;
 
         if (targetFile.Exists && targetFile.Length > limit)
         {
             DateTime targetLastDate = File.GetLastWriteTime(targetPath);
             DateTime sourceLastDate = File.GetLastWriteTime(sourcePath);
 
-            TimeSpan targetDifference = currentDate - targetLastDate;
+            Log.Debug($"Target last write: {targetLastDate:yyyy-MM-dd}");
+            Log.Debug($"Source last write: {sourceLastDate:yyyy-MM-dd}");
+
+            TimeSpan targetDifference = currentNowDate - targetLastDate;
             TimeSpan sourceDifference = targetLastDate - sourceLastDate;
 
             bool isTargetLimitGreate = targetDifference.TotalDays > limit;
             bool isSourceLimitGreate = sourceDifference.TotalSeconds > limit;
-
-            Log.Debug($"Target last write: {targetLastDate:yyyy-MM-dd}");
-            Log.Debug($"Source last write: {sourceLastDate:yyyy-MM-dd}");
 
             Log.Debug($"Target difference in days: {Math.Round(targetDifference.TotalDays)}");
             Log.Debug($"Source difference in days: {Math.Round(sourceDifference.TotalDays)}");
@@ -96,5 +96,6 @@ internal static class ExportHelper
         }
 
     }
+
 
 }
