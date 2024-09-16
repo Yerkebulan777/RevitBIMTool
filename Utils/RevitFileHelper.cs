@@ -45,6 +45,7 @@ internal static class RevitFileHelper
             if (document != null && document.IsValidObject && document.Close(false))
             {
                 uiapp.Application.PurgeReleasedAPIObjects();
+                Thread.Sleep(1000);
             }
         }
         finally
