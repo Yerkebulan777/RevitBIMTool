@@ -7,18 +7,13 @@ using System.Diagnostics;
 namespace RevitBIMTool.Utils;
 internal static class RevitFileHelper
 {
-    public static bool IsTimedOut(in DateTime startTime, ref int counter)
+    public static bool IsCountOut(ref int counter)
     {
-        Thread.Sleep(counter--);
+        Log.Debug($"Counter: {counter}");
 
-        TimeSpan limit = TimeSpan.FromHours(3);
+        Thread.Sleep(counter++);
 
-        if (counter > 100 || (DateTime.Now - startTime) > limit)
-        {
-            Log.Debug("Time limit reached"); return true;
-        }
-
-        return false;
+        return counter > 100;
     }
 
 
