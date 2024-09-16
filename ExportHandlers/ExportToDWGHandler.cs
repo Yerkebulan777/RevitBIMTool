@@ -65,7 +65,7 @@ internal static class ExportToDWGHandler
 
             if (ExportFileToDWG(uidoc.Document, tempFolder, sheetModels))
             {
-                RevitPathHelper.Move(tempFolder, exportFolder);
+                RevitPathHelper.MoveFiles(tempFolder, exportFolder);
                 ExportHelper.CreateZipTheFolder(revitFileName, exportDirectory);
             }
 
@@ -84,26 +84,18 @@ internal static class ExportToDWGHandler
 
         RevitPathHelper.EnsureDirectory(tempFolder);
 
+        Log.Information($"Total valid sheets {totalSheets}");
+
         foreach (SheetModel sheetModel in SheetModel.SortSheetModels(sheetModels))
         {
-            try
-            {
-                spinWait.SpinOnce();
+            spinWait.SpinOnce();
 
-                ICollection<ElementId> elementId = [sheetModel.ViewSheet.Id];
+            ICollection<ElementId> elemIds = [sheetModel.ViewSheet.Id];
 
-                if (doc.Export(tempFolder, sheetModel.SheetName, elementId, dwgOptions))
-                {
-                    count++;
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex.Message);
-            }
-            finally
+            if (doc.Export(tempFolder, sheetModel.SheetName, elemIds, dwgOptions))
             {
                 Thread.Sleep(100);
+                count++;
             }
         }
 

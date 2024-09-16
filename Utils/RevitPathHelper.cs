@@ -184,44 +184,22 @@ public static class RevitPathHelper
     }
 
 
-    public static void ClearDirectory(string directoryPath)
-    {
-        if (Directory.Exists(directoryPath))
-        {
-            DirectoryInfo directory = new(directoryPath);
-
-            foreach (FileInfo info in directory.EnumerateFiles())
-            {
-                if (FileUnlockHelper.TryUnlockFile(info.FullName))
-                {
-                    try
-                    {
-                        info.Delete();
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine(ex.Message);
-                    }
-                }
-            }
-        }
-    }
-
-
-    public static void Move(string source, string destination)
+    public static void MoveFiles(string source, string destination)
     {
         EnsureDirectory(destination);
 
-        ClearDirectory(destination);
+        DirectoryInfo directory = new(source);
 
-        foreach (string file in Directory.GetFiles(source))
+        foreach (FileInfo info in directory.EnumerateFiles())
         {
-            string fileName = Path.GetFileName(file);
-            string path = Path.Combine(destination, fileName);
+            string path = Path.Combine(destination, info.Name);
 
-            File.Move(file, path);
+            DeleteExistsFile(path);
+
+            File.Move(info.FullName, path);
         }
     }
+
 
 
 }
