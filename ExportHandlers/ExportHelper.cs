@@ -31,33 +31,33 @@ internal static class ExportHelper
     }
 
 
-    public static bool IsFileUpdated(string targetPath, string sourcePath, int limit = 100)
+    public static bool IsFileUpdated(string targetPath, string sourcePath, int limitSize = 100, int limitDays = 100)
     {
         FileInfo targetFile = new(targetPath);
 
-        DateTime currentNowDate = DateTime.Now;
-
-        if (targetFile.Exists && targetFile.Length > limit)
+        if (targetFile.Exists && targetFile.Length > limitSize)
         {
             DateTime targetLastDate = File.GetLastWriteTime(targetPath);
             DateTime sourceLastDate = File.GetLastWriteTime(sourcePath);
 
-            Log.Debug($"Target last write: {targetLastDate:yyyy-MM-dd}");
-            Log.Debug($"Source last write: {sourceLastDate:yyyy-MM-dd}");
-
-            TimeSpan targetDifference = currentNowDate - targetLastDate;
-            TimeSpan sourceDifference = targetLastDate - sourceLastDate;
-
-            bool isTargetLimitLess = targetDifference.TotalDays > limit;
-            bool isSourceLimitLess = sourceDifference.TotalSeconds > limit;
-
-            Log.Debug($"Target difference in days: {Math.Round(targetDifference.TotalDays)}");
-            Log.Debug($"Source difference in days: {Math.Round(sourceDifference.TotalDays)}");
-
-            if (isTargetLimitLess && isSourceLimitLess)
+            if (targetLastDate > sourceLastDate)
             {
-                Log.Debug($"Is updated file!");
-                return true;
+                DateTime currentNowDate = DateTime.Now;
+
+                Log.Debug($"Target last write: {targetLastDate:yyyy-MM-dd}");
+                Log.Debug($"Source last write: {sourceLastDate:yyyy-MM-dd}");
+
+                TimeSpan targetDifference = currentNowDate - targetLastDate;
+                TimeSpan sourceDifference = targetLastDate - sourceLastDate;
+
+                Log.Debug($"Target difference in days: {Math.Round(targetDifference.TotalDays)}");
+                Log.Debug($"Source difference in days: {Math.Round(sourceDifference.TotalDays)}");
+
+                bool result = limitDays > targetDifference.Days;
+
+                Log.Debug($"Is valid file: {result}");
+
+                return result;
             }
         }
 
