@@ -13,6 +13,7 @@ namespace RevitBIMTool.Core
         private readonly string versionNumber;
         private readonly ExternalEvent externalEvent;
 
+
         public RevitExternalEventHandler(string version)
         {
             externalEvent = ExternalEvent.Create(this);
@@ -62,6 +63,7 @@ namespace RevitBIMTool.Core
         {
             return externalEvent.Raise();
         }
+
 
     }
 
