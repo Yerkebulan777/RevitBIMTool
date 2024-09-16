@@ -48,13 +48,13 @@ internal static class ExportHelper
             TimeSpan targetDifference = currentNowDate - targetLastDate;
             TimeSpan sourceDifference = targetLastDate - sourceLastDate;
 
-            bool isTargetLimitGreate = targetDifference.TotalDays > limit;
-            bool isSourceLimitGreate = sourceDifference.TotalSeconds > limit;
+            bool isTargetLimitLess = targetDifference.TotalDays > limit;
+            bool isSourceLimitLess = sourceDifference.TotalSeconds > limit;
 
             Log.Debug($"Target difference in days: {Math.Round(targetDifference.TotalDays)}");
             Log.Debug($"Source difference in days: {Math.Round(sourceDifference.TotalDays)}");
 
-            if (isSourceLimitGreate && isTargetLimitGreate)
+            if (isTargetLimitLess && isSourceLimitLess)
             {
                 Log.Debug($"Is updated file!");
                 return true;
