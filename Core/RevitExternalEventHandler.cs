@@ -9,6 +9,7 @@ namespace RevitBIMTool.Core
 {
     internal sealed class RevitExternalEventHandler : IExternalEventHandler
     {
+        private int counter;
         private readonly DateTime startTime;
         private readonly string versionNumber;
         private readonly ExternalEvent externalEvent;
@@ -40,9 +41,9 @@ namespace RevitBIMTool.Core
 
                     string output = handler.RunDocumentAction(uiapp, model, GeneralTaskHandler.RunTask);
 
-                    Log.Information($"Task result:\t{output}");
+                    Log.Information($"Task result: \t{output}");
 
-                    if (RevitFileHelper.IsTimedOut(startTime))
+                    if (RevitFileHelper.IsTimedOut(in startTime, ref counter))
                     {
                         RevitFileHelper.CloseRevitApplication();
                     }
