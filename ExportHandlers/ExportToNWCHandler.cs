@@ -46,6 +46,7 @@ internal static class ExportToNWCHandler
         {
             List<Element> instansesToHide = [];
 
+            const BuiltInCategory genCat = BuiltInCategory.OST_GenericModel;
             const BuiltInCategory ductCat = BuiltInCategory.OST_DuctAccessory;
             const BuiltInCategory sfrmCat = BuiltInCategory.OST_StructuralFraming;
             const BuiltInCategory mechCat = BuiltInCategory.OST_MechanicalEquipment;
@@ -53,6 +54,7 @@ internal static class ExportToNWCHandler
             Dispatcher.CurrentDispatcher.Invoke(() => RevitViewHelper.OpenView(uidoc, view));
 
             instansesToHide.AddRange(RevitSystemsHelper.FilterPipesAndFittingsByMaxDiameter(doc, 30));
+            instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, genCat, "(Отверстия)").ToElements());
             instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, sfrmCat, "(Отверстия)").ToElements());
             instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, sfrmCat, "(элемент_перемычки)").ToElements());
             instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, ductCat, "(клапан)kazvent_bm-h").ToElements());
