@@ -34,8 +34,6 @@ internal static class ExportHelper
 
     public static bool IsFileUpdated(string targetPath, string sourcePath, int limit = 100)
     {
-        bool isUpdated = false;
-
         FileInfo targetFile = new(targetPath);
 
         DateTime currentDateTime = DateTime.Now;
@@ -48,24 +46,22 @@ internal static class ExportHelper
             TimeSpan sourceDifference = targetLastDate - sourceLastDate;
             TimeSpan currentDifference = currentDateTime - targetLastDate;
 
-            Debug.WriteLine($"Target last write: {targetLastDate:yyyy-MM-dd}");
-            Debug.WriteLine($"Source last write: {sourceLastDate:yyyy-MM-dd}");
-
-            Debug.WriteLine($"Source difference in days: {sourceDifference.TotalDays}");
-            Debug.WriteLine($"Current difference in days: {currentDifference.TotalDays}");
-
             bool isSourceTimeGreate = sourceDifference.TotalSeconds > limit;
             bool isCurrentTimeGreate = currentDifference.TotalDays > limit;
 
+            Log.Debug($"Target last write: {targetLastDate:yyyy-MM-dd}");
+            Log.Debug($"Source last write: {sourceLastDate:yyyy-MM-dd}");
+
+            Log.Debug($"Source difference in days: {sourceDifference.TotalDays}");
+            Log.Debug($"Current difference in days: {currentDifference.TotalDays}");
+
             if (isSourceTimeGreate && isCurrentTimeGreate)
             {
-                isUpdated = true;
+                return true;
             }
         }
 
-        Debug.WriteLine($"Is updated: {isUpdated}");
-
-        return isUpdated;
+        return false;
     }
 
 
