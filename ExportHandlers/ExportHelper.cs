@@ -2,7 +2,6 @@
 using RevitBIMTool.Utils.SystemUtil;
 using Serilog;
 using ServiceLibrary.Helpers;
-using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 
@@ -36,27 +35,28 @@ internal static class ExportHelper
     {
         FileInfo targetFile = new(targetPath);
 
-        DateTime currentDateTime = DateTime.Now;
+        DateTime currentDate = DateTime.Now;
 
         if (targetFile.Exists && targetFile.Length > limit)
         {
             DateTime targetLastDate = File.GetLastWriteTime(targetPath);
             DateTime sourceLastDate = File.GetLastWriteTime(sourcePath);
 
+            TimeSpan targetDifference = currentDate - targetLastDate;
             TimeSpan sourceDifference = targetLastDate - sourceLastDate;
-            TimeSpan currentDifference = currentDateTime - targetLastDate;
 
-            bool isSourceTimeGreate = sourceDifference.TotalSeconds > limit;
-            bool isCurrentTimeGreate = currentDifference.TotalDays > limit;
+            bool isTargetLimitGreate = targetDifference.TotalDays > limit;
+            bool isSourceLimitGreate = sourceDifference.TotalSeconds > limit;
 
             Log.Debug($"Target last write: {targetLastDate:yyyy-MM-dd}");
             Log.Debug($"Source last write: {sourceLastDate:yyyy-MM-dd}");
 
-            Log.Debug($"Source difference in days: {sourceDifference.TotalDays}");
-            Log.Debug($"Current difference in days: {currentDifference.TotalDays}");
+            Log.Debug($"Target difference in days: {Math.Round(targetDifference.TotalDays)}");
+            Log.Debug($"Source difference in days: {Math.Round(sourceDifference.TotalDays)}");
 
-            if (isSourceTimeGreate && isCurrentTimeGreate)
+            if (isSourceLimitGreate && isTargetLimitGreate)
             {
+                Log.Debug($"Is updated file!");
                 return true;
             }
         }
