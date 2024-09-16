@@ -69,18 +69,6 @@ internal static class ExportHelper
     }
 
 
-    public static string GetRelativePath(string fromPath, string toPath)
-    {
-        Uri fromUri = new(fromPath);
-        Uri toUri = new(toPath);
-
-        Uri relativeUri = fromUri.MakeRelativeUri(toUri);
-        string relativePath = Uri.UnescapeDataString(relativeUri.ToString());
-
-        return relativePath.Replace('/', Path.DirectorySeparatorChar);
-    }
-
-
     public static void CreateZipTheFolder(string exportFolder, string exportDirectory)
     {
         Log.Debug("Start create Zip folder... ");
