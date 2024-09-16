@@ -81,38 +81,36 @@ internal static class ExportHelper
     }
 
 
-    public static void CreateZipTheFolder(string revitFileName, string exportDirectory)
+    public static void CreateZipTheFolder(string exportFolder, string exportDirectory)
     {
-        string exportFolder = Path.Combine(exportDirectory, revitFileName);
+        Log.Debug("Start create Zip folder... ");
+
+        string zipFilePath = $"{exportFolder}.zip";
+
+        DirectoryInfo directory = new(exportFolder);
 
         SystemFolderOpener.OpenFolder(exportDirectory);
 
-        if (PathHelper.IsFileAccessible(exportFolder))
+        using ZipArchive archive = ZipFile.Open(zipFilePath, ZipArchiveMode.Create);
+
+        foreach (FileInfo info in directory.EnumerateFiles())
         {
-            Log.Debug("Satrt create Zip folder... ");
-
-            using ZipArchive archive = ZipFile.Open($"{exportFolder}.zip", ZipArchiveMode.Create);
-
-            foreach (string filePath in Directory.GetFiles(exportFolder))
+            if (PathHelper.IsFileAccessible(info.FullName))
             {
-                FileInfo info = new(filePath);
-
                 if (info.Length > 0)
                 {
                     try
                     {
-                        _ = archive.CreateEntryFromFile(filePath, info.Name, CompressionLevel.Fastest);
+                        _ = archive.CreateEntryFromFile(info.FullName, info.Name);
                     }
                     catch (Exception ex)
                     {
-                        Debug.WriteLine($"Failed: {info.Name} {ex.Message}");
+                        Log.Error($"Failed: {info.Name} {ex.Message}");
                     }
-
                 }
             }
-
         }
-    }
 
+    }
 
 }
