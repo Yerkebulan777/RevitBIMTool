@@ -9,7 +9,6 @@ using ServiceLibrary.Models;
 namespace RevitBIMTool;
 internal sealed class Application : IExternalApplication
 {
-    private int counter = 0;
     private string versionNumber;
     private RevitExternalEventHandler externalEventHandler;
 
@@ -23,7 +22,6 @@ internal sealed class Application : IExternalApplication
             uiapp = uiapp ?? throw new ArgumentNullException(nameof(uiapp));
             versionNumber = uiapp.ControlledApplication.VersionNumber;
             SetupUIPanel.Initialize(uiapp);
-            LoggerHelper.SetupLogger();
         }
         catch (Exception ex)
         {
@@ -64,14 +62,7 @@ internal sealed class Application : IExternalApplication
 
     private void OnIdling(object sender, IdlingEventArgs e)
     {
-        counter++;
-
-        if (counter > 0)
-        {
-            Thread.Sleep(1000);
-            Log.Debug($"Idling session called");
-            RevitFileHelper.CloseRevitApplication();
-        }
+        RevitFileHelper.CloseRevitApplication();
     }
 
     #endregion

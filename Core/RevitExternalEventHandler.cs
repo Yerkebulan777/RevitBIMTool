@@ -33,7 +33,7 @@ namespace RevitBIMTool.Core
             {
                 if (GeneralTaskHandler.IsValidTask(ref model, out string output))
                 {
-                    LoggerHelper.SetupLogger(context, model);
+                    LoggerHelper.SetupLogger(context, model.RevitFileName);
 
                     SynchronizationContext.SetSynchronizationContext(context);
 
