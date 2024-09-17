@@ -15,8 +15,8 @@ namespace RevitBIMTool.Utils
             {
                 if (Log.Logger != null)
                 {
-                    Thread.Sleep(100);
                     Log.CloseAndFlush();
+                    Thread.Sleep(request.CommandNumber * 1000);
                 }
 
                 string logDir = Path.Combine(MyDocuments, "RevitBIMTool");
