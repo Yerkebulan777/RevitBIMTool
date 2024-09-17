@@ -1,4 +1,5 @@
 ﻿using Autodesk.Revit.UI;
+using Org.BouncyCastle.Asn1.Ocsp;
 using RevitBIMTool.Utils;
 using Serilog;
 using ServiceLibrary.Models;
@@ -31,6 +32,7 @@ namespace RevitBIMTool.ExportHandlers
                         if (!ExportHelper.IsFileUpdated(model.ExportBaseFile, revitFilePath, out output))
                         {
                             RevitPathHelper.DeleteExistsFile(model.ExportBaseFile);
+                            Thread.Sleep(model.CommandNumber * 1000);
                             result = true;
                         }
                         break;
@@ -42,6 +44,7 @@ namespace RevitBIMTool.ExportHandlers
                         if (!ExportHelper.IsFileUpdated(model.ExportBaseFile, revitFilePath, out output))
                         {
                             RevitPathHelper.DeleteExistsFile(model.ExportBaseFile);
+                            Thread.Sleep(model.CommandNumber * 1000);
                             result = true;
                         }
                         break;
@@ -53,6 +56,7 @@ namespace RevitBIMTool.ExportHandlers
                         if (!ExportHelper.IsFileUpdated(model.ExportBaseFile, revitFilePath, out output))
                         {
                             RevitPathHelper.DeleteExistsFile(model.ExportBaseFile);
+                            Thread.Sleep(model.CommandNumber * 1000);
                             result = true;
                         }
                         break;

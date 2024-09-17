@@ -13,6 +13,7 @@ internal sealed class Application : IExternalApplication
     private string versionNumber;
     private RevitExternalEventHandler externalEventHandler;
 
+
     #region IExternalApplication
 
     public Result OnStartup(UIControlledApplication uiapp)
