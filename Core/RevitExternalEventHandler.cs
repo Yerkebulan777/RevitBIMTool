@@ -31,13 +31,13 @@ namespace RevitBIMTool.Core
 
             while (requestContainer.PopTaskModel(versionNumber, out TaskRequest model))
             {
-                if (GeneralTaskHandler.IsValidTask(ref model))
+                if (GeneralTaskHandler.IsValidTask(ref model, out string output))
                 {
                     LoggerHelper.SetupLogger(context, model);
 
                     SynchronizationContext.SetSynchronizationContext(context);
 
-                    string output = handler.RunDocumentAction(uiapp, model, GeneralTaskHandler.RunTask);
+                    output += handler.RunDocumentAction(uiapp, model, GeneralTaskHandler.RunTask);
 
                     Log.Information($"Task result: \t{output}");
 

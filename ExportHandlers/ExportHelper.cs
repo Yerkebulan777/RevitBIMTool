@@ -4,6 +4,7 @@ using Serilog;
 using ServiceLibrary.Helpers;
 using System.IO;
 using System.IO.Compression;
+using System.Text;
 
 
 namespace RevitBIMTool.ExportHandlers;
@@ -31,37 +32,37 @@ internal static class ExportHelper
     }
 
 
-    public static bool IsFileUpdated(string targetPath, string sourcePath, int limitSize = 100, int limitDays = 100)
+    public static bool IsFileUpdated(string targetPath, string sourcePath, out string output, int limitDays = 100)
     {
+        bool result = false;
         FileInfo targetFile = new(targetPath);
+        StringBuilder sb = new StringBuilder();
 
-        if (targetFile.Exists && targetFile.Length > limitSize)
+        if (targetFile.Exists && targetFile.Length > 100)
         {
             DateTime targetLastDate = File.GetLastWriteTime(targetPath);
             DateTime sourceLastDate = File.GetLastWriteTime(sourcePath);
+
+            sb.AppendLine($"Target last write: {targetLastDate:yyyy-MM-dd}");
+            sb.AppendLine($"Source last write: {sourceLastDate:yyyy-MM-dd}");
 
             if (targetLastDate > sourceLastDate)
             {
                 DateTime currentNowDate = DateTime.Now;
 
-                Log.Debug($"Target last write: {targetLastDate:yyyy-MM-dd}");
-                Log.Debug($"Source last write: {sourceLastDate:yyyy-MM-dd}");
-
                 TimeSpan targetDifference = currentNowDate - targetLastDate;
                 TimeSpan sourceDifference = targetLastDate - sourceLastDate;
 
-                Log.Debug($"Target difference in days: {Math.Round(targetDifference.TotalDays)}");
-                Log.Debug($"Source difference in days: {Math.Round(sourceDifference.TotalDays)}");
+                sb.AppendLine($"Target difference in days: {Math.Round(targetDifference.TotalDays)}");
+                sb.AppendLine($"Source difference in days: {Math.Round(sourceDifference.TotalDays)}");
 
-                bool result = limitDays > targetDifference.Days;
-
-                Log.Debug($"Is valid file: {result}");
-
-                return result;
+                result = limitDays > targetDifference.Days;
+                sb.AppendLine($"Is updated file: {result}");
             }
         }
 
-        return false;
+        output = sb.ToString();
+        return result;
     }
 
 
