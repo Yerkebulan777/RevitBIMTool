@@ -74,7 +74,7 @@ internal static class ExportToDWGHandler
     }
 
 
-    private static bool ExportFileToDWG(Document doc, string tempFolder, List<SheetModel> sheetModels)
+    private static bool ExportFileToDWG(Document doc, string folder, List<SheetModel> sheetModels)
     {
         int count = 0;
 
@@ -82,19 +82,18 @@ internal static class ExportToDWGHandler
 
         int totalSheets = sheetModels.Count;
 
-        RevitPathHelper.EnsureDirectory(tempFolder);
+        RevitPathHelper.EnsureDirectory(folder);
 
         Log.Information($"Total valid sheets {totalSheets}");
 
         foreach (SheetModel sheetModel in SheetModel.SortSheetModels(sheetModels))
         {
-            spinWait.SpinOnce();
-
             ICollection<ElementId> elemIds = [sheetModel.ViewSheet.Id];
 
-            if (doc.Export(tempFolder, sheetModel.SheetName, elemIds, dwgOptions))
+            if (doc.Export(folder, sheetModel.SheetName, elemIds, dwgOptions))
             {
-                Thread.Sleep(100);
+                spinWait.SpinOnce();
+                Thread.Sleep(1000);
                 count++;
             }
         }
