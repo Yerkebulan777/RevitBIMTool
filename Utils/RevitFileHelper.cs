@@ -7,6 +7,7 @@ using System.Diagnostics;
 namespace RevitBIMTool.Utils;
 internal static class RevitFileHelper
 {
+
     public static bool IsCountOut(ref int counter)
     {
         Log.Warning($"Counter: {counter--}");
@@ -72,5 +73,6 @@ internal static class RevitFileHelper
         }
 
     }
+
 
 }
