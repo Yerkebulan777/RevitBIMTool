@@ -9,11 +9,11 @@ internal static class RevitFileHelper
 {
     public static bool IsCountOut(ref int counter)
     {
-        Log.Debug($"Counter: {counter}");
+        Log.Warning($"Counter: {counter--}");
 
-        Thread.Sleep(counter++);
+        Thread.Sleep(counter);
 
-        return counter > 100;
+        return counter > 0;
     }
 
 
