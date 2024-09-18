@@ -50,17 +50,17 @@ internal static class ExportHelper
             {
                 DateTime currentNowDate = DateTime.Now;
 
+                TimeSpan sourceDifference = currentNowDate - sourceLastDate;
                 TimeSpan targetDifference = currentNowDate - targetLastDate;
-                TimeSpan sourceDifference = targetLastDate - sourceLastDate;
 
-                sb.AppendLine($"Target difference in days: {Math.Round(targetDifference.TotalDays)}");
-                sb.AppendLine($"Source difference in days: {Math.Round(sourceDifference.TotalDays)}");
+                sb.AppendLine($"Source difference in days: {sourceDifference.Days}");
+                sb.AppendLine($"Target difference in days: {targetDifference.Days}");
 
                 result = limitDays > targetDifference.Days;
-                sb.AppendLine($"Is updated file: {result}");
             }
         }
 
+        sb.AppendLine($"Is updated file: {result}");
         output = sb.ToString();
         return result;
     }
