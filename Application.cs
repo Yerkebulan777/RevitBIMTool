@@ -31,7 +31,7 @@ internal sealed class Application : IExternalApplication
         }
         finally
         {
-            if (TaskRequestContainer.Instance.DataAvailable(versionNumber, out int count))
+            if (TaskRequestContainer.Instance.ValidateData(versionNumber, out int count))
             {
                 externalEventHandler = new RevitExternalEventHandler(versionNumber, count);
 

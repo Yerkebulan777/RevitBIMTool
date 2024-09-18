@@ -66,15 +66,15 @@ internal static class ExportHelper
     }
 
 
-    public static void CreateZipTheFolder(string exportFolder, string exportDirectory)
+    public static void CreateZipFolder(string exportFolder, string exportDirectory)
     {
-        Log.Debug("Start create Zip folder... ");
-
         string zipFilePath = $"{exportFolder}.zip";
 
         DirectoryInfo directory = new(exportFolder);
 
         SystemFolderOpener.OpenFolder(exportDirectory);
+
+        Log.Debug($"Start create Zip file by path {zipFilePath}");
 
         using ZipArchive archive = ZipFile.Open(zipFilePath, ZipArchiveMode.Create);
 

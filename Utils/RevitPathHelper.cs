@@ -184,7 +184,7 @@ public static class RevitPathHelper
     }
 
 
-    public static void MoveFiles(string source, string destination)
+    public static void MoveAllFiles(string source, string destination)
     {
         EnsureDirectory(destination);
 

@@ -33,9 +33,9 @@ internal static class ExportToDWGHandler
     {
         Log.Information("Start export to DWG...");
 
-        string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
-
         RevitPathHelper.EnsureDirectory(exportDirectory);
+
+        string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
 
         FilteredElementCollector collector = new(uidoc.Document);
 
@@ -60,13 +60,13 @@ internal static class ExportToDWGHandler
                 }
             }
 
-            string exportFolder = Path.Combine(exportDirectory, revitFileName);
-            string tempFolder = Path.Combine(Path.GetTempPath(), revitFileName);
+            string sourсeFolder = Path.Combine(Path.GetTempPath(), revitFileName);
+            string targetFolder = Path.Combine(exportDirectory, revitFileName);
 
-            if (ExportFileToDWG(uidoc.Document, tempFolder, sheetModels))
+            if (ExportFileToDWG(uidoc.Document, sourсeFolder, sheetModels))
             {
-                RevitPathHelper.MoveFiles(tempFolder, exportFolder);
-                ExportHelper.CreateZipTheFolder(revitFileName, exportDirectory);
+                RevitPathHelper.MoveAllFiles(sourсeFolder, targetFolder);
+                ExportHelper.CreateZipFolder(targetFolder, exportDirectory);
             }
 
         }
