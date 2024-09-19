@@ -106,11 +106,6 @@
 			<RootItem Include="$(ProjectDir)*.addin" />
 		</ItemGroup>
 
-		<!--<PropertyGroup>
-			<AddinDir>$(RootDir)$(AssemblyName)\</AddinDir>
-			<RootDir>bin\$(RevitVersion) $(Configuration)\</RootDir>
-		</PropertyGroup>-->
-
 		<Copy SourceFiles="@(RootItem)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\$(RevitVersion)\" />
 		<Copy SourceFiles="@(AddinItem)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\$(RevitVersion)\$(ProjectName)\%(RecursiveDir)" />
 
