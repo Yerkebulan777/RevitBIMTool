@@ -100,13 +100,19 @@
     </ItemGroup>
 
     <Target Name="CopyFiles" AfterTargets="CoreBuild">
-		
-        <ItemGroup>
-            <AddinFiles Include="$(RootDir)**\*" />
-        </ItemGroup>
 
-        <Copy SourceFiles="@(AddinFiles)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\$(RevitVersion)\%(RecursiveDir)" />
-		<Copy SourceFiles="@(AddinFiles)" DestinationFolder="K:\04_Файлообменник\Addins\$(RevitVersion)\%(RecursiveDir)" />
+		<ItemGroup>
+			<AddinItem Include="$(TargetDir)**\*" />
+			<RootItem Include="$(ProjectDir)*.addin" />
+		</ItemGroup>
+
+		<!--<PropertyGroup>
+			<AddinDir>$(RootDir)$(AssemblyName)\</AddinDir>
+			<RootDir>bin\$(RevitVersion) $(Configuration)\</RootDir>
+		</PropertyGroup>-->
+
+		<Copy SourceFiles="@(RootItem)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\$(RevitVersion)\" />
+		<Copy SourceFiles="@(AddinItem)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\$(RevitVersion)\$(ProjectName)\%(RecursiveDir)" />
 
 	</Target>
 
