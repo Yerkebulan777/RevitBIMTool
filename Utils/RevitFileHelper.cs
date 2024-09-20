@@ -14,7 +14,7 @@ internal static class RevitFileHelper
 
         Thread.Sleep(counter);
 
-        return counter > 0;
+        return counter == 0;
     }
 
 
