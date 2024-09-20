@@ -12,7 +12,7 @@ internal static class RevitFileHelper
     {
         Thread.Sleep(TimeSpan.FromSeconds(counter));
 
-        Log.Warning($"Counter: {counter--}");
+        Log.Debug($"Counter: {counter--}");
 
         return counter == 0;
     }
