@@ -47,7 +47,7 @@ internal static class ExportToPDFHandler
 
         if (sheetData.Count > 0)
         {
-            Log.Information($"Temporary print path: {targetPath}");
+            Log.Information($"Temporary path: {targetPath}");
 
             List<SheetModel> sheetModels = PrintHandler.PrintSheetData(doc, sheetData, tempFolder);
 
