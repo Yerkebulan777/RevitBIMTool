@@ -198,8 +198,6 @@ internal static class PrintHandler
 
     private static bool ExportSheet(Document doc, string tempFolder, SheetModel model)
     {
-        Thread.Sleep(100);
-
         lock (syncLocker)
         {
             PrintManager printManager = doc.PrintManager;
@@ -214,10 +212,9 @@ internal static class PrintHandler
 
             if (printManager.SubmitPrint(model.ViewSheet))
             {
-                Log.Debug($"Start print file {model.SheetName}");
-
                 if (RevitPathHelper.AwaitExistsFile(tempPath))
                 {
+                    Log.Debug($"Printed: {model.SheetName}");
                     model.SheetTempPath = tempPath;
                     return true;
                 }
