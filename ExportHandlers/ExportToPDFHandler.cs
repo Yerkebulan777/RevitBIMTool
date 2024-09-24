@@ -16,25 +16,25 @@ internal static class ExportToPDFHandler
 
     public static void Execute(UIDocument uidoc, string revitFilePath, string exportDirectory)
     {
-        Document doc = uidoc.Document;
-
-        Log.Debug("Start export to PDF...");
-
-        string sectionName = RevitPathHelper.GetSectionName(revitFilePath);
-        string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
-        string tempFolder = Path.Combine(Path.GetTempPath(), $"{revitFileName}TMP");
-        string targetFullPath = Path.Combine(exportDirectory, $"{revitFileName}.pdf");
-
-        RevitPathHelper.EnsureDirectory(tempFolder);
-        RevitPathHelper.EnsureDirectory(exportDirectory);
-        PrintHandler.ResetPrintSettings(doc, printerName);
-
         string defaultPrinter = PrinterApiUtility.GetDefaultPrinter();
 
         if (!defaultPrinter.Equals(printerName))
         {
             throw new ArgumentException(printerName + "is not defined");
         }
+
+        Document doc = uidoc.Document;
+
+        string sectionName = RevitPathHelper.GetSectionName(revitFilePath);
+        string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
+        string tempFolder = Path.Combine(Path.GetTempPath(), $"{revitFileName}TMP");
+        string targetPath = Path.Combine(exportDirectory, $"{revitFileName}.pdf");
+
+        Log.Debug("Start export to PDF...");
+
+        RevitPathHelper.EnsureDirectory(tempFolder);
+        RevitPathHelper.EnsureDirectory(exportDirectory);
+        PrintHandler.ResetPrintSettings(doc, printerName);
 
         ColorDepthType colorType = ColorDepthType.Color;
 
@@ -47,17 +47,20 @@ internal static class ExportToPDFHandler
 
         if (sheetData.Count > 0)
         {
+            Log.Information($"Temporary print path: {targetPath}");
+
             List<SheetModel> sheetModels = PrintHandler.PrintSheetData(doc, sheetData, tempFolder);
 
-            Log.Information($"Total valid sheets: ({sheetModels.Count})");
+            Log.Information($"Total printed sheets: ({sheetModels.Count})");
 
             if (sheetModels.Count > 0)
             {
-                MergeHandler.CombinePDFsFromFolder(sheetModels, tempFolder, targetFullPath);
+                MergeHandler.CombinePDFsFromFolder(sheetModels, tempFolder, targetPath);
                 SystemFolderOpener.OpenFolder(exportDirectory);
                 RevitPathHelper.DeleteDirectory(tempFolder);
             }
         }
 
     }
+
 }
