@@ -51,12 +51,11 @@ internal static class ExportToPDFHandler
 
             List<SheetModel> sheetModels = PrintHandler.PrintSheetData(doc, sheetData, tempFolder);
 
-            Log.Information($"Total printed sheets: ({sheetModels.Count})");
-
             if (sheetModels.Count > 0)
             {
-                MergeHandler.CombinePDFsFromFolder(sheetModels, tempFolder, targetPath);
                 SystemFolderOpener.OpenFolder(exportDirectory);
+                Log.Information($"Total printed sheets: ({sheetModels.Count})");
+                MergeHandler.CombinePDFsFromFolder(sheetModels, tempFolder, targetPath);
                 RevitPathHelper.DeleteDirectory(tempFolder);
             }
         }
