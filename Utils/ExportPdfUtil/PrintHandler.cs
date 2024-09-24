@@ -9,7 +9,6 @@ using PaperSize = System.Drawing.Printing.PaperSize;
 using PrintRange = Autodesk.Revit.DB.PrintRange;
 
 
-
 namespace RevitBIMTool.Utils.ExportPdfUtil;
 internal static class PrintHandler
 {
