@@ -208,7 +208,6 @@ internal static class PrintHandler
         {
             if (RevitPathHelper.AwaitExistsFile(filePath))
             {
-                Log.Debug($"Printed: {model.SheetName}");
                 model.SheetTempPath = filePath;
                 return true;
             }
