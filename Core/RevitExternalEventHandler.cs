@@ -38,9 +38,9 @@ namespace RevitBIMTool.Core
 
                     SynchronizationContext.SetSynchronizationContext(context);
 
-                    output += handler.RunDocumentAction(uiapp, model, GeneralTaskHandler.RunTask);
+                    string result = handler.RunDocumentAction(uiapp, model, GeneralTaskHandler.RunTask);
 
-                    Log.Information($"Task result: \t{output}");
+                    Log.Information($" \n {output} \n Result: {result}");
 
                     if (RevitFileHelper.IsCountOut(ref counter))
                     {
