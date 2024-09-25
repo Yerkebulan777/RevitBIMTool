@@ -15,9 +15,6 @@ internal static class PrintHandler
     private static string printerName;
 
 
-    private static readonly object syncLocker = new();
-
-
     public static void ResetPrintSettings(Document doc, string printerName)
     {
         PrintHandler.printerName = printerName;
@@ -143,13 +140,13 @@ internal static class PrintHandler
 
         using Mutex mutex = new(false, $"Global\\{{{printerName}}}");
 
-        using Transaction trx = new(doc, "PrintToPDF");
-
         if (mutex.WaitOne(Timeout.InfiniteTimeSpan))
         {
-            if (TransactionStatus.Started == trx.Start())
+            using Transaction trx = new(doc, "PrintToPDF");
+
+            try
             {
-                try
+                if (TransactionStatus.Started == trx.Start())
                 {
                     foreach (string settingName in sheetDict.Keys)
                     {
@@ -175,18 +172,18 @@ internal static class PrintHandler
                         }
                     }
                 }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, ex.Message);
-                }
-                finally
-                {
-                    mutex.ReleaseMutex();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+            }
+            finally
+            {
+                mutex.ReleaseMutex();
 
-                    if (!trx.HasEnded())
-                    {
-                        _ = trx.RollBack();
-                    }
+                if (!trx.HasEnded())
+                {
+                    _ = trx.RollBack();
                 }
             }
         }
@@ -195,33 +192,29 @@ internal static class PrintHandler
     }
 
 
-    private static bool ExportSheet(Document doc, string tempFolder, SheetModel model)
+    private static bool ExportSheet(Document doc, string folder, SheetModel model)
     {
-        lock (syncLocker)
+        PrintManager printManager = doc.PrintManager;
+
+        string filePath = Path.Combine(folder, model.SheetName);
+
+        RegistryHelper.ActivateSettingsForPDFCreator(folder);
+
+        RevitPathHelper.DeleteExistsFile(filePath);
+
+        printManager.PrintToFileName = filePath;
+
+        if (printManager.SubmitPrint(model.ViewSheet))
         {
-            PrintManager printManager = doc.PrintManager;
-
-            string tempPath = Path.Combine(tempFolder, model.SheetName);
-
-            RegistryHelper.ActivateSettingsForPDFCreator(tempFolder);
-
-            RevitPathHelper.DeleteExistsFile(tempPath);
-
-            printManager.PrintToFileName = tempPath;
-
-            if (printManager.SubmitPrint(model.ViewSheet))
+            if (RevitPathHelper.AwaitExistsFile(filePath))
             {
-                if (RevitPathHelper.AwaitExistsFile(tempPath))
-                {
-                    Log.Debug($"Printed: {model.SheetName}");
-                    model.SheetTempPath = tempPath;
-                    return true;
-                }
+                Log.Debug($"Printed: {model.SheetName}");
+                model.SheetTempPath = filePath;
+                return true;
             }
         }
 
         return false;
     }
-
 
 }
