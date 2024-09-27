@@ -80,7 +80,7 @@ internal static class ExportHelper
 
         foreach (FileInfo info in directory.EnumerateFiles())
         {
-            if (PathHelper.IsFileAccessible(info.FullName))
+            if (FilePathHelper.IsFileAccessible(info.FullName))
             {
                 if (info.Length > 0)
                 {
