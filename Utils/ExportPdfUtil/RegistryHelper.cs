@@ -134,10 +134,6 @@ internal static class RegistryHelper
 
 
 
-
-
-
-
     [DllImport("user32.DLL")]
     public static extern bool SendNotifyMessageA(IntPtr hWnd, uint msg, int wParam, int lParam);
 
