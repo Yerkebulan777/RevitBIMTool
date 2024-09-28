@@ -13,10 +13,15 @@ namespace RevitBIMTool.ExportHandlers;
 internal static class ExportToPDFHandler
 {
     private const string printerName = "PDFCreator";
+    private static Dictionary<string, List<SheetModel>> sheetData;
 
     public static void Execute(UIDocument uidoc, string revitFilePath, string exportDirectory)
     {
         string defaultPrinter = PrinterApiUtility.GetDefaultPrinter();
+        string sectionName = RevitPathHelper.GetSectionName(revitFilePath);
+        string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
+        string tempFolder = Path.Combine(Path.GetTempPath(), $"{revitFileName}TMP");
+        string targetPath = Path.Combine(exportDirectory, $"{revitFileName}.pdf");
 
         if (!defaultPrinter.Equals(printerName))
         {
@@ -25,25 +30,19 @@ internal static class ExportToPDFHandler
 
         Document doc = uidoc.Document;
 
-        string sectionName = RevitPathHelper.GetSectionName(revitFilePath);
-        string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
-        string tempFolder = Path.Combine(Path.GetTempPath(), $"{revitFileName}TMP");
-        string targetPath = Path.Combine(exportDirectory, $"{revitFileName}.pdf");
-
         Log.Debug("Start export to PDF...");
 
         RevitPathHelper.EnsureDirectory(tempFolder);
         RevitPathHelper.EnsureDirectory(exportDirectory);
         PrintHandler.ResetPrintSettings(doc, printerName);
 
-        ColorDepthType colorType = ColorDepthType.Color;
-
-        if (sectionName.Equals("KJ") || sectionName.Equals("KR") || sectionName.Equals("KG"))
+        ColorDepthType colorType = sectionName switch
         {
-            colorType = ColorDepthType.BlackLine;
-        }
+            "KJ" or "KR" or "KG" => ColorDepthType.BlackLine,
+            _ => ColorDepthType.Color,
+        };
 
-        Dictionary<string, List<SheetModel>> sheetData = PrintHandler.GetSheetData(doc, revitFileName, colorType);
+        sheetData = PrintHandler.GetSheetData(doc, revitFileName, colorType);
 
         if (sheetData.Count > 0)
         {
