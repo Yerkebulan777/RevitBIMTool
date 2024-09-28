@@ -198,7 +198,7 @@ internal static class PrintHandler
 
         string filePath = Path.Combine(folder, model.SheetName);
 
-        RegistryHelper.ActivateSettingsForPDFCreator(folder);
+        RegistryHelper.ActivateSettingsForPdfCreator(folder);
 
         RevitPathHelper.DeleteExistsFile(filePath);
 

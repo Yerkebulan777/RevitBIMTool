@@ -17,8 +17,8 @@ namespace RevitBIMTool.Core
         public RevitExternalEventHandler(string version, int length)
         {
             externalEvent = ExternalEvent.Create(this);
+            counter = length >= 10 ? 10 : length;
             versionNumber = version;
-            counter = length;
         }
 
 

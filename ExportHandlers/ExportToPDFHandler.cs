@@ -20,7 +20,7 @@ internal static class ExportToPDFHandler
 
         if (!defaultPrinter.Equals(printerName))
         {
-            throw new ArgumentException(printerName + "is not defined");
+            throw new ArgumentException($"{printerName} is not defined!");
         }
 
         Document doc = uidoc.Document;
