@@ -8,10 +8,10 @@ namespace RevitBIMTool.Utils.ExportPdfUtil;
 internal static class RegistryHelper
 {
     private static readonly uint WM_SETTINGCHANGE = 26;
-    private static readonly IntPtr HWND_BROADCAST = new IntPtr(0xFFFF);
+    private static readonly IntPtr HWND_BROADCAST = new(0xFFFF);
 
 
-    public static bool IsPathExists(string installPath)
+    public static bool IsRegistryKeyExists(string installPath)
     {
         using RegistryKey regKey = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry64);
         using RegistryKey registryKey = regKey.OpenSubKey(installPath);
@@ -19,7 +19,7 @@ internal static class RegistryHelper
     }
 
 
-    private static bool SetRegistryValue(RegistryKey root, string regPath, string keyName, object value)
+    public static void SetValue(RegistryKey root, string regPath, string keyName, object value)
     {
         lock (Registry.LocalMachine)
         {
@@ -40,15 +40,15 @@ internal static class RegistryHelper
                 }
 
                 registryKey.Flush();
-
-                return ApplyRegistryChanges();
             }
             catch (Exception ex)
             {
                 Log.Error(ex, ex.Message);
             }
-
-            return false;
+            finally
+            {
+                _ = ApplyRegistryChanges();
+            }
         }
     }
 
@@ -84,32 +84,34 @@ internal static class RegistryHelper
         string directory = Path.GetDirectoryName(outputFile);
         //string appPath = "C:\\Program Files\\Autodesk\\Revit 2023\\Revit.exe";
         string registryPath = @"SOFTWARE\Adobe\Acrobat Distiller\PrinterJobControl";
-        _ = SetRegistryValue(Registry.CurrentUser, registryPath, "LastPdfPortFolder - Revit.exe", directory);
-        _ = SetRegistryValue(Registry.CurrentUser, registryPath, appPath, outputFile);
+        _ = SetValue(Registry.CurrentUser, registryPath, "LastPdfPortFolder - Revit.exe", directory);
+        _ = SetValue(Registry.CurrentUser, registryPath, appPath, outputFile);
     }
 
 
     public static void ActivateSettingsForPdfCreator(string outputFile)
     {
         string registryKey = @"SOFTWARE\pdfforge\PDFCreator\Settings\ConversionProfiles\0";
-        _ = SetRegistryValue(Registry.CurrentUser, registryKey + "\\AutoSave", "Enabled", "True");
-        _ = SetRegistryValue(Registry.CurrentUser, registryKey + "\\OpenViewer", "Enabled", "False");
-        _ = SetRegistryValue(Registry.CurrentUser, registryKey + "\\OpenViewer", "OpenWithPdfArchitect", "False");
-        _ = SetRegistryValue(Registry.CurrentUser, registryKey, "FileNameTemplate", "<InputFilename>");
-        _ = SetRegistryValue(Registry.CurrentUser, registryKey, "TargetDirectory", outputFile);
+        SetValue(Registry.CurrentUser, registryKey + "\\AutoSave", "Enabled", "True");
+        SetValue(Registry.CurrentUser, registryKey + "\\OpenViewer", "Enabled", "False");
+        SetValue(Registry.CurrentUser, registryKey + "\\OpenViewer", "OpenWithPdfArchitect", "False");
+        SetValue(Registry.CurrentUser, registryKey, "FileNameTemplate", "<InputFilename>");
+        
     }
+
 
     private static void ResetPrinterOutput()
     {
         string registryKey = @"SOFTWARE\Microsoft\PrintToPDF";
-        _ = SetRegistryValue(Registry.CurrentUser, registryKey, "PromptForFilename", 1);
+        SetValue(Registry.CurrentUser, registryKey, "PromptForFilename", 1);
     }
+
 
     private static void SetDefaultPrinterOutput(string outputFile)
     {
         string registryKey = @"SOFTWARE\Microsoft\PrintToPDF";
-        _ = SetRegistryValue(Registry.CurrentUser, registryKey, "OutputFile", outputFile);
-        _ = SetRegistryValue(Registry.CurrentUser, registryKey, "PromptForFilename", 0);
+        SetValue(Registry.CurrentUser, registryKey, "OutputFile", outputFile);
+        SetValue(Registry.CurrentUser, registryKey, "PromptForFilename", 0);
     }
 
 
