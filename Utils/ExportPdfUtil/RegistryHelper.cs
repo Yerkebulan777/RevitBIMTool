@@ -84,8 +84,8 @@ internal static class RegistryHelper
         string directory = Path.GetDirectoryName(outputFile);
         //string appPath = "C:\\Program Files\\Autodesk\\Revit 2023\\Revit.exe";
         string registryPath = @"SOFTWARE\Adobe\Acrobat Distiller\PrinterJobControl";
-        _ = SetValue(Registry.CurrentUser, registryPath, "LastPdfPortFolder - Revit.exe", directory);
-        _ = SetValue(Registry.CurrentUser, registryPath, appPath, outputFile);
+        SetValue(Registry.CurrentUser, registryPath, "LastPdfPortFolder - Revit.exe", directory);
+        SetValue(Registry.CurrentUser, registryPath, appPath, outputFile);
     }
 
 
@@ -96,7 +96,7 @@ internal static class RegistryHelper
         SetValue(Registry.CurrentUser, registryKey + "\\OpenViewer", "Enabled", "False");
         SetValue(Registry.CurrentUser, registryKey + "\\OpenViewer", "OpenWithPdfArchitect", "False");
         SetValue(Registry.CurrentUser, registryKey, "FileNameTemplate", "<InputFilename>");
-        
+
     }
 
 
@@ -113,9 +113,6 @@ internal static class RegistryHelper
         SetValue(Registry.CurrentUser, registryKey, "OutputFile", outputFile);
         SetValue(Registry.CurrentUser, registryKey, "PromptForFilename", 0);
     }
-
-
-
 
 
     [DllImport("user32.DLL")]

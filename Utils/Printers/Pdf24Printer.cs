@@ -1,6 +1,6 @@
 ﻿using Microsoft.Win32;
 using RevitBIMTool.Utils.ExportPdfUtil;
-using System.IO;
+
 
 namespace RevitBIMTool.Utils.Printers
 {
@@ -8,6 +8,7 @@ namespace RevitBIMTool.Utils.Printers
     {
         private string registryKey;
         public override string Name => "PDF24";
+
 
         public override void InitializePrinter()
         {
@@ -27,6 +28,7 @@ namespace RevitBIMTool.Utils.Printers
 
             throw new InvalidOperationException("Registry key not found: " + registryKey);
         }
+
 
         public override void ResetPrinterSettings()
         {
