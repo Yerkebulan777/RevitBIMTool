@@ -8,7 +8,7 @@ namespace RevitBIMTool.Utils.ExportPdfUtil;
 internal static class RegistryHelper
 {
     private static readonly uint WM_SETTINGCHANGE = 26;
-    private static readonly IntPtr HWND_BROADCAST = (IntPtr)(int)ushort.MaxValue;
+    private static readonly IntPtr HWND_BROADCAST = new IntPtr(0xFFFF);
 
 
     public static bool IsPathExists(string installPath)
@@ -130,8 +130,6 @@ internal static class RegistryHelper
         string pdf24Key = @"HKEY_CURRENT_USER\Software\PDFPrint\PDF24";
         Registry.SetValue(pdf24Key, "SilentMode", 0); // Включить запрос имени файла
     }
-
-
 
 
     [DllImport("user32.DLL")]
