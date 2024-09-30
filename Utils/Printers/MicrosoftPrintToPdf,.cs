@@ -4,12 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-
 namespace RevitBIMTool.Utils.Printers
 {
-    internal sealed class AdobePdfPrinter : PrinterBase
+    internal sealed class MicrosoftPrintToPdf : PrinterBase
     {
-        public override string Name => "Adobe PDF";
+        public override string Name => "Microsoft Print to PDF";
 
         public override void ResetPrinterSettings()
         {

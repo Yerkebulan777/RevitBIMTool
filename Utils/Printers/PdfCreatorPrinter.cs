@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace RevitBIMTool.Utils.Printers
 {
-    internal sealed class PdfCreatorPrinter : AbstractPrinter
+    internal sealed class PdfCreatorPrinter : PrinterBase
     {
         public override string Name => "PDFCreator";
 

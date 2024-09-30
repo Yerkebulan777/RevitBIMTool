@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace RevitBIMTool.Utils.Printers
 {
-    public abstract class AbstractPrinter
+    public abstract class PrinterBase
     {
         public abstract string Name { get; }
 
