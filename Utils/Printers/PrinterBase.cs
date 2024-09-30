@@ -12,6 +12,8 @@ namespace RevitBIMTool.Utils.Printers
     {
         public abstract string Name { get; }
 
+        public abstract void InitializePrinter();
+
         public abstract void ResetPrinterSettings();
 
         public abstract void SetPrinterOutput(string filePath);

@@ -9,7 +9,14 @@ namespace RevitBIMTool.Utils.Printers
 {
     internal sealed class PdfCreatorPrinter : PrinterBase
     {
+
+
         public override string Name => "PDFCreator";
+
+        public override void InitializePrinter()
+        {
+            throw new NotImplementedException();
+        }
 
 
         public override void ResetPrinterSettings()

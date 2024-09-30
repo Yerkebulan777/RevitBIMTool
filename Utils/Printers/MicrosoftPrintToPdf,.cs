@@ -6,9 +6,14 @@ using System.Threading.Tasks;
 
 namespace RevitBIMTool.Utils.Printers
 {
-    internal sealed class MicrosoftPrintToPdf : PrinterBase
+    internal sealed class MicrosoftPrinter : PrinterBase
     {
         public override string Name => "Microsoft Print to PDF";
+
+        public override void InitializePrinter()
+        {
+            throw new NotImplementedException();
+        }
 
         public override void ResetPrinterSettings()
         {
