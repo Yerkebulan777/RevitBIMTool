@@ -115,23 +115,7 @@ internal static class RegistryHelper
     }
 
 
-    public static void SetPDF24Output(string outputFile)
-    {
-        // Путь в реестре к настройкам PDF24
-        string pdf24Key = @"HKEY_CURRENT_USER\Software\PDFPrint\PDF24";
 
-        // Установка пути сохранения и включение тихого режима (без запроса имени файла)
-        Registry.SetValue(pdf24Key, "OutputDir", System.IO.Path.GetDirectoryName(outputFile));
-        Registry.SetValue(pdf24Key, "OutputFile", System.IO.Path.GetFileName(outputFile));
-        Registry.SetValue(pdf24Key, "SilentMode", 1);
-    }
-
-    public static void ResetPDF24Settings()
-    {
-        // Возврат стандартных настроек (с запросом имени файла)
-        string pdf24Key = @"HKEY_CURRENT_USER\Software\PDFPrint\PDF24";
-        Registry.SetValue(pdf24Key, "SilentMode", 0); // Включить запрос имени файла
-    }
 
 
     [DllImport("user32.DLL")]
