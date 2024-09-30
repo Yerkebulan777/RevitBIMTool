@@ -10,10 +10,18 @@ namespace RevitBIMTool.Utils.Printers
     {
         public override string Name => "PDF24";
 
+
+        public override void InitializePrinter()
+        {
+            throw new NotImplementedException();
+        }
+
+
         public override void ResetPrinterSettings()
         {
             throw new NotImplementedException();
         }
+
 
         public override void SetPrinterOutput(string filePath)
         {
