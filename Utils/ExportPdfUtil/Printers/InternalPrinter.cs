@@ -11,9 +11,14 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
             string fileName = Path.GetFileNameWithoutExtension(filePath);
             string directory = Path.GetDirectoryName(filePath);
 
-            PDFExportOptions option = new()
+            PDFExportOptions option = new PDFExportOptions()
             {
-                FileName = fileName
+                ExportQuality = PDFExportQualityType.DPI300,
+                RasterQuality = RasterQualityType.Medium,
+                ColorDepth = ColorDepthType.Color,
+                ZoomType = ZoomType.Zoom,
+                ZoomPercentage = 100,
+                FileName = fileName,
             };
 
             IList<ElementId> viewIds = [viewSheet.Id];
