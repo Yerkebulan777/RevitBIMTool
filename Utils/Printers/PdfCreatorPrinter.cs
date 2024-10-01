@@ -1,4 +1,5 @@
-﻿using Microsoft.Win32;
+﻿using Autodesk.Revit.DB;
+using Microsoft.Win32;
 using RevitBIMTool.Utils.ExportPdfUtil;
 using System.IO;
 
@@ -29,8 +30,8 @@ namespace RevitBIMTool.Utils.Printers
 
         public override void ResetPrinterSettings()
         {
-            // тут незнаю 
-            // сброс настроек по умолчанию
+            string deskPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "TargetDirectory", deskPath);
         }
 
 
