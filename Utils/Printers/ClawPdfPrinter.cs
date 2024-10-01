@@ -14,11 +14,12 @@ namespace RevitBIMTool.Utils.Printers
         {
             if (RegistryHelper.IsRegistryKeyExists(registryKey))
             {
+                string autoSaveKey = Path.Combine(registryKey, "AutoSave");
+                RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "Enabled", "True");
                 RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "OpenViewer", "False");
                 RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "SkipPrintDialog", "True");
                 RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "FileNameTemplate", "<InputFilename>");
-                RegistryHelper.SetValue(Registry.CurrentUser, Path.Combine(registryKey, "AutoSave"), "Enabled", "True");
-                RegistryHelper.SetValue(Registry.CurrentUser, Path.Combine(registryKey, "AutoSave"), "TargetDirectory", "<InputFilePath>");
+                RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", "<InputFilePath>");
 
                 return;
             }
@@ -29,11 +30,12 @@ namespace RevitBIMTool.Utils.Printers
 
         public override void ResetPrinterSettings()
         {
+            string autoSaveKey = Path.Combine(registryKey, "AutoSave");
+            RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "Enabled", "False");
             RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "OpenViewer", "True");
             RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "SkipPrintDialog", "False");
             RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "FileNameTemplate", "<Title>");
-            RegistryHelper.SetValue(Registry.CurrentUser, Path.Combine(registryKey, "AutoSave"), "Enabled", "False");
-            RegistryHelper.SetValue(Registry.CurrentUser, Path.Combine(registryKey, "AutoSave"), "TargetDirectory", string.Empty);
+            RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", string.Empty);
         }
 
 
