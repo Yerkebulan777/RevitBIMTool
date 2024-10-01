@@ -18,6 +18,29 @@ internal static class RegistryHelper
     }
 
 
+    public static string GetValue(RegistryKey root, string path, string name)
+    {
+        string value = null;
+
+        try
+        {
+            using RegistryKey registryKey = root.OpenSubKey(path);
+
+            if (registryKey is not null)
+            {
+                value = registryKey.GetValue(name).ToString();
+                registryKey.Flush();
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, $"GetValue failed: {ex.Message}");
+        }
+
+        return value;
+    }
+
+
     public static void SetValue(RegistryKey root, string regPath, string keyName, object value)
     {
         lock (Registry.LocalMachine)
@@ -49,29 +72,6 @@ internal static class RegistryHelper
                 _ = ApplyRegistryChanges();
             }
         }
-    }
-
-
-    public static string GetValue(RegistryKey root, string path, string name)
-    {
-        string value = null;
-
-        try
-        {
-            using RegistryKey registryKey = root.OpenSubKey(path);
-
-            if (registryKey is not null)
-            {
-                value = registryKey.GetValue(name).ToString();
-                registryKey.Flush();
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, $"GetValue failed: {ex.Message}");
-        }
-
-        return value;
     }
 
 
