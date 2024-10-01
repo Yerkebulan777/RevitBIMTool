@@ -107,22 +107,6 @@ internal static class RegistryHelper
         SetValue(Registry.CurrentUser, registryKey + "\\OpenViewer", "Enabled", "False");
         SetValue(Registry.CurrentUser, registryKey + "\\OpenViewer", "OpenWithPdfArchitect", "False");
         SetValue(Registry.CurrentUser, registryKey, "FileNameTemplate", "<InputFilename>");
-
-    }
-
-
-    private static void ResetPrinterOutput()
-    {
-        string registryKey = @"SOFTWARE\Microsoft\PrintToPDF";
-        SetValue(Registry.CurrentUser, registryKey, "PromptForFilename", 1);
-    }
-
-
-    private static void SetDefaultPrinterOutput(string outputFile)
-    {
-        string registryKey = @"SOFTWARE\Microsoft\PrintToPDF";
-        SetValue(Registry.CurrentUser, registryKey, "OutputFile", outputFile);
-        SetValue(Registry.CurrentUser, registryKey, "PromptForFilename", 0);
     }
 
 
