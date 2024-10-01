@@ -1,24 +1,34 @@
-﻿using Serilog;
+﻿using RevitBIMTool.Utils.ExportPdfUtil;
+using Serilog;
 using System.Runtime.InteropServices;
 
 namespace RevitBIMTool.Utils.Printers
 {
     internal class BullzipPrinter : PrinterBase
     {
-        private dynamic pdfPrinter;
+        private readonly string registryKey = @"SOFTWARE\Bullzip\PDF Printer\Settings";
         public override string Name => "Bullzip PDF Printer";
+
+        private dynamic pdfPrinter;
 
 
         public override void InitializePrinter()
         {
-            try
+            if (RegistryHelper.IsRegistryKeyExists(registryKey))
             {
-                pdfPrinter = Activator.CreateInstance(Type.GetTypeFromProgID("Bullzip.PDFPrinterSettings"));
+                try
+                {
+                    pdfPrinter = Activator.CreateInstance(Type.GetTypeFromProgID("Bullzip.PDFPrinterSettings"));
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, $"Error occurred while initializing the printer: {ex.Message}");
+                }
+
+                return;
             }
-            catch (Exception ex)
-            {
-                Log.Error(ex, $"Error occurred while initializing the printer: {ex.Message}");
-            }
+
+            throw new InvalidOperationException($"Registry key not found for printer: {Name}");
         }
 
 
