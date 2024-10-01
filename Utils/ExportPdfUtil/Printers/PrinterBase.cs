@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 
-namespace RevitBIMTool.Utils.Printers
+namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
 {
     public abstract class PrinterBase
     {

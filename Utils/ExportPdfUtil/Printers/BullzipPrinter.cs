@@ -2,7 +2,7 @@
 using Serilog;
 using System.Runtime.InteropServices;
 
-namespace RevitBIMTool.Utils.Printers
+namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
 {
     internal class BullzipPrinter : PrinterBase
     {

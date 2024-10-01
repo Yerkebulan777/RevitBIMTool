@@ -1,4 +1,4 @@
-﻿namespace RevitBIMTool.Utils.Printers
+﻿namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
 {
     internal sealed class MicrosoftPrinter : PrinterBase
     {

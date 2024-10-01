@@ -3,7 +3,7 @@ using RevitBIMTool.Utils.ExportPdfUtil;
 using System.IO;
 
 
-namespace RevitBIMTool.Utils.Printers
+namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
 {
     internal sealed class ClawPdfPrinter : PrinterBase
     {

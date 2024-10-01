@@ -3,7 +3,7 @@ using RevitBIMTool.Utils.ExportPdfUtil;
 using System.IO;
 
 
-namespace RevitBIMTool.Utils.Printers
+namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
 {
     internal sealed class PdfCreatorPrinter : PrinterBase
     {
@@ -26,7 +26,7 @@ namespace RevitBIMTool.Utils.Printers
                 RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "CompressionLevel", "medium");
                 RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "SkipPrintDialog", "True");
                 RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "ShowProgress", "False");
-                
+
                 return;
             }
 

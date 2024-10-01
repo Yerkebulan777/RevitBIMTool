@@ -2,7 +2,7 @@
 using RevitBIMTool.Utils.ExportPdfUtil;
 
 
-namespace RevitBIMTool.Utils.Printers
+namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
 {
     internal sealed class Pdf24Printer : PrinterBase
     {
