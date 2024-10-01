@@ -1,11 +1,11 @@
 ﻿using Serilog;
+using System.Runtime.InteropServices;
 
 namespace RevitBIMTool.Utils.Printers
 {
     internal class BullzipPrinter : PrinterBase
     {
         private dynamic pdfPrinter;
-
         public override string Name => "Bullzip PDF Printer";
 
 
@@ -14,15 +14,10 @@ namespace RevitBIMTool.Utils.Printers
             try
             {
                 pdfPrinter = Activator.CreateInstance(Type.GetTypeFromProgID("Bullzip.PDFPrinterSettings"));
-
-                if (pdfPrinter is null)
-                {
-                    throw new Exception("Failed to initialize Bullzip PDF Printer");
-                }
             }
             catch (Exception ex)
             {
-                Log.Error($"Error occurred while initializing the printer: {ex.Message}");
+                Log.Error(ex, $"Error occurred while initializing the printer: {ex.Message}");
             }
         }
 
@@ -31,13 +26,20 @@ namespace RevitBIMTool.Utils.Printers
         {
             try
             {
-                pdfPrinter.ResetSettings();
+                pdfPrinter.RemoveSettings(true);
                 pdfPrinter.WriteSettings(true);
-                Log.Debug("Printer settings have been reset.");
             }
             catch (Exception ex)
             {
                 Log.Error($"Error occurred while resetting printer settings: {ex.Message}");
+            }
+            finally
+            {
+                if (pdfPrinter != null)
+                {
+                    Marshal.ReleaseComObject(pdfPrinter);
+                    pdfPrinter = null;
+                }
             }
         }
 
@@ -46,16 +48,19 @@ namespace RevitBIMTool.Utils.Printers
         {
             try
             {
+                pdfPrinter.SetValue("ShowPdf", "no");
                 pdfPrinter.SetValue("Output", filePath);
+                pdfPrinter.SetValue("ShowProgress", "no");
+                pdfPrinter.SetValue("ShowSettings", "never");
+                pdfPrinter.SetValue("ShowProgressFinished", "no");
                 pdfPrinter.WriteSettings(true);
-                Log.Debug("Set output path");
             }
             catch (Exception ex)
             {
-                Log.Error($"Error occurred while setting the output file path: {ex.Message}");
+                Log.Error(ex, $"Error occurred while setting the output file path: {ex.Message}");
             }
         }
 
-
     }
+
 }

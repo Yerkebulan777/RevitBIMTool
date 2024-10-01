@@ -43,7 +43,7 @@ internal static class RegistryHelper
             }
             catch (Exception ex)
             {
-                Log.Error(ex, ex.Message);
+                Log.Error(ex, $"SetValue failed: {ex.Message}");
             }
             finally
             {
@@ -53,29 +53,51 @@ internal static class RegistryHelper
     }
 
 
-    public static string GetValue(RegistryKey regRoot, string address, string property)
+    public static string GetValue(RegistryKey root, string path, string name)
     {
-        string value = string.Empty;
+        string value = null;
 
-        lock (Registry.LocalMachine)
+        try
+        {
+            using RegistryKey registryKey = root.OpenSubKey(path);
+
+            if (registryKey is not null)
+            {
+                value = registryKey.GetValue(name).ToString();
+                registryKey.Flush();
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, $"GetValue failed: {ex.Message}");
+        }
+
+        return value;
+    }
+
+
+    public static void CreateParameter(RegistryKey root, string path, string name, string defaultValue)
+    {
+        string value = GetValue(root, path, name);
+
+        if (string.IsNullOrEmpty(value))
         {
             try
             {
-                using RegistryKey registryKey = regRoot.OpenSubKey(address, false);
-
-                if (registryKey is not null)
-                {
-                    value = registryKey.GetValue(property).ToString();
-                    registryKey.Flush();
-                }
+                using RegistryKey registryKey = root.OpenSubKey(path, true);
+                using RegistryKey key = registryKey.CreateSubKey(name);
+                key?.SetValue(name, defaultValue);
             }
             catch (Exception ex)
             {
-                Log.Error(ex, ex.Message);
+                Log.Error(ex, $"CreateParameter failed: {ex.Message}");
             }
-
-            return value;
+            finally
+            {
+                _ = ApplyRegistryChanges();
+            }
         }
+
     }
 
 

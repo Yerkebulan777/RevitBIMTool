@@ -6,7 +6,7 @@ namespace RevitBIMTool.Utils.Printers
 {
     internal sealed class AdobePdfPrinter : PrinterBase
     {
-        private readonly string registryKey = @"Software\Adobe\Acrobat Distiller\PrinterJobControl";
+        private readonly string registryKey = @"SOFTWARE\Adobe\Acrobat Distiller\PrinterJobControl";
         public override string Name => "Adobe PDF";
 
         public override void InitializePrinter()
