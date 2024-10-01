@@ -19,7 +19,7 @@
 
         public override void SetPrinterOutput(string filePath)
         {
-            throw new NotImplementedException();
+            Thread.Sleep(100);
         }
     }
 }

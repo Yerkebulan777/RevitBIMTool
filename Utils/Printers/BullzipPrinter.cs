@@ -69,6 +69,10 @@ namespace RevitBIMTool.Utils.Printers
             {
                 Log.Error(ex, $"Error occurred while setting the output file path: {ex.Message}");
             }
+            finally
+            {
+                Thread.Sleep(100);
+            }
         }
 
     }

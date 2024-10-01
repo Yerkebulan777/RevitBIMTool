@@ -52,7 +52,9 @@ namespace RevitBIMTool.Utils.Printers
         public override void SetPrinterOutput(string filePath)
         {
             RegistryHelper.SetValue(Registry.CurrentUser, Path.Combine(registryKey, "AutoSave"), "TargetDirectory", filePath);
+            Thread.Sleep(100);
         }
+
     }
 
 }
