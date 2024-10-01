@@ -8,28 +8,19 @@ namespace RevitBIMTool.Utils.Printers
     internal sealed class AdobePdfPrinter : PrinterBase
     {
         private readonly string registryKey = @"SOFTWARE\Adobe\Acrobat Distiller\PrinterJobControl";
+        private readonly string portFolder = "LastPdfPortFolder - Revit.exe";
+        private readonly string revitVersion = RevitBIMToolApp.Version;
+
         public override string Name => "Adobe PDF";
-
-        string revitVersion;
-
-        public void ActivateSettingsForAdobePdf(string outputFile)
-        {
-            string directory = Path.GetDirectoryName(outputFile);
-
-            string application = "C:\\Program Files\\Autodesk\\Revit 2023\\Revit.exe";
-
-            RegistryHelper.SetValue(Registry.CurrentUser, registryKey, application, outputFile);
-        }
 
 
         public override void InitializePrinter()
         {
             if (RegistryHelper.IsRegistryKeyExists(registryKey))
             {
-                RevitBIMToolApp.
-                string deskPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-                RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "LastPdfPortFolder - Revit.exe", string.Empty);
-
+                string application = $@"C:\Program Files\Autodesk\Revit {revitVersion}\Revit.exe";
+                RegistryHelper.CreateParameter(Registry.CurrentUser, registryKey, portFolder, string.Empty);
+                RegistryHelper.CreateParameter(Registry.CurrentUser, registryKey, application, Path.GetTempPath());
 
                 return;
             }
@@ -40,18 +31,20 @@ namespace RevitBIMTool.Utils.Printers
 
         public override void ResetPrinterSettings()
         {
-            string deskPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-            RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "bExecViewer", 1);
-            RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "bShowSaveDialog", 1);
-            RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "sPDFFileName", string.Empty);
-            RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "bPromptForPDFFilename", 1);
-            RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "sOutputDir", deskPath);
+            string application = $@"C:\Program Files\Autodesk\Revit {revitVersion}\Revit.exe";
+            RegistryHelper.SetValue(Registry.CurrentUser, registryKey, portFolder, string.Empty);
+            RegistryHelper.SetValue(Registry.CurrentUser, registryKey, application, string.Empty);
         }
+
 
         public override void SetPrinterOutput(string filePath)
         {
-            RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "sOutputDir", filePath);
+            string directory = Path.GetDirectoryName(filePath);
+            string application = $@"C:\Program Files\Autodesk\Revit {revitVersion}\Revit.exe";
+            RegistryHelper.SetValue(Registry.CurrentUser, registryKey, portFolder, directory);
+            RegistryHelper.SetValue(Registry.CurrentUser, registryKey, application, filePath);
         }
+
     }
 
 }
