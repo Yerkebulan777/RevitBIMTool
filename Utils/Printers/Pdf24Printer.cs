@@ -24,7 +24,7 @@ namespace RevitBIMTool.Utils.Printers
                 return;
             }
 
-            throw new InvalidOperationException("Registry key not found: " + registryKey);
+            throw new InvalidOperationException($"Registry key not found for printer: {Name}");
         }
 
 

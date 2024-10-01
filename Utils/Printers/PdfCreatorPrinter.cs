@@ -1,5 +1,4 @@
-﻿using Autodesk.Revit.DB;
-using Microsoft.Win32;
+﻿using Microsoft.Win32;
 using RevitBIMTool.Utils.ExportPdfUtil;
 using System.IO;
 
@@ -24,7 +23,7 @@ namespace RevitBIMTool.Utils.Printers
                 return;
             }
 
-            throw new InvalidOperationException($"Registry key not found: {registryKey}");
+            throw new InvalidOperationException($"Registry key not found for printer: {Name}");
         }
 
 
