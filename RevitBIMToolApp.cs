@@ -7,9 +7,9 @@ using ServiceLibrary.Models;
 
 
 namespace RevitBIMTool;
-internal sealed class Application : IExternalApplication
+internal sealed class RevitBIMToolApp : IExternalApplication
 {
-    private string versionNumber;
+    public string VersionNumber { get; set; }
     private RevitExternalEventHandler externalEventHandler;
 
 
@@ -20,7 +20,7 @@ internal sealed class Application : IExternalApplication
         try
         {
             uiapp = uiapp ?? throw new ArgumentNullException(nameof(uiapp));
-            versionNumber = uiapp.ControlledApplication.VersionNumber;
+            VersionNumber = uiapp.ControlledApplication.VersionNumber;
             SetupUIPanel.Initialize(uiapp);
         }
         catch (Exception ex)
@@ -31,9 +31,9 @@ internal sealed class Application : IExternalApplication
         }
         finally
         {
-            if (TaskRequestContainer.Instance.ValidateData(versionNumber, out int count))
+            if (TaskRequestContainer.Instance.ValidateData(VersionNumber, out int count))
             {
-                externalEventHandler = new RevitExternalEventHandler(versionNumber, count);
+                externalEventHandler = new RevitExternalEventHandler(VersionNumber, count);
 
                 if (ExternalEventRequest.Denied != externalEventHandler.Raise())
                 {

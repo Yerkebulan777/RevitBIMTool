@@ -101,16 +101,6 @@ internal static class RegistryHelper
     }
 
 
-    public static void ActivateSettingsForAdobePdf(string outputFile, string appPath)
-    {
-        string directory = Path.GetDirectoryName(outputFile);
-        //string appPath = "C:\\Program Files\\Autodesk\\Revit 2023\\Revit.exe";
-        string registryPath = @"SOFTWARE\Adobe\Acrobat Distiller\PrinterJobControl";
-        SetValue(Registry.CurrentUser, registryPath, "LastPdfPortFolder - Revit.exe", directory);
-        SetValue(Registry.CurrentUser, registryPath, appPath, outputFile);
-    }
-
-
     public static void ActivateSettingsForPdfCreator(string outputFile)
     {
         string registryKey = @"SOFTWARE\pdfforge\PDFCreator\Settings\ConversionProfiles\0";

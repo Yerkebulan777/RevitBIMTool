@@ -1,5 +1,6 @@
 ﻿using Microsoft.Win32;
 using RevitBIMTool.Utils.ExportPdfUtil;
+using System.IO;
 
 
 namespace RevitBIMTool.Utils.Printers
@@ -9,15 +10,26 @@ namespace RevitBIMTool.Utils.Printers
         private readonly string registryKey = @"SOFTWARE\Adobe\Acrobat Distiller\PrinterJobControl";
         public override string Name => "Adobe PDF";
 
+        string revitVersion;
+
+        public void ActivateSettingsForAdobePdf(string outputFile)
+        {
+            string directory = Path.GetDirectoryName(outputFile);
+
+            string application = "C:\\Program Files\\Autodesk\\Revit 2023\\Revit.exe";
+
+            RegistryHelper.SetValue(Registry.CurrentUser, registryKey, application, outputFile);
+        }
+
+
         public override void InitializePrinter()
         {
             if (RegistryHelper.IsRegistryKeyExists(registryKey))
             {
-                RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "bExecViewer", 0);
-                RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "bShowSaveDialog", 0);
-                RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "sPDFFileName", "$fileName");
-                RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "bPromptForPDFFilename", 0);
-                RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "sOutputDir", @"C:\PDFs");
+                RevitBIMToolApp.
+                string deskPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "LastPdfPortFolder - Revit.exe", string.Empty);
+
 
                 return;
             }
