@@ -7,14 +7,12 @@ namespace RevitBIMTool.Utils.Printers
 {
     internal sealed class PdfCreatorPrinter : PrinterBase
     {
-        private string registryKey;
+        public readonly string registryKey = @"SOFTWARE\pdfforge\PDFCreator\Settings\ConversionProfiles\0";
         public override string Name => "PDFCreator";
 
 
         public override void InitializePrinter()
         {
-            registryKey = @"SOFTWARE\pdfforge\PDFCreator\Settings\ConversionProfiles\0";
-
             if (RegistryHelper.IsRegistryKeyExists(registryKey))
             {
                 RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "FileNameTemplate", "<InputFilename>");

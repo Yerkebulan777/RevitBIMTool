@@ -6,14 +6,12 @@ namespace RevitBIMTool.Utils.Printers
 {
     internal sealed class Pdf24Printer : PrinterBase
     {
-        private string registryKey;
+        private readonly string registryKey = @"SOFTWARE\PDF24\Services\PDF";
         public override string Name => "PDF24";
 
 
         public override void InitializePrinter()
         {
-            registryKey = @"SOFTWARE\PDF24\Services\PDF";
-
             if (RegistryHelper.IsRegistryKeyExists(registryKey))
             {
                 RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "AutoSaveOpenDir", 0);
@@ -51,6 +49,7 @@ namespace RevitBIMTool.Utils.Printers
         {
             RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "AutoSaveDir", filePath);
         }
+
     }
 
 }
