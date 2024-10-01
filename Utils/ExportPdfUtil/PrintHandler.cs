@@ -18,10 +18,15 @@ internal static class PrintHandler
     public static void ResetPrintSettings(Document doc, string printerName)
     {
         PrintHandler.printerName = printerName;
+
         PrintManager printManager = doc.PrintManager;
+
         PrinterApiUtility.ResetDefaultPrinter(printerName);
+
         List<PrintSetting> printSettings = RevitPrinterUtil.GetPrintSettings(doc);
+
         using Transaction trx = new(doc, "ResetPrintSetting");
+
         if (TransactionStatus.Started == trx.Start())
         {
             try
@@ -30,16 +35,16 @@ internal static class PrintHandler
                 printSettings.ForEach(set => doc.Delete(set.Id));
                 printManager.PrintRange = PrintRange.Current;
                 printManager.PrintToFile = true;
+                printManager.Apply();
             }
             catch (Exception ex)
             {
                 _ = trx.RollBack();
-                Log.Error($"Reset settings: {ex.Message}", ex);
-                throw new Exception($"Reset settings: {ex.Message}", ex);
+                Log.Error(ex, $"Reset settings: {ex.Message}");
+                throw new Exception($"Reset settings: {ex.Message}");
             }
             finally
             {
-                printManager.Apply();
                 if (!trx.HasEnded())
                 {
                     _ = trx.Commit();
