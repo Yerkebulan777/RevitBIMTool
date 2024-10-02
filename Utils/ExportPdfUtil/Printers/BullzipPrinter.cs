@@ -1,10 +1,11 @@
-﻿using RevitBIMTool.Utils.ExportPdfUtil;
+﻿using Autodesk.Revit.DB;
+using RevitBIMTool.Model;
 using Serilog;
 using System.Runtime.InteropServices;
 
 namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
 {
-    internal class BullzipPrinter : PrinterBase
+    internal class BullzipPrinter : PrinterControl
     {
         private readonly string registryKey = @"SOFTWARE\Bullzip\PDF Printer\Settings";
         public override string Name => "Bullzip PDF Printer";
@@ -75,6 +76,11 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
             }
         }
 
+
+        public override bool PrintSheet(Document doc, string folder, SheetModel model)
+        {
+            throw new NotImplementedException();
+        }
     }
 
 }

@@ -1,11 +1,13 @@
-﻿using Microsoft.Win32;
+﻿using Autodesk.Revit.DB;
+using Microsoft.Win32;
+using RevitBIMTool.Model;
 using RevitBIMTool.Utils.ExportPdfUtil;
 using System.IO;
 
 
 namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
 {
-    internal sealed class PdfCreatorPrinter : PrinterBase
+    internal sealed class PdfCreatorPrinter : PrinterControl
     {
         public readonly string registryKey = @"SOFTWARE\pdfforge\PDFCreator\Settings\ConversionProfiles\0";
         public override string Name => "PDFCreator";
@@ -54,6 +56,12 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
         {
             RegistryHelper.SetValue(Registry.CurrentUser, Path.Combine(registryKey, "AutoSave"), "TargetDirectory", filePath);
             Thread.Sleep(100);
+        }
+
+
+        public override bool PrintSheet(Document doc, string folder, SheetModel model)
+        {
+            throw new NotImplementedException();
         }
 
     }

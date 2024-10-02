@@ -1,6 +1,5 @@
 ﻿using Autodesk.Revit.DB;
 using RevitBIMTool.Utils;
-using Serilog;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -33,7 +32,7 @@ internal class SheetModel : IDisposable
     public string SheetTempPath { get; internal set; }
     public string PaperName => SheetPapeSize.PaperName;
     public object OrganizationGroupName { get; internal set; }
-    
+
 
     public static string GetSheetNumber(ViewSheet sequenceSheet)
     {

@@ -6,9 +6,6 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
 {
     internal sealed class InternalPrinter
     {
-
-
-
         public bool ExportSheet(Document doc, ViewSheet viewSheet, string filePath)
         {
             string fileName = Path.GetFileNameWithoutExtension(filePath);

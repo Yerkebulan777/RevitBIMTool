@@ -1,11 +1,12 @@
-﻿using Microsoft.Win32;
-using RevitBIMTool.Utils.ExportPdfUtil;
+﻿using Autodesk.Revit.DB;
+using Microsoft.Win32;
+using RevitBIMTool.Model;
 using System.IO;
 
 
 namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
 {
-    internal sealed class ClawPdfPrinter : PrinterBase
+    internal sealed class ClawPdfPrinter : PrinterControl
     {
         private readonly string registryKey = @"SOFTWARE\clawSoft\clawPDF\Settings\ConversionProfiles\0";
         public override string Name => "clawPDF";
@@ -44,6 +45,12 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
         {
             RegistryHelper.SetValue(Registry.CurrentUser, Path.Combine(registryKey, "AutoSave"), "TargetDirectory", filePath);
             Thread.Sleep(100);
+        }
+
+
+        public override bool PrintSheet(Document doc, string folder, SheetModel model)
+        {
+            throw new NotImplementedException();
         }
 
     }

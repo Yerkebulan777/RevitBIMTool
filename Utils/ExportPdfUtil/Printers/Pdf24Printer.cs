@@ -1,10 +1,12 @@
-﻿using Microsoft.Win32;
+﻿using Autodesk.Revit.DB;
+using Microsoft.Win32;
+using RevitBIMTool.Model;
 using RevitBIMTool.Utils.ExportPdfUtil;
 
 
 namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
 {
-    internal sealed class Pdf24Printer : PrinterBase
+    internal sealed class Pdf24Printer : PrinterControl
     {
         private readonly string registryKey = @"SOFTWARE\PDF24\Services\PDF";
         public override string Name => "PDF24";
@@ -49,6 +51,12 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
         {
             RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "AutoSaveDir", filePath);
             Thread.Sleep(100);
+        }
+
+
+        public override bool PrintSheet(Document doc, string folder, SheetModel model)
+        {
+            throw new NotImplementedException();
         }
 
     }
