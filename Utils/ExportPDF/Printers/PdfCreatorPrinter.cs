@@ -60,9 +60,9 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
         }
 
 
-        public override bool PrintSheet(Document doc, string folder, SheetModel model)
+        public override bool Print(Document doc, string folder, SheetModel model)
         {
-            throw new NotImplementedException();
+            return PrintHandler.PrintSheet(doc, folder, model);
         }
 
     }

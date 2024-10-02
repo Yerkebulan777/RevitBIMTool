@@ -1,8 +1,9 @@
 ﻿using Autodesk.Revit.DB;
 using RevitBIMTool.Model;
+using RevitBIMTool.Utils.ExportPdfUtil.Printers;
 
 
-namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
+namespace RevitBIMTool.Utils.ExportPDF.Printers
 {
     internal sealed class InternalPrinter : PrinterControl
     {
@@ -12,23 +13,23 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
 
 
         public override void InitializePrinter()
-        {
-            throw new NotImplementedException();
+        { 
         }
 
-        public override bool PrintSheet(Document doc, string folder, SheetModel model)
-        {
-            throw new NotImplementedException();
-        }
 
         public override void ResetPrinterSettings()
-        {
-            throw new NotImplementedException();
+        { 
         }
 
+
         public override void SetPrinterOutput(string filePath)
+        { 
+        }
+
+
+        public override bool Print(Document doc, string folder, SheetModel model)
         {
-            throw new NotImplementedException();
+            return PrintHandler.ExportSheet(doc, folder, model);
         }
     }
 }

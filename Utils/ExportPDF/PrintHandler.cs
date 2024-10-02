@@ -221,7 +221,7 @@ internal static class PrintHandler
     }
 
 
-    private static bool PrintSheet(Document doc, string folder, SheetModel model)
+    public static bool PrintSheet(Document doc, string folder, SheetModel model)
     {
         string filePath = Path.Combine(folder, model.SheetName);
 

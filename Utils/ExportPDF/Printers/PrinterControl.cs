@@ -19,7 +19,7 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
         public abstract void SetPrinterOutput(string filePath);
 
 
-        public abstract bool PrintSheet(Document doc, string folder, SheetModel model);
+        public abstract bool Print(Document doc, string folder, SheetModel model);
 
     }
 }
