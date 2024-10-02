@@ -11,6 +11,7 @@ using PrintRange = Autodesk.Revit.DB.PrintRange;
 namespace RevitBIMTool.Utils.ExportPDF;
 internal static class PrintHandler
 {
+
     private static string printerName;
 
 
@@ -241,5 +242,6 @@ internal static class PrintHandler
 
         return false;
     }
+
 
 }
