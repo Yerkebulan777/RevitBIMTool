@@ -3,7 +3,7 @@ using Serilog;
 using System.Runtime.InteropServices;
 
 
-namespace RevitBIMTool.Utils.ExportPdfUtil;
+namespace RevitBIMTool.Utils.ExportPDF;
 internal static class RegistryHelper
 {
     private static readonly uint WM_SETTINGCHANGE = 26;

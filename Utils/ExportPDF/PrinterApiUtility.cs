@@ -4,7 +4,7 @@ using System.Text;
 using PaperSize = System.Drawing.Printing.PaperSize;
 
 
-namespace RevitBIMTool.Utils.PrintUtil;
+namespace RevitBIMTool.Utils.ExportPDF;
 public static class PrinterApiUtility
 {
     private const int timeoutInSeconds = 30;

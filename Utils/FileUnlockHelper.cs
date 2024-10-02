@@ -6,7 +6,6 @@ namespace RevitBIMTool.Utils
 {
     public static class FileUnlockHelper
     {
-
         public static bool TryUnlockFile(string filePath)
         {
             try

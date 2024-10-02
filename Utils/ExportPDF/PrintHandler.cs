@@ -1,5 +1,6 @@
 ﻿using Autodesk.Revit.DB;
 using RevitBIMTool.Model;
+using RevitBIMTool.Utils.ExportPdfUtil;
 using RevitBIMTool.Utils.PrintUtil;
 using Serilog;
 using System.IO;
@@ -9,7 +10,7 @@ using PaperSize = System.Drawing.Printing.PaperSize;
 using PrintRange = Autodesk.Revit.DB.PrintRange;
 
 
-namespace RevitBIMTool.Utils.ExportPdfUtil;
+namespace RevitBIMTool.Utils.ExportPDF;
 internal static class PrintHandler
 {
     private static string printerName;
@@ -221,5 +222,31 @@ internal static class PrintHandler
         return false;
     }
 
+
+    public static bool ExportSheet(Document doc, ViewSheet viewSheet, string filePath)
+    {
+        string fileName = Path.GetFileNameWithoutExtension(filePath);
+        string directory = Path.GetDirectoryName(filePath);
+
+        PDFExportOptions option = new PDFExportOptions()
+        {
+            ExportQuality = PDFExportQualityType.DPI300,
+            RasterQuality = RasterQualityType.Medium,
+            ColorDepth = ColorDepthType.Color,
+            ZoomType = ZoomType.Zoom,
+            ZoomPercentage = 100,
+            FileName = fileName,
+        };
+
+        IList<ElementId> viewIds = [viewSheet.Id];
+
+        if (doc.Export(directory, viewIds, option))
+        {
+            Thread.Sleep(100);
+            return true;
+        }
+
+        return false;
+    }
 
 }
