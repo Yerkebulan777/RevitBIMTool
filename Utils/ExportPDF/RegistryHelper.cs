@@ -24,12 +24,12 @@ internal static class RegistryHelper
 
         try
         {
-            using RegistryKey registryKey = root.OpenSubKey(path);
+            using RegistryKey regKey = root.OpenSubKey(path);
 
-            if (registryKey is not null)
+            if (regKey is not null)
             {
-                value = registryKey.GetValue(name).ToString();
-                registryKey.Flush();
+                value = regKey.GetValue(name).ToString();
+                regKey.Flush();
             }
         }
         catch (Exception ex)
@@ -81,19 +81,22 @@ internal static class RegistryHelper
 
         if (string.IsNullOrEmpty(value))
         {
-            try
+            lock (Registry.LocalMachine)
             {
-                using RegistryKey registryKey = root.OpenSubKey(path, true);
-                using RegistryKey key = registryKey.CreateSubKey(name);
-                key?.SetValue(name, defaultValue);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, $"CreateParameter failed: {ex.Message}");
-            }
-            finally
-            {
-                _ = ApplyRegistryChanges();
+                try
+                {
+                    using RegistryKey regKey = root.OpenSubKey(path, true);
+                    using RegistryKey key = regKey.CreateSubKey(name);
+                    key?.SetValue(name, defaultValue);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, $"CreateParameter failed: {ex.Message}");
+                }
+                finally
+                {
+                    _ = ApplyRegistryChanges();
+                }
             }
         }
 
