@@ -99,10 +99,6 @@
       </None>
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Utils\Common\" />
-    </ItemGroup>
-
     <Target Name="CopyFiles" AfterTargets="CoreBuild">
 
 		<ItemGroup>
