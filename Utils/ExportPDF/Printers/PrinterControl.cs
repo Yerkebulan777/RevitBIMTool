@@ -8,6 +8,7 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
     {
         public abstract string Name { get; }
 
+        public abstract int OverallRating { get; }
 
         public abstract void InitializePrinter();
 

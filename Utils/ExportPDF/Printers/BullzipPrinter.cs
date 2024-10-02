@@ -11,6 +11,7 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
     {
         private readonly string registryKey = @"SOFTWARE\Bullzip\PDF Printer\Settings";
         public override string Name => "Bullzip PDF Printer";
+        public override int OverallRating => 3;
 
         private dynamic pdfPrinter;
 

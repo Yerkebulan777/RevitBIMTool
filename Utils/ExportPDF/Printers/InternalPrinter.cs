@@ -6,7 +6,10 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
 {
     internal sealed class InternalPrinter : PrinterControl
     {
-        public override string Name => throw new NotImplementedException();
+        public override string Name => string.Empty;
+
+        public override int OverallRating => 5;
+
 
         public override void InitializePrinter()
         {

@@ -11,6 +11,7 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
     {
         private readonly string registryKey = @"SOFTWARE\clawSoft\clawPDF\Settings\ConversionProfiles\0";
         public override string Name => "clawPDF";
+        public override int OverallRating => 4;
 
 
         public override void InitializePrinter()
