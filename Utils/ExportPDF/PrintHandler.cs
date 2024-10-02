@@ -12,12 +12,9 @@ namespace RevitBIMTool.Utils.ExportPDF;
 internal static class PrintHandler
 {
 
-    private static string printerName;
-
-
-    public static void ResetPrintSettings(Document doc, string printerName)
+    public static void ResetPrintSettings(Document doc, out string printerName)
     {
-        PrintHandler.printerName = printerName;
+        printerName = string.Empty;
 
         PrintManager printManager = doc.PrintManager;
 
@@ -72,8 +69,14 @@ internal static class PrintHandler
     }
 
 
-    public static Dictionary<string, List<SheetModel>> GetSheetData(Document doc, string revitFileName, ColorDepthType colorType)
+    public static Dictionary<string, List<SheetModel>> GetSheetData(Document doc,string printerName,  string revitFileName, string sectionName)
     {
+        ColorDepthType colorType = sectionName switch
+        {
+            "KJ" or "KR" or "KG" => ColorDepthType.BlackLine,
+            _ => ColorDepthType.Color,
+        };
+
         FilteredElementCollector collector = new(doc);
 
         collector = collector.OfCategory(BuiltInCategory.OST_TitleBlocks);
@@ -143,40 +146,36 @@ internal static class PrintHandler
 
         List<SheetModel> resultFilePaths = new(sheetDict.Values.Count);
 
-        using Mutex mutex = new(false, $"Global\\{{{printerName}}}");
+        using Transaction trx = new(doc, "PrintToPDF");
 
-        if (mutex.WaitOne(Timeout.InfiniteTimeSpan))
+        if (TransactionStatus.Started == trx.Start())
         {
-            using Transaction trx = new(doc, "PrintToPDF");
-
             try
             {
-                if (TransactionStatus.Started == trx.Start())
+                foreach (string settingName in sheetDict.Keys)
                 {
-                    foreach (string settingName in sheetDict.Keys)
+                    PrintManager printManager = doc.PrintManager;
+
+                    PrintSetting printSetting = printAllSettings.FirstOrDefault(set => set.Name == settingName);
+
+                    if (printSetting != null && sheetDict.TryGetValue(settingName, out List<SheetModel> sheetModels))
                     {
-                        PrintManager printManager = doc.PrintManager;
+                        printManager.PrintSetup.CurrentPrintSetting = printSetting;
 
-                        PrintSetting printSetting = printAllSettings.FirstOrDefault(set => set.Name == settingName);
+                        printManager.Apply(); // Set print settings
 
-                        if (printSetting != null && sheetDict.TryGetValue(settingName, out List<SheetModel> sheetModels))
+                        for (int idx = 0; idx < sheetModels.Count; idx++)
                         {
-                            printManager.PrintSetup.CurrentPrintSetting = printSetting;
+                            SheetModel model = sheetModels[idx];
 
-                            printManager.Apply(); // Set print settings
-
-                            for (int idx = 0; idx < sheetModels.Count; idx++)
+                            if (ExportSheet(doc, tempFolder, model))
                             {
-                                SheetModel model = sheetModels[idx];
-
-                                if (ExportSheet(doc, tempFolder, model))
-                                {
-                                    resultFilePaths.Add(model);
-                                }
+                                resultFilePaths.Add(model);
                             }
                         }
                     }
                 }
+
             }
             catch (Exception ex)
             {
@@ -184,8 +183,6 @@ internal static class PrintHandler
             }
             finally
             {
-                mutex.ReleaseMutex();
-
                 if (!trx.HasEnded())
                 {
                     _ = trx.RollBack();
@@ -199,7 +196,7 @@ internal static class PrintHandler
 
     public static bool ExportSheet(Document doc, string folder, SheetModel model)
     {
-        PDFExportOptions option = new PDFExportOptions()
+        PDFExportOptions option = new()
         {
             FileName = model.SheetName,
             ExportQuality = PDFExportQualityType.DPI300,

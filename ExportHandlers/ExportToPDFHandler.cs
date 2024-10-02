@@ -9,43 +9,30 @@ using System.IO;
 
 
 namespace RevitBIMTool.ExportHandlers;
-internal static class ExportToPDFHandler
+internal class ExportToPDFHandler
 {
-    private const string printerName = "PDFCreator";
-    private static Dictionary<string, List<SheetModel>> sheetData;
 
-    public static void Execute(UIDocument uidoc, string revitFilePath, string exportDirectory)
+    private Dictionary<string, List<SheetModel>> sheetData;
+
+    public void Execute(UIDocument uidoc, string revitFilePath, string exportDirectory)
     {
-        string defaultPrinter = PrinterApiUtility.GetDefaultPrinter();
-        string sectionName = RevitPathHelper.GetSectionName(revitFilePath);
-        string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
-        string tempFolder = Path.Combine(Path.GetTempPath(), $"{revitFileName}TMP");
-        string targetPath = Path.Combine(exportDirectory, $"{revitFileName}.pdf");
-
-        if (!defaultPrinter.Equals(printerName))
-        {
-            throw new ArgumentException($"{printerName} is not defined!");
-        }
-
         Document doc = uidoc.Document;
 
         Log.Debug("Start export to PDF...");
 
-        RevitPathHelper.EnsureDirectory(tempFolder);
-        RevitPathHelper.EnsureDirectory(exportDirectory);
-        PrintHandler.ResetPrintSettings(doc, printerName);
+        PrintHandler.ResetPrintSettings(doc, out string printerName);
 
-        ColorDepthType colorType = sectionName switch
-        {
-            "KJ" or "KR" or "KG" => ColorDepthType.BlackLine,
-            _ => ColorDepthType.Color,
-        };
+        string sectionName = RevitPathHelper.GetSectionName(revitFilePath);
+        string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
+        string tempFolder = Path.Combine(Path.GetTempPath(), $"{revitFileName}TMP");
+        string exportFullPath = Path.Combine(exportDirectory, $"{revitFileName}.pdf");
 
-        sheetData = PrintHandler.GetSheetData(doc, revitFileName, colorType);
+        sheetData = PrintHandler.GetSheetData(doc, printerName, revitFileName, sectionName);
 
         if (sheetData.Count > 0)
         {
-            Log.Information($"Temporary path: {targetPath}");
+            RevitPathHelper.EnsureDirectory(tempFolder);
+            RevitPathHelper.EnsureDirectory(exportDirectory);
 
             List<SheetModel> sheetModels = PrintHandler.PrintSheetData(doc, sheetData, tempFolder);
 
@@ -53,7 +40,7 @@ internal static class ExportToPDFHandler
             {
                 SystemFolderOpener.OpenFolder(exportDirectory);
                 Log.Information($"Total printed sheets: ({sheetModels.Count})");
-                MergeHandler.CombinePDFsFromFolder(sheetModels, tempFolder, targetPath);
+                MergeHandler.CombinePDFsFromFolder(sheetModels, tempFolder, exportFullPath);
                 RevitPathHelper.DeleteDirectory(tempFolder);
             }
         }
