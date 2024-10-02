@@ -1,11 +1,10 @@
 ﻿using Autodesk.Revit.DB;
 using RevitBIMTool.Model;
-using System.IO;
 
 
 namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
 {
-    internal sealed class InternalPrinter: PrinterControl
+    internal sealed class InternalPrinter : PrinterControl
     {
         public override string Name => throw new NotImplementedException();
 

@@ -3,6 +3,7 @@ using RevitBIMTool.Model;
 using Serilog;
 using System.Runtime.InteropServices;
 
+
 namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
 {
     internal class BullzipPrinter : PrinterControl
@@ -81,6 +82,7 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
         {
             throw new NotImplementedException();
         }
+
     }
 
 }
