@@ -54,6 +54,24 @@ internal static class PrintHandler
     }
 
 
+    private static Element GetViewSheetByNumber(Document document, string sheetNumber)
+    {
+        ParameterValueProvider pvp = new(new ElementId(BuiltInParameter.SHEET_NUMBER));
+
+#if R19 || R21
+        FilterStringRule filterRule = new(pvp, new FilterStringEquals(), sheetNumber, false);
+#else
+        FilterStringRule filterRule = new(pvp, new FilterStringEquals(), sheetNumber);
+#endif
+
+        FilteredElementCollector collector = new FilteredElementCollector(document).OfClass(typeof(ViewSheet));
+
+        collector = collector.WherePasses(new ElementParameterFilter(filterRule));
+
+        return collector.FirstElement();
+    }
+
+
     public static Dictionary<string, List<SheetModel>> GetSheetData(Document doc, string revitFileName, ColorDepthType colorType)
     {
         FilteredElementCollector collector = new(doc);
@@ -116,24 +134,6 @@ internal static class PrintHandler
         }
 
         return sheetPrintData;
-    }
-
-
-    private static Element GetViewSheetByNumber(Document document, string sheetNumber)
-    {
-        ParameterValueProvider pvp = new(new ElementId(BuiltInParameter.SHEET_NUMBER));
-
-#if R19 || R21
-        FilterStringRule filterRule = new(pvp, new FilterStringEquals(), sheetNumber, false);
-#else
-        FilterStringRule filterRule = new(pvp, new FilterStringEquals(), sheetNumber);
-#endif
-
-        FilteredElementCollector collector = new FilteredElementCollector(document).OfClass(typeof(ViewSheet));
-
-        collector = collector.WherePasses(new ElementParameterFilter(filterRule));
-
-        return collector.FirstElement();
     }
 
 
@@ -227,9 +227,9 @@ internal static class PrintHandler
 
         PrintManager printManager = doc.PrintManager;
 
-        RevitPathHelper.DeleteExistsFile(filePath);
-
         printManager.PrintToFileName = filePath;
+
+        RevitPathHelper.DeleteExistsFile(filePath);
 
         if (printManager.SubmitPrint(model.ViewSheet))
         {
