@@ -65,7 +65,7 @@ internal static class RegistryHelper
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"SetValue failed: {ex.Message}");
+                Log.Error(ex, $"Set value failed: {ex.Message}");
             }
             finally
             {
@@ -91,7 +91,7 @@ internal static class RegistryHelper
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, $"CreateParameter failed: {ex.Message}");
+                    Log.Error(ex, $"Create parameter failed: {ex.Message}");
                 }
                 finally
                 {
