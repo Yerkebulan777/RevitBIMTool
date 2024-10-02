@@ -1,7 +1,5 @@
 ﻿using Autodesk.Revit.DB;
 using RevitBIMTool.Model;
-using RevitBIMTool.Utils.ExportPdfUtil;
-using RevitBIMTool.Utils.PrintUtil;
 using Serilog;
 using System.IO;
 using Document = Autodesk.Revit.DB.Document;
