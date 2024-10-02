@@ -197,29 +197,6 @@ internal static class PrintHandler
     }
 
 
-    private static bool PrintSheet(Document doc, string folder, SheetModel model)
-    {
-        string filePath = Path.Combine(folder, model.SheetName);
-
-        PrintManager printManager = doc.PrintManager;
-
-        RevitPathHelper.DeleteExistsFile(filePath);
-
-        printManager.PrintToFileName = filePath;
-
-        if (printManager.SubmitPrint(model.ViewSheet))
-        {
-            if (RevitPathHelper.AwaitExistsFile(filePath))
-            {
-                model.SheetTempPath = filePath;
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-
     public static bool ExportSheet(Document doc, string folder, SheetModel model)
     {
         PDFExportOptions option = new PDFExportOptions()
@@ -238,6 +215,29 @@ internal static class PrintHandler
         {
             Thread.Sleep(100);
             return true;
+        }
+
+        return false;
+    }
+
+
+    private static bool PrintSheet(Document doc, string folder, SheetModel model)
+    {
+        string filePath = Path.Combine(folder, model.SheetName);
+
+        PrintManager printManager = doc.PrintManager;
+
+        RevitPathHelper.DeleteExistsFile(filePath);
+
+        printManager.PrintToFileName = filePath;
+
+        if (printManager.SubmitPrint(model.ViewSheet))
+        {
+            if (RevitPathHelper.AwaitExistsFile(filePath))
+            {
+                model.SheetTempPath = filePath;
+                return true;
+            }
         }
 
         return false;
