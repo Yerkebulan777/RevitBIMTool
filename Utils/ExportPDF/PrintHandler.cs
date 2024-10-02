@@ -196,13 +196,11 @@ internal static class PrintHandler
     }
 
 
-    private static bool ExportSheet(Document doc, string folder, SheetModel model)
+    private static bool PrintSheet(Document doc, string folder, SheetModel model)
     {
-        PrintManager printManager = doc.PrintManager;
-
         string filePath = Path.Combine(folder, model.SheetName);
 
-        RegistryHelper.ActivateSettingsForPdfCreator(folder);
+        PrintManager printManager = doc.PrintManager;
 
         RevitPathHelper.DeleteExistsFile(filePath);
 
@@ -221,24 +219,21 @@ internal static class PrintHandler
     }
 
 
-    public static bool ExportSheet(Document doc, ViewSheet viewSheet, string filePath)
+    public static bool ExportSheet(Document doc, string folder, SheetModel model)
     {
-        string fileName = Path.GetFileNameWithoutExtension(filePath);
-        string directory = Path.GetDirectoryName(filePath);
-
         PDFExportOptions option = new PDFExportOptions()
         {
+            FileName = model.SheetName,
             ExportQuality = PDFExportQualityType.DPI300,
             RasterQuality = RasterQualityType.Medium,
             ColorDepth = ColorDepthType.Color,
             ZoomType = ZoomType.Zoom,
             ZoomPercentage = 100,
-            FileName = fileName,
         };
 
-        IList<ElementId> viewIds = [viewSheet.Id];
+        IList<ElementId> viewIds = [model.ViewSheet.Id];
 
-        if (doc.Export(directory, viewIds, option))
+        if (doc.Export(folder, viewIds, option))
         {
             Thread.Sleep(100);
             return true;
