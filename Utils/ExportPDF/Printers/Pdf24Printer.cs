@@ -15,7 +15,7 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
 
         public override void InitializePrinter()
         {
-            if (RegistryHelper.IsRegistryKeyExists(registryKey))
+            if (RegistryHelper.IsRegistryKeyExists(RegistryHive.CurrentUser, registryKey))
             {
                 RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "AutoSaveOpenDir", 0);
                 RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "Handler", "autoSave");

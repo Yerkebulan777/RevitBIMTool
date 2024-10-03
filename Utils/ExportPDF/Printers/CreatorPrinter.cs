@@ -8,7 +8,7 @@ using System.IO;
 
 namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
 {
-    internal sealed class PdfCreatorPrinter : PrinterControl
+    internal sealed class CreatorPrinter : PrinterControl
     {
         public readonly string registryKey = @"SOFTWARE\pdfforge\PDFCreator\Settings\ConversionProfiles\0";
         public override string Name => "PDFCreator";
@@ -17,7 +17,7 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
 
         public override void InitializePrinter()
         {
-            if (RegistryHelper.IsRegistryKeyExists(registryKey))
+            if (RegistryHelper.IsRegistryKeyExists(RegistryHive.CurrentUser, registryKey))
             {
                 string autoSaveKey = Path.Combine(registryKey, "AutoSave");
                 string openViewerKey = Path.Combine(registryKey, "OpenViewer");

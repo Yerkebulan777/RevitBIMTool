@@ -1,4 +1,5 @@
 ﻿using Autodesk.Revit.DB;
+using Microsoft.Win32;
 using RevitBIMTool.Model;
 using RevitBIMTool.Utils.ExportPDF;
 using RevitBIMTool.Utils.SystemHelpers;
@@ -19,7 +20,7 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
 
         public override void InitializePrinter()
         {
-            if (RegistryHelper.IsRegistryKeyExists(registryKey))
+            if (RegistryHelper.IsRegistryKeyExists(RegistryHive.CurrentUser, registryKey))
             {
                 try
                 {

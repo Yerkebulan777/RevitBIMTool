@@ -23,8 +23,8 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
 
         public virtual bool IsPrinterInstalled()
         {
-            const string regPath = @"SYSTEM\CurrentControlSet\Control\Print\Printers";
-            return RegistryHelper.IsRegistryKeyExists(Path.Combine(regPath, Name));
+            const string registryPath = @"SYSTEM\CurrentControlSet\Control\Print\Printers";
+            return RegistryHelper.IsRegistryKeyExists(RegistryHive.LocalMachine, Path.Combine(registryPath, Name));
         }
 
     }

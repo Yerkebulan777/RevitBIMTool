@@ -12,9 +12,9 @@ internal static class RegistryHelper
     private const string registryPrintPath = @"SYSTEM\CurrentControlSet\Control\Print\Printers";
 
 
-    public static bool IsRegistryKeyExists(string installPath)
+    public static bool IsRegistryKeyExists(RegistryHive hiveKey, string installPath)
     {
-        using RegistryKey regKey = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry64);
+        using RegistryKey regKey = RegistryKey.OpenBaseKey(hiveKey, RegistryView.Default);
         using RegistryKey registryKey = regKey.OpenSubKey(installPath);
         return registryKey != null;
     }

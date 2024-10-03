@@ -1,5 +1,7 @@
 ﻿using Autodesk.Revit.DB;
 using RevitBIMTool.Model;
+using RevitBIMTool.Utils.ExportPDF.Printers;
+using RevitBIMTool.Utils.ExportPdfUtil.Printers;
 using Serilog;
 using System.IO;
 using Document = Autodesk.Revit.DB.Document;
@@ -240,6 +242,23 @@ internal static class PrintHandler
 
     internal static string GetPrinter()
     {
+        List<PrinterControl> printers =
+        [
+            new Pdf24Printer(),
+            new CreatorPrinter(),
+            new BullzipPrinter(),
+            new ClawPdfPrinter(),
+            new InternalPrinter(),
+        ];
+
+        foreach (PrinterControl printer in printers)
+        {
+            if (printer.IsPrinterInstalled())
+            {
+
+            }
+        }
+
         throw new NotImplementedException();
     }
 }
