@@ -6,6 +6,7 @@ using RevitBIMTool.Utils.ExportPdfUtil.Printers;
 using RevitBIMTool.Utils.SystemHelpers;
 using Serilog;
 using System.IO;
+using System.Windows.Documents;
 using Document = Autodesk.Revit.DB.Document;
 using Element = Autodesk.Revit.DB.Element;
 using PaperSize = System.Drawing.Printing.PaperSize;
@@ -66,6 +67,11 @@ internal static class PrintHandler
 
     private static void ResetAndApplyPrinterSettings(Document doc, string printerName)
     {
+        if (string.IsNullOrEmpty(printerName))
+        {
+            throw new ArgumentException("PrinterName");
+        }
+
         PrintManager printManager = doc.PrintManager;
 
         List<PrintSetting> printSettings = RevitPrinterUtil.GetPrintSettings(doc);
@@ -119,13 +125,6 @@ internal static class PrintHandler
 
     public static Dictionary<string, List<SheetModel>> GetData(Document doc, string printerName, string revitFileName, bool color = true)
     {
-        if (string.IsNullOrEmpty(printerName))
-        {
-
-        }
-
-
-
         ResetAndApplyPrinterSettings(doc, printerName);
 
         FilteredElementCollector collector = new(doc);
