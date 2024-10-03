@@ -22,7 +22,7 @@ internal static class PrintHandler
 
         foreach (PrinterControl printer in GetInstalledPrinters())
         {
-            int status = GetPrinterStatus(printer.RegistryName);
+            int status = GetPrinterStatus(printer.RegistryPath);
 
             if (result is null && status == 0)
             {
@@ -59,15 +59,13 @@ internal static class PrintHandler
     }
 
 
-    private static int GetPrinterStatus(string printerName, string parameterName = "PrintStatusMonitor")
+    private static int GetPrinterStatus(string printerPath)
     {
-        string printerPath = Path.Combine(@"SYSTEM\CurrentControlSet\Control\Print\Printers", printerName);
+        int status = Convert.ToInt32(RegistryHelper.CreateParameter(Registry.CurrentUser, printerPath, "StatusMonitor", 0));
 
-        int value = (int)RegistryHelper.CreateParameter(Registry.LocalMachine, printerPath, parameterName, 0);
+        Log.Debug($"Printer access status: {status}");
 
-        Log.Debug($"Printer {printerName} access status: {value}");
-
-        return value;
+        return status;
     }
 
 

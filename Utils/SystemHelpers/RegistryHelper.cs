@@ -115,7 +115,7 @@ internal static class RegistryHelper
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, $"Create parameter: {ex.Message}");
+                    Log.Error(ex, $"Create parameter in {path} {ex.Message}");
                 }
                 finally
                 {
