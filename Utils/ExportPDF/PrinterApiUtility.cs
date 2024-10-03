@@ -106,6 +106,8 @@ public static class PrinterApiUtility
             {
                 try
                 {
+                    Log.Information($"Start add format: {formName}");
+
                     PrinterApiWrapper.PrinterDefaults defaults = new()
                     {
                         pDatatype = null,
