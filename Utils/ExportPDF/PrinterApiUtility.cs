@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using Serilog;
+using System.Diagnostics;
 using System.Drawing.Printing;
 using System.Text;
 using PaperSize = System.Drawing.Printing.PaperSize;
@@ -7,9 +8,13 @@ using PaperSize = System.Drawing.Printing.PaperSize;
 namespace RevitBIMTool.Utils.ExportPDF;
 public static class PrinterApiUtility
 {
+
+    const int acсess = PrinterApiWrapper.PRINTER_ACCESS_ADMINISTER | PrinterApiWrapper.PRINTER_ACCESS_USE;
+
+
     public static string GetDefaultPrinter()
     {
-        PrinterSettings settings = new PrinterSettings();
+        PrinterSettings settings = new();
         string defaultPrinter = settings?.PrinterName;
         return defaultPrinter;
     }
@@ -17,7 +22,7 @@ public static class PrinterApiUtility
 
     public static void ResetDefaultPrinter(string printerName)
     {
-        PrintDocument printDocument = new PrintDocument();
+        PrintDocument printDocument = new();
 
         PrinterSettings settings = printDocument.PrinterSettings;
 
@@ -38,8 +43,8 @@ public static class PrinterApiUtility
         resultSize = null;
         bool result = false;
 
-        StringBuilder strBuilder = new StringBuilder();
-        PrinterSettings prntSettings = new PrinterSettings();
+        StringBuilder strBuilder = new();
+        PrinterSettings prntSettings = new();
 
         double widthInch = PrinterUnitConvert.Convert(widthInMm, PrinterUnit.TenthsOfAMillimeter, PrinterUnit.ThousandthsOfAnInch);
         double heightInch = PrinterUnitConvert.Convert(heigthInMm, PrinterUnit.TenthsOfAMillimeter, PrinterUnit.ThousandthsOfAnInch);
@@ -87,63 +92,68 @@ public static class PrinterApiUtility
 
     public static string AddFormat(string printerName, double widthInMm, double heightInMm)
     {
-        // форматы надо всегда добавлять в вертикальной ориентации
-        double widthSideInMm = Math.Min(widthInMm, heightInMm);
-        double heighSideInMm = Math.Max(widthInMm, heightInMm);
+        double widthSideInMm = Math.Round(Math.Min(widthInMm, heightInMm), 5);
+        double heighSideInMm = Math.Round(Math.Max(widthInMm, heightInMm), 5);
 
-        string formName = $"Custom {Math.Round(widthSideInMm)} x {Math.Round(heighSideInMm)}";
+        string formName = $"Custom {widthSideInMm} x {heighSideInMm}";
 
-        PrinterApiWrapper.PrinterDefaults defaults = new PrinterApiWrapper.PrinterDefaults
+        using (Mutex mutex = new(false, "Global\\{{{AddPrinterFormat}}}"))
         {
-            pDatatype = null,
-            pDevMode = IntPtr.Zero,
-            DesiredAccess = PrinterApiWrapper.PRINTER_ACCESS_ADMINISTER | PrinterApiWrapper.PRINTER_ACCESS_USE
-        };
+            int width = (int)(widthSideInMm * 1000.0);
+            int height = (int)(heighSideInMm * 1000.0);
 
-        if (PrinterApiWrapper.OpenPrinter(printerName, out IntPtr hPrinter, ref defaults))
-        {
-            try
+            if (mutex.WaitOne(Timeout.Infinite))
             {
-                if (PrinterApiWrapper.DeleteForm(hPrinter, formName))
+                try
                 {
-                    Debug.WriteLine("Deleted: " + formName);
+                    PrinterApiWrapper.PrinterDefaults defaults = new()
+                    {
+                        pDatatype = null,
+                        pDevMode = IntPtr.Zero,
+                        DesiredAccess = acсess,
+                    };
+
+                    if (PrinterApiWrapper.OpenPrinter(printerName, out IntPtr hPrinter, ref defaults))
+                    {
+                        Log.Debug($"Deleted {formName}: {PrinterApiWrapper.DeleteForm(hPrinter, formName)}");
+
+                        PrinterApiWrapper.FormInfo1 formInfo = new()
+                        {
+                            Flags = 0,
+                            pName = formName
+                        };
+
+                        formInfo.Size.width = width;
+                        formInfo.Size.height = height;
+                        formInfo.ImageableArea.top = 0;
+                        formInfo.ImageableArea.left = 0;
+                        formInfo.ImageableArea.right = width;
+                        formInfo.ImageableArea.bottom = height;
+
+                        if (!PrinterApiWrapper.AddForm(hPrinter, 1, ref formInfo))
+                        {
+                            Log.Error($"Failed add printer form {formName}!");
+                        }
+
+                        if (PrinterApiWrapper.ClosePrinter(hPrinter))
+                        {
+                            Log.Debug($"Closed {formName}");
+                        }
+                    }
                 }
-
-                PrinterApiWrapper.FormInfo1 formInfo = new PrinterApiWrapper.FormInfo1
+                catch (Exception ex)
                 {
-                    Flags = 0,
-                    pName = formName
-                };
-
-                // для перевода в сантиметры умножить на 10000
-                formInfo.Size.width = (int)(widthSideInMm * 1000.0);
-                formInfo.Size.height = (int)(heighSideInMm * 1000.0);
-
-                formInfo.ImageableArea.left = 0;
-                formInfo.ImageableArea.right = formInfo.Size.width;
-                formInfo.ImageableArea.top = 0;
-                formInfo.ImageableArea.bottom = formInfo.Size.height;
-
-                if (!PrinterApiWrapper.AddForm(hPrinter, 1, ref formInfo))
-                {
-                    throw new Exception($"Failed currentSize {formName} to the printer {printerName}");
+                    Log.Error(ex, ex.ToString());
                 }
-            }
-            finally
-            {
-                if (PrinterApiWrapper.ClosePrinter(hPrinter))
+                finally
                 {
+                    mutex.ReleaseMutex();
                     Thread.Sleep(1000);
                 }
             }
         }
-        else
-        {
-            throw new Exception($"Failed to open  {printerName} printer");
-        }
 
         return formName;
     }
-
 
 }

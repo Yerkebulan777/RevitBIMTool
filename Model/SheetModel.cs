@@ -29,7 +29,7 @@ internal class SheetModel : IDisposable
     public string SheetName { get; private set; }
     public double DigitNumber { get; private set; }
     public string StringNumber { get; private set; }
-    public string SheetTempPath { get; internal set; }
+    public string TempPath { get; internal set; }
     public string PaperName => SheetPapeSize.PaperName;
     public object OrganizationGroupName { get; internal set; }
 

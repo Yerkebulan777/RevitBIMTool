@@ -6,7 +6,6 @@ using RevitBIMTool.Utils.ExportPDF;
 using RevitBIMTool.Utils.ExportPdfUtil.Printers;
 using RevitBIMTool.Utils.SystemHelpers;
 using Serilog;
-using ServiceLibrary.Helpers;
 using System.IO;
 
 
@@ -14,6 +13,7 @@ namespace RevitBIMTool.ExportHandlers;
 internal sealed class ExportToPDFHandler
 {
     private Dictionary<string, List<SheetModel>> sheetData;
+
 
     public void Execute(UIDocument uidoc, string revitFilePath, string exportDirectory)
     {
@@ -28,13 +28,12 @@ internal sealed class ExportToPDFHandler
 
         PrinterControl printer = PrintHandler.GetAvailablePrinter(out string printerName);
 
-        ConcurrentActionHandler.ExecuteWithMutex("Global\\{{{GetSheetData}}}", () =>
-        {
-            sheetData = PrintHandler.GetSheetData(doc, printerName, revitFileName, section is not ("KJ" or "KR" or "KG"));
-        });
+        sheetData = PrintHandler.GetSheetData(doc, printerName, revitFileName, section is not ("KJ" or "KR" or "KG"));
 
         if (sheetData.Count > 0)
         {
+            printer.InitializePrinter();
+
             RevitPathHelper.EnsureDirectory(tempFolder);
             RevitPathHelper.EnsureDirectory(exportDirectory);
 

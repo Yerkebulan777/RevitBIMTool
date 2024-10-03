@@ -26,7 +26,6 @@ internal static class PrintHandler
             Log.Debug($"Printer: {printer.RegistryName} status: {description}");
             if (result is null && status == 0)
             {
-                printer.InitializePrinter();
                 printerName = printer.RegistryName;
             }
         }
@@ -245,7 +244,6 @@ internal static class PrintHandler
                         }
                     }
                 }
-
             }
             catch (Exception ex)
             {
@@ -253,6 +251,8 @@ internal static class PrintHandler
             }
             finally
             {
+                printer.ResetPrinterSettings();
+
                 if (!trx.HasEnded())
                 {
                     _ = trx.RollBack();
@@ -303,7 +303,7 @@ internal static class PrintHandler
         {
             if (RevitPathHelper.AwaitExistsFile(filePath))
             {
-                model.SheetTempPath = filePath;
+                model.TempPath = filePath;
                 return true;
             }
         }
