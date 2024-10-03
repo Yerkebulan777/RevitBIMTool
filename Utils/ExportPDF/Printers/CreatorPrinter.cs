@@ -1,62 +1,55 @@
 ﻿using Autodesk.Revit.DB;
 using Microsoft.Win32;
 using RevitBIMTool.Model;
-using RevitBIMTool.Utils.ExportPDF;
+using RevitBIMTool.Utils.ExportPdfUtil.Printers;
 using RevitBIMTool.Utils.SystemHelpers;
-using System.IO;
 
 
-namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
+namespace RevitBIMTool.Utils.ExportPDF.Printers
 {
     internal sealed class CreatorPrinter : PrinterControl
     {
-        public readonly string registryKey = @"SOFTWARE\pdfforge\PDFCreator\Settings\ConversionProfiles\0";
-        public override string Name => "PDFCreator";
+        public override string RegistryPath => @"SOFTWARE\pdfforge\PDFCreator\Settings\ConversionProfiles\0";
+        public override string RegistryName => "PDFCreator";
         public override int OverallRating => 2;
 
 
         public override void InitializePrinter()
         {
-            if (RegistryHelper.IsRegistryKeyExists(RegistryHive.CurrentUser, registryKey))
-            {
-                string autoSaveKey = Path.Combine(registryKey, "AutoSave");
-                string openViewerKey = Path.Combine(registryKey, "OpenViewer");
-                RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "Enabled", "True");
-                RegistryHelper.SetValue(Registry.CurrentUser, openViewerKey, "Enabled", "False");
-                RegistryHelper.SetValue(Registry.CurrentUser, openViewerKey, "OpenWithPdfArchitect", "False");
-                RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", "<InputFilePath>");
-                RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "FileNameTemplate", "<InputFilename>");
-                RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "ShowAllNotifications", "False");
-                RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "CompressionLevel", "medium");
-                RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "SkipPrintDialog", "True");
-                RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "ShowProgress", "False");
-
-                return;
-            }
-
-            throw new InvalidOperationException($"Registry key not found for printer: {Name}");
+            string autoSaveKey = System.IO.Path.Combine(RegistryPath, "AutoSave");
+            string openViewerKey = System.IO.Path.Combine(RegistryPath, "OpenViewer");
+            RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "Enabled", "True");
+            RegistryHelper.SetValue(Registry.CurrentUser, openViewerKey, "Enabled", "False");
+            RegistryHelper.SetValue(Registry.CurrentUser, openViewerKey, "OpenWithPdfArchitect", "False");
+            RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", "<InputFilePath>");
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<InputFilename>");
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowAllNotifications", "False");
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "CompressionLevel", "medium");
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "SkipPrintDialog", "True");
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowProgress", "False");
         }
 
 
         public override void ResetPrinterSettings()
         {
-            string autoSaveKey = Path.Combine(registryKey, "AutoSave");
-            string openViewerKey = Path.Combine(registryKey, "OpenViewer");
+            string autoSaveKey = System.IO.Path.Combine(RegistryPath, "AutoSave");
+            string openViewerKey = System.IO.Path.Combine(RegistryPath, "OpenViewer");
             RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "Enabled", "False");
             RegistryHelper.SetValue(Registry.CurrentUser, openViewerKey, "Enabled", "True");
             RegistryHelper.SetValue(Registry.CurrentUser, openViewerKey, "OpenWithPdfArchitect", "True");
             RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", string.Empty);
-            RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "FileNameTemplate", "<Title>");
-            RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "ShowAllNotifications", "True");
-            RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "CompressionLevel", "high");
-            RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "SkipPrintDialog", "False");
-            RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "ShowProgress", "True");
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<Title>");
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowAllNotifications", "True");
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "CompressionLevel", "high");
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "SkipPrintDialog", "False");
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowProgress", "True");
         }
 
 
         public override void SetPrinterOutput(string filePath)
         {
-            RegistryHelper.SetValue(Registry.CurrentUser, Path.Combine(registryKey, "AutoSave"), "TargetDirectory", filePath);
+            string autoSaveKey = System.IO.Path.Combine(RegistryPath, "AutoSave");
+            RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", filePath);
         }
 
 

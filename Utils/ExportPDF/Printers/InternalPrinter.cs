@@ -1,14 +1,16 @@
 ﻿using Autodesk.Revit.DB;
+using Microsoft.Win32;
 using RevitBIMTool.Model;
 using RevitBIMTool.Utils.ExportPdfUtil.Printers;
+using RevitBIMTool.Utils.SystemHelpers;
 
 
 namespace RevitBIMTool.Utils.ExportPDF.Printers
 {
     internal sealed class InternalPrinter : PrinterControl
     {
-        public override string Name => "Microsoft Print to PDF";
-
+        public override string RegistryPath => @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Print\Printers\Microsoft Print to PDF";
+        public override string RegistryName => "Microsoft Print to PDF";
         public override int OverallRating => 5;
 
 
@@ -41,6 +43,13 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
         {
             return base.IsPrinterInstalled();
         }
+
+
+        public override bool IsPrinterEnabled()
+        {
+            return RegistryHelper.IsSubKeyExists(Registry.LocalMachine, RegistryPath);
+        }
+
     }
 
 }

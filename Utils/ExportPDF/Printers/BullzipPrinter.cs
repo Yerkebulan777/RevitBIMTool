@@ -1,8 +1,6 @@
 ﻿using Autodesk.Revit.DB;
-using Microsoft.Win32;
 using RevitBIMTool.Model;
 using RevitBIMTool.Utils.ExportPDF;
-using RevitBIMTool.Utils.SystemHelpers;
 using Serilog;
 using System.Runtime.InteropServices;
 
@@ -11,8 +9,8 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
 {
     internal class BullzipPrinter : PrinterControl
     {
-        private readonly string registryKey = @"SOFTWARE\Bullzip\PDF Printer\Settings";
-        public override string Name => "Bullzip PDF Printer";
+        public override string RegistryPath => @"SOFTWARE\Bullzip\PDF Printer\Settings";
+        public override string RegistryName => "Bullzip PDF Printer";
         public override int OverallRating => 3;
 
         private dynamic pdfPrinter;
@@ -20,21 +18,14 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
 
         public override void InitializePrinter()
         {
-            if (RegistryHelper.IsRegistryKeyExists(RegistryHive.CurrentUser, registryKey))
+            try
             {
-                try
-                {
-                    pdfPrinter = Activator.CreateInstance(Type.GetTypeFromProgID("Bullzip.PDFPrinterSettings"));
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, $"Error occurred while initializing the printer: {ex.Message}");
-                }
-
-                return;
+                pdfPrinter = Activator.CreateInstance(Type.GetTypeFromProgID("Bullzip.PDFPrinterSettings"));
             }
-
-            throw new InvalidOperationException($"Registry key not found for printer: {Name}");
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"Error occurred while initializing the printer: {ex.Message}");
+            }
         }
 
 
@@ -91,6 +82,12 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
         public override bool IsPrinterInstalled()
         {
             return base.IsPrinterInstalled();
+        }
+
+
+        public override bool IsPrinterEnabled()
+        {
+            return base.IsPrinterEnabled();
         }
 
     }

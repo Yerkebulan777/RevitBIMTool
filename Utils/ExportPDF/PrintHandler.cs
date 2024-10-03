@@ -22,12 +22,12 @@ internal static class PrintHandler
 
         foreach (PrinterControl printer in GetInstalledPrinters())
         {
-            int status = GetPrinterStatus(printer.Name, out string description);
-            Log.Debug($"Printer: {printer.Name} status: {description}");
+            int status = GetPrinterStatus(printer.RegistryName, out string description);
+            Log.Debug($"Printer: {printer.RegistryName} status: {description}");
             if (result is null && status == 0)
             {
                 printer.InitializePrinter();
-                printerName = printer.Name;
+                printerName = printer.RegistryName;
             }
         }
 

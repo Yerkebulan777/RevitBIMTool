@@ -3,50 +3,43 @@ using Microsoft.Win32;
 using RevitBIMTool.Model;
 using RevitBIMTool.Utils.ExportPDF;
 using RevitBIMTool.Utils.SystemHelpers;
-using System.IO;
 
 
 namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
 {
     internal sealed class ClawPdfPrinter : PrinterControl
     {
-        private readonly string registryKey = @"SOFTWARE\clawSoft\clawPDF\Settings\ConversionProfiles\0";
-        public override string Name => "clawPDF";
+        public override string RegistryPath => @"SOFTWARE\clawSoft\clawPDF\Settings\ConversionProfiles\0";
+        public override string RegistryName => "clawPDF";
         public override int OverallRating => 4;
 
 
         public override void InitializePrinter()
         {
-            if (RegistryHelper.IsRegistryKeyExists(RegistryHive.CurrentUser, registryKey))
-            {
-                string autoSaveKey = Path.Combine(registryKey, "AutoSave");
-                RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "Enabled", "True");
-                RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "OpenViewer", "False");
-                RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "SkipPrintDialog", "True");
-                RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "FileNameTemplate", "<InputFilename>");
-                RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", "<InputFilePath>");
-
-                return;
-            }
-
-            throw new InvalidOperationException($"Registry key not found for printer: {Name}");
+            string autoSaveKey = System.IO.Path.Combine(RegistryPath, "AutoSave");
+            RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "Enabled", "True");
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "OpenViewer", "False");
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "SkipPrintDialog", "True");
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<InputFilename>");
+            RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", "<InputFilePath>");
         }
 
 
         public override void ResetPrinterSettings()
         {
-            string autoSaveKey = Path.Combine(registryKey, "AutoSave");
+            string autoSaveKey = System.IO.Path.Combine(RegistryPath, "AutoSave");
             RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "Enabled", "False");
-            RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "OpenViewer", "True");
-            RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "SkipPrintDialog", "False");
-            RegistryHelper.SetValue(Registry.CurrentUser, registryKey, "FileNameTemplate", "<Title>");
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "OpenViewer", "True");
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "SkipPrintDialog", "False");
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<Title>");
             RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", string.Empty);
         }
 
 
         public override void SetPrinterOutput(string filePath)
         {
-            RegistryHelper.SetValue(Registry.CurrentUser, Path.Combine(registryKey, "AutoSave"), "TargetDirectory", filePath);
+            string autoSaveKey = System.IO.Path.Combine(RegistryPath, "AutoSave");
+            RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", filePath);
         }
 
 
@@ -59,6 +52,12 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
         public override bool IsPrinterInstalled()
         {
             return base.IsPrinterInstalled();
+        }
+
+
+        public override bool IsPrinterEnabled()
+        {
+            return base.IsPrinterEnabled();
         }
 
     }

@@ -323,7 +323,7 @@ internal sealed class RevitViewHelper
     //{
     //    FilteredElementCollector collector = new FilteredElementCollector(doc).OfClass(typeof(AnalysisDisplayStyle));
 
-    //    if (!collector.Any(a => a.Name == styleName))
+    //    if (!collector.Any(a => a.RegistryName == styleName))
     //    {
     //        AnalysisDisplayMarkersAndTextSettings markerSettings = new AnalysisDisplayMarkersAndTextSettings();
 

@@ -9,21 +9,33 @@ internal static class RegistryHelper
     private static readonly uint WM_SETTINGCHANGE = 26;
     private static readonly IntPtr HWND_BROADCAST = new(0xFFFF);
 
-
-    public static bool IsRegistryKeyExists(RegistryHive hiveKey, string installPath)
+    private static RegistryHive GetRegistryHive(RegistryKey root)
     {
-        using RegistryKey regKey = RegistryKey.OpenBaseKey(hiveKey, RegistryView.Default);
-        using RegistryKey registryKey = regKey.OpenSubKey(installPath);
-        return registryKey != null;
+        return root.Name switch
+        {
+            "HKEY_USERS" => RegistryHive.Users,
+            "HKEY_CURRENT_USER" => RegistryHive.CurrentUser,
+            "HKEY_CLASSES_ROOT" => RegistryHive.ClassesRoot,
+            "HKEY_CURRENT_CONFIG" => RegistryHive.CurrentConfig,
+            _ => RegistryHive.LocalMachine
+        };
     }
 
 
-    private static bool IsPrinterRegistry(string printerName)
+    public static bool IsSubKeyExists(RegistryKey root, string registryPath)
     {
-        const string registryPath = @"SYSTEM\CurrentControlSet\Control\Print\Printers";
-
-        using RegistryKey key = Registry.LocalMachine.OpenSubKey(registryPath);
-        return key?.GetSubKeyNames().Contains(printerName) ?? false;
+        try
+        {
+            RegistryHive registryHive = GetRegistryHive(root);
+            using RegistryKey regKey = RegistryKey.OpenBaseKey(registryHive, RegistryView.Default);
+            using RegistryKey registryKey = regKey.OpenSubKey(registryPath);
+            return registryKey != null;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, ex.Message);
+            return false;
+        }
     }
 
 
@@ -57,23 +69,24 @@ internal static class RegistryHelper
             {
                 using RegistryKey registryKey = root.OpenSubKey(regPath, true);
 
-                if (registryKey is not null)
+                if (value is int intValue)
                 {
-                    if (value is int intValue)
-                    {
-                        registryKey.SetValue(keyName, intValue, RegistryValueKind.DWord);
-                    }
-                    else if (value is string stringValue)
-                    {
-                        registryKey.SetValue(keyName, stringValue, RegistryValueKind.String);
-                    }
+                    registryKey.SetValue(keyName, intValue, RegistryValueKind.DWord);
+                }
+                else if (value is string stringValue)
+                {
+                    registryKey.SetValue(keyName, stringValue, RegistryValueKind.String);
+                }
+                else
+                {
+                    throw new ArgumentException($"RegistryKey {keyName} {registryKey}");
                 }
 
                 registryKey.Flush();
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"Set status failed: {ex.Message}");
+                Log.Error(ex, $"Set value failed: {ex.Message}");
             }
             finally
             {

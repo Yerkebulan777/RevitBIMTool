@@ -88,7 +88,7 @@ internal static class RevitWorksetHelper
 
                         WorksetId wid = new(workset.Id.IntegerValue);
 
-                        builder.AppendLine("Name: " + workset.Name);
+                        builder.AppendLine("RegistryName: " + workset.Name);
                         builder.AppendLine("Kind: " + workset.Kind);
                         builder.AppendLine("Is open: " + workset.IsOpen);
                         builder.AppendLine("UniqueId: " + workset.UniqueId);
