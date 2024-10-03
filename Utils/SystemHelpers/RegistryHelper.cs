@@ -110,8 +110,7 @@ internal static class RegistryHelper
                 try
                 {
                     using RegistryKey regKey = root.OpenSubKey(path, true);
-                    using RegistryKey key = regKey.CreateSubKey(name);
-                    key?.SetValue(name, defaultValue);
+                    regKey?.SetValue(name, defaultValue);
                 }
                 catch (Exception ex)
                 {

@@ -22,6 +22,7 @@ internal sealed class ExportToPDFHandler
         string tempFolder = Path.Combine(Path.GetTempPath(), $"{revitFileName}TMP");
         string exportFullPath = Path.Combine(exportDirectory, $"{revitFileName}.pdf");
         string section = RevitPathHelper.GetSectionName(revitFilePath);
+
         bool setColorType = section is not ("KJ" or "KR" or "KG");
 
         if (PrintHandler.TryGetAvailablePrinter(out PrinterControl printer))
