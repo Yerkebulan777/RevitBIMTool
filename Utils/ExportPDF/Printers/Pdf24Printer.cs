@@ -1,10 +1,11 @@
 ﻿using Autodesk.Revit.DB;
 using Microsoft.Win32;
 using RevitBIMTool.Model;
-using RevitBIMTool.Utils.ExportPDF;
+using RevitBIMTool.Utils.ExportPdfUtil.Printers;
 using RevitBIMTool.Utils.SystemHelpers;
+using System.IO;
 
-namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
+namespace RevitBIMTool.Utils.ExportPDF.Printers
 {
     internal sealed class Pdf24Printer : PrinterControl
     {
@@ -24,7 +25,7 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
         }
 
 
-        public override void ResetPrinterSettings() 
+        public override void ResetPrinterSettings()
         {
             string deskPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveOpenDir", 1);
@@ -43,7 +44,8 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
 
         public override void SetPrinterOutput(string filePath)
         {
-            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveDir", filePath);
+            string directory = Path.GetDirectoryName(filePath);
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveDir", directory);
         }
 
 
