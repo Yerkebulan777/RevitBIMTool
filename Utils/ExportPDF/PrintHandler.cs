@@ -33,6 +33,7 @@ internal static class PrintHandler
         return result;
     }
 
+
     private static List<PrinterControl> GetInstalledPrinters()
     {
         List<PrinterControl> printers =
@@ -59,11 +60,22 @@ internal static class PrintHandler
 
     private static int GetPrinterStatus(string printerName, out string description)
     {
+        description = string.Empty;
+
         string registryPath = Path.Combine(@"SYSTEM\CurrentControlSet\Control\Print\Printers", printerName);
 
-        object status = RegistryHelper.GetValue(Registry.CurrentUser, registryPath, "Status");
+        if (RegistryHelper.IsSubKeyExists(Registry.CurrentUser, registryPath))
+        {
+            object status = RegistryHelper.GetValue(Registry.CurrentUser, registryPath, "Status");
 
-        return GetStatusDescription((int)status, out description);
+            if (status is int statusIntValue)
+            {
+                Log.Debug($"Status value {statusIntValue}");
+                return GetStatusDescription(statusIntValue, out description);
+            }
+        }
+
+        return -1;
     }
 
 
