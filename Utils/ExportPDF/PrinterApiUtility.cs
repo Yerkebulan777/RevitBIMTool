@@ -7,7 +7,13 @@ using PaperSize = System.Drawing.Printing.PaperSize;
 namespace RevitBIMTool.Utils.ExportPDF;
 public static class PrinterApiUtility
 {
-    private const int timeoutInSeconds = 30;
+    public static string GetDefaultPrinter()
+    {
+        PrinterSettings settings = new PrinterSettings();
+        string defaultPrinter = settings?.PrinterName;
+        return defaultPrinter;
+    }
+
 
     public static void ResetDefaultPrinter(string printerName)
     {
@@ -24,14 +30,6 @@ public static class PrinterApiUtility
 
             printDocument.Dispose();
         }
-    }
-
-
-    public static string GetDefaultPrinter()
-    {
-        PrinterSettings settings = new PrinterSettings();
-        string defaultPrinter = settings?.PrinterName;
-        return defaultPrinter;
     }
 
 
@@ -87,7 +85,7 @@ public static class PrinterApiUtility
     }
 
 
-    public static void AddFormat(string printerName, double widthInMm, double heightInMm)
+    public static string AddFormat(string printerName, double widthInMm, double heightInMm)
     {
         // форматы надо всегда добавлять в вертикальной ориентации
         double widthSideInMm = Math.Min(widthInMm, heightInMm);
@@ -135,7 +133,7 @@ public static class PrinterApiUtility
             {
                 if (PrinterApiWrapper.ClosePrinter(hPrinter))
                 {
-                    Thread.Sleep(timeoutInSeconds * 1000);
+                    Thread.Sleep(1000);
                 }
             }
         }
@@ -143,6 +141,9 @@ public static class PrinterApiUtility
         {
             throw new Exception($"Failed to open  {printerName} printer");
         }
+
+        return formName;
     }
+
 
 }

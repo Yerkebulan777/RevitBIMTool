@@ -77,7 +77,10 @@ internal static class RegistryHelper
             }
             finally
             {
-                _ = ApplyRegistryChanges();
+                if (ApplyRegistryChanges())
+                {
+                    Thread.Sleep(100);
+                }
             }
         }
     }

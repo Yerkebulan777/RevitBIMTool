@@ -21,6 +21,7 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
 
         public abstract bool Print(Document doc, string folder, SheetModel model);
 
+
         public virtual bool IsPrinterInstalled()
         {
             const string registryPath = @"SYSTEM\CurrentControlSet\Control\Print\Printers";

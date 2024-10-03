@@ -15,21 +15,23 @@ using PrintRange = Autodesk.Revit.DB.PrintRange;
 namespace RevitBIMTool.Utils.ExportPDF;
 internal static class PrintHandler
 {
-    public static string GetAvailablePrinter()
+    public static PrinterControl GetAvailablePrinter(out string printerName)
     {
-        string printerName = null;
+        printerName = string.Empty;
+        PrinterControl result = null;
 
         foreach (PrinterControl printer in GetInstalledPrinters())
         {
             int status = GetPrinterStatus(printer.Name, out string description);
-            Log.Information($"Printer: {printer.Name} status: {description}");
-            if (printerName is null && status == 0)
+            Log.Debug($"Printer: {printer.Name} status: {description}");
+            if (result is null && status == 0)
             {
+                printer.InitializePrinter();
                 printerName = printer.Name;
             }
         }
 
-        return printerName;
+        return result;
     }
 
     private static List<PrinterControl> GetInstalledPrinters()
@@ -88,11 +90,9 @@ internal static class PrintHandler
     }
 
 
-    public static void ResetPrintSettings(Document doc, string printerName)
+    private static void ResetAndApplyPrinterSettings(Document doc, string printerName)
     {
         PrintManager printManager = doc.PrintManager;
-
-        PrinterApiUtility.ResetDefaultPrinter(printerName);
 
         List<PrintSetting> printSettings = RevitPrinterUtil.GetPrintSettings(doc);
 
@@ -143,9 +143,9 @@ internal static class PrintHandler
     }
 
 
-    public static Dictionary<string, List<SheetModel>> GetSheetData(Document doc, string printerName, string revitFileName, bool blackColorType)
+    public static Dictionary<string, List<SheetModel>> GetSheetData(Document doc, string printerName, string revitFileName, bool color = true)
     {
-        ResetPrintSettings(doc, printerName);
+        ResetAndApplyPrinterSettings(doc, printerName);
 
         FilteredElementCollector collector = new(doc);
 
@@ -153,11 +153,9 @@ internal static class PrintHandler
         collector = collector.OfClass(typeof(FamilyInstance));
         collector = collector.WhereElementIsNotElementType();
 
-        int sheetCount = collector.GetElementCount();
+        ColorDepthType colorType = color ? ColorDepthType.Color : ColorDepthType.BlackLine;
 
-        Dictionary<string, List<SheetModel>> sheetPrintData = new(sheetCount);
-
-        ColorDepthType colorType = blackColorType ? ColorDepthType.BlackLine : ColorDepthType.Color;
+        Dictionary<string, List<SheetModel>> sheetPrintData = new(collector.GetElementCount());
 
         foreach (FamilyInstance titleBlock in collector.Cast<FamilyInstance>())
         {
@@ -174,7 +172,7 @@ internal static class PrintHandler
             {
                 if (!PrinterApiUtility.GetPaperSize(widthInMm, heighInMm, out _))
                 {
-                    PrinterApiUtility.AddFormat(printerName, widthInMm, heighInMm);
+                    Log.Debug(PrinterApiUtility.AddFormat(printerName, widthInMm, heighInMm));
                 }
 
                 if (PrinterApiUtility.GetPaperSize(widthInMm, heighInMm, out PaperSize papeSize))
@@ -212,25 +210,25 @@ internal static class PrintHandler
     }
 
 
-    public static List<SheetModel> PrintSheetData(Document doc, Dictionary<string, List<SheetModel>> sheetDict, string tempFolder)
+    public static List<SheetModel> PrintSheetData(Document doc, PrinterControl printer, Dictionary<string, List<SheetModel>> sheetData, string folder)
     {
         List<PrintSetting> printAllSettings = RevitPrinterUtil.GetPrintSettings(doc);
 
-        List<SheetModel> resultFilePaths = new(sheetDict.Values.Count);
+        List<SheetModel> resultFilePaths = new(sheetData.Values.Count);
 
-        using Transaction trx = new(doc, "PrintToPDF");
+        using Transaction trx = new(doc, "ExportToPDF");
 
         if (TransactionStatus.Started == trx.Start())
         {
             try
             {
-                foreach (string settingName in sheetDict.Keys)
+                foreach (string settingName in sheetData.Keys)
                 {
                     PrintManager printManager = doc.PrintManager;
 
                     PrintSetting printSetting = printAllSettings.FirstOrDefault(set => set.Name == settingName);
 
-                    if (printSetting != null && sheetDict.TryGetValue(settingName, out List<SheetModel> sheetModels))
+                    if (printSetting != null && sheetData.TryGetValue(settingName, out List<SheetModel> sheetModels))
                     {
                         printManager.PrintSetup.CurrentPrintSetting = printSetting;
 
@@ -240,7 +238,7 @@ internal static class PrintHandler
                         {
                             SheetModel model = sheetModels[idx];
 
-                            if (ExportSheet(doc, tempFolder, model))
+                            if (printer.Print(doc, folder, model))
                             {
                                 resultFilePaths.Add(model);
                             }

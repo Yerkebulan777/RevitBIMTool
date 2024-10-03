@@ -6,6 +6,7 @@ using RevitBIMTool.Utils.ExportPDF;
 using RevitBIMTool.Utils.ExportPdfUtil.Printers;
 using RevitBIMTool.Utils.SystemHelpers;
 using Serilog;
+using ServiceLibrary.Helpers;
 using System.IO;
 
 
@@ -20,25 +21,24 @@ internal sealed class ExportToPDFHandler
 
         Log.Debug("Start export to PDF...");
 
-        string printerName =  PrintHandler.GetAvailablePrinter();
-
-
-
-        string sectionName = RevitPathHelper.GetSectionName(revitFilePath);
+        string section = RevitPathHelper.GetSectionName(revitFilePath);
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
         string tempFolder = Path.Combine(Path.GetTempPath(), $"{revitFileName}TMP");
         string exportFullPath = Path.Combine(exportDirectory, $"{revitFileName}.pdf");
 
-        bool blackColorType = (sectionName is "KJ" or "KR" or "KG");
+        PrinterControl printer = PrintHandler.GetAvailablePrinter(out string printerName);
 
-        sheetData = PrintHandler.GetSheetData(doc, printerName, revitFileName, sectionName);
+        ConcurrentActionHandler.ExecuteWithMutex("Global\\{{{GetSheetData}}}", () =>
+        {
+            sheetData = PrintHandler.GetSheetData(doc, printerName, revitFileName, section is not ("KJ" or "KR" or "KG"));
+        });
 
         if (sheetData.Count > 0)
         {
             RevitPathHelper.EnsureDirectory(tempFolder);
             RevitPathHelper.EnsureDirectory(exportDirectory);
 
-            List<SheetModel> sheetModels = PrintHandler.PrintSheetData(doc, sheetData, tempFolder);
+            List<SheetModel> sheetModels = PrintHandler.PrintSheetData(doc, printer, sheetData, tempFolder);
 
             if (sheetModels.Count > 0)
             {
