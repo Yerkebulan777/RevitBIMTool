@@ -19,7 +19,7 @@ internal sealed class ExportToPDFHandler
 
         Log.Debug("Start export to PDF...");
 
-        string printerName = PrintHandler.GetPrinter();
+        string printerName = PrintHandler.GetInstalledPrinters();
 
         PrintHandler.ResetPrintSettings(doc, printerName);
 

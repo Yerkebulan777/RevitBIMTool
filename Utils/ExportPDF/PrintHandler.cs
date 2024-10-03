@@ -13,6 +13,31 @@ using PrintRange = Autodesk.Revit.DB.PrintRange;
 namespace RevitBIMTool.Utils.ExportPDF;
 internal static class PrintHandler
 {
+    internal static List<PrinterControl> GetInstalledPrinters()
+    {
+        List<PrinterControl> printers =
+        [
+            new Pdf24Printer(),
+            new CreatorPrinter(),
+            new BullzipPrinter(),
+            new ClawPdfPrinter(),
+            new InternalPrinter(),
+        ];
+
+        List<PrinterControl> result = new(printers.Count);
+
+        foreach (PrinterControl printer in printers)
+        {
+            if (printer.IsPrinterInstalled())
+            {
+                result.Add(printer);
+            }
+        }
+
+        return result;
+    }
+
+
     public static void ResetPrintSettings(Document doc, string printerName)
     {
         PrintManager printManager = doc.PrintManager;
@@ -240,25 +265,8 @@ internal static class PrintHandler
         return false;
     }
 
-    internal static string GetPrinter()
-    {
-        List<PrinterControl> printers =
-        [
-            new Pdf24Printer(),
-            new CreatorPrinter(),
-            new BullzipPrinter(),
-            new ClawPdfPrinter(),
-            new InternalPrinter(),
-        ];
 
-        foreach (PrinterControl printer in printers)
-        {
-            if (printer.IsPrinterInstalled())
-            {
 
-            }
-        }
 
-        throw new NotImplementedException();
-    }
+
 }
