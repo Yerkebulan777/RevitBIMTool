@@ -155,10 +155,9 @@ public static class RevitPathHelper
     }
 
 
-    public static bool AwaitExistsFile(string filePath, int duration = 100)
+    public static bool AwaitExistsFile(string filePath, int duration = 300)
     {
         int counter = 0;
-        int totalWaitTime = 0;
         bool awaitResult = false;
 
         while (counter < duration)
@@ -167,8 +166,7 @@ public static class RevitPathHelper
             {
                 counter++;
 
-                totalWaitTime += counter;
-                Thread.Sleep(counter * 1000);
+                Thread.Sleep(1000);
 
                 if (File.Exists(filePath))
                 {
@@ -178,7 +176,7 @@ public static class RevitPathHelper
             }
         }
 
-        Debug.WriteLine($"Total waiting: {totalWaitTime} seconds");
+        Debug.WriteLine($"Total waiting: {counter} seconds");
 
         return awaitResult;
     }
