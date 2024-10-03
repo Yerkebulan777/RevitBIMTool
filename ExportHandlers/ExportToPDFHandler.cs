@@ -6,7 +6,6 @@ using RevitBIMTool.Utils.ExportPdfUtil.Printers;
 using RevitBIMTool.Utils.SystemHelpers;
 using Serilog;
 using System.IO;
-using static UIFramework.CalculationsPanelItem;
 
 
 namespace RevitBIMTool.ExportHandlers;
