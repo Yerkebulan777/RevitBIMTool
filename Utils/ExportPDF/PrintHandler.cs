@@ -15,22 +15,21 @@ using PrintRange = Autodesk.Revit.DB.PrintRange;
 namespace RevitBIMTool.Utils.ExportPDF;
 internal static class PrintHandler
 {
-    public static PrinterControl GetAvailablePrinter(out string printerName)
+
+    public static bool TryGetAvailablePrinter(out PrinterControl availablePrinter)
     {
-        printerName = string.Empty;
-        PrinterControl result = null;
+        availablePrinter = null;
 
         foreach (PrinterControl printer in GetInstalledPrinters())
         {
-            int status = GetPrinterStatus(printer.RegistryPath);
-
-            if (result is null && status == 0)
+            if (GetPrinterStatus(printer.RegistryPath) == 0)
             {
-                printerName = printer.RegistryName;
+                availablePrinter = printer;
+                return true;
             }
         }
 
-        return result;
+        return false;
     }
 
 
@@ -63,7 +62,7 @@ internal static class PrintHandler
     {
         int status = Convert.ToInt32(RegistryHelper.CreateParameter(Registry.CurrentUser, printerPath, "StatusMonitor", 0));
 
-        Log.Debug($"Printer access status: {status}");
+
 
         return status;
     }
@@ -122,7 +121,7 @@ internal static class PrintHandler
     }
 
 
-    public static Dictionary<string, List<SheetModel>> GetSheetData(Document doc, string printerName, string revitFileName, bool color = true)
+    public static Dictionary<string, List<SheetModel>> GetData(Document doc, string printerName, string revitFileName, bool color = true)
     {
         if (string.IsNullOrEmpty(printerName))
         {

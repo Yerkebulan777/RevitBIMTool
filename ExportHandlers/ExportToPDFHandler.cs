@@ -1,5 +1,4 @@
-﻿using Autodesk.Revit.DB;
-using Autodesk.Revit.UI;
+﻿using Autodesk.Revit.UI;
 using RevitBIMTool.Model;
 using RevitBIMTool.Utils;
 using RevitBIMTool.Utils.ExportPDF;
@@ -7,6 +6,7 @@ using RevitBIMTool.Utils.ExportPdfUtil.Printers;
 using RevitBIMTool.Utils.SystemHelpers;
 using Serilog;
 using System.IO;
+using static UIFramework.CalculationsPanelItem;
 
 
 namespace RevitBIMTool.ExportHandlers;
@@ -18,31 +18,35 @@ internal sealed class ExportToPDFHandler
     {
         Log.Debug("Start export to PDF...");
 
-        string section = RevitPathHelper.GetSectionName(revitFilePath);
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
         string tempFolder = Path.Combine(Path.GetTempPath(), $"{revitFileName}TMP");
         string exportFullPath = Path.Combine(exportDirectory, $"{revitFileName}.pdf");
+        string section = RevitPathHelper.GetSectionName(revitFilePath);
+        bool setColorType = section is not ("KJ" or "KR" or "KG");
 
-        PrinterControl printer = PrintHandler.GetAvailablePrinter(out string printerName);
-
-        sheetData = PrintHandler.GetSheetData(uidoc.Document, printerName, revitFileName, section is not ("KJ" or "KR" or "KG"));
-
-        if (sheetData.Count > 0)
+        if (PrintHandler.TryGetAvailablePrinter(out PrinterControl printer))
         {
-            printer.InitializePrinter();
+            sheetData = PrintHandler.GetData(uidoc.Document, printer.RegistryName, revitFileName, setColorType);
 
-            RevitPathHelper.EnsureDirectory(tempFolder);
-            RevitPathHelper.EnsureDirectory(exportDirectory);
+            Log.Information($"Available printer: {printer.RegistryName}");
 
-            Log.Information($"Total valid sheets: {sheetData.Count}");
-
-            List<SheetModel> sheetModels = PrintHandler.PrintSheetData(uidoc.Document, printer, sheetData, tempFolder);
-
-            if (sheetModels.Count > 0)
+            if (sheetData.Count > 0)
             {
-                MergeHandler.Combine(sheetModels, tempFolder, exportFullPath);
-                SystemFolderOpener.OpenFolder(exportDirectory);
-                RevitPathHelper.DeleteDirectory(tempFolder);
+                printer.InitializePrinter();
+
+                RevitPathHelper.EnsureDirectory(tempFolder);
+                RevitPathHelper.EnsureDirectory(exportDirectory);
+
+                Log.Information($"Total valid sheets: {sheetData.Count}");
+
+                List<SheetModel> sheetModels = PrintHandler.PrintSheetData(uidoc.Document, printer, sheetData, tempFolder);
+
+                if (sheetModels.Count > 0)
+                {
+                    MergeHandler.Combine(sheetModels, tempFolder, exportFullPath);
+                    SystemFolderOpener.OpenFolder(exportDirectory);
+                    RevitPathHelper.DeleteDirectory(tempFolder);
+                }
             }
         }
 
