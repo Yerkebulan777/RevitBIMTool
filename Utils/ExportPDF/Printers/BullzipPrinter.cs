@@ -51,12 +51,12 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
         }
 
 
-        public override void SetPrinterOutput(string filePath)
+        public override void SetPrinterOutputDirectory(string folder)
         {
             try
             {
                 pdfPrinter.SetValue("ShowPdf", "no");
-                pdfPrinter.SetValue("Output", filePath);
+                pdfPrinter.SetValue("Output", folder);
                 pdfPrinter.SetValue("ShowProgress", "no");
                 pdfPrinter.SetValue("ShowSettings", "never");
                 pdfPrinter.SetValue("ShowProgressFinished", "no");
@@ -75,6 +75,7 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
 
         public override bool Print(Document doc, string folder, SheetModel model)
         {
+            SetPrinterOutputDirectory(folder);
             return PrintHandler.PrintSheet(doc, folder, model);
         }
 

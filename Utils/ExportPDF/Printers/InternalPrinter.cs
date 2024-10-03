@@ -22,7 +22,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
         }
 
 
-        public override void SetPrinterOutput(string filePath)
+        public override void SetPrinterOutputDirectory(string filePath)
         {
         }
 
