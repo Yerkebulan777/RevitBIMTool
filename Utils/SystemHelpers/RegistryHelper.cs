@@ -1,6 +1,5 @@
 ﻿using Microsoft.Win32;
 using Serilog;
-using System.IO;
 using System.Runtime.InteropServices;
 
 
@@ -91,7 +90,7 @@ internal static class RegistryHelper
             }
             finally
             {
-                Log.Debug($"Set  value {value}");
+                Log.Debug($"Set to {keyName} value {value}");
 
                 if (ApplyRegistryChanges())
                 {
