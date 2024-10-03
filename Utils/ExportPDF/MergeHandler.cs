@@ -8,7 +8,7 @@ using Document = iTextSharp.text.Document;
 namespace RevitBIMTool.Utils.ExportPDF;
 internal static class MergeHandler
 {
-    public static void CombinePDFsFromFolder(List<SheetModel> sheetModels, string directory, string outputFullName, bool deleted = true)
+    public static void Combine(List<SheetModel> sheetModels, string directory, string outputFullName, bool deleted = true)
     {
         RevitPathHelper.DeleteExistsFile(outputFullName);
 
