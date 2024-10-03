@@ -12,7 +12,9 @@ public static class PrinterApiUtility
     public static void ResetDefaultPrinter(string printerName)
     {
         PrintDocument printDocument = new PrintDocument();
+
         PrinterSettings settings = printDocument.PrinterSettings;
+
         if (!settings.PrinterName.Equals(printerName))
         {
             if (PrinterApiWrapper.SetDefaultPrinter(printerName))
@@ -142,7 +144,5 @@ public static class PrinterApiUtility
             throw new Exception($"Failed to open  {printerName} printer");
         }
     }
-
-
 
 }

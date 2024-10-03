@@ -1,5 +1,6 @@
 ﻿using Autodesk.Revit.DB;
 using Serilog;
+using System;
 using Document = Autodesk.Revit.DB.Document;
 using Level = Autodesk.Revit.DB.Level;
 
@@ -52,12 +53,12 @@ public static class CollectorHelper
         ElementId typeParamId = new(BuiltInParameter.ELEM_TYPE_PARAM);
         ElementId symbolParamId = new(BuiltInParameter.SYMBOL_NAME_PARAM);
 
-#if R23
-        FilterRule typeRule = ParameterFilterRuleFactory.CreateEqualsRule(typeParamId, symbolName);
-        FilterRule symbolRule = ParameterFilterRuleFactory.CreateEqualsRule(symbolParamId, symbolName);
-#elif R19 || R21
+#if R19 || R21
         FilterRule typeRule = ParameterFilterRuleFactory.CreateEqualsRule(typeParamId, symbolName, false);
         FilterRule symbolRule = ParameterFilterRuleFactory.CreateEqualsRule(symbolParamId, symbolName, false);
+#else
+        FilterRule typeRule = ParameterFilterRuleFactory.CreateEqualsRule(typeParamId, symbolName);
+        FilterRule symbolRule = ParameterFilterRuleFactory.CreateEqualsRule(symbolParamId, symbolName);
 #endif
 
         ElementParameterFilter typeFilter = new(typeRule);

@@ -11,11 +11,8 @@ using PrintRange = Autodesk.Revit.DB.PrintRange;
 namespace RevitBIMTool.Utils.ExportPDF;
 internal static class PrintHandler
 {
-
-    public static void ResetPrintSettings(Document doc, out string printerName)
+    public static void ResetPrintSettings(Document doc, string printerName)
     {
-        printerName = string.Empty;
-
         PrintManager printManager = doc.PrintManager;
 
         PrinterApiUtility.ResetDefaultPrinter(printerName);
@@ -69,7 +66,7 @@ internal static class PrintHandler
     }
 
 
-    public static Dictionary<string, List<SheetModel>> GetSheetData(Document doc,string printerName,  string revitFileName, string sectionName)
+    public static Dictionary<string, List<SheetModel>> GetSheetData(Document doc, string printerName, string revitFileName, string sectionName)
     {
         ColorDepthType colorType = sectionName switch
         {
@@ -196,6 +193,7 @@ internal static class PrintHandler
 
     public static bool ExportSheet(Document doc, string folder, SheetModel model)
     {
+#if R23
         PDFExportOptions option = new()
         {
             FileName = model.SheetName,
@@ -213,7 +211,7 @@ internal static class PrintHandler
             Thread.Sleep(100);
             return true;
         }
-
+#endif
         return false;
     }
 
@@ -240,5 +238,8 @@ internal static class PrintHandler
         return false;
     }
 
-
+    internal static string GetPrinter()
+    {
+        throw new NotImplementedException();
+    }
 }

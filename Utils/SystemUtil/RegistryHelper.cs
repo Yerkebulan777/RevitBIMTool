@@ -3,7 +3,7 @@ using Serilog;
 using System.Runtime.InteropServices;
 
 
-namespace RevitBIMTool.Utils.ExportPDF;
+namespace RevitBIMTool.Utils.SystemUtil;
 internal static class RegistryHelper
 {
     private static readonly uint WM_SETTINGCHANGE = 26;
@@ -100,16 +100,6 @@ internal static class RegistryHelper
             }
         }
 
-    }
-
-
-    public static void ActivateSettingsForPdfCreator(string outputFile)
-    {
-        string registryKey = @"SOFTWARE\pdfforge\PDFCreator\Settings\ConversionProfiles\0";
-        SetValue(Registry.CurrentUser, registryKey + "\\AutoSave", "Enabled", "True");
-        SetValue(Registry.CurrentUser, registryKey + "\\OpenViewer", "Enabled", "False");
-        SetValue(Registry.CurrentUser, registryKey + "\\OpenViewer", "OpenWithPdfArchitect", "False");
-        SetValue(Registry.CurrentUser, registryKey, "FileNameTemplate", "<InputFilename>");
     }
 
 

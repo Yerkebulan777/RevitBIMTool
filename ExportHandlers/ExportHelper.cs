@@ -10,7 +10,6 @@ using System.Text;
 namespace RevitBIMTool.ExportHandlers;
 internal static class ExportHelper
 {
-
     public static string SetDirectory(string revitFilePath, string folderName, bool date)
     {
         string exportDirectory = RevitPathHelper.DetermineDirectory(revitFilePath, folderName);

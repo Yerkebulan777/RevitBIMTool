@@ -11,7 +11,6 @@ using System.IO;
 namespace RevitBIMTool.ExportHandlers;
 internal class ExportToPDFHandler
 {
-
     private Dictionary<string, List<SheetModel>> sheetData;
 
     public void Execute(UIDocument uidoc, string revitFilePath, string exportDirectory)
@@ -20,7 +19,9 @@ internal class ExportToPDFHandler
 
         Log.Debug("Start export to PDF...");
 
-        PrintHandler.ResetPrintSettings(doc, out string printerName);
+        string printerName = PrintHandler.GetPrinter();
+
+        PrintHandler.ResetPrintSettings(doc, printerName);
 
         string sectionName = RevitPathHelper.GetSectionName(revitFilePath);
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
