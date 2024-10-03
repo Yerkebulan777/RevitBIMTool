@@ -22,8 +22,8 @@ internal static class PrintHandler
 
         foreach (PrinterControl printer in GetInstalledPrinters())
         {
-            int status = GetPrinterStatus(printer.RegistryName, out string description);
-            Log.Debug($"Printer: {printer.RegistryName} status: {description}");
+            int status = GetPrinterStatus(printer.RegistryName);
+
             if (result is null && status == 0)
             {
                 printerName = printer.RegistryName;
@@ -58,46 +58,16 @@ internal static class PrintHandler
         return result;
     }
 
-    private static int GetPrinterStatus(string printerName, out string description)
+
+    private static int GetPrinterStatus(string printerName, string parameterName = "PrintStatusMonitor")
     {
-        description = string.Empty;
+        string printerPath = Path.Combine(@"SYSTEM\CurrentControlSet\Control\Print\Printers", printerName);
 
-        string registryPath = Path.Combine(@"SYSTEM\CurrentControlSet\Control\Print\Printers", printerName);
+        int value = (int)RegistryHelper.CreateParameter(Registry.LocalMachine, printerPath, parameterName, 0);
 
-        if (RegistryHelper.IsSubKeyExists(Registry.CurrentUser, registryPath))
-        {
-            object status = RegistryHelper.GetValue(Registry.CurrentUser, registryPath, "Status");
+        Log.Debug($"Printer {printerName} access status: {value}");
 
-            if (status is int statusIntValue)
-            {
-                Log.Debug($"Status value {statusIntValue}");
-                return GetStatusDescription(statusIntValue, out description);
-            }
-        }
-
-        return -1;
-    }
-
-
-    private static int GetStatusDescription(int status, out string description)
-    {
-        description = status switch
-        {
-            0 => $"Idle (0)",
-            1 => $"Paused (1)",
-            2 => $"Error (2)",
-            3 => $"Pending Deletion (3)",
-            4 => $"Paper Jam (4)",
-            5 => $"Paper Out (5)",
-            6 => $"Manual Feed (6)",
-            7 => $"Offline (7)",
-            16 => $"Printing (16)",
-            32 => $"Waiting (32)",
-            64 => $"Processing (64)",
-            128 => $"Initializing (128)",
-            _ => $"Unknown Status",
-        };
-        return status;
+        return value;
     }
 
 
@@ -156,6 +126,13 @@ internal static class PrintHandler
 
     public static Dictionary<string, List<SheetModel>> GetSheetData(Document doc, string printerName, string revitFileName, bool color = true)
     {
+        if (string.IsNullOrEmpty(printerName))
+        {
+
+        }
+
+
+
         ResetAndApplyPrinterSettings(doc, printerName);
 
         FilteredElementCollector collector = new(doc);

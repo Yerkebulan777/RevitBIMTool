@@ -5,6 +5,7 @@ using RevitBIMTool.Core;
 using RevitBIMTool.ExportHandlers;
 using RevitBIMTool.Utils;
 using System.Globalization;
+using System.Runtime.Remoting.Contexts;
 using System.Windows;
 
 
@@ -25,6 +26,7 @@ internal sealed class ExportToDWGCommand : IExternalCommand, IExternalCommandAva
 
         try
         {
+            LoggerHelper.SetupLogger(doc.Title);
             RevitLinkHelper.CheckAndRemoveUnloadedLinks(doc);
             string revitFilePath = RevitPathHelper.GetRevitFilePath(doc);
             string exportDirectory = ExportHelper.SetDirectory(revitFilePath, "02_DWG", true);
@@ -32,7 +34,7 @@ internal sealed class ExportToDWGCommand : IExternalCommand, IExternalCommandAva
         }
         catch (Exception ex)
         {
-            _ = TaskDialog.Show("Exception", "Exception: \n" + ex);
+            TaskDialog.Show("Exception", "Exception: \n" + ex);
             Clipboard.SetText(ex.ToString());
             return Result.Failed;
         }

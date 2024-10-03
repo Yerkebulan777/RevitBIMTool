@@ -99,13 +99,13 @@ internal static class RegistryHelper
     }
 
 
-    public static void CreateParameter(RegistryKey root, string path, string name, string defaultValue)
+    public static object CreateParameter(RegistryKey root, string path, string name, object defaultValue)
     {
-        string value = (string)GetValue(root, path, name);
+        object value = GetValue(root, path, name);
 
-        if (string.IsNullOrEmpty(value))
+        lock (Registry.LocalMachine)
         {
-            lock (Registry.LocalMachine)
+            if (value is null)
             {
                 try
                 {
@@ -115,15 +115,19 @@ internal static class RegistryHelper
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, $"Create parameter failed: {ex.Message}");
+                    Log.Error(ex, $"Create parameter: {ex.Message}");
                 }
                 finally
                 {
-                    _ = ApplyRegistryChanges();
+                    if (ApplyRegistryChanges())
+                    {
+                        Thread.Sleep(100);
+                    }
                 }
             }
         }
 
+        return value;
     }
 
 
