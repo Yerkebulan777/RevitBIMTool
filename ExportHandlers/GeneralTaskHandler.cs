@@ -1,5 +1,4 @@
 ﻿using Autodesk.Revit.UI;
-using Org.BouncyCastle.Asn1.Ocsp;
 using RevitBIMTool.Utils;
 using Serilog;
 using ServiceLibrary.Models;
@@ -80,13 +79,13 @@ namespace RevitBIMTool.ExportHandlers
             _ = sb.AppendLine($"File name: {model.RevitFileName}");
             _ = sb.AppendLine($"Directory: {model.ExportFolder}");
 
-            Log.Debug($"Start task {sb}");
+            Log.Debug($"Start task: {sb}");
 
             switch (model.CommandNumber)
             {
                 case 1: // PDF
-
-                    ExportToPDFHandler.Execute(uidoc, model.RevitFilePath, model.ExportFolder);
+                    ExportToPDFHandler handler = new();
+                    handler.Execute(uidoc, model.RevitFilePath, model.ExportFolder);
                     break;
 
                 case 2: // DWG

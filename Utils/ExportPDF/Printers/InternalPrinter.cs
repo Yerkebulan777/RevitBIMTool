@@ -35,5 +35,12 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
             return PrintHandler.PrintSheet(doc, folder, model);
 #endif
         }
+
+
+        public override bool IsPrinterInstalled()
+        {
+            return base.IsPrinterInstalled();
+        }
     }
+
 }

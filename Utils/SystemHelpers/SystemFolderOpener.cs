@@ -4,7 +4,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 
 
-namespace RevitBIMTool.Utils.System;
+namespace RevitBIMTool.Utils.SystemHelpers;
 internal static class SystemFolderOpener
 {
     [DllImport("user32.dll")]

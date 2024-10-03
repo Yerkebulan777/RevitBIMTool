@@ -1,7 +1,7 @@
 ﻿using Autodesk.Revit.DB;
 using RevitBIMTool.Model;
 using RevitBIMTool.Utils.ExportPDF;
-using RevitBIMTool.Utils.System;
+using RevitBIMTool.Utils.SystemHelpers;
 using Serilog;
 using System.Runtime.InteropServices;
 
@@ -84,6 +84,12 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
         public override bool Print(Document doc, string folder, SheetModel model)
         {
             return PrintHandler.PrintSheet(doc, folder, model);
+        }
+
+
+        public override bool IsPrinterInstalled()
+        {
+            return base.IsPrinterInstalled();
         }
 
     }

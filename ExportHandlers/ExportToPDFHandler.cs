@@ -3,13 +3,13 @@ using Autodesk.Revit.UI;
 using RevitBIMTool.Model;
 using RevitBIMTool.Utils;
 using RevitBIMTool.Utils.ExportPDF;
-using RevitBIMTool.Utils.System;
+using RevitBIMTool.Utils.SystemHelpers;
 using Serilog;
 using System.IO;
 
 
 namespace RevitBIMTool.ExportHandlers;
-internal class ExportToPDFHandler
+internal sealed class ExportToPDFHandler
 {
     private Dictionary<string, List<SheetModel>> sheetData;
 
