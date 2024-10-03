@@ -3,6 +3,7 @@ using Autodesk.Revit.UI;
 using RevitBIMTool.Model;
 using RevitBIMTool.Utils;
 using RevitBIMTool.Utils.ExportPDF;
+using RevitBIMTool.Utils.ExportPdfUtil.Printers;
 using RevitBIMTool.Utils.SystemHelpers;
 using Serilog;
 using System.IO;
@@ -19,14 +20,16 @@ internal sealed class ExportToPDFHandler
 
         Log.Debug("Start export to PDF...");
 
-        string printerName = PrintHandler.GetInstalledPrinters();
+        string printerName =  PrintHandler.GetAvailablePrinter();
 
-        PrintHandler.ResetPrintSettings(doc, printerName);
+
 
         string sectionName = RevitPathHelper.GetSectionName(revitFilePath);
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
         string tempFolder = Path.Combine(Path.GetTempPath(), $"{revitFileName}TMP");
         string exportFullPath = Path.Combine(exportDirectory, $"{revitFileName}.pdf");
+
+        bool blackColorType = (sectionName is "KJ" or "KR" or "KG");
 
         sheetData = PrintHandler.GetSheetData(doc, printerName, revitFileName, sectionName);
 

@@ -1,6 +1,5 @@
 ﻿using Microsoft.Win32;
 using Serilog;
-using System.IO;
 using System.Runtime.InteropServices;
 
 
@@ -9,7 +8,6 @@ internal static class RegistryHelper
 {
     private static readonly uint WM_SETTINGCHANGE = 26;
     private static readonly IntPtr HWND_BROADCAST = new(0xFFFF);
-    private const string registryPrintPath = @"SYSTEM\CurrentControlSet\Control\Print\Printers";
 
 
     public static bool IsRegistryKeyExists(RegistryHive hiveKey, string installPath)
@@ -113,38 +111,6 @@ internal static class RegistryHelper
     }
 
 
-    private static int GetPrinterStatus(string printerName, out string output)
-    {
-        string registryPath = Path.Combine(registryPrintPath, printerName);
-
-        object status = GetValue(Registry.CurrentUser, registryPath, "Status");
-
-        return GetStatusDescription((int)status, out output);
-    }
-
-
-    private static int GetStatusDescription(int status, out string description)
-    {
-        description = status switch
-        {
-            0 => $"Idle (0)",
-            1 => $"Paused (1)",
-            2 => $"Error (2)",
-            3 => $"Pending Deletion (3)",
-            4 => $"Paper Jam (4)",
-            5 => $"Paper Out (5)",
-            6 => $"Manual Feed (6)",
-            7 => $"Offline (7)",
-            16 => $"Printing (16)",
-            32 => $"Waiting (32)",
-            64 => $"Processing (64)",
-            128 => $"Initializing (128)",
-            _ => $"Unknown Status",
-        };
-        return status;
-    }
-
-
     [DllImport("user32.DLL")]
     public static extern bool SendNotifyMessageA(IntPtr hWnd, uint msg, int wParam, int lParam);
 
@@ -153,6 +119,5 @@ internal static class RegistryHelper
     {
         return SendNotifyMessageA(HWND_BROADCAST, WM_SETTINGCHANGE, 0, 0);
     }
-
 
 }

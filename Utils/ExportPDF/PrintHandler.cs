@@ -1,7 +1,9 @@
 ﻿using Autodesk.Revit.DB;
+using Microsoft.Win32;
 using RevitBIMTool.Model;
 using RevitBIMTool.Utils.ExportPDF.Printers;
 using RevitBIMTool.Utils.ExportPdfUtil.Printers;
+using RevitBIMTool.Utils.SystemHelpers;
 using Serilog;
 using System.IO;
 using Document = Autodesk.Revit.DB.Document;
@@ -13,7 +15,24 @@ using PrintRange = Autodesk.Revit.DB.PrintRange;
 namespace RevitBIMTool.Utils.ExportPDF;
 internal static class PrintHandler
 {
-    internal static List<PrinterControl> GetInstalledPrinters()
+    public static string GetAvailablePrinter()
+    {
+        string printerName = null;
+
+        foreach (PrinterControl printer in GetInstalledPrinters())
+        {
+            int status = GetPrinterStatus(printer.Name, out string description);
+            Log.Information($"Printer: {printer.Name} status: {description}");
+            if (printerName is null && status == 0)
+            {
+                printerName = printer.Name;
+            }
+        }
+
+        return printerName;
+    }
+
+    private static List<PrinterControl> GetInstalledPrinters()
     {
         List<PrinterControl> printers =
         [
@@ -35,6 +54,37 @@ internal static class PrintHandler
         }
 
         return result;
+    }
+
+    private static int GetPrinterStatus(string printerName, out string description)
+    {
+        string registryPath = Path.Combine(@"SYSTEM\CurrentControlSet\Control\Print\Printers", printerName);
+
+        object status = RegistryHelper.GetValue(Registry.CurrentUser, registryPath, "Status");
+
+        return GetStatusDescription((int)status, out description);
+    }
+
+
+    private static int GetStatusDescription(int status, out string description)
+    {
+        description = status switch
+        {
+            0 => $"Idle (0)",
+            1 => $"Paused (1)",
+            2 => $"Error (2)",
+            3 => $"Pending Deletion (3)",
+            4 => $"Paper Jam (4)",
+            5 => $"Paper Out (5)",
+            6 => $"Manual Feed (6)",
+            7 => $"Offline (7)",
+            16 => $"Printing (16)",
+            32 => $"Waiting (32)",
+            64 => $"Processing (64)",
+            128 => $"Initializing (128)",
+            _ => $"Unknown Status",
+        };
+        return status;
     }
 
 
@@ -93,13 +143,9 @@ internal static class PrintHandler
     }
 
 
-    public static Dictionary<string, List<SheetModel>> GetSheetData(Document doc, string printerName, string revitFileName, string sectionName)
+    public static Dictionary<string, List<SheetModel>> GetSheetData(Document doc, string printerName, string revitFileName, bool blackColorType)
     {
-        ColorDepthType colorType = sectionName switch
-        {
-            "KJ" or "KR" or "KG" => ColorDepthType.BlackLine,
-            _ => ColorDepthType.Color,
-        };
+        ResetPrintSettings(doc, printerName);
 
         FilteredElementCollector collector = new(doc);
 
@@ -110,6 +156,8 @@ internal static class PrintHandler
         int sheetCount = collector.GetElementCount();
 
         Dictionary<string, List<SheetModel>> sheetPrintData = new(sheetCount);
+
+        ColorDepthType colorType = blackColorType ? ColorDepthType.BlackLine : ColorDepthType.Color;
 
         foreach (FamilyInstance titleBlock in collector.Cast<FamilyInstance>())
         {
@@ -264,9 +312,6 @@ internal static class PrintHandler
 
         return false;
     }
-
-
-
 
 
 }
