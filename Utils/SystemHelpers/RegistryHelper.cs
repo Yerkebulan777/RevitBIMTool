@@ -67,11 +67,11 @@ internal static class RegistryHelper
         {
             try
             {
-                Log.Debug($"Start set {value} to {name} parameter");
-
                 using RegistryKey key = root.OpenSubKey(path, true) ?? root.CreateSubKey(path);
 
                 result = key.GetValue(name);
+
+                Log.Debug($"Start set {value} to {name}");
 
                 if (result == null || !result.Equals(value))
                 {
