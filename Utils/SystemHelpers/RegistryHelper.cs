@@ -73,7 +73,7 @@ internal static class RegistryHelper
 
                 Log.Debug($"Set {value} to {name}");
 
-                if (result == null || !result.Equals(value))
+                if (result == null || result != value)
                 {
                     key.SetValue(name, value);
                     key.Flush();
