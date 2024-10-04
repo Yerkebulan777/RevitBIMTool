@@ -72,6 +72,11 @@ internal static class RegistryHelper
             {
                 using RegistryKey registryKey = root.OpenSubKey(path, true);
 
+                if (registryKey == null)
+                {
+                    throw new NullReferenceException($"{root.Name}\\{path} not found or access denied.");
+                }
+
                 if (value is int intValue)
                 {
                     registryKey.SetValue(name, intValue, RegistryValueKind.DWord);
@@ -82,7 +87,7 @@ internal static class RegistryHelper
                 }
                 else
                 {
-                    throw new ArgumentException($"RegistryKey {name} {registryKey}");
+                    throw new ArgumentException($"Unsupported value type for {name}");
                 }
 
                 registryKey.Flush();
