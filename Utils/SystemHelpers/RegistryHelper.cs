@@ -71,7 +71,7 @@ internal static class RegistryHelper
 
                 result = key.GetValue(name);
 
-                Log.Debug($"Start set {value} to {name}");
+                Log.Debug($"Set {value} to {name}");
 
                 if (result == null || !result.Equals(value))
                 {
@@ -87,6 +87,7 @@ internal static class RegistryHelper
             {
                 if (ApplyRegistryChanges())
                 {
+                    Log.Debug("Set value");
                     Thread.Sleep(100);
                 }
             }

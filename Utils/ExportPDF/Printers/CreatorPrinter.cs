@@ -18,13 +18,17 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
         {
             string autoSave = System.IO.Path.Combine(RegistryPath, "OpenViewer");
             string openViewerKey = System.IO.Path.Combine(RegistryPath, "OpenViewer");
+
             _ = RegistryHelper.SetValue(Registry.CurrentUser, autoSave, "Enabled", "True");
             _ = RegistryHelper.SetValue(Registry.CurrentUser, openViewerKey, "Enabled", "False");
             _ = RegistryHelper.SetValue(Registry.CurrentUser, openViewerKey, "OpenWithPdfArchitect", "False");
             _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "TargetDirectory", "<InputFilePath>");
             _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<InputFilename>");
+            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowOnlyErrorNotifications", "True");
             _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowAllNotifications", "False");
             _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "CompressionLevel", "medium");
+            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveDirectory", "True");
+            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveEnabled", "True");
             _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "SkipPrintDialog", "True");
             _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowProgress", "False");
         }
