@@ -18,8 +18,8 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
         {
             string autoSave = System.IO.Path.Combine(RegistryPath, "AutoSave");
             string openViewerKey = System.IO.Path.Combine(RegistryPath, "OpenViewer");
+            RegistryHelper.SetValue(Registry.CurrentUser, StatusPath, PrinterName, 1);
             RegistryHelper.SetValue(Registry.CurrentUser, autoSave, "Enabled", "True");
-            RegistryHelper.SetValue(Registry.CurrentUser, StatusPath, "StatusMonitor", 1);
             RegistryHelper.SetValue(Registry.CurrentUser, openViewerKey, "Enabled", "False");
             RegistryHelper.SetValue(Registry.CurrentUser, openViewerKey, "OpenWithPdfArchitect", "False");
             RegistryHelper.SetValue(Registry.CurrentUser, autoSave, "ExistingFileBehaviour", "Overwrite");
@@ -37,7 +37,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
         public override void ResetPrinterSettings()
         {
             string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-            //RegistryHelper.SetValue(Registry.CurrentUser, StatusPath, "StatusMonitor", 0);
+            //RegistryHelper.SetValue(Registry.CurrentUser, StatusPath, PrinterName, 0);
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "TargetDirectory", desktop);
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<Title>");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowProgress", "True");

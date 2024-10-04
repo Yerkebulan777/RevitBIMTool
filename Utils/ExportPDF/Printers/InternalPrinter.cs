@@ -16,13 +16,13 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
 
         public override void InitializePrinter()
         {
-            RegistryHelper.SetValue(Registry.CurrentUser, StatusPath, "StatusMonitor", 1);
+            RegistryHelper.SetValue(Registry.CurrentUser, StatusPath, PrinterName, 1);
         }
 
 
         public override void ResetPrinterSettings()
         {
-            RegistryHelper.SetValue(Registry.CurrentUser, StatusPath, "StatusMonitor", 0);
+            RegistryHelper.SetValue(Registry.CurrentUser, StatusPath, PrinterName, 0);
         }
 
 

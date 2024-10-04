@@ -15,7 +15,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
 
         public override void InitializePrinter()
         {
-            RegistryHelper.SetValue(Registry.CurrentUser, StatusPath, "StatusMonitor", 1);
+            RegistryHelper.SetValue(Registry.CurrentUser, StatusPath, PrinterName, 1);
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveOpenDir", 0);
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "Handler", "autoSave");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveOverwriteFile", 1);
@@ -28,7 +28,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
         public override void ResetPrinterSettings()
         {
             string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-            //RegistryHelper.SetValue(Registry.CurrentUser, StatusPath, "StatusMonitor", 0);
+            //RegistryHelper.SetValue(Registry.CurrentUser, StatusPath, PrinterName, 0);
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveOpenDir", 1);
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveDir", desktop);
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "(Default)", string.Empty);
