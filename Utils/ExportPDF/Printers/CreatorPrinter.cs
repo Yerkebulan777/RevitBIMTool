@@ -37,7 +37,8 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
 
         public override void ResetPrinterSettings()
         {
-            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "TargetDirectory", string.Empty);
+            string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "TargetDirectory", desktop);
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<Title>");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowProgress", "True");
         }

@@ -39,7 +39,6 @@ internal static class PrintHandler
         [
             new Pdf24Printer(),
             new CreatorPrinter(),
-            new BullzipPrinter(),
             new ClawPdfPrinter(),
             new InternalPrinter(),
         ];

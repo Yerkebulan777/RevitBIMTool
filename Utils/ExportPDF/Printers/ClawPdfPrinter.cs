@@ -18,30 +18,28 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
         public override void InitializePrinter()
         {
             string autoSaveKey = System.IO.Path.Combine(RegistryPath, "AutoSave");
+            string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
             RegistryHelper.SetValue(Registry.CurrentUser, StatusPath, "StatusMonitor", 1);
             RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "Enabled", "True");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "OpenViewer", "False");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "SkipPrintDialog", "True");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<InputFilename>");
-            RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", "<InputFilePath>");
+            RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", desktop);
         }
 
 
         public override void ResetPrinterSettings()
         {
             string autoSaveKey = System.IO.Path.Combine(RegistryPath, "AutoSave");
-            RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "Enabled", "False");
-            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "OpenViewer", "True");
-            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "SkipPrintDialog", "False");
-            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<Title>");
-            RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", string.Empty);
+            string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", desktop);
         }
 
 
         public override bool Print(Document doc, string folder, SheetModel model)
         {
             string autoSaveKey = System.IO.Path.Combine(RegistryPath, "AutoSave");
-            RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", folder);
+            RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", folder.Replace("\\", "\\\\"));
             return PrintHandler.PrintSheet(doc, folder, model);
         }
 
