@@ -8,9 +8,9 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
 {
     internal sealed class Pdf24Printer : PrinterControl
     {
-        public override string StatusPath => @"SOFTWARE\PDF24\Services\PDF";
         public override string RegistryPath => @"SOFTWARE\PDF24\Services\PDF";
         public override string PrinterName => "PDF24";
+        public string StatusPath => @"SOFTWARE\Settings";
 
 
         public override void InitializePrinter()

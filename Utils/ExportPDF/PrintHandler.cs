@@ -20,11 +20,11 @@ internal static class PrintHandler
     {
         availablePrinter = null;
 
+        string statusPath = @"SOFTWARE\Settings";
+
         foreach (PrinterControl printer in GetInstalledPrinters())
         {
-            bool isEmpty = string.IsNullOrEmpty(printer.StatusPath);
-
-            if (isEmpty || GetPrinterStatus(printer.StatusPath) == 0)
+            if (GetPrinterStatus(printer, statusPath) == 0)
             {
                 availablePrinter = printer;
                 return true;
@@ -59,11 +59,12 @@ internal static class PrintHandler
     }
 
 
-    private static int GetPrinterStatus(string statusPath)
+    private static int GetPrinterStatus(PrinterControl printer, string statusPath)
     {
+        string name = printer.PrinterName;
         return RegistryHelper.IsSubKeyExists(Registry.CurrentUser, statusPath)
-            ? Convert.ToInt32(RegistryHelper.GetValue(Registry.CurrentUser, statusPath, "StatusMonitor"))
-            : Convert.ToInt32(RegistryHelper.SetValue(Registry.CurrentUser, statusPath, "StatusMonitor", 0));
+            ? Convert.ToInt32(RegistryHelper.GetValue(Registry.CurrentUser, statusPath, name))
+            : Convert.ToInt32(RegistryHelper.SetValue(Registry.CurrentUser, statusPath, name, 0));
     }
 
 

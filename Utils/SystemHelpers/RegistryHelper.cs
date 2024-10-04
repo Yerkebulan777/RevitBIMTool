@@ -73,7 +73,15 @@ internal static class RegistryHelper
 
                 if (result is null || result != value)
                 {
-                    key.SetValue(name, value);
+                    if (value is int intValue)
+                    {
+                        key.SetValue(name, intValue, RegistryValueKind.DWord);
+                    }
+                    else if (value is string strValue)
+                    {
+                        key.SetValue(name, strValue, RegistryValueKind.String);
+                    }
+                    
                     key.Flush();
                 }
             }
