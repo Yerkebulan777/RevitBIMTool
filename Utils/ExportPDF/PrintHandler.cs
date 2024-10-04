@@ -6,7 +6,6 @@ using RevitBIMTool.Utils.ExportPdfUtil.Printers;
 using RevitBIMTool.Utils.SystemHelpers;
 using Serilog;
 using System.IO;
-using System.Windows.Documents;
 using Document = Autodesk.Revit.DB.Document;
 using Element = Autodesk.Revit.DB.Element;
 using PaperSize = System.Drawing.Printing.PaperSize;
@@ -61,7 +60,10 @@ internal static class PrintHandler
 
     private static int GetPrinterStatus(string printerPath)
     {
-        return Convert.ToInt32(RegistryHelper.SetValue(Registry.CurrentUser, printerPath, "StatusMonitor", 0));
+        object value = RegistryHelper.GetValue(Registry.CurrentUser, printerPath, "StatusMonitor");
+        value ??= RegistryHelper.SetValue(Registry.CurrentUser, printerPath, "StatusMonitor", 0);
+
+        return Convert.ToInt32(value);
     }
 
 
