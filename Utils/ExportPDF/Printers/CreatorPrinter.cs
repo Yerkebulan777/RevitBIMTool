@@ -3,6 +3,7 @@ using Microsoft.Win32;
 using RevitBIMTool.Model;
 using RevitBIMTool.Utils.ExportPdfUtil.Printers;
 using RevitBIMTool.Utils.SystemHelpers;
+using System.IO;
 
 
 namespace RevitBIMTool.Utils.ExportPDF.Printers
@@ -28,6 +29,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
             _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowAllNotifications", "False");
             _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowQuickActions", "False");
             _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "SkipPrintDialog", "True");
+            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "Name", "<DefaultProfile>");
             _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowProgress", "False");
         }
 
@@ -42,9 +44,9 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
 
         public override bool Print(Document doc, string folder, SheetModel model)
         {
-            return RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "TargetDirectory", folder) is null
-                ? throw new InvalidOperationException("Failed set directory!")
-                : PrintHandler.PrintSheet(doc, folder, model);
+            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", Path.GetFileName(folder));
+            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "TargetDirectory", folder);
+            return PrintHandler.PrintSheet(doc, folder, model);
         }
 
 
