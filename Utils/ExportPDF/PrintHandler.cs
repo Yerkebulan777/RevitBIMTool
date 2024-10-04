@@ -57,10 +57,15 @@ internal static class PrintHandler
     }
 
 
-    private static int GetPrinterStatus(string printerPath)
+    private static int GetPrinterStatus(string statusPath)
     {
-        object value = RegistryHelper.GetValue(Registry.CurrentUser, printerPath, "StatusMonitor");
-        value ??= RegistryHelper.SetValue(Registry.CurrentUser, printerPath, "StatusMonitor", 0);
+        object value = RegistryHelper.GetValue(Registry.CurrentUser, statusPath, "StatusMonitor");
+        value ??= RegistryHelper.SetValue(Registry.CurrentUser, statusPath, "StatusMonitor", 0);
+
+        if (value is null)
+        {
+            throw new Exception("NULL");
+        }
 
         return Convert.ToInt32(value);
     }
