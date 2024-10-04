@@ -28,9 +28,9 @@ internal sealed class ExportToPDFHandler
 
         if (PrintHandler.TryGetAvailablePrinter(out PrinterControl printer))
         {
-            sheetData = PrintHandler.GetData(uidoc.Document, printer.RegistryName, revitFileName, colorTypeEnabled);
+            sheetData = PrintHandler.GetData(uidoc.Document, printer.PrinterName, revitFileName, colorTypeEnabled);
 
-            Log.Information($"Available printer: {printer.RegistryName}");
+            Log.Information($"Available printer: {printer.PrinterName}");
 
             if (sheetData.Count > 0)
             {

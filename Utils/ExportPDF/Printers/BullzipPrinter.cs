@@ -10,7 +10,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
     internal class BullzipPrinter : PrinterControl
     {
         public override string RegistryPath => @"SOFTWARE\Bullzip\PDF Printer\Settings";
-        public override string RegistryName => "Bullzip PDF Printer";
+        public override string PrinterName => "Bullzip PDF Printer";
         public override int OverallRating => 3;
 
         private dynamic pdfPrinter;

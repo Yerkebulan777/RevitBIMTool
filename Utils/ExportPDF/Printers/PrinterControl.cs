@@ -10,7 +10,7 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
     internal abstract class PrinterControl
     {
         public abstract string RegistryPath { get; }
-        public abstract string RegistryName { get; }
+        public abstract string PrinterName { get; }
         public abstract int OverallRating { get; }
 
 
@@ -24,7 +24,7 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
         public virtual bool IsPrinterInstalled()
         {
             const string printersPath = @"SYSTEM\CurrentControlSet\Control\Print\Printers";
-            return RegistryHelper.IsSubKeyExists(Registry.LocalMachine, Path.Combine(printersPath, RegistryName));
+            return RegistryHelper.IsSubKeyExists(Registry.LocalMachine, Path.Combine(printersPath, PrinterName));
         }
 
 
