@@ -20,7 +20,8 @@ internal sealed class ExportToPDFHandler
         Log.Debug("Start export to PDF...");
 
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
-        string folder = Path.Combine(Path.GetTempPath(), $"{revitFileName}");
+        string baseTempPath = Path.GetDirectoryName(Path.GetTempPath());
+        string folder = Path.Combine(baseTempPath, $"{revitFileName}");
         string section = RevitPathHelper.GetSectionName(revitFilePath);
 
         bool colorTypeEnabled = section is not ("KJ" or "KR" or "KG");
