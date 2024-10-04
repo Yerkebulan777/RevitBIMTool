@@ -22,7 +22,7 @@ internal static class PrintHandler
 
         foreach (PrinterControl printer in GetInstalledPrinters())
         {
-            if (GetPrinterStatus(printer.RegistryPath) == 0)
+            if (GetPrinterStatus(printer.StatusPath) == 0)
             {
                 availablePrinter = printer;
                 return true;

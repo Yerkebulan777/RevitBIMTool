@@ -9,6 +9,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
 {
     internal sealed class CreatorPrinter : PrinterControl
     {
+        public override string StatusPath => @"SOFTWARE\pdfforge\PDFCreator\Settings";
         public override string RegistryPath => @"SOFTWARE\pdfforge\PDFCreator\Settings\ConversionProfiles\0";
         public override string PrinterName => "PDFCreator";
         public override int OverallRating => 2;
@@ -19,7 +20,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
             string autoSave = System.IO.Path.Combine(RegistryPath, "AutoSave");
             string openViewerKey = System.IO.Path.Combine(RegistryPath, "OpenViewer");
             RegistryHelper.SetValue(Registry.CurrentUser, autoSave, "Enabled", "True");
-            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "StatusMonitor", 1);
+            RegistryHelper.SetValue(Registry.CurrentUser, StatusPath, "StatusMonitor", 1);
             RegistryHelper.SetValue(Registry.CurrentUser, openViewerKey, "Enabled", "False");
             RegistryHelper.SetValue(Registry.CurrentUser, openViewerKey, "OpenWithPdfArchitect", "False");
             RegistryHelper.SetValue(Registry.CurrentUser, autoSave, "ExistingFileBehaviour", "Overwrite");

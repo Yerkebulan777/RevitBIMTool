@@ -9,6 +9,7 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
 {
     internal sealed class ClawPdfPrinter : PrinterControl
     {
+        public override string StatusPath => @"SOFTWARE\clawSoft\clawPDF\Settings";
         public override string RegistryPath => @"SOFTWARE\clawSoft\clawPDF\Settings\ConversionProfiles\0";
         public override string PrinterName => "clawPDF";
         public override int OverallRating => 4;
@@ -17,8 +18,8 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
         public override void InitializePrinter()
         {
             string autoSaveKey = System.IO.Path.Combine(RegistryPath, "AutoSave");
+            RegistryHelper.SetValue(Registry.CurrentUser, StatusPath, "StatusMonitor", 1);
             RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "Enabled", "True");
-            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "StatusMonitor", 1);
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "OpenViewer", "False");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "SkipPrintDialog", "True");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<InputFilename>");

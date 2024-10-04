@@ -8,6 +8,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
 {
     internal sealed class Pdf24Printer : PrinterControl
     {
+        public override string StatusPath => @"SOFTWARE\PDF24\Services\PDF";
         public override string RegistryPath => @"SOFTWARE\PDF24\Services\PDF";
         public override string PrinterName => "PDF24";
         public override int OverallRating => 1;
@@ -15,7 +16,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
 
         public override void InitializePrinter()
         {
-            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "StatusMonitor", 1);
+            RegistryHelper.SetValue(Registry.CurrentUser, StatusPath, "StatusMonitor", 1);
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveOpenDir", 0);
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "Handler", "autoSave");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveOverwriteFile", 1);

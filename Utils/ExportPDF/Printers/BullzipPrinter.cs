@@ -11,6 +11,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
 {
     internal class BullzipPrinter : PrinterControl
     {
+        public override string StatusPath => @"SOFTWARE\Bullzip\PDF Printer\Settings";
         public override string RegistryPath => @"SOFTWARE\Bullzip\PDF Printer\Settings";
         public override string PrinterName => "Bullzip PDF Printer";
         public override int OverallRating => 3;
@@ -30,7 +31,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
             }
             finally
             {
-                RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "StatusMonitor", 1);
+                RegistryHelper.SetValue(Registry.CurrentUser, StatusPath, "StatusMonitor", 1);
             }
         }
 
