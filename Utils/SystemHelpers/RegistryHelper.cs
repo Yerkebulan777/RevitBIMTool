@@ -63,32 +63,29 @@ internal static class RegistryHelper
     {
         object result = null;
 
-        lock (root)
+        try
         {
-            try
-            {
-                using RegistryKey key = root.OpenSubKey(path, true) ?? root.CreateSubKey(path);
+            using RegistryKey key = root.OpenSubKey(path, true) ?? root.CreateSubKey(path);
 
-                result = key.GetValue(name);
+            result = key.GetValue(name);
 
-                if (result == null || result != value)
-                {
-                    Log.Debug($"Set {value} to {name}");
-                    key.SetValue(name, value);
-                    key.Flush();
-                }
-            }
-            catch (Exception ex)
+            if (result == null || result != value)
             {
-                Log.Error(ex, $"SetValue parameter in {path} {ex.Message}");
+                Log.Debug($"Set {value} to {name}");
+                key.SetValue(name, value);
+                key.Flush();
             }
-            finally
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, $"SetValue parameter in {path} {ex.Message}");
+        }
+        finally
+        {
+            if (ApplyRegistryChanges())
             {
-                if (ApplyRegistryChanges())
-                {
-                    Log.Debug("Set value");
-                    Thread.Sleep(100);
-                }
+                Log.Debug("Set value");
+                Thread.Sleep(100);
             }
         }
 
