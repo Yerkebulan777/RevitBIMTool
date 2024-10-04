@@ -86,7 +86,7 @@ internal static class RegistryHelper
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"Registry {path} parameter {name}");
+                Log.Error($"Registry {path} parameter {name}");
                 Log.Error(ex, $"Set value failed: {ex.Message}");
             }
             finally
