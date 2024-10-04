@@ -3,6 +3,7 @@ using Microsoft.Win32;
 using RevitBIMTool.Model;
 using RevitBIMTool.Utils.ExportPdfUtil.Printers;
 using RevitBIMTool.Utils.SystemHelpers;
+using Serilog;
 
 
 namespace RevitBIMTool.Utils.ExportPDF.Printers

@@ -65,10 +65,12 @@ internal static class RegistryHelper
     {
         object result = null;
 
-        lock (Registry.LocalMachine)
+        lock (root)
         {
             try
             {
+                Log.Debug($"Start set {value} to {name} parameter");
+
                 using RegistryKey key = root.OpenSubKey(path, true) ?? root.CreateSubKey(path);
 
                 result = key.GetValue(name);
