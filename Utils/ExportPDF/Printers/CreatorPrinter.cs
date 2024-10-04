@@ -3,7 +3,6 @@ using Microsoft.Win32;
 using RevitBIMTool.Model;
 using RevitBIMTool.Utils.ExportPdfUtil.Printers;
 using RevitBIMTool.Utils.SystemHelpers;
-using Serilog;
 
 
 namespace RevitBIMTool.Utils.ExportPDF.Printers
@@ -22,13 +21,12 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
             _ = RegistryHelper.SetValue(Registry.CurrentUser, autoSave, "Enabled", "True");
             _ = RegistryHelper.SetValue(Registry.CurrentUser, openViewerKey, "Enabled", "False");
             _ = RegistryHelper.SetValue(Registry.CurrentUser, openViewerKey, "OpenWithPdfArchitect", "False");
+            _ = RegistryHelper.SetValue(Registry.CurrentUser, autoSave, "ExistingFileBehaviour", "Overwrite");
             _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "TargetDirectory", "<InputFilePath>");
             _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<InputFilename>");
             _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowOnlyErrorNotifications", "True");
             _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowAllNotifications", "False");
             _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowQuickActions", "False");
-            //_ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveDirectory", "True");
-            //_ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveEnabled", "True");
             _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "SkipPrintDialog", "True");
             _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowProgress", "False");
         }
@@ -44,12 +42,9 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
 
         public override bool Print(Document doc, string folder, SheetModel model)
         {
-            if (RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "TargetDirectory", folder) is null)
-            {
-                throw new InvalidOperationException("Failed set directory!");
-            }
-
-            return PrintHandler.PrintSheet(doc, folder, model);
+            return RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "TargetDirectory", folder) is null
+                ? throw new InvalidOperationException("Failed set directory!")
+                : PrintHandler.PrintSheet(doc, folder, model);
         }
 
 
