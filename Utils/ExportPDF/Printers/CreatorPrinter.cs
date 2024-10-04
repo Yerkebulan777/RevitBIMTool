@@ -11,7 +11,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
     {
         public override string RegistryPath => @"SOFTWARE\pdfforge\PDFCreator\Settings\ConversionProfiles\0";
         public override string PrinterName => "PDFCreator";
-        public string StatusPath => @"SOFTWARE\Settings";
+        public string StatusPath => PrintHandler.StatusPath;
 
 
         public override void InitializePrinter()

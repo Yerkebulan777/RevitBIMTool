@@ -15,16 +15,15 @@ using PrintRange = Autodesk.Revit.DB.PrintRange;
 namespace RevitBIMTool.Utils.ExportPDF;
 internal static class PrintHandler
 {
+    public const string StatusPath = @"Printers\Settings\Wizard";
 
     public static bool TryGetAvailablePrinter(out PrinterControl availablePrinter)
     {
         availablePrinter = null;
 
-        string statusPath = @"SOFTWARE\Settings";
-
         foreach (PrinterControl printer in GetInstalledPrinters())
         {
-            if (GetPrinterStatus(printer, statusPath) == 0)
+            if (GetPrinterStatus(printer, StatusPath) == 0)
             {
                 availablePrinter = printer;
                 return true;

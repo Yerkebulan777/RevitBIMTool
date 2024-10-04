@@ -12,7 +12,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
         public override string RegistryPath => @"SOFTWARE\clawSoft\clawPDF\Settings\ConversionProfiles\0";
         public override string PrinterName => "clawPDF";
 
-        public string StatusPath = @"SOFTWARE\Settings";
+        public string StatusPath = PrintHandler.StatusPath;
 
 
         public override void InitializePrinter()
