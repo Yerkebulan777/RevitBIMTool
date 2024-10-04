@@ -32,12 +32,9 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
 
         public override void ResetPrinterSettings()
         {
-            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "Enabled", "False");
             _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "TargetDirectory", string.Empty);
             _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<Title>");
-            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowAllNotifications", "True");
             _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "CompressionLevel", "high");
-            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "SkipPrintDialog", "False");
             _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowProgress", "True");
         }
 
