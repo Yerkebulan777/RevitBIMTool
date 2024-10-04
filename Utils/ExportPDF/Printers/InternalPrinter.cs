@@ -22,11 +22,6 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
         }
 
 
-        public override void SetPrinterOutputDirectory(string filePath)
-        {
-        }
-
-
         public override bool Print(Document doc, string folder, SheetModel model)
         {
 #if R23

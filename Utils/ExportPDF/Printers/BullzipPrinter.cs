@@ -1,11 +1,11 @@
 ﻿using Autodesk.Revit.DB;
 using RevitBIMTool.Model;
-using RevitBIMTool.Utils.ExportPDF;
+using RevitBIMTool.Utils.ExportPdfUtil.Printers;
 using Serilog;
 using System.Runtime.InteropServices;
 
 
-namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
+namespace RevitBIMTool.Utils.ExportPDF.Printers
 {
     internal class BullzipPrinter : PrinterControl
     {
@@ -51,8 +51,10 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
         }
 
 
-        public override void SetPrinterOutputDirectory(string folder)
+        public override bool Print(Document doc, string folder, SheetModel model)
         {
+            bool result;
+
             try
             {
                 pdfPrinter.SetValue("ShowPdf", "no");
@@ -65,18 +67,14 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
             catch (Exception ex)
             {
                 Log.Error(ex, $"Error occurred while setting the output file path: {ex.Message}");
+                result = false;
             }
             finally
             {
-                Thread.Sleep(100);
+                result = PrintHandler.PrintSheet(doc, folder, model);
             }
-        }
 
-
-        public override bool Print(Document doc, string folder, SheetModel model)
-        {
-            SetPrinterOutputDirectory(folder);
-            return PrintHandler.PrintSheet(doc, folder, model);
+            return result;
         }
 
 

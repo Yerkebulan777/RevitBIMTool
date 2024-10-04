@@ -42,15 +42,9 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
         }
 
 
-        public override void SetPrinterOutputDirectory(string folder)
-        {
-            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveDir", folder);
-        }
-
-
         public override bool Print(Document doc, string folder, SheetModel model)
         {
-            SetPrinterOutputDirectory(folder);
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveDir", folder);
             return PrintHandler.PrintSheet(doc, folder, model);
         }
 
