@@ -61,36 +61,37 @@ internal static class RegistryHelper
     }
 
 
-    public static void SetValue(RegistryKey root, string regPath, string keyName, object value)
+    public static void SetValue(RegistryKey root, string path, string name, object value)
     {
         lock (Registry.LocalMachine)
         {
             try
             {
-                using RegistryKey registryKey = root.OpenSubKey(regPath, true);
+                using RegistryKey registryKey = root.OpenSubKey(path, true);
 
                 if (value is int intValue)
                 {
-                    registryKey.SetValue(keyName, intValue, RegistryValueKind.DWord);
+                    registryKey.SetValue(name, intValue, RegistryValueKind.DWord);
                 }
                 else if (value is string stringValue)
                 {
-                    registryKey.SetValue(keyName, stringValue, RegistryValueKind.String);
+                    registryKey.SetValue(name, stringValue, RegistryValueKind.String);
                 }
                 else
                 {
-                    throw new ArgumentException($"RegistryKey {keyName} {registryKey}");
+                    throw new ArgumentException($"RegistryKey {name} {registryKey}");
                 }
 
                 registryKey.Flush();
             }
             catch (Exception ex)
             {
+                Log.Error(ex, $"Registry {path} parameter {name}");
                 Log.Error(ex, $"Set value failed: {ex.Message}");
             }
             finally
             {
-                Log.Debug($"Set to {keyName} value {value}");
+                Log.Debug($"Set to {name} value {value}");
 
                 if (ApplyRegistryChanges())
                 {
