@@ -32,6 +32,7 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
         {
             string autoSaveKey = System.IO.Path.Combine(RegistryPath, "AutoSave");
             string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            //RegistryHelper.SetValue(Registry.CurrentUser, StatusPath, "StatusMonitor", 0);
             RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", desktop);
         }
 
