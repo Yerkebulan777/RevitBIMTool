@@ -123,7 +123,7 @@ internal static class PrintHandler
     }
 
 
-    public static Dictionary<string, List<SheetModel>> GetData(Document doc, string printerName, string revitFileName, bool color = true)
+    public static Dictionary<string, List<SheetModel>> GetData(Document doc, string printerName, string title, bool isColorEnabled = true)
     {
         ResetAndApplyPrinterSettings(doc, printerName);
 
@@ -133,7 +133,7 @@ internal static class PrintHandler
         collector = collector.OfClass(typeof(FamilyInstance));
         collector = collector.WhereElementIsNotElementType();
 
-        ColorDepthType colorType = color ? ColorDepthType.Color : ColorDepthType.BlackLine;
+        ColorDepthType colorType = isColorEnabled ? ColorDepthType.Color : ColorDepthType.BlackLine;
 
         Dictionary<string, List<SheetModel>> sheetPrintData = new(collector.GetElementCount());
 
@@ -161,7 +161,7 @@ internal static class PrintHandler
 
                     SheetModel model = new(viewSheet, papeSize, orientType);
 
-                    model.SetSheetName(doc, revitFileName, "pdf");
+                    model.SetSheetName(doc, title, "pdf");
 
                     if (model.IsValid)
                     {
