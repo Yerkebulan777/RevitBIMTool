@@ -69,7 +69,7 @@ internal static class RegistryHelper
 
             result = key.GetValue(name);
 
-            if (result == null || result != value)
+            if (result is null || result != value)
             {
                 Log.Debug($"Set {value} to {name}");
                 key.SetValue(name, value);
