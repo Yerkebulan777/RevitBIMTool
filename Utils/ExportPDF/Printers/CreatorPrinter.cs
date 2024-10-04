@@ -3,7 +3,6 @@ using Microsoft.Win32;
 using RevitBIMTool.Model;
 using RevitBIMTool.Utils.ExportPdfUtil.Printers;
 using RevitBIMTool.Utils.SystemHelpers;
-using System.IO;
 
 
 namespace RevitBIMTool.Utils.ExportPDF.Printers
@@ -19,32 +18,33 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
         {
             string autoSave = System.IO.Path.Combine(RegistryPath, "AutoSave");
             string openViewerKey = System.IO.Path.Combine(RegistryPath, "OpenViewer");
-            _ = RegistryHelper.SetValue(Registry.CurrentUser, autoSave, "Enabled", "True");
-            _ = RegistryHelper.SetValue(Registry.CurrentUser, openViewerKey, "Enabled", "False");
-            _ = RegistryHelper.SetValue(Registry.CurrentUser, openViewerKey, "OpenWithPdfArchitect", "False");
-            _ = RegistryHelper.SetValue(Registry.CurrentUser, autoSave, "ExistingFileBehaviour", "Overwrite");
-            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "TargetDirectory", "<InputFilePath>");
-            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<InputFilename>");
-            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowOnlyErrorNotifications", "True");
-            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowAllNotifications", "False");
-            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowQuickActions", "False");
-            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "SkipPrintDialog", "True");
-            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "Name", "<DefaultProfile>");
-            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowProgress", "False");
+            RegistryHelper.SetValue(Registry.CurrentUser, autoSave, "Enabled", "True");
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "StatusMonitor", 1);
+            RegistryHelper.SetValue(Registry.CurrentUser, openViewerKey, "Enabled", "False");
+            RegistryHelper.SetValue(Registry.CurrentUser, openViewerKey, "OpenWithPdfArchitect", "False");
+            RegistryHelper.SetValue(Registry.CurrentUser, autoSave, "ExistingFileBehaviour", "Overwrite");
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "TargetDirectory", "<InputFilePath>");
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<InputFilename>");
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowOnlyErrorNotifications", "True");
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowAllNotifications", "False");
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowQuickActions", "False");
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "SkipPrintDialog", "True");
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "Name", "<DefaultProfile>");
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowProgress", "False");
         }
 
 
         public override void ResetPrinterSettings()
         {
-            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "TargetDirectory", string.Empty);
-            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<Title>");
-            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowProgress", "True");
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "TargetDirectory", string.Empty);
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<Title>");
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowProgress", "True");
         }
 
 
         public override bool Print(Document doc, string folder, SheetModel model)
         {
-            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "TargetDirectory", folder.Replace("\\", "\\\\"));
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "TargetDirectory", folder.Replace("\\", "\\\\"));
             return PrintHandler.PrintSheet(doc, folder, model);
         }
 

@@ -1,6 +1,8 @@
 ﻿using Autodesk.Revit.DB;
+using Microsoft.Win32;
 using RevitBIMTool.Model;
 using RevitBIMTool.Utils.ExportPdfUtil.Printers;
+using RevitBIMTool.Utils.SystemHelpers;
 using Serilog;
 using System.Runtime.InteropServices;
 
@@ -25,6 +27,10 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
             catch (Exception ex)
             {
                 Log.Error(ex, $"Error occurred while initializing the printer: {ex.Message}");
+            }
+            finally
+            {
+                RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "StatusMonitor", 1);
             }
         }
 

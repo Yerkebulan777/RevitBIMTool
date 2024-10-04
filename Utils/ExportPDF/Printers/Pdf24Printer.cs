@@ -3,7 +3,6 @@ using Microsoft.Win32;
 using RevitBIMTool.Model;
 using RevitBIMTool.Utils.ExportPdfUtil.Printers;
 using RevitBIMTool.Utils.SystemHelpers;
-using System.IO;
 
 namespace RevitBIMTool.Utils.ExportPDF.Printers
 {
@@ -16,6 +15,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
 
         public override void InitializePrinter()
         {
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "StatusMonitor", 1);
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveOpenDir", 0);
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "Handler", "autoSave");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveOverwriteFile", 1);
