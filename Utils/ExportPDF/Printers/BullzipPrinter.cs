@@ -4,6 +4,7 @@ using RevitBIMTool.Model;
 using RevitBIMTool.Utils.ExportPdfUtil.Printers;
 using RevitBIMTool.Utils.SystemHelpers;
 using Serilog;
+using System.IO;
 using System.Runtime.InteropServices;
 
 
@@ -24,6 +25,14 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
             try
             {
                 pdfPrinter = Activator.CreateInstance(Type.GetTypeFromProgID("Bullzip.PDFPrinterSettings"));
+
+                pdfPrinter.SetValue("ShowPdf", "no");
+                pdfPrinter.SetValue("ShowProgress", "no");
+                pdfPrinter.SetValue("ShowSettings", "never");
+                pdfPrinter.SetValue("ShowProgressFinished", "no");
+                pdfPrinter.SetValue("ConfirmOverwrite", "no");
+
+                pdfPrinter.WriteSettings(true);
             }
             catch (Exception ex)
             {
@@ -31,7 +40,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
             }
             finally
             {
-                RegistryHelper.SetValue(Registry.CurrentUser, StatusPath, "StatusMonitor", 1);
+                _ = RegistryHelper.SetValue(Registry.CurrentUser, StatusPath, "StatusMonitor", 1);
             }
         }
 
@@ -64,11 +73,8 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
 
             try
             {
-                pdfPrinter.SetValue("ShowPdf", "no");
-                pdfPrinter.SetValue("Output", folder);
-                pdfPrinter.SetValue("ShowProgress", "no");
-                pdfPrinter.SetValue("ShowSettings", "never");
-                pdfPrinter.SetValue("ShowProgressFinished", "no");
+                string filePath = Path.Combine(folder, model.SheetName);
+                pdfPrinter.SetValue("Output", filePath);
                 pdfPrinter.WriteSettings(true);
             }
             catch (Exception ex)
