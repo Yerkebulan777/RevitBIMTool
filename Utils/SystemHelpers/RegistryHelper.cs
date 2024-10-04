@@ -1,6 +1,7 @@
 ﻿using Microsoft.Win32;
 using Serilog;
 using System.Runtime.InteropServices;
+using System.Text;
 
 
 namespace RevitBIMTool.Utils.SystemHelpers;
@@ -63,6 +64,8 @@ internal static class RegistryHelper
 
     public static void SetValue(RegistryKey root, string path, string name, object value)
     {
+        StringBuilder message = new StringBuilder();
+
         lock (Registry.LocalMachine)
         {
             try
@@ -86,12 +89,13 @@ internal static class RegistryHelper
             }
             catch (Exception ex)
             {
-                Log.Error($"\nRegistry {root.Name} {path} parameter {name}");
-                Log.Error(ex, $"Set value failed: {ex} ");
+                message.AppendLine($"Set {value} to parameter {name}");
+                message.AppendLine($"Registry path {root.Name}\\{path}");
+                message.AppendLine($"Set value failed: {ex}");
             }
             finally
             {
-                Log.Debug($"Set to {name} value {value}");
+                Log.Debug(message.ToString());
 
                 if (ApplyRegistryChanges())
                 {
