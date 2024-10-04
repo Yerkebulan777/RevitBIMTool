@@ -12,7 +12,6 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
         public override string StatusPath => throw new NotImplementedException();
         public override string RegistryPath => @"SOFTWARE\Autodesk\Revit";
         public override string PrinterName => "Microsoft Print to PDF";
-        public override int OverallRating => 5;
 
 
         public override void InitializePrinter()
@@ -23,6 +22,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
 
         public override void ResetPrinterSettings()
         {
+            RegistryHelper.SetValue(Registry.CurrentUser, StatusPath, "StatusMonitor", 0);
         }
 
 

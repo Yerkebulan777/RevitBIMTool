@@ -12,7 +12,6 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
         public abstract string StatusPath { get; }
         public abstract string RegistryPath { get; }
         public abstract string PrinterName { get; }
-        public abstract int OverallRating { get; }
 
 
         public abstract void InitializePrinter();
