@@ -11,6 +11,7 @@ using System.IO;
 namespace RevitBIMTool.ExportHandlers;
 internal sealed class ExportToPDFHandler
 {
+    private List<SheetModel> sheetModels;
     private Dictionary<string, List<SheetModel>> sheetData;
 
 
@@ -31,7 +32,7 @@ internal sealed class ExportToPDFHandler
 
             Log.Information($"Available printer: {printer.RegistryName}");
 
-            if (sheetData.Values.Count > 0)
+            if (sheetData.Count > 0)
             {
                 printer.InitializePrinter();
 
@@ -42,7 +43,7 @@ internal sealed class ExportToPDFHandler
 
                 string exportPath = Path.Combine(exportDirectory, $"{revitFileName}.pdf");
 
-                List<SheetModel> sheetModels = PrintHandler.PrintSheetData(uidoc.Document, printer, sheetData, folder);
+                sheetModels = PrintHandler.PrintSheetData(uidoc.Document, printer, sheetData, folder);
 
                 if (sheetModels.Count > 0)
                 {
