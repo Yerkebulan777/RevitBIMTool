@@ -71,8 +71,6 @@ internal static class RegistryHelper
 
             if (result is null || result != value)
             {
-                Log.Debug($"Value {value} to {name}");
-                Log.Debug($"Registry path {path}");
                 key.SetValue(name, value);
                 key.Flush();
             }
@@ -85,7 +83,6 @@ internal static class RegistryHelper
         {
             if (ApplyRegistryChanges())
             {
-                Log.Debug($"Applied");
                 Thread.Sleep(100);
             }
         }

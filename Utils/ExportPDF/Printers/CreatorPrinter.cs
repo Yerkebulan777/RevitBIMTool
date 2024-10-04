@@ -44,8 +44,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
 
         public override bool Print(Document doc, string folder, SheetModel model)
         {
-            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", Path.GetFileName(folder));
-            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "TargetDirectory", folder);
+            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "TargetDirectory", folder.Replace("\\", "\\\\"));
             return PrintHandler.PrintSheet(doc, folder, model);
         }
 
