@@ -19,7 +19,6 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
             string autoSaveKey = System.IO.Path.Combine(RegistryPath, "AutoSave");
             string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
             RegistryHelper.SetValue(Registry.CurrentUser, StatusPath, "StatusMonitor", 1);
-            RegistryHelper.SetValue(Registry.CurrentUser, StatusPath, "StatusMonitor", 1);
             RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "Enabled", "True");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "OpenViewer", "False");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "SkipPrintDialog", "True");
