@@ -236,7 +236,7 @@ internal static class PrintHandler
             }
             finally
             {
-                Log.Debug("ResetPrinterSettings");
+                Log.Debug("Reset printer settings");
                 printer.ResetPrinterSettings();
 
                 if (!trx.HasEnded())
