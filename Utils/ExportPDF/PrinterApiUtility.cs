@@ -8,8 +8,7 @@ using PaperSize = System.Drawing.Printing.PaperSize;
 namespace RevitBIMTool.Utils.ExportPDF;
 public static class PrinterApiUtility
 {
-
-    const int acсess = PrinterApiWrapper.PRINTER_ACCESS_ADMINISTER | PrinterApiWrapper.PRINTER_ACCESS_USE;
+    private const int acсess = PrinterApiWrapper.PRINTER_ACCESS_ADMINISTER | PrinterApiWrapper.PRINTER_ACCESS_USE;
 
 
     public static string GetDefaultPrinter()
@@ -102,6 +101,8 @@ public static class PrinterApiUtility
             int width = (int)(widthSideInMm * 1000.0);
             int height = (int)(heighSideInMm * 1000.0);
 
+            IntPtr hPrinter = IntPtr.Zero;
+
             if (mutex.WaitOne(Timeout.Infinite))
             {
                 try
@@ -115,9 +116,9 @@ public static class PrinterApiUtility
                         DesiredAccess = acсess,
                     };
 
-                    if (PrinterApiWrapper.OpenPrinter(printerName, out IntPtr hPrinter, ref defaults))
+                    if (PrinterApiWrapper.OpenPrinter(printerName, out hPrinter, ref defaults))
                     {
-                        Log.Debug($"Deleted {formName}: {PrinterApiWrapper.DeleteForm(hPrinter, formName)}");
+                        bool deleted = PrinterApiWrapper.DeleteForm(hPrinter, formName);
 
                         PrinterApiWrapper.FormInfo1 formInfo = new()
                         {
@@ -134,12 +135,7 @@ public static class PrinterApiUtility
 
                         if (!PrinterApiWrapper.AddForm(hPrinter, 1, ref formInfo))
                         {
-                            Log.Error($"Failed add printer form {formName}!");
-                        }
-
-                        if (PrinterApiWrapper.ClosePrinter(hPrinter))
-                        {
-                            Log.Debug($"Closed {formName}");
+                            Log.Error($"Failed add printer form {formName} {deleted}!");
                         }
                     }
                 }
@@ -150,7 +146,10 @@ public static class PrinterApiUtility
                 finally
                 {
                     mutex.ReleaseMutex();
-                    Thread.Sleep(1000);
+                    if (PrinterApiWrapper.ClosePrinter(hPrinter))
+                    {
+                        Thread.Sleep(1000);
+                    }
                 }
             }
         }
