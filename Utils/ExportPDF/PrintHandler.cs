@@ -22,16 +22,12 @@ internal static class PrintHandler
 
         foreach (PrinterControl printer in GetInstalledPrinters())
         {
-            string statusPath = Path.GetDirectoryName( printer.RegistryPath);
+            bool isEmpty = string.IsNullOrEmpty(printer.StatusPath);
 
-            if (!string.IsNullOrEmpty(statusPath))
+            if (isEmpty || GetPrinterStatus(printer.StatusPath) == 0)
             {
-                if (GetPrinterStatus(statusPath) == 0)
-                {
-                    Log.Warning(statusPath);
-                    availablePrinter = printer;
-                    return true;
-                }
+                availablePrinter = printer;
+                return true;
             }
         }
 
