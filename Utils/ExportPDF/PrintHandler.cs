@@ -202,6 +202,8 @@ internal static class PrintHandler
         {
             try
             {
+                Log.Debug("Start transaction ...");
+
                 foreach (string settingName in sheetData.Keys)
                 {
                     PrintManager printManager = doc.PrintManager;
@@ -248,6 +250,8 @@ internal static class PrintHandler
     public static bool ExportSheet(Document doc, string folder, SheetModel model)
     {
 #if R23
+        Log.Debug("Start internal export...");
+
         PDFExportOptions option = new()
         {
             FileName = model.SheetName,
@@ -272,6 +276,8 @@ internal static class PrintHandler
 
     public static bool PrintSheet(Document doc, string folder, SheetModel model)
     {
+        Log.Debug("Start submit print...");
+
         string filePath = Path.Combine(folder, model.SheetName);
 
         PrintManager printManager = doc.PrintManager;
