@@ -19,8 +19,8 @@ internal sealed class ExportToPDFHandler
         Log.Debug("Start export to PDF...");
 
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
-        string tempFolder = Path.Combine(Path.GetTempPath(), $"{revitFileName}TMP");
-        string exportFullPath = Path.Combine(exportDirectory, $"{revitFileName}.pdf");
+        string tempDirectory = Environment.GetEnvironmentVariable("TEMP");
+        string folder = Path.Combine(tempDirectory, $"{revitFileName}");
         string section = RevitPathHelper.GetSectionName(revitFilePath);
 
         bool colorTypeEnabled = section is not ("KJ" or "KR" or "KG");
@@ -31,22 +31,24 @@ internal sealed class ExportToPDFHandler
 
             Log.Information($"Available printer: {printer.RegistryName}");
 
-            if (sheetData.Count > 0)
+            if (sheetData.Values.Count > 0)
             {
                 printer.InitializePrinter();
 
-                RevitPathHelper.EnsureDirectory(tempFolder);
+                RevitPathHelper.EnsureDirectory(folder);
                 RevitPathHelper.EnsureDirectory(exportDirectory);
 
-                Log.Information($"Total valid sheets: {sheetData.Count}");
+                Log.Information($"Total valid sheets: {sheetData.Values.Count}");
 
-                List<SheetModel> sheetModels = PrintHandler.PrintSheetData(uidoc.Document, printer, sheetData, tempFolder);
+                string exportPath = Path.Combine(exportDirectory, $"{revitFileName}.pdf");
+
+                List<SheetModel> sheetModels = PrintHandler.PrintSheetData(uidoc.Document, printer, sheetData, folder);
 
                 if (sheetModels.Count > 0)
                 {
-                    MergeHandler.Combine(sheetModels, tempFolder, exportFullPath);
+                    MergeHandler.Combine(sheetModels, folder, exportPath);
                     SystemFolderOpener.OpenFolder(exportDirectory);
-                    RevitPathHelper.DeleteDirectory(tempFolder);
+                    RevitPathHelper.DeleteDirectory(folder);
                 }
             }
         }

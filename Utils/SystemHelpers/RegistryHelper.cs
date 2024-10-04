@@ -47,9 +47,7 @@ internal static class RegistryHelper
 
             if (regKey is not null)
             {
-                object value = regKey.GetValue(name);
-                regKey.Flush();
-                return value;
+                return regKey.GetValue(name);
             }
         }
         catch (Exception ex)
