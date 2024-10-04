@@ -17,7 +17,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
 
         public override void InitializePrinter()
         {
-            string autoSave = System.IO.Path.Combine(RegistryPath, "OpenViewer");
+            string autoSave = System.IO.Path.Combine(RegistryPath, "AutoSave");
             string openViewerKey = System.IO.Path.Combine(RegistryPath, "OpenViewer");
             _ = RegistryHelper.SetValue(Registry.CurrentUser, autoSave, "Enabled", "True");
             _ = RegistryHelper.SetValue(Registry.CurrentUser, openViewerKey, "Enabled", "False");
