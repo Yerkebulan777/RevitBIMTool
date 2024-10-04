@@ -22,10 +22,16 @@ internal static class PrintHandler
 
         foreach (PrinterControl printer in GetInstalledPrinters())
         {
-            if (GetPrinterStatus(printer.StatusPath) == 0)
+            string printerStatusPath = printer.StatusPath;
+
+            if (!string.IsNullOrEmpty(printerStatusPath))
             {
-                availablePrinter = printer;
-                return true;
+                if (GetPrinterStatus(printerStatusPath) == 0)
+                {
+                    Log.Warning(printerStatusPath);
+                    availablePrinter = printer;
+                    return true;
+                }
             }
         }
 
@@ -62,12 +68,7 @@ internal static class PrintHandler
         object value = RegistryHelper.GetValue(Registry.CurrentUser, statusPath, "StatusMonitor");
         value ??= RegistryHelper.SetValue(Registry.CurrentUser, statusPath, "StatusMonitor", 0);
 
-        if (value is null)
-        {
-            throw new Exception("NULL");
-        }
-
-        return Convert.ToInt32(value);
+        return value is null ? throw new Exception("NULL") : Convert.ToInt32(value);
     }
 
 
