@@ -1,7 +1,6 @@
 ﻿using Microsoft.Win32;
 using Serilog;
 using System.Runtime.InteropServices;
-using System.Text;
 
 
 namespace RevitBIMTool.Utils.SystemHelpers;
@@ -62,84 +61,38 @@ internal static class RegistryHelper
     }
 
 
-    public static void SetValue(RegistryKey root, string path, string name, object value)
+    public static object SetValue(RegistryKey root, string path, string name, object value)
     {
-        StringBuilder message = new StringBuilder();
+        object result = null;
 
         lock (Registry.LocalMachine)
         {
             try
             {
-                using RegistryKey registryKey = root.OpenSubKey(path, true);
+                using RegistryKey key = root.OpenSubKey(path, true) ?? root.CreateSubKey(path);
 
-                if (registryKey == null)
-                {
-                    throw new NullReferenceException($"{root.Name}\\{path} not found or access denied.");
-                }
+                result = key.GetValue(name);
 
-                if (value is int intValue)
+                if (result == null || !result.Equals(value))
                 {
-                    registryKey.SetValue(name, intValue, RegistryValueKind.DWord);
+                    key.SetValue(name, value);
+                    key.Flush();
                 }
-                else if (value is string stringValue)
-                {
-                    registryKey.SetValue(name, stringValue, RegistryValueKind.String);
-                }
-                else
-                {
-                    throw new ArgumentException($"Unsupported value type for {name}");
-                }
-
-                registryKey.Flush();
             }
             catch (Exception ex)
             {
-                message.AppendLine($"Set {value} to parameter {name}");
-                message.AppendLine($"Registry path {root.Name}\\{path}");
-                message.AppendLine($"Set value failed: {ex}");
+                Log.Error(ex, $"SetValue parameter in {path} {ex.Message}");
             }
             finally
             {
-                Log.Debug(message.ToString());
-
                 if (ApplyRegistryChanges())
                 {
                     Thread.Sleep(100);
                 }
             }
         }
-    }
 
-
-    public static object CreateParameter(RegistryKey root, string path, string name, object defaultValue)
-    {
-        object value = GetValue(root, path, name);
-
-        lock (Registry.LocalMachine)
-        {
-            if (value is null)
-            {
-                try
-                {
-                    using RegistryKey regKey = root.OpenSubKey(path, true);
-                    regKey?.SetValue(name, defaultValue);
-                    regKey?.Flush();
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, $"Create parameter in {path} {ex.Message}");
-                }
-                finally
-                {
-                    if (ApplyRegistryChanges())
-                    {
-                        Thread.Sleep(100);
-                    }
-                }
-            }
-        }
-
-        return value;
+        return result;
     }
 
 

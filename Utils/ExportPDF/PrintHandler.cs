@@ -61,7 +61,7 @@ internal static class PrintHandler
 
     private static int GetPrinterStatus(string printerPath)
     {
-        return Convert.ToInt32(RegistryHelper.CreateParameter(Registry.CurrentUser, printerPath, "StatusMonitor", 0));
+        return Convert.ToInt32(RegistryHelper.SetValue(Registry.CurrentUser, printerPath, "StatusMonitor", 0));
     }
 
 
