@@ -19,7 +19,7 @@ public sealed class RevitPurginqHelper
 
         ElementMulticategoryFilter multiCat = new(purgeBuiltInCats);
 
-        IDictionary<int, ElementId> validTypeIds = new Dictionary<int, ElementId>(25);
+        IDictionary<int, ElementId> validTypeIds = new Dictionary<int, ElementId>(100);
         IDictionary<int, ElementId> invalidTypeIds = new Dictionary<int, ElementId>(25);
 
         collector = new FilteredElementCollector(doc).WherePasses(multiCat);
@@ -27,7 +27,9 @@ public sealed class RevitPurginqHelper
         foreach (Element elm in collector.WhereElementIsNotElementType())
         {
             ElementId etypeId = elm.GetTypeId();
+
             int typeIntId = etypeId.IntegerValue;
+
             if (!validTypeIds.ContainsKey(typeIntId))
             {
                 validTypeIds[typeIntId] = etypeId;
@@ -51,18 +53,32 @@ public sealed class RevitPurginqHelper
         using (TransactionGroup tg = new(doc))
         {
             TransactionStatus status = tg.Start("Purge types");
+
             foreach (KeyValuePair<int, ElementId> item in invalidTypeIds)
             {
-                using Transaction trx = new(doc, "DeleteElement type");
-                FailureHandlingOptions failOpt = trx.GetFailureHandlingOptions();
-                failOpt = failOpt.SetFailuresPreprocessor(new WarningSwallower());
-                failOpt = failOpt.SetClearAfterRollback(true);
-                trx.SetFailureHandlingOptions(failOpt);
                 if (DocumentValidation.CanDeleteElement(doc, item.Value))
                 {
+                    using Transaction trx = new(doc, "DeleteElement type");
+
+                    FailureHandlingOptions failOpt = trx.GetFailureHandlingOptions();
+                    failOpt = failOpt.SetFailuresPreprocessor(new WarningSwallower());
+                    failOpt = failOpt.SetClearAfterRollback(true);
+                    trx.SetFailureHandlingOptions(failOpt);
+
                     if (TransactionStatus.Started == trx.Start())
                     {
-                        status = doc.Delete(item.Value).Any() ? trx.Commit() : trx.RollBack();
+                        try
+                        {
+                            _ = doc.Delete(item.Value);
+                            status = trx.Commit();
+                        }
+                        finally
+                        {
+                            if (!trx.HasEnded())
+                            {
+                                status = trx.RollBack();
+                            }
+                        }
                     }
                 }
             }
