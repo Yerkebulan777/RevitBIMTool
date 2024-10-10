@@ -1,6 +1,7 @@
 ﻿using Autodesk.Revit.DB;
 using RevitBIMTool.Utils.Common;
 using Serilog;
+using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 using PaperSize = System.Drawing.Printing.PaperSize;
@@ -87,13 +88,13 @@ internal class SheetModel : IDisposable
             OrganizationGroupName = Regex.Replace(sheetNumber, @"[0-9.]", string.Empty);
         }
 
+        string sheetDigitNumber = Regex.Replace(sheetNumber, @"[^0-9.]", string.Empty);
+
         SheetName = string.IsNullOrEmpty(extension) ? sheetName : $"{sheetName}.{extension}";
 
-        string sheetDigits = Regex.Replace(sheetNumber, @"[^0-9.]", string.Empty);
-
-        if (double.TryParse(sheetDigits, out double number))
+        if (double.TryParse(sheetDigitNumber, NumberStyles.Any, CultureInfo.InvariantCulture, out double number))
         {
-            Log.Debug($"{sheetNumber} = {sheetDigits} > {number}");
+            Log.Debug($"{sheetNumber} = {sheetDigitNumber} > {number}");
 
             if (!groupName.StartsWith("#") && number < 500)
             {
