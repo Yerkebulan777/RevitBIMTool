@@ -88,13 +88,13 @@ internal class SheetModel : IDisposable
             OrganizationGroupName = Regex.Replace(sheetNumber, @"[0-9.]", string.Empty);
         }
 
-        string sheetDigitNumber = Regex.Replace(sheetNumber, @"[^0-9.]", string.Empty);
+        string digitNumber = Regex.Replace(sheetNumber, @"[^0-9.]", string.Empty);
 
         SheetName = string.IsNullOrEmpty(extension) ? sheetName : $"{sheetName}.{extension}";
 
-        if (double.TryParse(sheetDigitNumber, NumberStyles.Any, CultureInfo.InvariantCulture, out double number))
+        if (double.TryParse(digitNumber, NumberStyles.Any, CultureInfo.InvariantCulture, out double number))
         {
-            Log.Debug($"{sheetNumber} = {sheetDigitNumber} > {number}");
+            Log.Debug($"{sheetNumber} = {digitNumber} > {number}");
 
             if (!groupName.StartsWith("#") && number < 500)
             {
