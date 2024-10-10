@@ -15,14 +15,16 @@ public sealed class RevitPurginqHelper
             BuiltInCategory.OST_Floors,
         ];
 
+        FilteredElementCollector collector;
 
         ElementMulticategoryFilter multiCat = new(purgeBuiltInCats);
 
         IDictionary<int, ElementId> validTypeIds = new Dictionary<int, ElementId>(25);
         IDictionary<int, ElementId> invalidTypeIds = new Dictionary<int, ElementId>(25);
 
-        FilteredElementCollector collector = new FilteredElementCollector(doc).WhereElementIsNotElementType();
-        foreach (Element elm in collector.WherePasses(multiCat))
+        collector = new FilteredElementCollector(doc).WherePasses(multiCat);
+
+        foreach (Element elm in collector.WhereElementIsNotElementType())
         {
             ElementId etypeId = elm.GetTypeId();
             int typeIntId = etypeId.IntegerValue;
@@ -33,10 +35,12 @@ public sealed class RevitPurginqHelper
         }
 
 
-        collector = new FilteredElementCollector(doc).OfClass(typeof(ElementType));
-        foreach (Element etp in collector.WherePasses(multiCat))
+        collector = new FilteredElementCollector(doc).WherePasses(multiCat);
+
+        foreach (Element etp in collector.WhereElementIsElementType())
         {
             int typeIntId = etp.Id.IntegerValue;
+
             if (!validTypeIds.ContainsKey(typeIntId))
             {
                 invalidTypeIds[typeIntId] = etp.Id;
