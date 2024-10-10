@@ -2,10 +2,12 @@
 using Microsoft.Win32;
 using RevitBIMTool.Model;
 using RevitBIMTool.Utils.SystemHelpers;
+using Serilog;
+using System.Diagnostics;
 using System.IO;
 
 
-namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
+namespace RevitBIMTool.Utils.ExportPDF.Printers
 {
     internal abstract class PrinterControl
     {
@@ -29,7 +31,16 @@ namespace RevitBIMTool.Utils.ExportPdfUtil.Printers
 
         public virtual bool IsPrinterEnabled()
         {
-            return RegistryHelper.IsSubKeyExists(Registry.CurrentUser, RegistryPath);
+            if (RegistryHelper.IsSubKeyExists(Registry.CurrentUser, RegistryPath))
+            {
+                int value = Convert.ToInt32(RegistryHelper.GetValue(Registry.CurrentUser, PrintHandler.StatusPath, PrinterName));
+
+                Log.Debug($"Registry {RegistryPath} exists and status {value}");
+
+                return value == 0;
+            }
+
+            return false;
         }
 
     }

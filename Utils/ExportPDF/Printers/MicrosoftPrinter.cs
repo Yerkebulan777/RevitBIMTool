@@ -6,10 +6,11 @@ using RevitBIMTool.Utils.SystemHelpers;
 
 namespace RevitBIMTool.Utils.ExportPDF.Printers
 {
-    internal sealed class InternalPrinter : PrinterControl
+    internal class MicrosoftPrinter : PrinterControl
     {
         public override string RegistryPath => @"SOFTWARE\Autodesk\Revit";
-        public override string PrinterName => "RevitInternalPrinter";
+
+        public override string PrinterName => "Microsoft Print to PDF";
 
 
         public override void InitializePrinter()
@@ -26,13 +27,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
 
         public override bool Print(Document doc, string folder, SheetModel model)
         {
-            return PrintHandler.ExportSheet(doc, folder, model);
-        }
-
-
-        public override bool IsPrinterEnabled()
-        {
-            return RevitBIMToolApp.Version == "2023";
+            return PrintHandler.PrintSheet(doc, folder, model);
         }
 
     }

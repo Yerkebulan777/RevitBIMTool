@@ -1,7 +1,6 @@
 ﻿using Autodesk.Revit.DB;
 using Microsoft.Win32;
 using RevitBIMTool.Model;
-using RevitBIMTool.Utils.ExportPdfUtil.Printers;
 using RevitBIMTool.Utils.SystemHelpers;
 
 
@@ -12,19 +11,17 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
         public override string RegistryPath => @"SOFTWARE\clawSoft\clawPDF\Settings\ConversionProfiles\0";
         public override string PrinterName => "clawPDF";
 
-        public string StatusPath = PrintHandler.StatusPath;
-
 
         public override void InitializePrinter()
         {
             string autoSaveKey = System.IO.Path.Combine(RegistryPath, "AutoSave");
-            RegistryHelper.SetValue(Registry.CurrentUser, StatusPath, PrinterName, 1);
             string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-            RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "Enabled", "True");
-            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "OpenViewer", "False");
-            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "SkipPrintDialog", "True");
-            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<InputFilename>");
-            RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", desktop);
+            _ = RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "Enabled", "True");
+            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "OpenViewer", "False");
+            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "SkipPrintDialog", "True");
+            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<InputFilename>");
+            _ = RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", desktop);
+            _ = RegistryHelper.SetValue(Registry.CurrentUser, PrintHandler.StatusPath, PrinterName, 1);
         }
 
 
@@ -32,29 +29,18 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
         {
             string autoSaveKey = System.IO.Path.Combine(RegistryPath, "AutoSave");
             string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-            //RegistryHelper.SetValue(Registry.CurrentUser, StatusPath, PrinterName, 0);
-            RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", desktop);
+            _ = RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", desktop);
+            _ = RegistryHelper.SetValue(Registry.CurrentUser, PrintHandler.StatusPath, PrinterName, 0);
         }
 
 
         public override bool Print(Document doc, string folder, SheetModel model)
         {
             string autoSaveKey = System.IO.Path.Combine(RegistryPath, "AutoSave");
-            RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", folder.Replace("\\", "\\\\"));
+            _ = RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", folder.Replace("\\", "\\\\"));
             return PrintHandler.PrintSheet(doc, folder, model);
         }
 
-
-        public override bool IsPrinterInstalled()
-        {
-            return base.IsPrinterInstalled();
-        }
-
-
-        public override bool IsPrinterEnabled()
-        {
-            return base.IsPrinterEnabled();
-        }
 
     }
 

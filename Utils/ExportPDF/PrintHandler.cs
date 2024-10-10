@@ -2,7 +2,6 @@
 using Microsoft.Win32;
 using RevitBIMTool.Model;
 using RevitBIMTool.Utils.ExportPDF.Printers;
-using RevitBIMTool.Utils.ExportPdfUtil.Printers;
 using RevitBIMTool.Utils.SystemHelpers;
 using Serilog;
 using System.IO;
@@ -254,7 +253,7 @@ internal static class PrintHandler
     public static bool ExportSheet(Document doc, string folder, SheetModel model)
     {
 #if R23
-        Log.Debug("Start internal export...");
+        Log.Debug("Start export to pdf...");
 
         PDFExportOptions option = new()
         {
@@ -270,7 +269,7 @@ internal static class PrintHandler
 
         if (doc.Export(folder, viewIds, option))
         {
-            Thread.Sleep(100);
+            model.TempPath = Path.Combine(folder, model.SheetName);
             return true;
         }
 #endif

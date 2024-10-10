@@ -1,7 +1,6 @@
 ﻿using Autodesk.Revit.DB;
 using Microsoft.Win32;
 using RevitBIMTool.Model;
-using RevitBIMTool.Utils.ExportPdfUtil.Printers;
 using RevitBIMTool.Utils.SystemHelpers;
 
 
@@ -11,14 +10,12 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
     {
         public override string RegistryPath => @"SOFTWARE\pdfforge\PDFCreator\Settings\ConversionProfiles\0";
         public override string PrinterName => "PDFCreator";
-        public string StatusPath => PrintHandler.StatusPath;
 
 
         public override void InitializePrinter()
         {
             string autoSave = System.IO.Path.Combine(RegistryPath, "AutoSave");
             string openViewerKey = System.IO.Path.Combine(RegistryPath, "OpenViewer");
-            RegistryHelper.SetValue(Registry.CurrentUser, StatusPath, PrinterName, 1);
             RegistryHelper.SetValue(Registry.CurrentUser, autoSave, "Enabled", "True");
             RegistryHelper.SetValue(Registry.CurrentUser, openViewerKey, "Enabled", "False");
             RegistryHelper.SetValue(Registry.CurrentUser, openViewerKey, "OpenWithPdfArchitect", "False");
@@ -31,16 +28,17 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "SkipPrintDialog", "True");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "Name", "<DefaultProfile>");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowProgress", "False");
+
+            RegistryHelper.SetValue(Registry.CurrentUser, PrintHandler.StatusPath, PrinterName, 1);
         }
 
 
         public override void ResetPrinterSettings()
         {
             string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-            //RegistryHelper.SetValue(Registry.CurrentUser, StatusPath, PrinterName, 0);
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "TargetDirectory", desktop);
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<Title>");
-            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowProgress", "True");
+            RegistryHelper.SetValue(Registry.CurrentUser, PrintHandler.StatusPath, PrinterName, 0);
         }
 
 
@@ -48,12 +46,6 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
         {
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "TargetDirectory", folder.Replace("\\", "\\\\"));
             return PrintHandler.PrintSheet(doc, folder, model);
-        }
-
-
-        public override bool IsPrinterInstalled()
-        {
-            return base.IsPrinterInstalled();
         }
 
     }
