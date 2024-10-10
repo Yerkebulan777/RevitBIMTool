@@ -6,7 +6,7 @@ using RevitBIMTool.Utils.SystemHelpers;
 
 namespace RevitBIMTool.Utils.ExportPDF.Printers
 {
-    internal sealed class InternalPrinter : PrinterControl
+    internal sealed class InternalRevitPrinter : PrinterControl
     {
         public override string RegistryPath => @"SOFTWARE\Autodesk\Revit";
         public override string PrinterName => "RevitInternalPrinter";

@@ -16,44 +16,41 @@ internal static class PrintHandler
 {
     public const string StatusPath = @"Printers\Settings\Wizard";
 
+
     public static bool TryGetAvailablePrinter(out PrinterControl availablePrinter)
     {
-        availablePrinter = null;
+        int counter = 0;
 
-        foreach (PrinterControl printer in GetInstalledPrinters())
+        while (true)
         {
-            if (GetPrinterStatus(printer, StatusPath) == 0)
+            counter++;
+
+            Thread.Sleep(counter * 1000);
+
+            foreach (PrinterControl print in GetPrinters())
             {
-                availablePrinter = printer;
-                return true;
+                if (print.IsPrinterInstalled() && print.IsPrinterEnabled())
+                {
+                    availablePrinter = print;
+                    return true;
+                }
             }
         }
-
-        return false;
     }
 
 
-    private static List<PrinterControl> GetInstalledPrinters()
+    private static List<PrinterControl> GetPrinters()
     {
         List<PrinterControl> printers =
         [
             new Pdf24Printer(),
-            new CreatorPrinter(),
             new ClawPdfPrinter(),
-            new InternalPrinter(),
+            new CreatorPrinter(),
+            new MicrosoftPrinter(),
+            new InternalRevitPrinter(),
         ];
 
-        List<PrinterControl> result = new(printers.Count);
-
-        foreach (PrinterControl printer in printers)
-        {
-            if (printer.IsPrinterInstalled())
-            {
-                result.Add(printer);
-            }
-        }
-
-        return result;
+        return printers;
     }
 
 
@@ -235,7 +232,7 @@ internal static class PrintHandler
             }
             finally
             {
-                Log.Debug("Reset printer settings");
+                Log.Debug("Reset print settings");
 
                 printer.ResetPrinterSettings();
 
