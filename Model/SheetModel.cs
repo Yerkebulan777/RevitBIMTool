@@ -1,6 +1,5 @@
 ﻿using Autodesk.Revit.DB;
-using RevitBIMTool.Utils;
-using System.IO;
+using RevitBIMTool.Utils.Common;
 using System.Text;
 using System.Text.RegularExpressions;
 using PaperSize = System.Drawing.Printing.PaperSize;
@@ -34,20 +33,17 @@ internal class SheetModel : IDisposable
     public object OrganizationGroupName { get; internal set; }
 
 
-    public static string GetSheetNumber(ViewSheet sequenceSheet)
+    public static string GetSheetNumber(ViewSheet sheet)
     {
-        string stringNumber = sequenceSheet?.SheetNumber.TrimStart('0');
+        string sheetNumber = StringHelper.ReplaceInvalidChars(sheet.SheetNumber);
 
-        if (!string.IsNullOrEmpty(stringNumber))
+        if (!string.IsNullOrWhiteSpace(sheetNumber))
         {
-            string invalidChars = new(Path.GetInvalidFileNameChars().Concat(Path.GetInvalidPathChars()).ToArray());
-            string escapedInvalidChars = Regex.Escape(invalidChars);
-            Regex regex = new($"(?<=\\d){escapedInvalidChars}");
-            stringNumber = regex.Replace(stringNumber, ".");
-
+            sheetNumber = sheetNumber.TrimStart('0');
+            sheetNumber = sheetNumber.TrimEnd('.');
         }
 
-        return stringNumber;
+        return sheetNumber.Trim();
     }
 
 
@@ -55,7 +51,9 @@ internal class SheetModel : IDisposable
     {
         Regex matchPrefix = new(@"^(\s*)");
         StringBuilder stringBuilder = new();
+
         BrowserOrganization organization = BrowserOrganization.GetCurrentBrowserOrganizationForSheets(doc);
+
         foreach (FolderItemInfo folderInfo in organization.GetFolderItems(viewSheet.Id))
         {
             if (folderInfo.IsValidObject)
@@ -74,12 +72,12 @@ internal class SheetModel : IDisposable
     {
         string sheetNumber = GetSheetNumber(ViewSheet);
         string groupName = GetOrganizationGroupName(doc, ViewSheet);
-        string shortName = projectName.Substring(0, Math.Min(30, projectName.Length));
         string sheetName = StringHelper.ReplaceInvalidChars(ViewSheet.Name);
+        projectName = projectName.Substring(0, Math.Min(30, projectName.Length));
 
         sheetName = string.IsNullOrWhiteSpace(groupName)
-            ? StringHelper.NormalizeLength($"{shortName} - Лист - {sheetNumber} - {sheetName}")
-            : StringHelper.NormalizeLength($"{shortName} - Лист - {groupName}-{sheetNumber} - {sheetName}");
+            ? StringHelper.NormalizeLength($"{projectName} - Лист - {sheetNumber} - {sheetName}")
+            : StringHelper.NormalizeLength($"{projectName} - Лист - {groupName}-{sheetNumber} - {sheetName}");
 
         OrganizationGroupName = groupName;
 

@@ -1,20 +1,31 @@
 ﻿using System.IO;
+using System.Text;
 
 
-namespace RevitBIMTool.Utils;
+namespace RevitBIMTool.Utils.Common;
 internal static class StringHelper
 {
     public static string ReplaceInvalidChars(string textLine)
     {
-        if (!string.IsNullOrEmpty(textLine))
+        char[] invalidChars = Path.GetInvalidFileNameChars();
+
+        StringBuilder result = new(textLine.Length);
+
+        if (!string.IsNullOrWhiteSpace(textLine))
         {
-            textLine = string.Join(string.Empty, textLine.Split(Path.GetInvalidFileNameChars()));
             textLine = textLine.TrimEnd('_');
             textLine = textLine.Normalize();
-            textLine = textLine.Trim();
+
+            foreach (char c in textLine)
+            {
+                if (!invalidChars.Contains(c))
+                {
+                    _ = result.Append(c);
+                }
+            }
         }
 
-        return textLine;
+        return result.ToString();
     }
 
 
@@ -22,10 +33,11 @@ internal static class StringHelper
     {
         if (!string.IsNullOrEmpty(textLine) && textLine.Length > maxLenght)
         {
-            int strIndex = textLine.LastIndexOf(' ', maxLenght);
-            if (strIndex != -1)
+            int emptyIndex = textLine.LastIndexOf(string.Empty, maxLenght);
+
+            if (emptyIndex != -1)
             {
-                textLine = $"{textLine.Substring(0, maxLenght).Trim()}...";
+                textLine = $"{textLine.Substring(0, emptyIndex).Trim()}...";
             }
         }
 
