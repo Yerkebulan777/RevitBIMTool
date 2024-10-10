@@ -1,7 +1,6 @@
 ﻿using Autodesk.Revit.DB;
-using Microsoft.Win32;
 using RevitBIMTool.Model;
-using RevitBIMTool.Utils.SystemHelpers;
+using Serilog;
 
 
 namespace RevitBIMTool.Utils.ExportPDF.Printers
@@ -14,13 +13,13 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
 
         public override void InitializePrinter()
         {
-            _ = RegistryHelper.SetValue(Registry.CurrentUser, PrintHandler.StatusPath, "RevitInternalPrinter", 1);
+
         }
 
 
         public override void ResetPrinterSettings()
         {
-            _ = RegistryHelper.SetValue(Registry.CurrentUser, PrintHandler.StatusPath, "RevitInternalPrinter", 0);
+
         }
 
 
@@ -32,7 +31,14 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
 
         public override bool IsAvailable()
         {
-            return RevitBIMToolApp.Version == "2023";
+            if (RevitBIMToolApp.Version == "2023")
+            {
+                Log.Debug($"RevitInternalPrinter is available!");
+
+                return true;
+            }
+
+            return false;
         }
 
     }
