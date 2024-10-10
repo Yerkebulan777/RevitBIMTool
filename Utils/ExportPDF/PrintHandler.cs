@@ -69,11 +69,6 @@ internal static class PrintHandler
 
     private static void ResetAndApplyPrinterSettings(Document doc, string printerName)
     {
-        if (string.IsNullOrEmpty(printerName))
-        {
-            throw new ArgumentException("PrinterName");
-        }
-
         PrintManager printManager = doc.PrintManager;
 
         List<PrintSetting> printSettings = RevitPrinterUtil.GetPrintSettings(doc);
@@ -84,7 +79,11 @@ internal static class PrintHandler
         {
             try
             {
-                printManager.SelectNewPrintDriver(printerName);
+                if (!string.IsNullOrEmpty(printerName))
+                {
+                    printManager.SelectNewPrintDriver(printerName);
+                }
+
                 printSettings.ForEach(set => doc.Delete(set.Id));
                 printManager.PrintRange = PrintRange.Current;
                 printManager.PrintToFile = true;
@@ -94,7 +93,6 @@ internal static class PrintHandler
             {
                 _ = trx.RollBack();
                 Log.Error(ex, $"Reset settings: {ex.Message}");
-                throw new Exception($"Reset settings: {ex.Message}");
             }
             finally
             {
