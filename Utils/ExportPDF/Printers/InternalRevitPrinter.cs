@@ -35,7 +35,6 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
             return RevitBIMToolApp.Version == "2023";
         }
 
-
     }
 
 }
