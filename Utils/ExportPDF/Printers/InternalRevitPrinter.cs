@@ -30,7 +30,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
         }
 
 
-        public override bool IsPrinterEnabled()
+        public override bool IsAvailable()
         {
             return RevitBIMToolApp.Version == "2023";
         }

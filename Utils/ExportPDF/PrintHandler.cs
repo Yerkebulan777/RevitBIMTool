@@ -31,7 +31,7 @@ internal static class PrintHandler
 
             foreach (PrinterControl print in GetPrinters())
             {
-                if (print.IsPrinterInstalled() && print.IsPrinterEnabled())
+                if (print.IsPrinterInstalled() && print.IsAvailable())
                 {
                     availablePrinter = print;
                     return true;

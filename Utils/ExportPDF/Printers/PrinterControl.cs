@@ -28,16 +28,13 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
         }
 
 
-        public virtual bool IsPrinterEnabled()
+        public virtual bool IsAvailable()
         {
             if (RegistryHelper.IsSubKeyExists(Registry.CurrentUser, RegistryPath))
             {
-                int value = Convert.ToInt32(RegistryHelper.GetValue(Registry.CurrentUser, PrintHandler.StatusPath, PrinterName));
-
-                if (value == 0)
+                if (0 == Convert.ToInt32(RegistryHelper.GetValue(Registry.CurrentUser, PrintHandler.StatusPath, PrinterName)))
                 {
                     Log.Debug($"{PrinterName} is available!");
-
                     return true;
                 }
             }
