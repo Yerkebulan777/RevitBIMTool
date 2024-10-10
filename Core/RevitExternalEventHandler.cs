@@ -41,7 +41,7 @@ namespace RevitBIMTool.Core
 
                     string result = handler.RunDocumentAction(uiapp, model, GeneralTaskHandler.RunTask);
 
-                    Log.Information($" \n {output} \n Result: {result}");
+                    Log.Information($" \n Result: {result} ");
 
                     if (RevitFileHelper.IsTimeOut(ref startTime))
                     {
