@@ -21,7 +21,9 @@ internal static class PrintHandler
     {
         int counter = 0;
 
-        while (true)
+        availablePrinter = null;
+
+        while (counter < 100)
         {
             counter++;
 
@@ -36,6 +38,8 @@ internal static class PrintHandler
                 }
             }
         }
+
+        return false;
     }
 
 

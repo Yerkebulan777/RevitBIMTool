@@ -3,7 +3,6 @@ using Microsoft.Win32;
 using RevitBIMTool.Model;
 using RevitBIMTool.Utils.SystemHelpers;
 using Serilog;
-using System.Diagnostics;
 using System.IO;
 
 

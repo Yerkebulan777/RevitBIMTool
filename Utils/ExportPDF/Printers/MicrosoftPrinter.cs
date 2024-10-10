@@ -8,7 +8,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
 {
     internal class MicrosoftPrinter : PrinterControl
     {
-        public override string RegistryPath => @"SOFTWARE\Autodesk\Revit";
+        public override string RegistryPath => @"Printers\Settings";
 
         public override string PrinterName => "Microsoft Print to PDF";
 
