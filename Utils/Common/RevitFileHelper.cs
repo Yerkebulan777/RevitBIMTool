@@ -4,17 +4,17 @@ using Serilog;
 using System.Diagnostics;
 
 
-namespace RevitBIMTool.Utils;
+namespace RevitBIMTool.Utils.Common;
 internal static class RevitFileHelper
 {
 
-    public static bool IsCountOut(ref int counter)
+    public static bool IsTimeOut(ref DateTime startTime, int timer = 100)
     {
-        Thread.Sleep(TimeSpan.FromSeconds(--counter));
+        TimeSpan duration = TimeSpan.FromMinutes(timer);
 
-        Log.Debug($"Current count: {counter}");
+        TimeSpan elapsedTime = DateTime.Now - startTime;
 
-        return counter == 0;
+        return elapsedTime > duration;
     }
 
 

@@ -1,6 +1,7 @@
 ﻿using Autodesk.Revit.UI;
 using RevitBIMTool.ExportHandlers;
 using RevitBIMTool.Utils;
+using RevitBIMTool.Utils.Common;
 using Serilog;
 using ServiceLibrary.Models;
 
@@ -9,7 +10,7 @@ namespace RevitBIMTool.Core
 {
     internal sealed class RevitExternalEventHandler : IExternalEventHandler
     {
-        private int counter;
+        private DateTime startTime;
         private readonly string versionNumber;
         private readonly ExternalEvent externalEvent;
 
@@ -17,7 +18,7 @@ namespace RevitBIMTool.Core
         public RevitExternalEventHandler(string version, int length)
         {
             externalEvent = ExternalEvent.Create(this);
-            counter = length >= 10 ? 10 : length;
+            startTime = DateTime.Now;
             versionNumber = version;
         }
 
@@ -42,7 +43,7 @@ namespace RevitBIMTool.Core
 
                     Log.Information($" \n {output} \n Result: {result}");
 
-                    if (RevitFileHelper.IsCountOut(ref counter))
+                    if (RevitFileHelper.IsTimeOut(ref startTime))
                     {
                         RevitFileHelper.CloseRevitApplication();
                     }

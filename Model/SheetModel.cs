@@ -93,16 +93,14 @@ internal class SheetModel : IDisposable
 
         if (double.TryParse(sheetDigits, out double number))
         {
+            Log.Debug($"{sheetNumber} = {sheetDigits} > {number}");
+
             if (!groupName.StartsWith("#") && number < 500)
             {
                 IsValid = ViewSheet.CanBePrinted;
                 StringNumber = sheetNumber;
                 DigitNumber = number;
-                return;
             }
-
-            Log.Warning($"Invalid sheet number: {sheetNumber} => {sheetDigits}");
- 
         }
     }
 
