@@ -48,8 +48,8 @@ internal static class PrintHandler
         List<PrinterControl> printers =
         [
             new Pdf24Printer(),
-            new ClawPdfPrinter(),
             new CreatorPrinter(),
+            new ClawPdfPrinter(),
             new MicrosoftPrinter(),
             new InternalRevitPrinter(),
         ];
@@ -253,6 +253,9 @@ internal static class PrintHandler
     {
 #if R23
         Log.Debug("Start export to pdf...");
+
+
+
 
         PDFExportOptions option = new()
         {
