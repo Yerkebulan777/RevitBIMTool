@@ -23,9 +23,9 @@ internal static class MergeHandler
 
         foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
         {
-            if (File.Exists(model.TempPath))
+            if (File.Exists(model.SheetPath))
             {
-                PdfReader reader = new(model.TempPath);
+                PdfReader reader = new(model.SheetPath);
 
                 reader.ConsolidateNamedDestinations();
 
@@ -57,7 +57,7 @@ internal static class MergeHandler
 
                     if (deleted)
                     {
-                        File.Delete(model.TempPath);
+                        File.Delete(model.SheetPath);
                     }
                 }
             }

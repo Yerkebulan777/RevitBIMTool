@@ -165,6 +165,8 @@ internal static class PrintHandler
 
                     if (model.IsValid)
                     {
+                        model.IsColorEnabled = isColorEnabled;
+
                         string formatName = model.GetFormatNameWithSheetOrientation();
 
                         if (!sheetPrintData.TryGetValue(formatName, out List<SheetModel> sheetList))
@@ -271,7 +273,7 @@ internal static class PrintHandler
 
         if (doc.Export(folder, viewIds, option))
         {
-            model.TempPath = Path.Combine(folder, model.SheetName);
+            model.SheetPath = Path.Combine(folder, model.SheetName);
             return true;
         }
 #endif
@@ -295,7 +297,7 @@ internal static class PrintHandler
         {
             if (RevitPathHelper.AwaitExistsFile(filePath))
             {
-                model.TempPath = filePath;
+                model.SheetPath = filePath;
                 return true;
             }
         }

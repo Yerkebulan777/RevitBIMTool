@@ -30,9 +30,10 @@ internal class SheetModel : IDisposable
     public string SheetName { get; private set; }
     public double DigitNumber { get; private set; }
     public string StringNumber { get; private set; }
-    public string TempPath { get; internal set; }
-    public string PaperName => SheetPapeSize.PaperName;
     public object OrganizationGroupName { get; internal set; }
+    public string PaperName => SheetPapeSize.PaperName;
+    public bool IsColorEnabled { get; internal set; }
+    public string SheetPath { get; internal set; }
 
 
     public static string GetSheetNumber(ViewSheet sheet)
