@@ -101,7 +101,7 @@ internal class SheetModel : IDisposable
                 return;
             }
 
-            Log.Warning($"Invalid digit: {sheetDigits}");
+            Log.Warning($"Invalid sheet number: {sheetNumber} => {sheetDigits}");
  
         }
     }
