@@ -35,7 +35,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
             {
                 Log.Debug($"RevitInternalPrinter is available!");
 
-                return true;
+                return false;
             }
 
             return false;
