@@ -39,9 +39,9 @@ internal sealed class ExportToPDFHandler
                 RevitPathHelper.EnsureDirectory(folder);
                 RevitPathHelper.EnsureDirectory(exportDirectory);
 
-                Log.Information($"Total valid sheets: {sheetData.Values.Count}");
-
                 string exportPath = Path.Combine(exportDirectory, $"{revitFileName}.pdf");
+
+                Log.Information($"Total valid sheets: {sheetData.Values.Sum(lst => lst.Count)}");
 
                 sheetModels = PrintHandler.PrintSheetData(uidoc.Document, printer, sheetData, folder);
 
