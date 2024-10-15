@@ -1,6 +1,5 @@
 ﻿using Autodesk.Revit.DB;
 using RevitBIMTool.Model;
-using Serilog;
 
 
 namespace RevitBIMTool.Utils.ExportPDF.Printers
@@ -31,14 +30,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
 
         public override bool IsAvailable()
         {
-            if (RevitBIMToolApp.Version == "2023")
-            {
-                Log.Debug($"RevitInternalPrinter is available!");
-
-                return false;
-            }
-
-            return false;
+            return int.TryParse(RevitBIMToolApp.Version, out int version) && version >= 2020;
         }
 
     }

@@ -50,7 +50,7 @@ internal static class PrintHandler
             new Pdf24Printer(),
             new CreatorPrinter(),
             new ClawPdfPrinter(),
-            new MicrosoftPrinter(),
+
             new InternalRevitPrinter(),
         ];
 
