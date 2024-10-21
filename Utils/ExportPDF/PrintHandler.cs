@@ -17,13 +17,13 @@ internal static class PrintHandler
     public const string StatusPath = @"Printers\Settings\Wizard";
 
 
-    public static bool TryGetAvailablePrinter(out PrinterControl availablePrinter)
+    public static bool TryGetAvailablePrinter(out PrinterControl availablePrinter, int limit = 100)
     {
         int counter = 0;
 
         availablePrinter = null;
 
-        while (counter < 100)
+        while (counter < limit)
         {
             counter++;
 
