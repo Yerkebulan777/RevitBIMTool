@@ -142,11 +142,8 @@ internal static class RegistryHelper
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"Failed creating registry regKey {path}: {ex.Message}");
+                throw new Exception($"Failed to create registry parameter {path}: {ex.Message}");
             }
-
-            throw new Exception("Failed to create registry parameter");
-
         }
     }
 
