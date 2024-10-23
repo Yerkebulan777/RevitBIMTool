@@ -22,20 +22,40 @@ internal static class RegistryHelper
     }
 
 
-    public static bool IsSubKeyExists(RegistryKey root, string registryPath)
+    public static bool IsSubKeyExists(RegistryKey rootKey, string registryPath)
     {
         try
         {
-            RegistryHive registryHive = GetRegistryHive(root);
-            using RegistryKey regKey = RegistryKey.OpenBaseKey(registryHive, RegistryView.Default);
-            using RegistryKey registryKey = regKey.OpenSubKey(registryPath);
+            using RegistryKey registryKey = rootKey.OpenSubKey(registryPath);
+
             return registryKey != null;
         }
         catch (Exception ex)
         {
             Log.Error(ex, ex.Message);
-            return false;
         }
+
+        return false;
+    }
+
+
+    public static bool IsParameterExists(RegistryKey rootKey, string registryPath, string valueName)
+    {
+        try
+        {
+            using RegistryKey registryKey = rootKey.OpenSubKey(registryPath);
+
+            if (registryKey != null)
+            {
+                return registryKey.GetValue(valueName) != null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, ex.Message);
+        }
+
+        return false;
     }
 
 
