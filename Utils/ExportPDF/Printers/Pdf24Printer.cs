@@ -34,6 +34,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
             _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShellCmd", string.Empty);
             _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "(Default)", string.Empty);
             _ = RegistryHelper.SetValue(Registry.CurrentUser, PrintHandler.StatusPath, PrinterName, 0);
+            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveFilename", "$fileName");
         }
 
 
