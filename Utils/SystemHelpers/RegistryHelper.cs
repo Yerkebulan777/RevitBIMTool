@@ -10,40 +10,17 @@ internal static class RegistryHelper
     private static readonly IntPtr HWND_BROADCAST = new(0xFFFF);
 
 
-    public static bool IsSubKeyExists(RegistryKey rootKey, string registryPath)
+    public static bool IsKeyExists(RegistryKey rootKey, string path)
     {
-        try
-        {
-            using RegistryKey registryKey = rootKey.OpenSubKey(registryPath);
-
-            return registryKey != null;
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, ex.Message);
-        }
-
-        return false;
+        using RegistryKey registryKey = rootKey.OpenSubKey(path);
+        return registryKey != null;
     }
 
 
-    public static bool IsParameterExists(RegistryKey rootKey, string registryPath, string valueName)
+    public static bool IsParameterExists(RegistryKey rootKey, string path, string name)
     {
-        try
-        {
-            using RegistryKey registryKey = rootKey.OpenSubKey(registryPath);
-
-            if (registryKey != null)
-            {
-                return registryKey.GetValue(valueName) != null;
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, ex.Message);
-        }
-
-        return false;
+        using RegistryKey registryKey = rootKey.OpenSubKey(path);
+        return registryKey?.GetValue(name) != null;
     }
 
 
@@ -73,23 +50,35 @@ internal static class RegistryHelper
         {
             try
             {
-                using RegistryKey regKey = rootKey.OpenSubKey(path, true);
+                int retryCount = 0;
 
-                if (regKey is null)
+                while (retryCount < 10)
                 {
-                    throw new InvalidOperationException($"Not defined key {path}");
-                }
+                    retryCount++;
 
-                if (value is int intValue)
-                {
-                    regKey.SetValue(name, intValue, RegistryValueKind.DWord);
-                }
-                else if (value is string strValue)
-                {
-                    regKey.SetValue(name, strValue, RegistryValueKind.String);
-                }
+                    Thread.Sleep(100);
 
-                regKey.Flush();
+                    if (IsParameterExists(rootKey, path, name))
+                    {
+                        using RegistryKey regKey = rootKey.OpenSubKey(path, true);
+
+                        if (regKey is not null)
+                        {
+                            if (value is int intValue)
+                            {
+                                regKey.SetValue(name, intValue, RegistryValueKind.DWord);
+                            }
+                            else if (value is string strValue)
+                            {
+                                regKey.SetValue(name, strValue, RegistryValueKind.String);
+                            }
+
+                            regKey.Flush();
+
+                            return;
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {
