@@ -27,7 +27,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
 
             bool result = RegistryHelper.IsSubKeyExists(Registry.LocalMachine, Path.Combine(printersPath, PrinterName));
 
-            Log.Debug($"Is {PrinterName} printer installed {result}");
+            Log.Debug($"Is {PrinterName} printer installed {result}!");
 
             return result;
 
@@ -40,7 +40,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
             {
                 if (0 == Convert.ToInt32(RegistryHelper.GetValue(Registry.CurrentUser, PrintHandler.StatusPath, PrinterName)))
                 {
-                    Log.Debug($"{PrinterName} is available!");
+                    Log.Debug($"{PrinterName} printer is available!");
                     return true;
                 }
             }
