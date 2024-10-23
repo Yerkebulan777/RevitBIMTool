@@ -124,28 +124,33 @@ internal static class RegistryHelper
             {
                 using RegistryKey regKey = rootKey.CreateSubKey(path);
 
-                object currentValue = regKey?.GetValue(name);
-
-                if (currentValue is null)
+                if (regKey is not null)
                 {
-                    if (value is int intValue)
+                    object currentValue = regKey.GetValue(name);
+
+                    if (currentValue is null)
                     {
-                        regKey.SetValue(name, intValue, RegistryValueKind.DWord);
+                        if (value is int intValue)
+                        {
+                            regKey.SetValue(name, intValue, RegistryValueKind.DWord);
+                        }
+                        else if (value is string strValue)
+                        {
+                            regKey.SetValue(name, strValue, RegistryValueKind.String);
+                        }
                     }
-                    else if (value is string strValue)
-                    {
-                        regKey.SetValue(name, strValue, RegistryValueKind.String);
-                    }
+
+                    regKey.Flush();
+
+                    return ApplyRegistryChanges();
                 }
-
-                regKey?.Flush();
-
-                return ApplyRegistryChanges();
             }
             catch (Exception ex)
             {
                 throw new Exception($"Failed to create registry parameter {path}: {ex.Message}");
             }
+
+            return false;
         }
     }
 
