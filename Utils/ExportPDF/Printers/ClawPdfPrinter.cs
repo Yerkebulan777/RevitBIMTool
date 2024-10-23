@@ -15,32 +15,31 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
         public override void InitializePrinter()
         {
             string autoSaveKey = System.IO.Path.Combine(RegistryPath, "AutoSave");
-            _ = RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "Enabled", "True");
-            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "OpenViewer", "False");
-            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowProgress", "False");
-            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "SkipPrintDialog", "True");
-            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<InputFilename>");
-            _ = RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", "<InputFilePath>");
-            _ = RegistryHelper.SetValue(Registry.CurrentUser, PrintHandler.StatusPath, PrinterName, 1);
+            RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "Enabled", "True");
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "OpenViewer", "False");
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowProgress", "False");
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "SkipPrintDialog", "True");
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<InputFilename>");
+            RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", "<InputFilePath>");
+            RegistryHelper.SetValue(Registry.CurrentUser, PrintHandler.StatusPath, PrinterName, 1);
         }
 
 
         public override void ResetPrinterSettings()
         {
-            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "OpenViewer", "True");
-            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowProgress", "True");
-            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<Title>");
-            _ = RegistryHelper.SetValue(Registry.CurrentUser, PrintHandler.StatusPath, PrinterName, 0);
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "OpenViewer", "True");
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowProgress", "True");
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<Title>");
+            RegistryHelper.SetValue(Registry.CurrentUser, PrintHandler.StatusPath, PrinterName, 0);
         }
 
 
         public override bool Print(Document doc, string folder, SheetModel model)
         {
             string autoSaveKey = System.IO.Path.Combine(RegistryPath, "AutoSave");
-            _ = RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", folder.Replace("\\", "\\\\"));
+            RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", folder.Replace("\\", "\\\\"));
             return PrintHandler.PrintSheet(doc, folder, model);
         }
-
 
     }
 

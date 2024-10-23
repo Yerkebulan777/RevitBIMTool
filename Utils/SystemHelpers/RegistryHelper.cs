@@ -39,11 +39,11 @@ internal static class RegistryHelper
     }
 
 
-    public static object GetValue(RegistryKey root, string path, string name)
+    public static object GetValue(RegistryKey rootKey, string path, string name)
     {
         try
         {
-            using RegistryKey regKey = root.OpenSubKey(path);
+            using RegistryKey regKey = rootKey.OpenSubKey(path);
 
             if (regKey is not null)
             {
@@ -59,35 +59,29 @@ internal static class RegistryHelper
     }
 
 
-    public static object SetValue(RegistryKey root, string path, string name, object value)
+    public static void SetValue(RegistryKey rootKey, string name, string path, object value)
     {
-        object result = null;
-
-        lock (root)
+        lock (rootKey)
         {
             try
             {
-                using RegistryKey key = root.OpenSubKey(path, true) ?? root.CreateSubKey(path);
+                using RegistryKey regKey = rootKey.OpenSubKey(path, true);
 
-                result = key.GetValue(name);
-
-                if (result is null || result != value)
+                if (value is int intValue)
                 {
-                    if (value is int intValue)
-                    {
-                        key.SetValue(name, intValue, RegistryValueKind.DWord);
-                    }
-                    else if (value is string strValue)
-                    {
-                        key.SetValue(name, strValue, RegistryValueKind.String);
-                    }
-                    
-                    key.Flush();
+                    regKey.SetValue(name, intValue, RegistryValueKind.DWord);
                 }
+                else if (value is string strValue)
+                {
+                    regKey.SetValue(name, strValue, RegistryValueKind.String);
+                }
+
+                regKey.Flush();
+
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"SetValue parameter in {path} {ex.Message}");
+                Log.Error(ex, $"Failed to set registry value: {name}, {ex.Message}");
             }
             finally
             {
@@ -97,8 +91,44 @@ internal static class RegistryHelper
                 }
             }
         }
+    }
 
-        return result;
+
+    public static bool CreateKey(RegistryKey rootKey, string path, string name, object value)
+    {
+        lock (rootKey)
+        {
+            try
+            {
+                using RegistryKey regKey = rootKey.CreateSubKey(path);
+
+                object currentValue = regKey.GetValue(name);
+
+                if (currentValue == null)
+                {
+                    if (value is int intValue)
+                    {
+                        regKey.SetValue(name, intValue, RegistryValueKind.DWord);
+                    }
+                    else if (value is string strValue)
+                    {
+                        regKey.SetValue(name, strValue, RegistryValueKind.String);
+                    }
+
+                    if (ApplyRegistryChanges())
+                    {
+                        regKey.Flush();
+                    }
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"Failed creating registry regKey {path}: {ex.Message}");
+                return false;
+            }
+        }
     }
 
 
