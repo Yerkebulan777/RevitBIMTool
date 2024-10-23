@@ -87,13 +87,16 @@ internal static class RegistryHelper
             {
                 using RegistryKey regKey = rootKey.OpenSubKey(path, true);
 
-                if (value is int intValue)
+                if (regKey is not null)
                 {
-                    regKey.SetValue(name, intValue, RegistryValueKind.DWord);
-                }
-                else if (value is string strValue)
-                {
-                    regKey.SetValue(name, strValue, RegistryValueKind.String);
+                    if (value is int intValue)
+                    {
+                        regKey.SetValue(name, intValue, RegistryValueKind.DWord);
+                    }
+                    else if (value is string strValue)
+                    {
+                        regKey.SetValue(name, strValue, RegistryValueKind.String);
+                    }
                 }
 
                 regKey.Flush();
