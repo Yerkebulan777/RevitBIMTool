@@ -9,18 +9,6 @@ internal static class RegistryHelper
     private static readonly uint WM_SETTINGCHANGE = 26;
     private static readonly IntPtr HWND_BROADCAST = new(0xFFFF);
 
-    private static RegistryHive GetRegistryHive(RegistryKey root)
-    {
-        return root.Name switch
-        {
-            "HKEY_USERS" => RegistryHive.Users,
-            "HKEY_CURRENT_USER" => RegistryHive.CurrentUser,
-            "HKEY_CLASSES_ROOT" => RegistryHive.ClassesRoot,
-            "HKEY_CURRENT_CONFIG" => RegistryHive.CurrentConfig,
-            _ => RegistryHive.LocalMachine
-        };
-    }
-
 
     public static bool IsSubKeyExists(RegistryKey rootKey, string registryPath)
     {
@@ -89,7 +77,7 @@ internal static class RegistryHelper
 
                 if (regKey is null)
                 {
-                    throw new InvalidOperationException(path);
+                    throw new InvalidOperationException($"Not defined key {path}");
                 }
 
                 if (value is int intValue)
