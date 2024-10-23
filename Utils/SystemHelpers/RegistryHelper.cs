@@ -79,7 +79,7 @@ internal static class RegistryHelper
     }
 
 
-    public static void SetValue(RegistryKey rootKey, string name, string path, object value)
+    public static void SetValue(RegistryKey rootKey, string path, string name, object value)
     {
         lock (rootKey)
         {
@@ -87,19 +87,21 @@ internal static class RegistryHelper
             {
                 using RegistryKey regKey = rootKey.OpenSubKey(path, true);
 
-                if (regKey is not null)
+                if (regKey is null)
                 {
-                    if (value is int intValue)
-                    {
-                        regKey.SetValue(name, intValue, RegistryValueKind.DWord);
-                    }
-                    else if (value is string strValue)
-                    {
-                        regKey.SetValue(name, strValue, RegistryValueKind.String);
-                    }
-
-                    regKey.Flush();
+                    throw new InvalidOperationException(path);
                 }
+
+                if (value is int intValue)
+                {
+                    regKey.SetValue(name, intValue, RegistryValueKind.DWord);
+                }
+                else if (value is string strValue)
+                {
+                    regKey.SetValue(name, strValue, RegistryValueKind.String);
+                }
+
+                regKey.Flush();
             }
             catch (Exception ex)
             {
