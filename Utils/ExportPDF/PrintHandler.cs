@@ -14,7 +14,8 @@ using PrintRange = Autodesk.Revit.DB.PrintRange;
 namespace RevitBIMTool.Utils.ExportPDF;
 internal static class PrintHandler
 {
-    public const string StatusPath = @"Printers\Settings\Wizard";
+    // Компьютер\HKEY_CURRENT_USER\Printers
+    public const string StatusPath = @"Printers";
 
 
     public static bool TryGetAvailablePrinter(out PrinterControl availablePrinter, int limit = 100)
@@ -255,9 +256,6 @@ internal static class PrintHandler
     {
 #if R23
         Log.Debug("Start export to pdf...");
-
-
-
 
         PDFExportOptions option = new()
         {
