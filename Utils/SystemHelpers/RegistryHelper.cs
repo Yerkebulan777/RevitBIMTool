@@ -124,7 +124,7 @@ internal static class RegistryHelper
 
                 object currentValue = regKey.GetValue(name);
 
-                if (currentValue == null)
+                if (currentValue is null)
                 {
                     if (value is int intValue)
                     {
