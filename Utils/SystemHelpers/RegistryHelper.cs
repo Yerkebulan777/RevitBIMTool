@@ -144,6 +144,8 @@ internal static class RegistryHelper
             {
                 throw new Exception($"Failed to create registry parameter {path}: {ex.Message}");
             }
+
+            return false;
         }
     }
 
