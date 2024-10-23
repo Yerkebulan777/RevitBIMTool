@@ -115,19 +115,16 @@ internal static class RegistryHelper
                         regKey.SetValue(name, strValue, RegistryValueKind.String);
                     }
 
-                    if (ApplyRegistryChanges())
-                    {
-                        regKey.Flush();
-                    }
-                }
+                    regKey.Flush();
 
-                return true;
+                    return ApplyRegistryChanges();
+                }
             }
             catch (Exception ex)
             {
                 Log.Error(ex, $"Failed creating registry regKey {path}: {ex.Message}");
-                return false;
             }
+            return false;
         }
     }
 

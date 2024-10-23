@@ -63,15 +63,18 @@ internal static class PrintHandler
     {
         int status = 0;
 
-        string name = printer.PrinterName;
+        string paramName = printer.PrinterName;
 
         if (RegistryHelper.IsSubKeyExists(Registry.CurrentUser, statusPath))
         {
-            status = Convert.ToInt32(RegistryHelper.GetValue(Registry.CurrentUser, statusPath, name));
+            status = Convert.ToInt32(RegistryHelper.GetValue(Registry.CurrentUser, statusPath, paramName));
         }
         else
         {
-            RegistryHelper.SetValue(Registry.CurrentUser, statusPath, name, 0);
+            if (RegistryHelper.CreateKey(Registry.CurrentUser, statusPath, paramName, 0))
+            {
+                Log.Debug($"Created status parameter {paramName} with value {0}");
+            }
         }
 
         return status;
