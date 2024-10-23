@@ -114,7 +114,7 @@ internal static class RegistryHelper
     }
 
 
-    public static bool CreateKey(RegistryKey rootKey, string path, string name, object value)
+    public static bool CreateValue(RegistryKey rootKey, string path, string name, object value)
     {
         lock (rootKey)
         {

@@ -26,7 +26,7 @@ internal static class PrintHandler
         {
             status = Convert.ToInt32(RegistryHelper.GetValue(Registry.CurrentUser, StatusPath, printer.PrinterName));
         }
-        else if (RegistryHelper.CreateKey(Registry.CurrentUser, StatusPath, printer.PrinterName, 0))
+        else if (RegistryHelper.CreateValue(Registry.CurrentUser, StatusPath, printer.PrinterName, 0))
         {
             Log.Debug($"Created status parameter {printer.PrinterName} with value {0}");
         }
