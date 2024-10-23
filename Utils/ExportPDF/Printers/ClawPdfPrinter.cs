@@ -17,6 +17,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
             string autoSaveKey = System.IO.Path.Combine(RegistryPath, "AutoSave");
             _ = RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "Enabled", "True");
             _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "OpenViewer", "False");
+            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowProgress", "False");
             _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "SkipPrintDialog", "True");
             _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<InputFilename>");
             _ = RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", "<InputFilePath>");
@@ -26,6 +27,9 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
 
         public override void ResetPrinterSettings()
         {
+            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "OpenViewer", "True");
+            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowProgress", "True");
+            _ = RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<Title>");
             _ = RegistryHelper.SetValue(Registry.CurrentUser, PrintHandler.StatusPath, PrinterName, 0);
         }
 
