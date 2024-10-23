@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 namespace RevitBIMTool.Utils.SystemHelpers;
 internal static class RegistryHelper
 {
+    private const int maxRetries = 10;
     private static readonly uint WM_SETTINGCHANGE = 26;
     private static readonly IntPtr HWND_BROADCAST = new(0xFFFF);
 
@@ -13,14 +14,29 @@ internal static class RegistryHelper
     public static bool IsKeyExists(RegistryKey rootKey, string path)
     {
         using RegistryKey registryKey = rootKey.OpenSubKey(path);
-        return registryKey != null;
+
+        if (registryKey is null)
+        {
+            Thread.Sleep(100);
+            return false;
+        }
+
+        return true;
     }
 
 
-    public static bool IsParameterExists(RegistryKey rootKey, string path, string name)
+    public static bool IsValueExists(RegistryKey rootKey, string path, string name)
     {
         using RegistryKey registryKey = rootKey.OpenSubKey(path);
-        return registryKey?.GetValue(name) != null;
+        object value = registryKey?.GetValue(name);
+
+        if (value is null)
+        {
+            Thread.Sleep(100);
+            return false;
+        }
+
+        return true;
     }
 
 
@@ -52,33 +68,24 @@ internal static class RegistryHelper
             {
                 int retryCount = 0;
 
-                while (retryCount < 10)
+                while (retryCount < maxRetries)
                 {
                     retryCount++;
 
-                    Thread.Sleep(100);
-
-                    if (IsParameterExists(rootKey, path, name))
+                    if (IsValueExists(rootKey, path, name))
                     {
                         using RegistryKey regKey = rootKey.OpenSubKey(path, true);
 
-                        if (regKey is not null)
+                        if (regKey != null)
                         {
-                            if (value is int intValue)
-                            {
-                                regKey.SetValue(name, intValue, RegistryValueKind.DWord);
-                            }
-                            else if (value is string strValue)
-                            {
-                                regKey.SetValue(name, strValue, RegistryValueKind.String);
-                            }
-
+                            SetRegistryValue(regKey, name, value);
                             regKey.Flush();
-
                             return;
                         }
                     }
                 }
+
+                throw new InvalidOperationException($"Failed to set registry value: {name}");
             }
             catch (Exception ex)
             {
@@ -91,6 +98,23 @@ internal static class RegistryHelper
                     Thread.Sleep(100);
                 }
             }
+        }
+    }
+
+
+    private static void SetRegistryValue(RegistryKey regKey, string name, object value)
+    {
+        if (value is int intValue)
+        {
+            regKey.SetValue(name, intValue, RegistryValueKind.DWord);
+        }
+        else if (value is string strValue)
+        {
+            regKey.SetValue(name, strValue, RegistryValueKind.String);
+        }
+        else
+        {
+            throw new ArgumentException($"Unsupported value type: {value.GetType()}");
         }
     }
 

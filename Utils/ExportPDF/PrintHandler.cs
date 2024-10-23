@@ -22,7 +22,7 @@ internal static class PrintHandler
     {
         int status = 0;
 
-        if (RegistryHelper.IsParameterExists(Registry.CurrentUser, StatusPath, printer.PrinterName))
+        if (RegistryHelper.IsValueExists(Registry.CurrentUser, StatusPath, printer.PrinterName))
         {
             status = Convert.ToInt32(RegistryHelper.GetValue(Registry.CurrentUser, StatusPath, printer.PrinterName));
         }
