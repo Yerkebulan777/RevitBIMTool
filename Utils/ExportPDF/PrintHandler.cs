@@ -18,6 +18,25 @@ internal static class PrintHandler
     public const string StatusPath = @"Printers";
 
 
+    public static int GetPrinterStatus(PrinterControl printer)
+    {
+        int status = 0;
+
+        string paramName = printer.PrinterName;
+
+        if (RegistryHelper.IsSubKeyExists(Registry.CurrentUser, StatusPath))
+        {
+            status = Convert.ToInt32(RegistryHelper.GetValue(Registry.CurrentUser, StatusPath, paramName));
+        }
+        else if (RegistryHelper.CreateKey(Registry.CurrentUser, StatusPath, paramName, 0))
+        {
+            Log.Debug($"Created status parameter {paramName} with value {0}");
+        }
+
+        return status;
+    }
+
+
     public static bool TryGetAvailablePrinter(out PrinterControl availablePrinter, int limit = 100)
     {
         int counter = 0;
@@ -59,26 +78,7 @@ internal static class PrintHandler
     }
 
 
-    private static int GetPrinterStatus(PrinterControl printer, string statusPath)
-    {
-        int status = 0;
 
-        string paramName = printer.PrinterName;
-
-        if (RegistryHelper.IsSubKeyExists(Registry.CurrentUser, statusPath))
-        {
-            status = Convert.ToInt32(RegistryHelper.GetValue(Registry.CurrentUser, statusPath, paramName));
-        }
-        else
-        {
-            if (RegistryHelper.CreateKey(Registry.CurrentUser, statusPath, paramName, 0))
-            {
-                Log.Debug($"Created status parameter {paramName} with value {0}");
-            }
-        }
-
-        return status;
-    }
 
 
     private static void ResetAndApplyPrinterSettings(Document doc, string printerName)

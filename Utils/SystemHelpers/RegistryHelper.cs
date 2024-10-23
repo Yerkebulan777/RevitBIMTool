@@ -124,7 +124,9 @@ internal static class RegistryHelper
             {
                 Log.Error(ex, $"Failed creating registry regKey {path}: {ex.Message}");
             }
-            return false;
+
+            throw new Exception("Failed to create registry parameter");
+
         }
     }
 

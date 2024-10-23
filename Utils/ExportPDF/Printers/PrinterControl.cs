@@ -39,11 +39,10 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
         {
             if (IsPrinterInstalled())
             {
-                object result = RegistryHelper.GetValue(Registry.CurrentUser, PrintHandler.StatusPath, PrinterName);
-
-                if (0 == Convert.ToInt32(result))
+                if (0 == PrintHandler.GetPrinterStatus(this))
                 {
                     Log.Debug($"{PrinterName} printer is available!");
+
                     return true;
                 }
             }
