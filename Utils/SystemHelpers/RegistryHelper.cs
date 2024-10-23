@@ -136,18 +136,16 @@ internal static class RegistryHelper
                     {
                         regKey.SetValue(name, strValue, RegistryValueKind.String);
                     }
-
-                    regKey.Flush();
-
-                    return ApplyRegistryChanges();
                 }
+
+                regKey?.Flush();
+
+                return ApplyRegistryChanges();
             }
             catch (Exception ex)
             {
                 throw new Exception($"Failed to create registry parameter {path}: {ex.Message}");
             }
-
-            return false;
         }
     }
 
