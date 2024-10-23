@@ -97,10 +97,9 @@ internal static class RegistryHelper
                     {
                         regKey.SetValue(name, strValue, RegistryValueKind.String);
                     }
+
+                    regKey.Flush();
                 }
-
-                regKey.Flush();
-
             }
             catch (Exception ex)
             {
@@ -125,7 +124,7 @@ internal static class RegistryHelper
             {
                 using RegistryKey regKey = rootKey.CreateSubKey(path);
 
-                object currentValue = regKey.GetValue(name);
+                object currentValue = regKey?.GetValue(name);
 
                 if (currentValue is null)
                 {
