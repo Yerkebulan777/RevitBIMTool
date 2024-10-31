@@ -43,7 +43,6 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
             return PrintHandler.PrintSheet(doc, folder, model);
         }
 
-
     }
 
 }
