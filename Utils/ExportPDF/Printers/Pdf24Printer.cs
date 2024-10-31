@@ -29,12 +29,11 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
         {
             string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveDir", desktop);
-            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "Handler", "assistant");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveUseFileCmd", 0);
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShellCmd", string.Empty);
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "(Default)", string.Empty);
-            RegistryHelper.SetValue(Registry.CurrentUser, PrintHandler.StatusPath, PrinterName, 0);
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveFilename", "$fileName");
+            RegistryHelper.SetValue(Registry.CurrentUser, PrintHandler.StatusPath, PrinterName, 0);
         }
 
 
