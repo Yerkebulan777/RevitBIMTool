@@ -17,7 +17,6 @@ internal static class RegistryHelper
 
         if (registryKey is null)
         {
-            Thread.Sleep(100);
             return false;
         }
 
@@ -32,7 +31,6 @@ internal static class RegistryHelper
 
         if (value is null)
         {
-            Thread.Sleep(100);
             return false;
         }
 
@@ -64,57 +62,58 @@ internal static class RegistryHelper
     {
         lock (rootKey)
         {
-            try
+            int retryCount = 0;
+
+            while (retryCount < maxRetries)
             {
-                int retryCount = 0;
+                Thread.Sleep(100); retryCount++;
 
-                while (retryCount < maxRetries)
+                if (IsValueExists(rootKey, path, name))
                 {
-                    retryCount++;
+                    using RegistryKey regKey = rootKey.OpenSubKey(path, true);
 
-                    if (IsValueExists(rootKey, path, name))
+                    if (regKey != null)
                     {
-                        using RegistryKey regKey = rootKey.OpenSubKey(path, true);
-
-                        if (regKey != null)
-                        {
-                            SetRegistryValue(regKey, name, value);
-                            regKey.Flush();
-                            return;
-                        }
+                        SetRegistryValue(regKey, name, value);
+                        regKey.Flush();
+                        return;
                     }
                 }
+            }
 
-                throw new InvalidOperationException($"Failed to set registry value: {name}");
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, $"Failed to set registry value: {name}, {ex.Message}");
-            }
-            finally
-            {
-                if (ApplyRegistryChanges())
-                {
-                    Thread.Sleep(100);
-                }
-            }
+            throw new InvalidOperationException($"Failed to set registry value: {name}");
+
         }
     }
 
 
     private static void SetRegistryValue(RegistryKey regKey, string name, object value)
     {
-        if (value is int intValue)
+        try
         {
-            regKey.SetValue(name, intValue, RegistryValueKind.DWord);
+            if (value is int intValue)
+            {
+                regKey.SetValue(name, intValue, RegistryValueKind.DWord);
+            }
+            else if (value is string strValue)
+            {
+                regKey.SetValue(name, strValue, RegistryValueKind.String);
+            }
+            else
+            {
+                throw new ArgumentException($"Unsupported type: {value.GetType()}");
+            }
         }
-        else if (value is string strValue)
+        catch (Exception ex)
         {
-            regKey.SetValue(name, strValue, RegistryValueKind.String);
+            Log.Error(ex, $"Failed to set registry value: {name}, {ex.Message}");
         }
-        else
+        finally
         {
-            throw new ArgumentException($"Unsupported value type: {value.GetType()}");
+            if (ApplyRegistryChanges())
+            {
+                Thread.Sleep(100);
+            }
         }
     }
 
