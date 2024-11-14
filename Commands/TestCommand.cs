@@ -10,8 +10,6 @@ namespace RevitBIMTool.Commands
     [Transaction(TransactionMode.Manual)]
     public class AutomationCommand : IExternalCommand, IExternalCommandAvailability
     {
-        private string output = string.Empty;
-
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
             if (commandData.Application == null) { return Result.Cancelled; }
@@ -28,9 +26,9 @@ namespace RevitBIMTool.Commands
 
             uidoc.Selection.SetElementIds(elems.Select(elem => elem.Id).ToList());
 
-            output += $"\n Total elements count: {elems.Count()}";
+            string output = $"\n Total elements count: {elems.Count()}";
 
-            _ = TaskDialog.Show("RevitBIMTool", output);
+            TaskDialogResult dialog = TaskDialog.Show("RevitBIMTool", output);
 
             return Result.Succeeded;
         }

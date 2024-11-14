@@ -1,11 +1,9 @@
 ﻿using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using RevitBIMTool.Core;
 using RevitBIMTool.ExportHandlers;
 using RevitBIMTool.Utils;
 using System.Globalization;
-using System.Runtime.Remoting.Contexts;
 using System.Windows;
 
 
