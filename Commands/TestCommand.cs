@@ -8,7 +8,7 @@ using System.Globalization;
 namespace RevitBIMTool.Commands
 {
     [Transaction(TransactionMode.Manual)]
-    public class AutomationCommand : IExternalCommand, IExternalCommandAvailability
+    public class TestCommand : IExternalCommand, IExternalCommandAvailability
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
