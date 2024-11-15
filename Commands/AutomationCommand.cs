@@ -1,7 +1,6 @@
 ﻿using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using RevitBIMTool.Utils;
 using System.Globalization;
 
 
@@ -11,8 +10,6 @@ namespace RevitBIMTool.Commands;
 [Regeneration(RegenerationOption.Manual)]
 public class AutomationCommand : IExternalCommand, IExternalCommandAvailability
 {
-    private string output = string.Empty;
-
     public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
     {
         if (commandData.Application == null) { return Result.Cancelled; }
@@ -22,16 +19,6 @@ public class AutomationCommand : IExternalCommand, IExternalCommandAvailability
         UIApplication uiapp = commandData.Application;
         UIDocument uidoc = uiapp.ActiveUIDocument;
         Document doc = uidoc.Document;
-
-        const BuiltInCategory mechCat = BuiltInCategory.OST_MechanicalEquipment;
-
-        IList<Element> elems = CollectorHelper.GetInstancesByFamilyName(doc, mechCat, "Задание на отверстие").ToElements();
-
-        uidoc.Selection.SetElementIds(elems.Select(elem => elem.Id).ToList());
-
-        output += $"\n Total elements count: {elems.Count()}";
-
-        _ = TaskDialog.Show("RevitBIMTool", output);
 
         return Result.Succeeded;
     }
