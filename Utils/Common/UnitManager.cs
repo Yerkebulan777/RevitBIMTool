@@ -31,6 +31,13 @@ public sealed class UnitManager
     }
 
 
+    public static double FootToRoundedMm(double length, int baseVal = 50)
+    {
+        double millimeters = FootToMm(length);
+        return baseVal * Math.Round(millimeters / baseVal);
+    }
+
+
     public static double CubicFootToCubicMeter(double volume)
     {
         return volume * cubicFootToCubicMeter;

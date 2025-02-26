@@ -1,43 +1,53 @@
 ﻿namespace RevitBIMTool.Model
 {
     /// <summary>
-    /// Configuration parameters for lintel marking algorithm
+    /// Конфигурация алгоритма маркировки
     /// </summary>
-    public class MarkingConfig
+    public class MarkConfig
     {
         /// <summary>
-        /// Maximum allowed deviation in mm for merging elements
+        /// Максимальное допустимое отклонение для объединения групп (мм)
         /// </summary>
-        public int Threshold { get; set; } = 50;
+        public int Threshold { get; set; } = 150;
 
         /// <summary>
-        /// Minimum count of elements to consider a group as "large"
+        /// Минимальное количество элементов для "большой" группы
         /// </summary>
-        public int MinGroupSize { get; set; } = 3;
+        public int MinCount { get; set; } = 3;
 
         /// <summary>
-        /// Mark prefix (default: "ПР-")
+        /// Базовое значение для округления (мм)
         /// </summary>
-        public string MarkPrefix { get; set; } = "ПР-";
+        public int RoundBase { get; set; } = 50;
 
         /// <summary>
-        /// Parameter name for wall thickness
+        /// Префикс для марок
+        /// </summary>
+        public string Prefix { get; set; } = "ПР-";
+
+        /// <summary>
+        /// Имя параметра для толщины стены
         /// </summary>
         public string ThicknessParam { get; set; } = "Толщина стены";
 
         /// <summary>
-        /// Parameter name for opening width
+        /// Имя параметра для ширины проема
         /// </summary>
         public string WidthParam { get; set; } = "Ширина проема";
 
         /// <summary>
-        /// Parameter name for opening height
+        /// Имя параметра для высоты
         /// </summary>
         public string HeightParam { get; set; } = "Высота";
 
         /// <summary>
-        /// Parameter name for mark
+        /// Имя параметра для марки
         /// </summary>
         public string MarkParam { get; set; } = "BI_марка_изделия";
+
+        /// <summary>
+        /// Наименование семейства перемычек
+        /// </summary>
+        public string FamilyName { get; set; } = "Перемычка";
     }
 }

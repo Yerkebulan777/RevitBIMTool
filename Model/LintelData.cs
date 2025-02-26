@@ -7,42 +7,27 @@
     public class LintelData
     {
         /// <summary>
-        /// Wall thickness in mm
+        /// Округленная толщина стены
         /// </summary>
-        public double Thickness { get; set; }
+        public double ThicknessRound { get; set; }
 
         /// <summary>
-        /// Opening width in mm
+        /// Округленная ширина проема
         /// </summary>
-        public double Width { get; set; }
+        public double WidthRound { get; set; }
 
         /// <summary>
-        /// Opening height in mm
+        /// Округленная высота
         /// </summary>
-        public double Height { get; set; }
+        public double HeightRound { get; set; }
 
         /// <summary>
-        /// Rounded wall thickness in mm
-        /// </summary>
-        public int ThicknessRound { get; set; }
-
-        /// <summary>
-        /// Rounded opening width in mm
-        /// </summary>
-        public int WidthRound { get; set; }
-
-        /// <summary>
-        /// Rounded opening height in mm
-        /// </summary>
-        public int HeightRound { get; set; }
-
-        /// <summary>
-        /// Group identifier based on rounded dimensions
+        /// Идентификатор группы
         /// </summary>
         public string Group { get; set; }
 
         /// <summary>
-        /// Assigned mark
+        /// Присвоенная марка
         /// </summary>
         public string Mark { get; set; }
     }
