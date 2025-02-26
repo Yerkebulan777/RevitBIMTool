@@ -122,9 +122,9 @@ namespace RevitBIMTool.Core
                 // Сохраняем данные
                 LintelData data = new()
                 {
-                    ThicknessRound = thicknessRound,
-                    WidthRound = widthRound,
-                    HeightRound = heightRound,
+                    Thickness = thicknessRound,
+                    Height = heightRound,
+                    Width = widthRound,
                     Group = group
                 };
 

@@ -7,19 +7,19 @@
     public class LintelData
     {
         /// <summary>
-        /// Округленная толщина стены
+        /// Толщина стены
         /// </summary>
-        public double ThicknessRound { get; set; }
+        public double Thickness { get; set; }
 
         /// <summary>
-        /// Округленная ширина проема
+        /// Высота проема
         /// </summary>
-        public double WidthRound { get; set; }
+        public double Height { get; set; }
 
         /// <summary>
-        /// Округленная высота
+        /// Ширина проема
         /// </summary>
-        public double HeightRound { get; set; }
+        public double Width { get; set; }
 
         /// <summary>
         /// Идентификатор группы
