@@ -20,8 +20,6 @@ public class AutomationCommand : IExternalCommand, IExternalCommandAvailability
         UIDocument uidoc = uiapp.ActiveUIDocument;
         Document doc = uidoc.Document;
 
-
-
         return Result.Succeeded;
     }
 
