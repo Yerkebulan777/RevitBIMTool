@@ -38,7 +38,7 @@ namespace RevitBIMTool.Commands
                 LintelMarker marker = new LintelMarker(doc, config);
 
                 // Находим перемычки
-                List<FamilyInstance> lintels = marker.FindLintels(familyName);
+                List<FamilyInstance> lintels = marker.FindByFamilyName(familyName);
 
                 if (lintels.Count > 0)
                 {

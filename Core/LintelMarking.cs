@@ -39,7 +39,7 @@ namespace RevitBIMTool.Core
         /// Находит все перемычки в модели на основе наименования семейства
         /// </summary>
         /// <returns>Список перемычек</returns>
-        public List<FamilyInstance> FindLintels(string familyName)
+        public List<FamilyInstance> FindByFamilyName(string familyName)
         {
             BuiltInCategory bic = BuiltInCategory.OST_StructuralFraming;
 
@@ -54,6 +54,7 @@ namespace RevitBIMTool.Core
 
             return lintels;
         }
+
 
         /// <summary>
         /// Маркирует перемычки с унификацией похожих элементов
@@ -70,7 +71,7 @@ namespace RevitBIMTool.Core
             Dictionary<FamilyInstance, LintelData> data = GetLintelData(lintels);
 
             // Группируем перемычки
-            Dictionary<string, List<FamilyInstance>> groups = GroupLintels(lintels, data);
+            Dictionary<string, List<FamilyInstance>> groups = GroupLintels(data);
 
             // Объединяем малочисленные группы
             MergeSmallGroups(groups, data);
@@ -93,6 +94,7 @@ namespace RevitBIMTool.Core
 
             _ = t.Commit();
         }
+
 
         /// <summary>
         /// Получает данные о перемычках
@@ -137,22 +139,17 @@ namespace RevitBIMTool.Core
         /// <summary>
         /// Группирует перемычки по размерам
         /// </summary>
-        /// <param name="lintels">Список перемычек</param>
         /// <param name="data">Данные о перемычках</param>
         /// <returns>Словарь групп перемычек</returns>
-        private Dictionary<string, List<FamilyInstance>> GroupLintels(
-            List<FamilyInstance> lintels, Dictionary<FamilyInstance, LintelData> data)
+        private Dictionary<string, List<FamilyInstance>> GroupLintels(Dictionary<FamilyInstance, LintelData> data)
         {
             Dictionary<string, List<FamilyInstance>> groups = [];
 
-            foreach (FamilyInstance lintel in lintels)
+            foreach (var kvp in data)
             {
-                if (!data.ContainsKey(lintel))
-                {
-                    continue;
-                }
-
-                string group = data[lintel].Group;
+                FamilyInstance lintel = kvp.Key;
+                LintelData lintelData = kvp.Value;
+                string group = lintelData.Group;
 
                 if (!groups.ContainsKey(group))
                 {
