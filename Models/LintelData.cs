@@ -26,7 +26,7 @@ namespace RevitBIMTool.Model
         /// <summary>
         /// Идентификатор группы
         /// </summary>
-        public Dimensions Size { get; set; }
+        public SizeKey Size { get; set; }
 
         /// <summary>
         /// Присвоенная марка

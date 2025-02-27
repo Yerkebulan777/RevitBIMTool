@@ -1,12 +1,12 @@
 ﻿namespace RevitBIMTool.Models
 {
-    public struct Dimensions : IEquatable<Dimensions>
+    public struct SizeKey : IEquatable<SizeKey>
     {
         public double Thick { get; }
         public double Width { get; }
         public double Height { get; }
 
-        public Dimensions(double thick, double width, double height)
+        public SizeKey(double thick, double width, double height)
         {
             Thick = thick;
             Width = width;
@@ -15,10 +15,10 @@
 
         public override bool Equals(object obj)
         {
-            return obj is Dimensions dimensions && Equals(dimensions);
+            return obj is SizeKey dimensions && Equals(dimensions);
         }
 
-        public bool Equals(Dimensions other)
+        public bool Equals(SizeKey other)
         {
             return Thick == other.Thick &&
                    Width == other.Width &&

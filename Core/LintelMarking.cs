@@ -70,7 +70,7 @@ namespace RevitBIMTool.Core
             Dictionary<FamilyInstance, LintelData> data = GetLintelData(lintels);
 
             // Группируем перемычки
-            Dictionary<string, List<FamilyInstance>> groups = GroupLintels(data);
+            Dictionary<SizeKey, List<FamilyInstance>> groups = GroupLintels(data);
 
             // Объединяем малочисленные группы
             MergeSmallGroups(groups, data);
@@ -111,7 +111,7 @@ namespace RevitBIMTool.Core
 
                 double widthRound = UnitManager.FootToRoundedMm(LintelUtils.GetParamValue(lintel, _config.WidthParam), _config.RoundBase);
 
-                Dimensions dimensions = new(thickRound, widthRound, heightRound);
+                SizeKey dimensions = new(thickRound, widthRound, heightRound);
 
                 // Сохраняем данные
                 LintelData data = new()
@@ -133,103 +133,100 @@ namespace RevitBIMTool.Core
         /// </summary>
         /// <param name="data">Данные о перемычках</param>
         /// <returns>Словарь групп перемычек</returns>
-        private Dictionary<string, List<FamilyInstance>> GroupLintels(Dictionary<FamilyInstance, LintelData> data)
+        private Dictionary<SizeKey, List<FamilyInstance>> GroupLintels(Dictionary<FamilyInstance, LintelData> data)
         {
-            Dictionary<string, List<FamilyInstance>> groups = [];
+            Dictionary<SizeKey, List<FamilyInstance>> groups = new Dictionary<SizeKey, List<FamilyInstance>>();
 
             foreach (var kvp in data)
             {
                 FamilyInstance lintel = kvp.Key;
                 LintelData lintelData = kvp.Value;
-                string group = lintelData.Group;
 
-                if (!groups.ContainsKey(group))
+                SizeKey dimensions = new SizeKey(
+                    lintelData.Thick,
+                    lintelData.Width,
+                    lintelData.Height);
+
+                lintelData.Size = dimensions;
+
+                if (!groups.ContainsKey(dimensions))
                 {
-                    groups[group] = [];
+                    groups[dimensions] = new List<FamilyInstance>();
                 }
 
-                groups[group].Add(lintel);
+                groups[dimensions].Add(lintel);
             }
 
             return groups;
         }
 
-        /// <summary>
-        /// Объединяет малочисленные группы с похожими большими группами
-        /// </summary>
-        /// <param name="groups">Словарь групп перемычек</param>
-        /// <param name="data">Данные о перемычках</param>
-        private void MergeSmallGroups(Dictionary<string, List<FamilyInstance>> groups, Dictionary<FamilyInstance, LintelData> data)
+        private void MergeSmallGroups(Dictionary<SizeKey, List<FamilyInstance>> groups, Dictionary<FamilyInstance, LintelData> data)
         {
             // Находим малые и большие группы
-            List<string> smallGroups = groups.Where(g => g.Value.Count < _config.MinCount).Select(g => g.Key).ToList();
-            List<string> largeGroups = groups.Where(g => g.Value.Count >= _config.MinCount).Select(g => g.Key).ToList();
+            List<SizeKey> smallGroups = groups.Where(g => g.Value.Count < _config.MinCount).Select(g => g.Key).ToList();
+            List<SizeKey> largeGroups = groups.Where(g => g.Value.Count >= _config.MinCount).Select(g => g.Key).ToList();
 
-            foreach (string small in smallGroups)
+            // Если нет больших групп, нечего объединять
+            if (largeGroups.Count == 0)
+            {
+                return;
+            }
+
+            foreach (SizeKey smallDimensions in smallGroups)
             {
                 // Если группа уже удалена в процессе объединения, пропускаем
-                if (!groups.ContainsKey(small))
+
+                if (!groups.ContainsKey(smallDimensions))
                 {
                     continue;
                 }
 
-                // Разбиваем идентификатор группы на размеры
-                string[] parts = small.Split('_');
-
-                double smallThick = double.Parse(parts[0]);
-                double smallWidth = double.Parse(parts[1]);
-                double smallHeight = double.Parse(parts[2]);
-
                 // Ищем ближайшую большую группу
-                string bestMatch = null;
+
+                SizeKey? bestMatch = null;
+
                 double minDiff = double.MaxValue;
 
-                foreach (string largeGroup in largeGroups)
+                foreach (SizeKey largeDimensions in largeGroups)
                 {
-                    // Разбиваем идентификатор большой группы
-                    parts = largeGroup.Split('_');
-                    double largeThickness = double.Parse(parts[0]);
-                    double largeWidth = double.Parse(parts[1]);
-                    double largeHeight = double.Parse(parts[2]);
-
                     // Вычисляем разницу по каждому параметру
-                    double diffThickness = Math.Abs(smallThick - largeThickness);
-                    double diffWidth = Math.Abs(smallWidth - largeWidth);
-                    double diffHeight = Math.Abs(smallHeight - largeHeight);
+                    double diffThick = Math.Abs(smallDimensions.Thick- largeDimensions.Thick);
+                    double diffWidth = Math.Abs(smallDimensions.Width - largeDimensions.Width);
+                    double diffHeight = Math.Abs(smallDimensions.Height - largeDimensions.Height);
 
                     // Проверяем, что разница в пределах порога
-                    if (diffThickness <= _config.Threshold &&
+                    if (diffThick <= _config.Threshold &&
                         diffWidth <= _config.Threshold &&
                         diffHeight <= _config.Threshold)
                     {
                         // Общая разница
-                        double totalDiff = diffThickness + diffWidth + diffHeight;
+                        double totalDiff = diffThick + diffWidth + diffHeight;
 
                         if (totalDiff < minDiff)
                         {
                             minDiff = totalDiff;
-                            bestMatch = largeGroup;
+                            bestMatch = largeDimensions;
                         }
                     }
                 }
 
                 // Если нашли подходящую группу, объединяем с ней
-                if (bestMatch != null)
+                if (bestMatch.HasValue)
                 {
                     // Обновляем группу в данных
-                    foreach (FamilyInstance lintel in groups[small])
+                    foreach (FamilyInstance lintel in groups[smallDimensions])
                     {
                         if (data.ContainsKey(lintel))
                         {
-                            data[lintel].Group = bestMatch;
+                            data[lintel].Size = bestMatch.Value;
                         }
                     }
 
                     // Добавляем элементы в большую группу
-                    groups[bestMatch].AddRange(groups[small]);
+                    groups[bestMatch.Value].AddRange(groups[smallDimensions]);
 
                     // Удаляем малую группу
-                    _ = groups.Remove(small);
+                    groups.Remove(smallDimensions);
                 }
             }
         }
@@ -239,20 +236,20 @@ namespace RevitBIMTool.Core
         /// </summary>
         /// <param name="groups">Словарь групп перемычек</param>
         /// <param name="data">Данные о перемычках</param>
-        private void AssignMarks(
-            Dictionary<string, List<FamilyInstance>> groups, Dictionary<FamilyInstance, LintelData> data)
+        private void AssignMarks(Dictionary<SizeKey, List<FamilyInstance>> groups, Dictionary<FamilyInstance, LintelData> data)
         {
             // Сортируем группы
-            List<string> sortedGroups = groups.Keys
-                .OrderBy(g => double.Parse(g.Split('_')[0]))  // По толщине
-                .ThenBy(g => double.Parse(g.Split('_')[1]))   // По ширине
-                .ThenBy(g => double.Parse(g.Split('_')[2]))   // По высоте
+            List<SizeKey> sortedGroups = groups.Keys
+                .OrderBy(g => g.Thick)  // По толщине
+                .ThenBy(g => g.Width)   // По ширине
+                .ThenBy(g => g.Height)  // По высоте
                 .ToList();
 
             // Назначаем марки группам
             for (int i = 0; i < sortedGroups.Count; i++)
             {
-                string group = sortedGroups[i];
+                SizeKey group = sortedGroups[i];
+
                 string mark = $"{_config.Prefix}{i + 1}";
 
                 // Сохраняем марку для каждой перемычки в группе
@@ -265,5 +262,6 @@ namespace RevitBIMTool.Core
                 }
             }
         }
+
     }
 }
