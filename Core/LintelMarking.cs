@@ -1,5 +1,6 @@
 ﻿using Autodesk.Revit.DB;
 using RevitBIMTool.Model;
+using RevitBIMTool.Models;
 using RevitBIMTool.Utils;
 using RevitBIMTool.Utils.Common;
 
@@ -102,29 +103,23 @@ namespace RevitBIMTool.Core
         {
             Dictionary<FamilyInstance, LintelData> result = [];
 
-            string thicknessParam = _config.ThicknessParam;
-            string heightParam = _config.HeightParam;
-            string widthParam = _config.WidthParam;
-
-            int roundBase = _config.RoundBase;
-
             foreach (FamilyInstance lintel in lintels)
             {
-                double thicknessRound = UnitManager.FootToRoundedMm(LintelUtils.GetParamValue(lintel, thicknessParam), roundBase);
+                double thickRound = UnitManager.FootToRoundedMm(LintelUtils.GetParamValue(lintel, _config.ThicknessParam), _config.RoundBase);
 
-                double heightRound = UnitManager.FootToRoundedMm(LintelUtils.GetParamValue(lintel, heightParam), roundBase);
+                double heightRound = UnitManager.FootToRoundedMm(LintelUtils.GetParamValue(lintel, _config.HeightParam), _config.RoundBase);
 
-                double widthRound = UnitManager.FootToRoundedMm(LintelUtils.GetParamValue(lintel, widthParam), roundBase);
+                double widthRound = UnitManager.FootToRoundedMm(LintelUtils.GetParamValue(lintel, _config.WidthParam), _config.RoundBase);
 
-                string group = $"{thicknessRound}_{widthRound}_{heightRound}";
+                Dimensions dimensions = new(thickRound, widthRound, heightRound);
 
                 // Сохраняем данные
                 LintelData data = new()
                 {
-                    Thickness = thicknessRound,
+                    Thick = thickRound,
                     Height = heightRound,
                     Width = widthRound,
-                    Group = group
+                    Size = dimensions,
                 };
 
                 result[lintel] = data;

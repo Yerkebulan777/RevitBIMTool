@@ -1,4 +1,6 @@
-﻿namespace RevitBIMTool.Model
+﻿using RevitBIMTool.Models;
+
+namespace RevitBIMTool.Model
 {
 
     /// <summary>
@@ -9,7 +11,7 @@
         /// <summary>
         /// Толщина стены
         /// </summary>
-        public double Thickness { get; set; }
+        public double Thick { get; set; }
 
         /// <summary>
         /// Высота проема
@@ -24,7 +26,7 @@
         /// <summary>
         /// Идентификатор группы
         /// </summary>
-        public string Group { get; set; }
+        public Dimensions Size { get; set; }
 
         /// <summary>
         /// Присвоенная марка
