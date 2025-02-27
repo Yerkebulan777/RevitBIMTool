@@ -20,8 +20,8 @@ namespace RevitBIMTool.Core
         /// <param name="doc">Документ Revit</param>
         public LintelMarker(Document doc)
         {
-            _doc = doc;
             _config = new MarkConfig();
+            _doc = doc;
         }
 
         /// <summary>
@@ -31,8 +31,8 @@ namespace RevitBIMTool.Core
         /// <param name="config">Конфигурация маркировки</param>
         public LintelMarker(Document doc, MarkConfig config)
         {
-            _doc = doc;
             _config = config;
+            _doc = doc;
         }
 
         /// <summary>
@@ -47,14 +47,12 @@ namespace RevitBIMTool.Core
 
             IList<Element> instances = new FilteredElementCollector(_doc).OfCategory(bic).OfClass(typeof(FamilyInstance)).ToElements();
 
-            List<FamilyInstance> lintels = instances
-                .OfType<FamilyInstance>()
+            List<FamilyInstance> lintels = instances.OfType<FamilyInstance>()
                 .Where(instance => instance.Symbol != null)
                 .Where(instance => instance.Symbol.FamilyName.Equals(familyName, comp)).ToList();
 
             return lintels;
         }
-
 
         /// <summary>
         /// Маркирует перемычки с унификацией похожих элементов
@@ -94,7 +92,6 @@ namespace RevitBIMTool.Core
 
             _ = t.Commit();
         }
-
 
         /// <summary>
         /// Получает данные о перемычках
@@ -167,30 +164,24 @@ namespace RevitBIMTool.Core
         /// </summary>
         /// <param name="groups">Словарь групп перемычек</param>
         /// <param name="data">Данные о перемычках</param>
-        private void MergeSmallGroups(
-            Dictionary<string, List<FamilyInstance>> groups, Dictionary<FamilyInstance, LintelData> data)
+        private void MergeSmallGroups(Dictionary<string, List<FamilyInstance>> groups, Dictionary<FamilyInstance, LintelData> data)
         {
             // Находим малые и большие группы
             List<string> smallGroups = groups.Where(g => g.Value.Count < _config.MinCount).Select(g => g.Key).ToList();
             List<string> largeGroups = groups.Where(g => g.Value.Count >= _config.MinCount).Select(g => g.Key).ToList();
 
-            // Если нет больших групп, нечего объединять
-            if (largeGroups.Count == 0)
-            {
-                return;
-            }
-
-            foreach (string smallGroup in smallGroups)
+            foreach (string small in smallGroups)
             {
                 // Если группа уже удалена в процессе объединения, пропускаем
-                if (!groups.ContainsKey(smallGroup))
+                if (!groups.ContainsKey(small))
                 {
                     continue;
                 }
 
                 // Разбиваем идентификатор группы на размеры
-                string[] parts = smallGroup.Split('_');
-                double smallThickness = double.Parse(parts[0]);
+                string[] parts = small.Split('_');
+
+                double smallThick = double.Parse(parts[0]);
                 double smallWidth = double.Parse(parts[1]);
                 double smallHeight = double.Parse(parts[2]);
 
@@ -207,7 +198,7 @@ namespace RevitBIMTool.Core
                     double largeHeight = double.Parse(parts[2]);
 
                     // Вычисляем разницу по каждому параметру
-                    double diffThickness = Math.Abs(smallThickness - largeThickness);
+                    double diffThickness = Math.Abs(smallThick - largeThickness);
                     double diffWidth = Math.Abs(smallWidth - largeWidth);
                     double diffHeight = Math.Abs(smallHeight - largeHeight);
 
@@ -231,7 +222,7 @@ namespace RevitBIMTool.Core
                 if (bestMatch != null)
                 {
                     // Обновляем группу в данных
-                    foreach (FamilyInstance lintel in groups[smallGroup])
+                    foreach (FamilyInstance lintel in groups[small])
                     {
                         if (data.ContainsKey(lintel))
                         {
@@ -240,10 +231,10 @@ namespace RevitBIMTool.Core
                     }
 
                     // Добавляем элементы в большую группу
-                    groups[bestMatch].AddRange(groups[smallGroup]);
+                    groups[bestMatch].AddRange(groups[small]);
 
                     // Удаляем малую группу
-                    _ = groups.Remove(smallGroup);
+                    _ = groups.Remove(small);
                 }
             }
         }
