@@ -178,19 +178,17 @@ namespace RevitBIMTool.Core
             List<SizeKey> allGroups = groupSizes.Keys.ToList();
 
             // Нечего объединять, если нет малых групп или всего одна группа
-            if (smallGroups.Count == 0 || allGroups.Count <= 1)
+            if (smallGroups.Count != 0 && allGroups.Count > 1)
             {
-                return;
+                // Шаг 2: Создаем и заполняем структуру для отслеживания объединений
+                UnionSize unionFind = new(allGroups);
+
+                // Шаг 3: Ищем и применяем лучшие объединения
+                FindAndMergeGroups(smallGroups, allGroups, unionFind, groupSizes);
+
+                // Шаг 4: Применяем результаты объединений к данным
+                ApplyGroupMerges(groups, data, unionFind);
             }
-
-            // Шаг 2: Создаем и заполняем структуру для отслеживания объединений
-            UnionFindStructure unionFind = new(allGroups);
-
-            // Шаг 3: Ищем и применяем лучшие объединения
-            FindAndMergeGroups(smallGroups, allGroups, unionFind, groupSizes);
-
-            // Шаг 4: Применяем результаты объединений к данным
-            ApplyGroupMerges(groups, data, unionFind);
         }
 
         /// <summary>
@@ -206,19 +204,13 @@ namespace RevitBIMTool.Core
         /// </summary>
         private List<SizeKey> FindSmallGroups(Dictionary<SizeKey, int> groupSizes, int minCount)
         {
-            return groupSizes.Where(g => g.Value < minCount)
-                            .Select(g => g.Key)
-                            .ToList();
+            return groupSizes.Where(g => g.Value < minCount).Select(g => g.Key).ToList();
         }
 
         /// <summary>
         /// Ищет и выполняет объединение групп на основе их сходства
         /// </summary>
-        private void FindAndMergeGroups(
-            List<SizeKey> smallGroups,
-            List<SizeKey> allGroups,
-            UnionFindStructure unionFind,
-            Dictionary<SizeKey, int> groupSizes)
+        private void FindAndMergeGroups(List<SizeKey> smallGroups, List<SizeKey> allGroups, UnionSize unionFind, Dictionary<SizeKey, int> groupSizes)
         {
             // Сначала находим лучшие совпадения для всех малых групп
             List<GroupMatch> bestMatches = FindBestMatches(smallGroups, allGroups);
@@ -247,10 +239,11 @@ namespace RevitBIMTool.Core
         /// <summary>
         /// Рассчитывает текущий размер группы с учетом всех выполненных объединений
         /// </summary>
-        private int CalculateCurrentGroupSize(SizeKey rootKey, Dictionary<SizeKey, int> groupSizes, UnionFindStructure unionFind)
+        private int CalculateCurrentGroupSize(SizeKey rootKey, Dictionary<SizeKey, int> groupSizes, UnionSize unionFind)
         {
             // Считаем суммарный размер всех групп, объединенных с этой
             int totalSize = 0;
+
             foreach (SizeKey key in groupSizes.Keys)
             {
                 if (unionFind.FindRoot(key).Equals(rootKey))
@@ -258,6 +251,7 @@ namespace RevitBIMTool.Core
                     totalSize += groupSizes[key];
                 }
             }
+
             return totalSize;
         }
 
@@ -330,7 +324,7 @@ namespace RevitBIMTool.Core
         private void ApplyGroupMerges(
             Dictionary<SizeKey, List<FamilyInstance>> groups,
             Dictionary<FamilyInstance, LintelData> data,
-            UnionFindStructure unionFind)
+            UnionSize unionFind)
         {
             Dictionary<SizeKey, List<FamilyInstance>> newGroups = [];
 
@@ -367,22 +361,6 @@ namespace RevitBIMTool.Core
             }
         }
 
-        /// <summary>
-        /// Класс для хранения информации о совпадении групп
-        /// </summary>
-        private class GroupMatch
-        {
-            public SizeKey Source { get; }
-            public SizeKey Target { get; }
-            public double Score { get; }
-
-            public GroupMatch(SizeKey source, SizeKey target, double score)
-            {
-                Source = source;
-                Target = target;
-                Score = score;
-            }
-        }
 
         /// <summary>
         /// Вычисляет взвешенную разницу между двумя ключами размеров
@@ -392,10 +370,9 @@ namespace RevitBIMTool.Core
         /// <returns>Взвешенная разница</returns>
         private double CalculateWeightedDifference(SizeKey source, SizeKey target)
         {
-            // Веса параметров в зависимости от порядка в конфигурации
-            double weightFactor = 10.0;
-
             double totalDiff = 0;
+
+            double weightFactor = 10.0;
 
             for (int i = 0; i < _config.GroupingOrder.Count; i++)
             {

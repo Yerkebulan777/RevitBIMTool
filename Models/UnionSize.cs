@@ -1,10 +1,10 @@
 ﻿namespace RevitBIMTool.Models
 {
-    public class UnionFindStructure
+    public class UnionSize
     {
         private readonly Dictionary<SizeKey, SizeKey> parent;
 
-        public UnionFindStructure(List<SizeKey> keys)
+        public UnionSize(List<SizeKey> keys)
         {
             parent = keys.ToDictionary(k => k, k => k);
         }

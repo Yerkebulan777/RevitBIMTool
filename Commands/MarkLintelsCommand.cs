@@ -14,8 +14,6 @@ namespace RevitBIMTool.Commands
     public class MarkLintelsCommand : IExternalCommand
     {
 
-        
-
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
             try
