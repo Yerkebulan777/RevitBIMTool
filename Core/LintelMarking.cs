@@ -9,7 +9,7 @@ namespace RevitBIMTool.Core
     /// <summary>
     /// Основной класс для маркировки перемычек
     /// </summary>
-    public class LintelMarker
+    public partial class LintelMarker
     {
         private readonly Document _doc;
         private readonly MarkConfig _config;
@@ -179,10 +179,12 @@ namespace RevitBIMTool.Core
 
             // Нечего объединять, если нет малых групп или всего одна группа
             if (smallGroups.Count == 0 || allGroups.Count <= 1)
+            {
                 return;
+            }
 
             // Шаг 2: Создаем и заполняем структуру для отслеживания объединений
-            UnionFindStructure unionFind = new UnionFindStructure(allGroups);
+            UnionFindStructure unionFind = new(allGroups);
 
             // Шаг 3: Ищем и применяем лучшие объединения
             FindAndMergeGroups(smallGroups, allGroups, unionFind, groupSizes);
@@ -219,10 +221,10 @@ namespace RevitBIMTool.Core
             Dictionary<SizeKey, int> groupSizes)
         {
             // Сначала находим лучшие совпадения для всех малых групп
-            var bestMatches = FindBestMatches(smallGroups, allGroups);
+            List<GroupMatch> bestMatches = FindBestMatches(smallGroups, allGroups);
 
             // Объединяем группы в порядке качества совпадения (от лучшего к худшему)
-            foreach (var match in bestMatches.OrderBy(m => m.Score))
+            foreach (GroupMatch match in bestMatches.OrderBy(m => m.Score))
             {
                 SizeKey smallKey = match.Source;
                 SizeKey targetKey = match.Target;
@@ -249,7 +251,7 @@ namespace RevitBIMTool.Core
         {
             // Считаем суммарный размер всех групп, объединенных с этой
             int totalSize = 0;
-            foreach (var key in groupSizes.Keys)
+            foreach (SizeKey key in groupSizes.Keys)
             {
                 if (unionFind.FindRoot(key).Equals(rootKey))
                 {
@@ -264,17 +266,19 @@ namespace RevitBIMTool.Core
         /// </summary>
         private List<GroupMatch> FindBestMatches(List<SizeKey> smallGroups, List<SizeKey> allGroups)
         {
-            List<GroupMatch> matches = new List<GroupMatch>();
+            List<GroupMatch> matches = [];
 
-            foreach (var smallKey in smallGroups)
+            foreach (SizeKey smallKey in smallGroups)
             {
                 double bestScore = double.MaxValue;
                 SizeKey? bestTarget = null;
 
-                foreach (var targetKey in allGroups)
+                foreach (SizeKey targetKey in allGroups)
                 {
                     if (smallKey.Equals(targetKey))
+                    {
                         continue;
+                    }
 
                     // Проверяем попадание в допуски
                     if (IsWithinTolerances(smallKey, targetKey))
@@ -328,10 +332,10 @@ namespace RevitBIMTool.Core
             Dictionary<FamilyInstance, LintelData> data,
             UnionFindStructure unionFind)
         {
-            Dictionary<SizeKey, List<FamilyInstance>> newGroups = new Dictionary<SizeKey, List<FamilyInstance>>();
+            Dictionary<SizeKey, List<FamilyInstance>> newGroups = [];
 
             // Для каждой исходной группы
-            foreach (var entry in groups)
+            foreach (KeyValuePair<SizeKey, List<FamilyInstance>> entry in groups)
             {
                 SizeKey originalKey = entry.Key;
                 SizeKey rootKey = unionFind.FindRoot(originalKey);
@@ -339,11 +343,11 @@ namespace RevitBIMTool.Core
                 // Создаем новую группу, если еще не существует
                 if (!newGroups.ContainsKey(rootKey))
                 {
-                    newGroups[rootKey] = new List<FamilyInstance>();
+                    newGroups[rootKey] = [];
                 }
 
                 // Обновляем размеры в данных и добавляем в новую группу
-                foreach (var lintel in entry.Value)
+                foreach (FamilyInstance lintel in entry.Value)
                 {
                     if (data.ContainsKey(lintel))
                     {
@@ -356,7 +360,8 @@ namespace RevitBIMTool.Core
 
             // Заменяем старые группы на новые
             groups.Clear();
-            foreach (var entry in newGroups)
+
+            foreach (KeyValuePair<SizeKey, List<FamilyInstance>> entry in newGroups)
             {
                 groups[entry.Key] = entry.Value;
             }
@@ -376,51 +381,6 @@ namespace RevitBIMTool.Core
                 Source = source;
                 Target = target;
                 Score = score;
-            }
-        }
-
-        /// <summary>
-        /// Вспомогательный класс для работы со структурой Union-Find
-        /// </summary>
-        private class UnionFindStructure
-        {
-            private Dictionary<SizeKey, SizeKey> parent;
-
-            public UnionFindStructure(List<SizeKey> keys)
-            {
-                parent = keys.ToDictionary(k => k, k => k);
-            }
-
-            /// <summary>
-            /// Находит корневой элемент для указанного ключа
-            /// </summary>
-            public SizeKey FindRoot(SizeKey key)
-            {
-                if (!parent[key].Equals(key))
-                    parent[key] = FindRoot(parent[key]); // Сжатие пути
-                return parent[key];
-            }
-
-            /// <summary>
-            /// Объединяет две группы
-            /// </summary>
-            public void Union(SizeKey key1, SizeKey key2, Dictionary<SizeKey, int> groupSizes)
-            {
-                SizeKey root1 = FindRoot(key1);
-                SizeKey root2 = FindRoot(key2);
-
-                if (!root1.Equals(root2))
-                {
-                    // Всегда делаем корнем большую группу
-                    if (groupSizes[root1] < groupSizes[root2])
-                    {
-                        parent[root1] = root2;
-                    }
-                    else
-                    {
-                        parent[root2] = root1;
-                    }
-                }
             }
         }
 
