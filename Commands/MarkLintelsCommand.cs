@@ -29,7 +29,7 @@ namespace RevitBIMTool.Commands
                 MarkConfig config = new MarkConfig
                 {
                     MarkParam = "BI_марка_изделия",
-                    ThicknessParam = "Толщина стены",
+                    ThickParam = "Толщина стены",
                     WidthParam = "Ширина проема",
                     HeightParam = "Высота",
                 };

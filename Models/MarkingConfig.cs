@@ -8,12 +8,12 @@
         /// <summary>
         /// Максимальное допустимое отклонение для объединения групп (мм)
         /// </summary>
-        public int Threshold { get; set; } = 150;
+        public int MaxTotalDeviation { get; set; } = 150;
 
         /// <summary>
         /// Минимальное количество элементов для "большой" группы
         /// </summary>
-        public int MinCount { get; set; } = 3;
+        public int MinCount { get; set; } = 5;
 
         /// <summary>
         /// Базовое значение для округления (мм)
@@ -28,7 +28,7 @@
         /// <summary>
         /// Имя параметра для толщины стены
         /// </summary>
-        public string ThicknessParam { get; set; } = "Толщина стены";
+        public string ThickParam { get; set; } = "Толщина стены";
 
         /// <summary>
         /// Имя параметра для ширины проема
@@ -49,5 +49,51 @@
         /// Наименование семейства перемычек
         /// </summary>
         public string FamilyName { get; set; } = "Перемычка";
+
+        /// <summary>
+        /// Допуск для ширины проема (мм)
+        /// </summary>
+        public int WidthTolerance { get; set; } = 25;
+
+        /// <summary>
+        /// Допуск для толщины стены (мм)
+        /// </summary>
+        public int ThickTolerance { get; set; } = 50;
+
+        /// <summary>
+        /// Допуск для высоты (мм)
+        /// </summary>
+        public int HeightTolerance { get; set; } = 100;
+
+        /// <summary>
+        /// Порядок сортировки параметров при группировке (1-толщина, 2-ширина, 3-высота)
+        /// </summary>
+        public List<GroupingParameter> GroupingOrder { get; set; } = new List<GroupingParameter>
+        {
+            GroupingParameter.Thick,
+            GroupingParameter.Width,
+            GroupingParameter.Height
+        };
+    }
+
+    /// <summary>
+    /// Параметры перемычки для группировки
+    /// </summary>
+    public enum GroupingParameter
+    {
+        /// <summary>
+        /// Толщина стены
+        /// </summary>
+        Thick,
+
+        /// <summary>
+        /// Ширина проема
+        /// </summary>
+        Width,
+
+        /// <summary>
+        /// Высота проема
+        /// </summary>
+        Height
     }
 }
