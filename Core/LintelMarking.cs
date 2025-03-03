@@ -64,42 +64,38 @@ namespace RevitBIMTool.Core
         /// <param name="lintels">Список перемычек</param>
         public void MarkLintels(List<FamilyInstance> lintels)
         {
-            if (lintels.Count == 0)
+            if (lintels.Count != 0)
             {
-                return;
-            }
+                Dictionary<FamilyInstance, LintelData> data = GetLintelData(lintels);
 
-            // Получаем данные о перемычках
-            Dictionary<FamilyInstance, LintelData> data = GetLintelData(lintels);
+                Dictionary<SizeKey, List<FamilyInstance>> groups = GroupLintels(data);
 
-            // Группируем перемычки
-            Dictionary<SizeKey, List<FamilyInstance>> groups = GroupLintels(data);
+                MergeSmallGroups(groups, data);
 
-            // Объединяем малочисленные группы
-            MergeSmallGroups(groups, data);
+                AssignMarks(groups, data);
 
-            // Назначаем марки
-            AssignMarks(groups, data);
+                using Transaction t = new(_doc, "Маркировка перемычек");
 
-            // Применяем марки в Revit
-            using Transaction t = new(_doc, "Маркировка перемычек");
-            _ = t.Start();
+                _ = t.Start();
 
-            foreach (FamilyInstance lintel in lintels)
-            {
-                if (data.ContainsKey(lintel) && data[lintel].Mark != null)
+                foreach (FamilyInstance lintel in lintels)
                 {
-                    string mark = data[lintel].Mark;
-                    LintelUtils.SetMark(lintel, _config.MarkParam, mark);
+                    if (data.ContainsKey(lintel) && data[lintel].Mark != null)
+                    {
+                        string mark = data[lintel].Mark;
 
-                    // Создаем имя типа на основе марки и размеров
-                    LintelData lintelData = data[lintel];
-                    string typeName = $"{mark} {lintelData.Thick}x{lintelData.Width}x{lintelData.Height}";
-                    LintelUtils.SetTypeName(lintel, typeName);
+                        LintelUtils.SetMark(lintel, _config.MarkParam, mark);
+
+                        LintelData lintelData = data[lintel];
+
+                        string typeName = $"{mark} {lintelData.Thick}x{lintelData.Width}x{lintelData.Height}";
+
+                        LintelUtils.SetTypeName(lintel, typeName);
+                    }
                 }
-            }
 
-            _ = t.Commit();
+                _ = t.Commit();
+            }
         }
 
         /// <summary>
