@@ -66,35 +66,35 @@ namespace RevitBIMTool.Core
         {
             if (lintels.Count != 0)
             {
-                Dictionary<FamilyInstance, LintelData> data = GetLintelData(lintels);
+                List<LintelData> data = GetLintelData(lintels);
 
-                Dictionary<SizeKey, List<FamilyInstance>> groups = GroupLintels(data);
+                Dictionary<SizeKey, List<LintelData>> groups = GroupLintels(data);
 
-                MergeSmallGroups(groups, data);
+                //MergeSmallGroups(groups, data);
 
-                AssignMarks(groups, data);
+                //AssignMarks(groups, data);
 
-                using Transaction t = new(_doc, "Маркировка перемычек");
+                //using Transaction t = new(_doc, "Маркировка перемычек");
 
-                _ = t.Start();
+                //_ = t.Start();
 
-                foreach (FamilyInstance lintel in lintels)
-                {
-                    if (data.ContainsKey(lintel) && data[lintel].Mark != null)
-                    {
-                        string mark = data[lintel].Mark;
+                //foreach (FamilyInstance lintel in lintels)
+                //{
+                //    if (data.ContainsKey(lintel) && data[lintel].Mark != null)
+                //    {
+                //        string mark = data[lintel].Mark;
 
-                        LintelUtils.SetMark(lintel, _config.MarkParam, mark);
+                //        LintelUtils.SetMark(lintel, _config.MarkParam, mark);
 
-                        LintelData lintelData = data[lintel];
+                //        LintelData lintelData = data[lintel];
 
-                        string typeName = $"{mark} {lintelData.Thick}x{lintelData.Width}x{lintelData.Height}";
+                //        string typeName = $"{mark} {lintelData.Thick}x{lintelData.Width}x{lintelData.Height}";
 
-                        LintelUtils.SetTypeName(lintel, typeName);
-                    }
-                }
+                //        LintelUtils.SetTypeName(lintel, typeName);
+                //    }
+                //}
 
-                _ = t.Commit();
+                //_ = t.Commit();
             }
         }
 
@@ -103,9 +103,9 @@ namespace RevitBIMTool.Core
         /// </summary>
         /// <param name="lintels">Список перемычек</param>
         /// <returns>Словарь с данными о перемычках</returns>
-        private Dictionary<FamilyInstance, LintelData> GetLintelData(List<FamilyInstance> lintels)
+        private List<LintelData> GetLintelData(List<FamilyInstance> lintels)
         {
-            Dictionary<FamilyInstance, LintelData> result = [];
+            List<LintelData> lintelDataList = [];
 
             foreach (FamilyInstance lintel in lintels)
             {
@@ -117,8 +117,7 @@ namespace RevitBIMTool.Core
 
                 SizeKey dimensions = new(thickRound, widthRound, heightRound);
 
-                // Сохраняем данные
-                LintelData data = new()
+                LintelData data = new(lintel)
                 {
                     Thick = thickRound,
                     Height = heightRound,
@@ -126,37 +125,40 @@ namespace RevitBIMTool.Core
                     Size = dimensions,
                 };
 
-                result[lintel] = data;
+                lintelDataList.Add(data);
             }
 
-            return result;
+            return lintelDataList;
         }
 
         /// <summary>
         /// Группирует перемычки по размерам
         /// </summary>
-        /// <param name="data">Данные о перемычках</param>
+        /// <param name="lintelDataList">Данные о перемычках</param>
         /// <returns>Словарь групп перемычек</returns>
-        private Dictionary<SizeKey, List<FamilyInstance>> GroupLintels(Dictionary<FamilyInstance, LintelData> data)
+        private Dictionary<SizeKey, List<LintelData>> GroupLintels(List<LintelData> lintelDataList)
         {
-            Dictionary<SizeKey, List<FamilyInstance>> groups = [];
+            Dictionary<SizeKey, List<LintelData>> groups = lintelDataList
+                .GroupBy(ld => new SizeKey(ld.Thick, ld.Height, ld.Width))
+                .ToDictionary(g => g.Key, g => g.ToList());
 
-            foreach (KeyValuePair<FamilyInstance, LintelData> kvp in data)
-            {
-                FamilyInstance lintel = kvp.Key;
-                LintelData lintelData = kvp.Value;
+            //Dictionary<SizeKey, List<LintelData>> groups = [];
 
-                SizeKey dimensions = new(lintelData.Thick, lintelData.Width, lintelData.Height);
+            //foreach (LintelData lintelData in lintelDataList)
+            //{
+            //    FamilyInstance lintel = lintelData.Instance;
 
-                lintelData.Size = dimensions;
+            //    SizeKey dimensions = new(lintelData.Thick, lintelData.Width, lintelData.Height);
 
-                if (!groups.ContainsKey(dimensions))
-                {
-                    groups[dimensions] = [];
-                }
+            //    lintelData.Size = dimensions; // Устанавливаем размер ???
 
-                groups[dimensions].Add(lintel);
-            }
+            //    if (!groups.ContainsKey(dimensions))
+            //    {
+            //        groups[dimensions] = [];
+            //    }
+
+            //    groups[dimensions].Add(lintelData);
+            //}
 
             return groups;
         }
@@ -166,11 +168,11 @@ namespace RevitBIMTool.Core
         /// </summary>
         /// <param name="groups">Словарь групп перемычек</param>
         /// <param name="data">Данные о перемычках</param>
-        private void MergeSmallGroups(Dictionary<SizeKey, List<FamilyInstance>> groups, Dictionary<FamilyInstance, LintelData> data)
+        protected void MergeSmallGroups(Dictionary<SizeKey, List<LintelData>> groups, int threshold)
         {
             // Шаг 1: Подготовка данных для группировки
-            Dictionary<SizeKey, int> groupSizes = PrepareGroupSizes(groups);
-            List<SizeKey> smallGroups = FindSmallGroups(groupSizes, _config.MinCount);
+            Dictionary<SizeKey, int> groupSizes = groups.ToDictionary(g => g.Key, g => g.Value.Count);
+            List<SizeKey> smallGroups = FindSmallGroups(groupSizes, threshold);
             List<SizeKey> allGroups = groupSizes.Keys.ToList();
 
             // Нечего объединять, если нет малых групп или всего одна группа
@@ -185,14 +187,6 @@ namespace RevitBIMTool.Core
                 // Шаг 4: Применяем результаты объединений к данным
                 ApplyGroupMerges(groups, data, unionFind);
             }
-        }
-
-        /// <summary>
-        /// Подготавливает словарь с размерами групп
-        /// </summary>
-        private Dictionary<SizeKey, int> PrepareGroupSizes(Dictionary<SizeKey, List<FamilyInstance>> groups)
-        {
-            return groups.ToDictionary(g => g.Key, g => g.Value.Count);
         }
 
         /// <summary>

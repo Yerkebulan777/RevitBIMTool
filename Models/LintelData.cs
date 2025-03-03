@@ -1,4 +1,5 @@
-﻿using RevitBIMTool.Models;
+﻿using Autodesk.Revit.DB;
+using RevitBIMTool.Models;
 
 namespace RevitBIMTool.Model
 {
@@ -8,6 +9,13 @@ namespace RevitBIMTool.Model
     /// </summary>
     public class LintelData
     {
+        public readonly FamilyInstance Instance;
+
+        public LintelData(FamilyInstance lintel)
+        {
+            Instance = lintel;
+        }
+
         /// <summary>
         /// Толщина стены
         /// </summary>
