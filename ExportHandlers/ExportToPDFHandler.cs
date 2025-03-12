@@ -7,8 +7,8 @@ using RevitBIMTool.Utils.SystemHelpers;
 using Serilog;
 using System.IO;
 
-
 namespace RevitBIMTool.ExportHandlers;
+
 internal sealed class ExportToPDFHandler
 {
     private List<SheetModel> sheetModels;
@@ -16,8 +16,6 @@ internal sealed class ExportToPDFHandler
 
     public void Execute(UIDocument uidoc, string revitFilePath, string exportDirectory)
     {
-        Log.Debug("Start export to PDF...");
-
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
         string baseTempPath = Path.GetDirectoryName(Path.GetTempPath());
         string folder = Path.Combine(baseTempPath, $"{revitFileName}");
@@ -37,6 +35,8 @@ internal sealed class ExportToPDFHandler
         if (sheetData.Count > 0)
         {
             printer.InitializePrinter();
+
+            Log.Debug("Start export to PDF...");
 
             RevitPathHelper.EnsureDirectory(folder);
             RevitPathHelper.EnsureDirectory(exportDirectory);
