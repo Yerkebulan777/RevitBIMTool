@@ -26,7 +26,30 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
 
         public override bool Print(Document doc, string folder, SheetModel model)
         {
-            return PrintHandler.ExportSheet(doc, folder, model);
+#if R23
+            ColorDepthType colorDepthType = model.IsColorEnabled ? ColorDepthType.Color : ColorDepthType.BlackLine;
+
+            Log.Debug("Экспорт в PDF с встроенного механизма Revit...");
+
+            PDFExportOptions options = new()
+            {
+                FileName = model.SheetName,
+                RasterQuality = RasterQualityType.Medium,
+                ExportQuality = PDFExportQualityType.DPI300,
+                ColorDepth = colorDepthType,
+                ZoomType = ZoomType.Zoom,
+                ZoomPercentage = 100,
+            };
+
+            IList<ElementId> viewIds = [model.ViewSheet.Id];
+
+            if (doc.Export(folder, viewIds, options))
+            {
+                model.SheetPath = Path.Combine(folder, model.SheetName);
+                return true;
+            }
+#endif
+            return false;
         }
 
 

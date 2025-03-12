@@ -68,7 +68,6 @@ internal static class PrintHandler
             new Pdf24Printer(),
             new CreatorPrinter(),
             new ClawPdfPrinter(),
-
             new InternalPrinter(),
         ];
 
@@ -260,33 +259,6 @@ internal static class PrintHandler
     }
 
 
-    public static bool ExportSheet(Document doc, string folder, SheetModel model)
-    {
-#if R23
-        Log.Debug("Экспорт в PDF с использованием встроенного механизма Revit...");
-
-        PDFExportOptions options = new()
-        {
-            FileName = model.SheetName,
-            RasterQuality = RasterQualityType.Medium,
-            ExportQuality = PDFExportQualityType.DPI300,
-            ColorDepth = model.IsColorEnabled ? ColorDepthType.Color : ColorDepthType.BlackLine,
-            ZoomType = ZoomType.Zoom,
-            ZoomPercentage = 100,
-        };
-
-        IList<ElementId> viewIds = [model.ViewSheet.Id];
-
-        if (doc.Export(folder, viewIds, options))
-        {
-            model.SheetPath = Path.Combine(folder, model.SheetName);
-            return true;
-        }
-#endif
-        return false;
-    }
-
-
     public static bool PrintSheet(Document doc, string folder, SheetModel model)
     {
         Log.Debug("Start submit print...");
@@ -310,6 +282,7 @@ internal static class PrintHandler
 
         return false;
     }
+
 
 
 }
