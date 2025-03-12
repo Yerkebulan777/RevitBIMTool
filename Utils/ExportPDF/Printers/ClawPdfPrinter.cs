@@ -2,6 +2,7 @@
 using Microsoft.Win32;
 using RevitBIMTool.Model;
 using RevitBIMTool.Utils.SystemHelpers;
+using Serilog;
 
 
 namespace RevitBIMTool.Utils.ExportPDF.Printers
@@ -27,6 +28,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
 
         public override void ResetPrinterSettings()
         {
+            Log.Debug("Reset print settings");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "OpenViewer", "True");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowProgress", "True");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<Title>");
