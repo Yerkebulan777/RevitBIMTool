@@ -37,16 +37,15 @@ internal static class PrintHandler
 
     public static bool TryRetrievePrinter(out PrinterControl availablePrinter)
     {
-        int attempt = 0;
-
+        int retryCount = 0;
         availablePrinter = null;
-
-        while (attempt < 1000)
+        while (retryCount < 1000)
         {
+            retryCount++;
+            Thread.Sleep(1000);
             Log.Debug($"Поиск доступного принтера...");
             foreach (PrinterControl print in GetPrinters())
             {
-                Thread.Sleep(attempt++);
                 if (print.IsAvailable())
                 {
                     availablePrinter = print;
