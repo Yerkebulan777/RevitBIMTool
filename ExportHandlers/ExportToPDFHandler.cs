@@ -28,7 +28,6 @@ internal sealed class ExportToPDFHandler
 
         if (!PrintHandler.TryRetrievePrinter(out PrinterControl printer))
         {
-            Log.Error("Все принтеры заняты или недоступны.");
             throw new InvalidOperationException("Не удалось найти доступный принтер PDF!");
         }
 

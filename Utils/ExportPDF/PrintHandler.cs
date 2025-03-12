@@ -37,18 +37,18 @@ internal static class PrintHandler
 
     public static bool TryRetrievePrinter(out PrinterControl availablePrinter)
     {
-        int retryInterval = 100;
+        int attempt = 0;
 
         availablePrinter = null;
 
-        while (retryInterval < 1000)
+        while (attempt < 1000)
         {
-            retryInterval++;
+            int waitSeconds = Math.Min(attempt++, 100);
+            Log.Debug($"Ожидание {waitSeconds} секунд...");
+            Thread.Sleep(1000 * waitSeconds);
 
             foreach (PrinterControl print in GetPrinters())
             {
-                Thread.Sleep(retryInterval);
-
                 if (print.IsAvailable())
                 {
                     availablePrinter = print;
@@ -238,7 +238,7 @@ internal static class PrintHandler
                     }
                 }
 
-                trx.Commit();
+                _ = trx.Commit();
             }
             catch (Exception ex)
             {
@@ -246,7 +246,7 @@ internal static class PrintHandler
 
                 if (!trx.HasEnded())
                 {
-                    trx.RollBack();
+                    _ = trx.RollBack();
                 }
             }
             finally
