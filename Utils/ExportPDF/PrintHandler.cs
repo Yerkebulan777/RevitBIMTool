@@ -35,20 +35,20 @@ internal static class PrintHandler
     }
 
 
-    public static bool TryGetAvailablePrinter(out PrinterControl availablePrinter, int limit = 100)
+    public static bool TryGetAvailablePrinter(out PrinterControl availablePrinter)
     {
-        int counter = 0;
+        int retryInterval = 100;
 
         availablePrinter = null;
 
-        while (counter < limit)
+        while (retryInterval < 1000)
         {
-            counter++;
-
-            Thread.Sleep(counter * 1000);
+            retryInterval++;
 
             foreach (PrinterControl print in GetPrinters())
             {
+                Thread.Sleep(retryInterval);
+
                 if (print.IsAvailable())
                 {
                     availablePrinter = print;
