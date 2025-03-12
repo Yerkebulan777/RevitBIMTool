@@ -2,8 +2,8 @@
 using RevitBIMTool.Model;
 using Serilog;
 
-
 namespace RevitBIMTool.Utils.ExportPDF;
+
 internal static class RevitPrinterUtil
 {
     public static PageOrientationType GetOrientation(double width, double height)
