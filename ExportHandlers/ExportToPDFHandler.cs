@@ -14,7 +14,6 @@ internal sealed class ExportToPDFHandler
     private List<SheetModel> sheetModels;
     private Dictionary<string, List<SheetModel>> sheetData;
 
-
     public void Execute(UIDocument uidoc, string revitFilePath, string exportDirectory)
     {
         Log.Debug("Start export to PDF...");
