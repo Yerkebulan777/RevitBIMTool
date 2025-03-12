@@ -76,9 +76,6 @@ internal static class PrintHandler
     }
 
 
-
-
-
     private static void ResetAndApplyPrinterSettings(Document doc, string printerName)
     {
         PrintManager printManager = doc.PrintManager;
@@ -241,21 +238,21 @@ internal static class PrintHandler
                         }
                     }
                 }
+
+                trx.Commit();
             }
             catch (Exception ex)
             {
                 Log.Error(ex, ex.Message);
-            }
-            finally
-            {
-                Log.Debug("Reset print settings");
-
-                printer.ResetPrinterSettings();
 
                 if (!trx.HasEnded())
                 {
-                    _ = trx.RollBack();
+                    trx.RollBack();
                 }
+            }
+            finally
+            {
+                printer.ResetPrinterSettings();
             }
         }
 

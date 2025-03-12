@@ -2,6 +2,7 @@
 using Microsoft.Win32;
 using RevitBIMTool.Model;
 using RevitBIMTool.Utils.SystemHelpers;
+using Serilog;
 
 
 namespace RevitBIMTool.Utils.ExportPDF.Printers
@@ -18,40 +19,23 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
             string outputDirKey = System.IO.Path.Combine(RegistryPath, "OutputDir");
             string promptUserKey = System.IO.Path.Combine(RegistryPath, "PromptForAdobePDF");
 
-            // Включаем автосохранение
             RegistryHelper.SetValue(Registry.CurrentUser, autoSave, "Enabled", "True");
-
-            // Устанавливаем каталог для сохранения файлов
-            RegistryHelper.SetValue(Registry.CurrentUser, outputDirKey, "Directory", "<InputFilePath>");
-
-            // Отключаем запрос пользователя на ввод имени файла
             RegistryHelper.SetValue(Registry.CurrentUser, promptUserKey, "Enabled", "False");
-
-            // Настраиваем шаблон имени файла
+            RegistryHelper.SetValue(Registry.CurrentUser, outputDirKey, "Directory", "<InputFilePath>");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<InputFilename>");
-
-            // Отключаем уведомления
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowAllNotifications", "False");
-
-            // Пропускаем диалог печати
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "SkipPrintDialog", "True");
 
-            // Устанавливаем статус принтера
             RegistryHelper.SetValue(Registry.CurrentUser, PrintHandler.StatusPath, PrinterName, 1);
         }
 
 
         public override void ResetPrinterSettings()
         {
+            Log.Debug("Reset print settings");
             string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-
-            // Сбрасываем настройки сохранения на рабочий стол
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "OutputDir", desktop);
-
-            // Сбрасываем шаблон имени файла
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<Title>");
-
-            // Отключаем принтер
             RegistryHelper.SetValue(Registry.CurrentUser, PrintHandler.StatusPath, PrinterName, 0);
         }
 
