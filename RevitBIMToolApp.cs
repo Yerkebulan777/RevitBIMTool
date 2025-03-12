@@ -5,8 +5,8 @@ using RevitBIMTool.Utils.Common;
 using Serilog;
 using ServiceLibrary.Models;
 
-
 namespace RevitBIMTool;
+
 internal sealed class RevitBIMToolApp : IExternalApplication
 {
     public static string Version { get; set; }
