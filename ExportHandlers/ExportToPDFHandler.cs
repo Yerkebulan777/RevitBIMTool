@@ -26,31 +26,34 @@ internal sealed class ExportToPDFHandler
 
         bool colorTypeEnabled = section is not ("KJ" or "KR" or "KG");
 
-        if (PrintHandler.TryGetAvailablePrinter(out PrinterControl printer))
+        if (!PrintHandler.TryRetrievePrinter(out PrinterControl printer))
         {
-            sheetData = PrintHandler.GetData(uidoc.Document, printer.PrinterName, revitFileName, colorTypeEnabled);
+            Log.Error("Все принтеры заняты или недоступны.");
+            throw new InvalidOperationException("Не удалось найти доступный принтер PDF!");
+        }
 
-            Log.Information($"Available printer: {printer.PrinterName}");
+        sheetData = PrintHandler.GetData(uidoc.Document, printer.PrinterName, revitFileName, colorTypeEnabled);
 
-            if (sheetData.Count > 0)
+        Log.Information($"Available printer: {printer.PrinterName}");
+
+        if (sheetData.Count > 0)
+        {
+            printer.InitializePrinter();
+
+            RevitPathHelper.EnsureDirectory(folder);
+            RevitPathHelper.EnsureDirectory(exportDirectory);
+
+            string exportPath = Path.Combine(exportDirectory, $"{revitFileName}.pdf");
+
+            Log.Information($"Total valid sheets: {sheetData.Values.Sum(lst => lst.Count)}");
+
+            sheetModels = PrintHandler.PrintSheetData(uidoc.Document, printer, sheetData, folder);
+
+            if (sheetModels.Count > 0)
             {
-                printer.InitializePrinter();
-
-                RevitPathHelper.EnsureDirectory(folder);
-                RevitPathHelper.EnsureDirectory(exportDirectory);
-
-                string exportPath = Path.Combine(exportDirectory, $"{revitFileName}.pdf");
-
-                Log.Information($"Total valid sheets: {sheetData.Values.Sum(lst => lst.Count)}");
-
-                sheetModels = PrintHandler.PrintSheetData(uidoc.Document, printer, sheetData, folder);
-
-                if (sheetModels.Count > 0)
-                {
-                    MergeHandler.Combine(sheetModels, folder, exportPath);
-                    SystemFolderOpener.OpenFolder(exportDirectory);
-                    RevitPathHelper.DeleteDirectory(folder);
-                }
+                MergeHandler.Combine(sheetModels, folder, exportPath);
+                SystemFolderOpener.OpenFolder(exportDirectory);
+                RevitPathHelper.DeleteDirectory(folder);
             }
         }
 

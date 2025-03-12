@@ -35,7 +35,7 @@ internal static class PrintHandler
     }
 
 
-    public static bool TryGetAvailablePrinter(out PrinterControl availablePrinter)
+    public static bool TryRetrievePrinter(out PrinterControl availablePrinter)
     {
         int retryInterval = 100;
 
