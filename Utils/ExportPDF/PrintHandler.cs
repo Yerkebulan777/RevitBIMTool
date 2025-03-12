@@ -43,7 +43,7 @@ internal static class PrintHandler
 
         while (attempt < 1000)
         {
-            Log.Debug($"Поиск доступного принтера ...");
+            Log.Debug($"Поиск доступного принтера...");
             Thread.Sleep(1000 * Math.Min(attempt++, 100));
             foreach (PrinterControl print in GetPrinters())
             {
