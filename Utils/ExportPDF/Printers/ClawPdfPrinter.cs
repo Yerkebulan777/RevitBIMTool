@@ -3,6 +3,7 @@ using Microsoft.Win32;
 using RevitBIMTool.Model;
 using RevitBIMTool.Utils.SystemHelpers;
 using Serilog;
+using System.IO;
 
 
 namespace RevitBIMTool.Utils.ExportPDF.Printers
@@ -36,13 +37,16 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
         }
 
 
-        public override bool Print(Document doc, string folder, SheetModel model)
+        public override bool Print(Document doc, SheetModel model)
         {
             string autoSaveKey = System.IO.Path.Combine(RegistryPath, "AutoSave");
-            RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", folder.Replace("\\", "\\\\"));
+            string folder = Path.GetDirectoryName(model.FilePath).Replace("\\", "\\\\");
+            RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", folder);
             return PrintHandler.ExecutePrintAsync(doc, folder, model).Result;
         }
 
     }
+
+
 
 }

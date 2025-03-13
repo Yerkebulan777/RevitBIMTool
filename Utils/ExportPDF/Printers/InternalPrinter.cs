@@ -26,10 +26,12 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
         }
 
 
-        public override bool Print(Document doc, string folder, SheetModel model)
+        public override bool Print(Document doc, SheetModel model)
         {
 #if R23
             ColorDepthType colorDepthType = model.IsColorEnabled ? ColorDepthType.Color : ColorDepthType.BlackLine;
+
+            string folder = Path.GetDirectoryName(model.FilePath);
 
             Log.Debug("Export to PDF from internal Revit...");
 
@@ -47,7 +49,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
 
             if (doc.Export(folder, viewIds, options))
             {
-                model.SheetPath = Path.Combine(folder, model.SheetName);
+                model.IsSuccessfully = true;
                 Thread.Sleep(1000);
                 return true;
             }
@@ -63,6 +65,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
                 Log.Debug($"Revit version: {revitVersion}");
                 return revitVersion >= 2023;
             }
+
             return false;
         }
 

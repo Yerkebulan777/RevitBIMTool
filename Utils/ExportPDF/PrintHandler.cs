@@ -228,8 +228,11 @@ internal static class PrintHandler
                         {
                             SheetModel model = sheetModels[idx];
 
+                            model.FilePath = Path.Combine(folder, model.SheetName);
+
                             if (printer.Print(doc, folder, model))
                             {
+                                model.IsSuccessfully = true;
                                 resultFilePaths.Add(model);
                             }
                         }
@@ -272,7 +275,7 @@ internal static class PrintHandler
         {
             if (await RevitPathHelper.AwaitExistsFileAsync(filePath))
             {
-                model.SheetPath = filePath;
+                model.IsSuccessfully = true;
                 return true;
             }
         }

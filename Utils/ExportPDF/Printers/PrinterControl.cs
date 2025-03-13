@@ -13,13 +13,11 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
         public abstract string RegistryPath { get; }
         public abstract string PrinterName { get; }
 
-
         public abstract void InitializePrinter();
 
         public abstract void ResetPrinterSettings();
 
-        public abstract bool Print(Document doc, string folder, SheetModel model);
-
+        public abstract bool Print(Document doc, SheetModel model);
 
         public virtual bool IsPrinterInstalled()
         {
@@ -34,7 +32,6 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
             return isInstalled && isPathExists;
         }
 
-
         public virtual bool IsAvailable()
         {
             if (IsPrinterInstalled())
@@ -46,6 +43,8 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
                     return true;
                 }
             }
+
+            Log.Debug($"{PrinterName} printer is busy");
 
             return false;
         }

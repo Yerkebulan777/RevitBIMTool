@@ -9,14 +9,15 @@ namespace RevitBIMTool.Utils.ExportPDF;
 
 internal static class MergeHandler
 {
-
     public static void Combine(List<SheetModel> sheetModels, string outputFullName, bool deleted = true)
     {
+        List<SheetModel> validSheets = sheetModels?.Where(s => s.IsSuccessfully).ToList();
+
         RevitPathHelper.DeleteExistsFile(outputFullName);
 
-        if (sheetModels == null || sheetModels.Count == 0)
+        if (validSheets is null || validSheets.Count == 0)
         {
-            Log.Error("Нет листов для объединения в PDF.");
+            Log.Error("Нет листов для объединения!");
             return;
         }
 
@@ -25,14 +26,15 @@ internal static class MergeHandler
         using PdfCopy copy = new PdfSmartCopy(outputDocument, stream);
         outputDocument.Open();
 
-        foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
+        foreach (SheetModel model in SheetModel.SortSheetModels(validSheets))
         {
             PdfReader reader = null;
-            if (File.Exists(model.SheetPath))
+
+            if (File.Exists(model.FilePath))
             {
                 try
                 {
-                    reader = new PdfReader(model.SheetPath);
+                    reader = new PdfReader(model.FilePath);
                     reader.ConsolidateNamedDestinations();
 
                     for (int num = 1; num <= reader.NumberOfPages; num++)
@@ -59,7 +61,7 @@ internal static class MergeHandler
                         if (deleted)
                         {
                             Log.Debug(model.SheetName);
-                            RevitPathHelper.DeleteExistsFile(model.SheetPath);
+                            RevitPathHelper.DeleteExistsFile(model.FilePath);
                         }
                     }
                 }
