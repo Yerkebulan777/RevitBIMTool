@@ -25,7 +25,6 @@ internal static class MergeHandler
         using Document outputDocument = new();
         using PdfCopy copy = new PdfSmartCopy(outputDocument, stream);
         outputDocument.Open();
-        int processedSheets = 0;
         int totalPages = 0;
 
         foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
@@ -53,7 +52,6 @@ internal static class MergeHandler
                 }
 
                 copy.FreeReader(reader);
-                processedSheets++;
             }
             catch (Exception ex)
             {
