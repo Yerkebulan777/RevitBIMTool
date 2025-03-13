@@ -1,6 +1,8 @@
-﻿using RevitBIMTool.Utils.ExportPDF.Printers;
+﻿using RevitBIMTool.Utils.Common;
+using RevitBIMTool.Utils.ExportPDF.Printers;
 using RevitBIMTool.Utils.SystemHelpers;
 using Serilog;
+using ServiceLibrary.Helpers;
 using System.IO;
 using System.Xml.Serialization;
 
@@ -62,6 +64,8 @@ internal static class PrinterStateManager
     /// </summary>
     private static void EnsureStateFileExists()
     {
+        RevitPathHelper.EnsureDirectory(appDataFolder);
+
         if (!File.Exists(stateFilePath))
         {
             PrinterStates initialState = new()
@@ -70,13 +74,12 @@ internal static class PrinterStateManager
                 Printers = []
             };
 
-            // Добавляем информацию о всех принтерах
             foreach (PrinterControl printer in GetPrinters())
             {
                 initialState.Printers.Add(new PrinterInfo(printer.PrinterName, true));
             }
 
-            _ = XmlHelper.SaveToXml(initialState, stateFilePath);
+            XmlHelper.SaveToXml(initialState, stateFilePath);
         }
     }
 
@@ -148,21 +151,13 @@ internal static class PrinterStateManager
             try
             {
                 PrinterStates states = XmlHelper.LoadFromXml<PrinterStates>(stateFilePath);
-
-                if (states == null)
-                {
-                    Log.Warning("Не удалось загрузить файл состояния принтеров");
-                    return false;
-                }
-
                 PrinterInfo printerInfo = AddPrinterIfNotExists(states, printerName, true);
                 XmlHelper.SaveToXml(states, stateFilePath);
-
                 return printerInfo.IsAvailable;
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"Ошибка при проверке доступности принтера {printerName}: {ex.Message}");
+                Log.Error(ex, $"{printerName}: {ex.Message}");
                 return false;
             }
             finally
@@ -187,10 +182,11 @@ internal static class PrinterStateManager
             {
                 PrinterStates states = XmlHelper.LoadFromXml<PrinterStates>(stateFilePath);
                 PrinterInfo printerInfo = AddPrinterIfNotExists(states, printerName, isAvailable);
-                printerInfo.IsAvailable = isAvailable;
                 states.LastUpdate = DateTime.Now;
+                printerInfo.IsAvailable = isAvailable;
+                XmlHelper.SaveToXml(states, stateFilePath);
 
-                return XmlHelper.SaveToXml(states, stateFilePath);
+                return true;
             }
             catch (Exception ex)
             {

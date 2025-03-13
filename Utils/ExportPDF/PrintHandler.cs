@@ -19,23 +19,6 @@ internal static class PrintHandler
     public const string StatusPath = @"Printers";
 
 
-    //public static int GetPrinterStatus(PrinterControl printer)
-    //{
-    //    int status = 0;
-
-    //    if (RegistryHelper.IsValueExists(Registry.CurrentUser, StatusPath, printer.PrinterName))
-    //    {
-    //        status = Convert.ToInt32(RegistryHelper.GetValue(Registry.CurrentUser, StatusPath, printer.PrinterName));
-    //    }
-    //    else if (RegistryHelper.CreateValue(Registry.CurrentUser, StatusPath, printer.PrinterName, 0))
-    //    {
-    //        Log.Debug($"Created status parameter {printer.PrinterName} with value {0}");
-    //    }
-
-    //    return status;
-    //}
-
-
     public static bool TryRetrievePrinter(out PrinterControl availablePrinter)
     {
         int retryCount = 0;

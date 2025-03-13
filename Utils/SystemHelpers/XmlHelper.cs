@@ -13,7 +13,7 @@ public static class XmlHelper
     /// <summary>
     /// Сохраняет объект в XML файл с использованием Mutex
     /// </summary>
-    public static bool SaveToXml<T>(T obj, string filePath) where T : class
+    public static void SaveToXml<T>(T obj, string filePath) where T : class
     {
         RevitPathHelper.EnsureDirectory(Path.GetDirectoryName(filePath));
 
@@ -36,8 +36,6 @@ public static class XmlHelper
                     {
                         serializer.Serialize(writer, obj);
                     }
-
-                    return true;
                 }
                 catch (Exception ex)
                 {
@@ -49,8 +47,6 @@ public static class XmlHelper
                 }
             }
         }
-
-        return false;
     }
 
     /// <summary>
