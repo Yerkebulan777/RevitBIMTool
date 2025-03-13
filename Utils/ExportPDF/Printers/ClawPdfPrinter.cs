@@ -40,7 +40,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
         {
             string autoSaveKey = System.IO.Path.Combine(RegistryPath, "AutoSave");
             RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", folder.Replace("\\", "\\\\"));
-            return PrintHandler.PrintSheet(doc, folder, model);
+            return PrintHandler.ExecutePrintAsync(doc, folder, model).Result;
         }
 
     }

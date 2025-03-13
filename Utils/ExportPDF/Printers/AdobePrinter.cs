@@ -44,7 +44,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
         {
             // Настраиваем директорию для сохранения
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "OutputDir", folder.Replace("\\", "\\\\"));
-            return PrintHandler.PrintSheet(doc, folder, model);
+            return PrintHandler.ExecutePrintAsync(doc, folder, model).Result;
         }
     }
 

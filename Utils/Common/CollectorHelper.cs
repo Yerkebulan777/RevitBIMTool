@@ -1,9 +1,7 @@
 ﻿using Autodesk.Revit.DB;
 using Serilog;
-using System;
 using Document = Autodesk.Revit.DB.Document;
 using Level = Autodesk.Revit.DB.Level;
-
 
 namespace RevitBIMTool.Utils;
 

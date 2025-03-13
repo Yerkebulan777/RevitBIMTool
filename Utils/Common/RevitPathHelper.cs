@@ -6,12 +6,13 @@ using System.IO;
 using Path = System.IO.Path;
 
 
-namespace RevitBIMTool.Utils;
+namespace RevitBIMTool.Utils.Common;
 public static class RevitPathHelper
 {
-
-    private static readonly string[] sectionAcronyms = { "AR", "AS", "APT", "KJ", "KR", "KG", "OV", "VK", "EOM", "EM", "PS", "SS", "OViK", "APT", "BIM" };
-
+    private static readonly string[] sectionAcronyms =
+    {
+        "AR", "AS", "APT", "KJ", "KR", "KG", "OV", "VK", "EOM", "EM", "PS", "SS", "OViK", "APT", "BIM"
+    };
 
     public static string GetUNCPath(string inputPath)
     {
@@ -156,17 +157,17 @@ public static class RevitPathHelper
     }
 
 
-    public static bool AwaitExistsFile(string filePath, int duration = 300)
+    public static async Task<bool> AwaitExistsFileAsync(string filePath, int durationInSeconds = 300)
     {
         int counter = 0;
 
-        while (counter < duration)
+        while (counter < durationInSeconds)
         {
+            await Task.Delay(1000);
+
             lock (sectionAcronyms)
             {
                 counter++;
-
-                Thread.Sleep(1000);
 
                 if (File.Exists(filePath))
                 {

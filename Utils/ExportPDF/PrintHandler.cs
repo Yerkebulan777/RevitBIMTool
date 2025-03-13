@@ -1,6 +1,7 @@
 ﻿using Autodesk.Revit.DB;
 using Microsoft.Win32;
 using RevitBIMTool.Model;
+using RevitBIMTool.Utils.Common;
 using RevitBIMTool.Utils.ExportPDF.Printers;
 using RevitBIMTool.Utils.SystemHelpers;
 using Serilog;
@@ -239,11 +240,10 @@ internal static class PrintHandler
             }
             catch (Exception ex)
             {
-                Log.Error(ex, ex.Message);
-
                 if (!trx.HasEnded())
                 {
                     _ = trx.RollBack();
+                    Log.Error(ex, ex.Message);
                 }
             }
             finally
@@ -256,7 +256,7 @@ internal static class PrintHandler
     }
 
 
-    public static bool PrintSheet(Document doc, string folder, SheetModel model)
+    public static async Task<bool> ExecutePrintAsync(Document doc, string folder, SheetModel model)
     {
         Log.Debug("Start submit print...");
 
@@ -270,7 +270,7 @@ internal static class PrintHandler
 
         if (printManager.SubmitPrint(model.ViewSheet))
         {
-            if (RevitPathHelper.AwaitExistsFile(filePath))
+            if (await RevitPathHelper.AwaitExistsFileAsync(filePath))
             {
                 model.SheetPath = filePath;
                 return true;
