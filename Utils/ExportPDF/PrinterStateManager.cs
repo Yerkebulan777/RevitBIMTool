@@ -48,7 +48,7 @@ internal static class PrinterStateManager
     private const string StateMutexName = "Global\\RevitPrinterStateMutex";
     private static readonly string userDocsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
     private static readonly string appDataFolder = Path.Combine(userDocsPath, "RevitBIMTool");
-    private static readonly string _stateFilePath = Path.Combine(appDataFolder, "PrinterState.xml");
+    private static readonly string stateFilePath = Path.Combine(appDataFolder, "PrinterState.xml");
 
     static PrinterStateManager()
     {
@@ -60,7 +60,7 @@ internal static class PrinterStateManager
     /// </summary>
     private static void EnsureStateFileExists()
     {
-        if (!File.Exists(_stateFilePath))
+        if (!File.Exists(stateFilePath))
         {
             PrinterStates initialState = new()
             {
@@ -74,7 +74,7 @@ internal static class PrinterStateManager
                 initialState.Printers.Add(new PrinterInfo(printer.PrinterName, true));
             }
 
-            _ = XmlHelper.SaveToXml(initialState, _stateFilePath);
+            _ = XmlHelper.SaveToXml(initialState, stateFilePath);
         }
     }
 
@@ -145,7 +145,7 @@ internal static class PrinterStateManager
         {
             try
             {
-                PrinterStates states = XmlHelper.LoadFromXml<PrinterStates>(_stateFilePath);
+                PrinterStates states = XmlHelper.LoadFromXml<PrinterStates>(stateFilePath);
 
                 if (states == null)
                 {
@@ -153,16 +153,8 @@ internal static class PrinterStateManager
                     return false;
                 }
 
-                PrinterInfo printerInfo = states.Printers.Find(p => p.PrinterName == printerName);
-
-                if (printerInfo == null)
-                {
-                    // Если принтера нет в списке, добавляем его
-                    printerInfo = new PrinterInfo(printerName, true);
-                    states.Printers.Add(printerInfo);
-                    states.LastUpdate = DateTime.Now;
-                    XmlHelper.SaveToXml(states, _stateFilePath);
-                }
+                PrinterInfo printerInfo = AddPrinterIfNotExists(states, printerName, true);
+                XmlHelper.SaveToXml(states, stateFilePath);
 
                 return printerInfo.IsAvailable;
             }
@@ -176,11 +168,8 @@ internal static class PrinterStateManager
                 mutex.ReleaseMutex();
             }
         }
-        else
-        {
-            Log.Warning("Таймаут ожидания доступа к файлу состояния принтеров");
-            return false;
-        }
+
+        return false;
     }
 
     /// <summary>
@@ -194,34 +183,16 @@ internal static class PrinterStateManager
         {
             try
             {
-                PrinterStates states = XmlHelper.LoadFromXml<PrinterStates>(_stateFilePath);
-
-                if (states == null)
-                {
-                    Log.Warning("Не удалось загрузить файл состояния принтеров");
-                    return false;
-                }
-
-                PrinterInfo printerInfo = states.Printers.Find(p => p.PrinterName == printerName);
-
-                if (printerInfo == null)
-                {
-                    // Если принтера нет в списке, добавляем его
-                    printerInfo = new PrinterInfo(printerName, isAvailable);
-                    states.Printers.Add(printerInfo);
-                }
-                else
-                {
-                    // Меняем состояние существующего принтера
-                    printerInfo.IsAvailable = isAvailable;
-                }
-
+                PrinterStates states = XmlHelper.LoadFromXml<PrinterStates>(stateFilePath);
+                PrinterInfo printerInfo = AddPrinterIfNotExists(states, printerName, isAvailable);
+                printerInfo.IsAvailable = isAvailable;
                 states.LastUpdate = DateTime.Now;
-                return XmlHelper.SaveToXml(states, _stateFilePath);
+
+                return XmlHelper.SaveToXml(states, stateFilePath);
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"Ошибка при изменении доступности принтера {printerName}: {ex.Message}");
+                Log.Error(ex, ex.Message);
                 return false;
             }
             finally
@@ -229,11 +200,24 @@ internal static class PrinterStateManager
                 mutex.ReleaseMutex();
             }
         }
-        else
+
+        return false;
+    }
+
+    /// <summary>
+    /// Добавляет принтер в список, если его там нет
+    /// </summary>
+    public static PrinterInfo AddPrinterIfNotExists(PrinterStates states, string printerName, bool isAvailable)
+    {
+        PrinterInfo printerInfo = states.Printers.Find(p => p.PrinterName == printerName);
+
+        if (printerInfo is null)
         {
-            Log.Warning("Таймаут ожидания доступа к файлу состояния принтеров");
-            return false;
+            printerInfo = new PrinterInfo(printerName, isAvailable);
+            states.Printers.Add(printerInfo);
         }
+
+        return printerInfo;
     }
 
     /// <summary>
