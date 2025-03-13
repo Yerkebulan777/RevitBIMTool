@@ -11,6 +11,7 @@ namespace RevitBIMTool.ExportHandlers;
 
 internal sealed class ExportToPDFHandler
 {
+    private PrinterControl printer;
     private List<SheetModel> sheetModels;
     private Dictionary<string, List<SheetModel>> sheetData;
 
@@ -23,7 +24,7 @@ internal sealed class ExportToPDFHandler
 
         bool colorTypeEnabled = section is not ("KJ" or "KR" or "KG");
 
-        if (!PrintHandler.TryRetrievePrinter(out PrinterControl printer))
+        if (!PrinterStateManager.TryRetrievePrinter(out printer))
         {
             Log.Error("No available printer found!");
             RevitFileHelper.CloseRevitApplication();

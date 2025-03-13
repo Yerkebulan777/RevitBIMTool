@@ -1,9 +1,7 @@
 ﻿using Autodesk.Revit.DB;
-using Microsoft.Win32;
 using RevitBIMTool.Model;
 using RevitBIMTool.Utils.Common;
 using RevitBIMTool.Utils.ExportPDF.Printers;
-using RevitBIMTool.Utils.SystemHelpers;
 using Serilog;
 using System.IO;
 using Document = Autodesk.Revit.DB.Document;
@@ -17,43 +15,6 @@ internal static class PrintHandler
 {
     // Компьютер\HKEY_CURRENT_USER\Printers
     public const string StatusPath = @"Printers";
-
-
-    public static bool TryRetrievePrinter(out PrinterControl availablePrinter)
-    {
-        int retryCount = 0;
-        availablePrinter = null;
-        while (retryCount < 1000)
-        {
-            retryCount++;
-            Thread.Sleep(1000);
-            Log.Debug($"Поиск доступного принтера...");
-            foreach (PrinterControl print in GetPrinters())
-            {
-                if (print.IsAvailable())
-                {
-                    availablePrinter = print;
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-
-    private static List<PrinterControl> GetPrinters()
-    {
-        List<PrinterControl> printers =
-        [
-            new Pdf24Printer(),
-            new CreatorPrinter(),
-            new ClawPdfPrinter(),
-            new InternalPrinter(),
-        ];
-
-        return printers;
-    }
 
 
     private static void ResetAndApplyPrinterSettings(Document doc, string printerName)

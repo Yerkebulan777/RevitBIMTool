@@ -96,7 +96,7 @@ internal static class PrinterStateManager
         {
             retryCount++;
             Thread.Sleep(retryDelay);
-            Log.Debug($"Поиск доступного принтера...");
+            Log.Debug("Searching for an available printer...");
 
             foreach (PrinterControl printer in GetPrinters())
             {
@@ -106,7 +106,6 @@ internal static class PrinterStateManager
                     {
                         if (SetAvailability(printer.PrinterName, false))
                         {
-                            Log.Debug($"Доступный принтер: {printer.PrinterName}");
                             availablePrinter = printer;
                             return true;
                         }
@@ -119,7 +118,7 @@ internal static class PrinterStateManager
             }
         }
 
-        Log.Error($"Не найден доступный принтер!");
+        Log.Error("No available printer found!");
 
         return false;
     }
@@ -131,9 +130,9 @@ internal static class PrinterStateManager
     {
         return
         [
-            new Pdf24Printer(),
-            new CreatorPrinter(),
-            new ClawPdfPrinter(),
+            //new Pdf24Printer(),
+            //new CreatorPrinter(),
+            //new ClawPdfPrinter(),
             new InternalPrinter()
         ];
     }
