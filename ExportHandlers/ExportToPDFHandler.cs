@@ -26,7 +26,7 @@ internal sealed class ExportToPDFHandler
 
         if (!PrinterStateManager.TryRetrievePrinter(out printer))
         {
-            Log.Error("No available printer found!");
+            Log.Fatal("No available printer found!");
             RevitFileHelper.CloseRevitApplication();
         }
 
