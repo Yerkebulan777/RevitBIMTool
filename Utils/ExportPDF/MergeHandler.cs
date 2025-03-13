@@ -21,9 +21,13 @@ internal static class MergeHandler
         if (validSheets is not null && validSheets.Any())
         {
             using FileStream stream = new(outputFullName, FileMode.Create);
+
             using Document outputDocument = new();
+
             using PdfCopy copy = new PdfSmartCopy(outputDocument, stream);
+
             outputDocument.Open();
+
             int totalPages = 0;
 
             foreach (SheetModel model in SheetModel.SortSheetModels(validSheets))
