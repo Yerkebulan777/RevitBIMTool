@@ -12,7 +12,7 @@ namespace RevitBIMTool.Utils.ExportPDF;
 /// </summary>
 [Serializable]
 [XmlRoot("PrinterStates")]
-internal class PrinterStates
+public class PrinterStates
 {
     [XmlElement("LastUpdate")]
     public DateTime LastUpdate { get; set; }
@@ -27,7 +27,7 @@ internal class PrinterStates
 /// Модель данных для хранения информации о принтере
 /// </summary>
 [Serializable]
-internal class PrinterInfo
+public class PrinterInfo
 {
     [XmlAttribute("Name")]
     public string PrinterName { get; set; }
@@ -40,6 +40,11 @@ internal class PrinterInfo
 
     public PrinterInfo(string name, bool isAvailable)
     {
+        if (string.IsNullOrEmpty(name))
+        {
+            throw new ArgumentNullException(nameof(name));
+        }
+
         IsAvailable = isAvailable;
         PrinterName = name;
     }
@@ -144,7 +149,7 @@ internal static class PrinterStateManager
     {
         if (string.IsNullOrEmpty(printerName))
         {
-            new ArgumentNullException(nameof(printerName));
+            throw new ArgumentNullException(nameof(printerName));
         }
 
         using Mutex mutex = new(false, StateMutexName);
