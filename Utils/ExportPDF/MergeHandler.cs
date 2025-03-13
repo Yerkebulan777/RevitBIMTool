@@ -9,15 +9,15 @@ namespace RevitBIMTool.Utils.ExportPDF;
 
 internal static class MergeHandler
 {
-    public static void Combine(List<SheetModel> sheetModels, string outputFullName, bool deleted = true)
+
+    public static void Combine(List<SheetModel> sheetModels, string directory, string outputFullName, bool deleteOriginals = true)
     {
-        List<SheetModel> validSheets = sheetModels?.Where(s => s.IsSuccessfully).ToList();
+        Log.Information($"Sheets count for PDF combining: {sheetModels?.Count ?? 0}");
 
         RevitPathHelper.DeleteExistsFile(outputFullName);
 
-        if (validSheets is null || validSheets.Count == 0)
+        if (sheetModels is null || !sheetModels.Any())
         {
-            Log.Error("No sheets available for merging");
             return;
         }
 
@@ -25,50 +25,55 @@ internal static class MergeHandler
         using Document outputDocument = new();
         using PdfCopy copy = new PdfSmartCopy(outputDocument, stream);
         outputDocument.Open();
+        int processedSheets = 0;
+        int totalPages = 0;
 
-        foreach (SheetModel model in SheetModel.SortSheetModels(validSheets))
+        foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
         {
-            PdfReader reader = null;
-
-            if (File.Exists(model.FilePath))
+            if (!File.Exists(model.FilePath))
             {
-                try
-                {
-                    reader = new PdfReader(model.FilePath);
-                    reader.ConsolidateNamedDestinations();
+                Log.Warning($"Sheet file not found: {model.FilePath}");
+                continue;
+            }
 
-                    for (int num = 1; num <= reader.NumberOfPages; num++)
+            PdfReader reader = null;
+            try
+            {
+                reader = new PdfReader(model.FilePath);
+                reader.ConsolidateNamedDestinations();
+
+                for (int num = 1; num <= reader.NumberOfPages; num++)
+                {
+                    PdfImportedPage page = copy.GetImportedPage(reader, num);
+                    if (page != null && outputDocument.IsOpen())
                     {
-                        PdfImportedPage page = copy.GetImportedPage(reader, num);
-                        if (page != null && outputDocument.IsOpen())
-                        {
-                            copy.AddPage(page);
-                        }
+                        copy.AddPage(page);
+                        totalPages++;
                     }
                 }
-                catch (Exception ex)
+
+                copy.FreeReader(reader);
+                processedSheets++;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"Error processing PDF sheet {model.SheetName}: {ex.Message}");
+            }
+            finally
+            {
+                reader?.Close();
+                model.Dispose();
+
+                if (deleteOriginals)
                 {
-                    Log.Error(ex, $"Error processing file {model.FilePath}: {ex.Message}");
-                }
-                finally
-                {
-                    try
-                    {
-                        copy.FreeReader(reader);
-                        reader.Close();
-                    }
-                    finally
-                    {
-                        model.Dispose();
-                        if (deleted)
-                        {
-                            RevitPathHelper.DeleteExistsFile(model.FilePath);
-                        }
-                    }
+                    RevitPathHelper.DeleteExistsFile(model.FilePath);
                 }
             }
         }
+
+        Log.Information($"Successfully combined {totalPages} total pages");
     }
+
 
 
 
