@@ -102,7 +102,7 @@ internal static class PrinterStateManager
                 {
                     if (printer.IsAvailable())
                     {
-                        if (SetPrinterAvailability(printer.PrinterName, false))
+                        if (SetAvailability(printer.PrinterName, false))
                         {
                             Log.Debug($"Доступный принтер: {printer.PrinterName}");
                             availablePrinter = printer;
@@ -177,7 +177,7 @@ internal static class PrinterStateManager
     /// <summary>
     /// Устанавливает доступность принтера
     /// </summary>
-    public static bool SetPrinterAvailability(string printerName, bool isAvailable)
+    public static bool SetAvailability(string printerName, bool isAvailable)
     {
         using Mutex mutex = new(false, StateMutexName);
 
@@ -227,6 +227,6 @@ internal static class PrinterStateManager
     /// </summary>
     public static bool ReleasePrinter(string printerName)
     {
-        return SetPrinterAvailability(printerName, true);
+        return SetAvailability(printerName, true);
     }
 }
