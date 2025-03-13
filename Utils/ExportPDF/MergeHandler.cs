@@ -14,6 +14,12 @@ internal static class MergeHandler
     {
         RevitPathHelper.DeleteExistsFile(outputFullName);
 
+        if (sheetModels == null || sheetModels.Count == 0)
+        {
+            Log.Error("Нет листов для объединения в PDF.");
+            return;
+        }
+
         using FileStream stream = new(outputFullName, FileMode.Create);
         using Document outputDocument = new();
         using PdfCopy copy = new PdfSmartCopy(outputDocument, stream);

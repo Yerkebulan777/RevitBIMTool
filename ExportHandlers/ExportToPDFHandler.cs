@@ -16,9 +16,9 @@ internal sealed class ExportToPDFHandler
 
     public void Execute(UIDocument uidoc, string revitFilePath, string exportDirectory)
     {
-        string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
         string baseTempPath = Path.GetDirectoryName(Path.GetTempPath());
-        string folder = Path.Combine(baseTempPath, $"{revitFileName}");
+        string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
+        string tempDirectory = Path.Combine(baseTempPath, $"{revitFileName}");
         string section = RevitPathHelper.GetSectionName(revitFilePath);
 
         bool colorTypeEnabled = section is not ("KJ" or "KR" or "KG");
@@ -31,7 +31,9 @@ internal sealed class ExportToPDFHandler
 
         sheetData = PrintHandler.GetData(uidoc.Document, printer.PrinterName, revitFileName, colorTypeEnabled);
 
+        Log.Information($"Total sheets: {sheetData.Values.Sum(lst => lst.Count)}");
         Log.Information($"Available printer: {printer.PrinterName}");
+        Log.Information($"Section: {section}");
 
         if (sheetData.Count > 0)
         {
@@ -39,20 +41,20 @@ internal sealed class ExportToPDFHandler
 
             Log.Debug("Start export to PDF...");
 
-            RevitPathHelper.EnsureDirectory(folder);
+            RevitPathHelper.EnsureDirectory(tempDirectory);
             RevitPathHelper.EnsureDirectory(exportDirectory);
 
             string exportPath = Path.Combine(exportDirectory, $"{revitFileName}.pdf");
 
-            Log.Information($"Total valid sheets: {sheetData.Values.Sum(lst => lst.Count)}");
+            sheetModels = PrintHandler.PrintSheetData(uidoc.Document, printer, sheetData, tempDirectory);
 
-            sheetModels = PrintHandler.PrintSheetData(uidoc.Document, printer, sheetData, folder);
+            Log.Information($"Total valid sheets: {sheetModels.Count}");
 
             if (sheetModels.Count > 0)
             {
                 MergeHandler.Combine(sheetModels, exportPath);
                 SystemFolderOpener.OpenFolder(exportDirectory);
-                RevitPathHelper.DeleteDirectory(folder);
+                RevitPathHelper.DeleteDirectory(tempDirectory);
             }
         }
     }

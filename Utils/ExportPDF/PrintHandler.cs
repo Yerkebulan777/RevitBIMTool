@@ -248,7 +248,7 @@ internal static class PrintHandler
             }
             finally
             {
-                printer.ResetPrinterSettings();
+                printer?.ResetPrinterSettings();
             }
         }
 
@@ -279,9 +279,6 @@ internal static class PrintHandler
 
         return false;
     }
-
-
-
 
 
 
