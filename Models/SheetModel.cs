@@ -1,6 +1,5 @@
 ﻿using Autodesk.Revit.DB;
 using RevitBIMTool.Utils.Common;
-using Serilog;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
