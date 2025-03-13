@@ -31,13 +31,19 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
 #if R23
             ColorDepthType colorDepthType = model.IsColorEnabled ? ColorDepthType.Color : ColorDepthType.BlackLine;
 
-            string folder = Path.GetDirectoryName(model.FilePath);
+            Log.Debug($"Export from internal printer to folder: {model.FilePath}");
 
-            Log.Debug("Export to PDF from internal Revit...");
+            string folderPath = Path.GetDirectoryName(model.FilePath);
 
             PDFExportOptions options = new()
             {
+                Combine = false,
+                StopOnError = true,
+                HideScopeBoxes = true,
+                HideCropBoundaries = true,
+                HideReferencePlane = true,
                 FileName = model.SheetName,
+                PaperFormat = ExportPaperFormat.Default,
                 RasterQuality = RasterQualityType.Medium,
                 ExportQuality = PDFExportQualityType.DPI300,
                 ColorDepth = colorDepthType,
@@ -47,10 +53,10 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
 
             IList<ElementId> viewIds = [model.ViewSheet.Id];
 
-            if (doc.Export(folder, viewIds, options))
+            if (doc.Export(folderPath, viewIds, options))
             {
                 model.IsSuccessfully = true;
-                Thread.Sleep(1000);
+                Thread.Sleep(100);
                 return true;
             }
 #endif

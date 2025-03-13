@@ -143,6 +143,11 @@ internal static class PrinterStateManager
     /// </summary>
     public static bool IsPrinterAvailable(string printerName)
     {
+        if (string.IsNullOrEmpty(printerName))
+        {
+            new ArgumentNullException(nameof(printerName));
+        }
+
         using Mutex mutex = new(false, StateMutexName);
 
         if (mutex.WaitOne(5000))

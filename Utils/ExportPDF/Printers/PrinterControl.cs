@@ -4,7 +4,6 @@ using RevitBIMTool.Model;
 using RevitBIMTool.Utils.SystemHelpers;
 using Serilog;
 using System.IO;
-using System.Reflection;
 
 
 namespace RevitBIMTool.Utils.ExportPDF.Printers
