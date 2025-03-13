@@ -31,7 +31,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
 #if R23
             ColorDepthType colorDepthType = model.IsColorEnabled ? ColorDepthType.Color : ColorDepthType.BlackLine;
 
-            Log.Debug($"Export from internal printer to folder: {model.FilePath}");
+            Log.Debug($"Exporting to PDF using the internal printer, destination: {model.FilePath}");
 
             string folderPath = Path.GetDirectoryName(model.FilePath);
 
