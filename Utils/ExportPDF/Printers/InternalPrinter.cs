@@ -11,6 +11,8 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
         public override string RegistryPath => @"SOFTWARE\Autodesk\Revit";
         public override string PrinterName => string.Empty;
 
+        public int revitVersion;
+
 
         public override void InitializePrinter()
         {
@@ -55,9 +57,16 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
 
         public override bool IsAvailable()
         {
-            return int.TryParse(RevitBIMToolApp.Version, out int version) && version >= 2023;
+            if (int.TryParse(RevitBIMToolApp.Version, out revitVersion))
+            {
+                Log.Debug($"Revit version: {revitVersion}");
+                return revitVersion >= 2023;
+            }
+            return false;
         }
 
     }
+
+
 
 }
