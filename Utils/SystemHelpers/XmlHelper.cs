@@ -44,6 +44,10 @@ public static class XmlHelper
                 finally
                 {
                     mutex.ReleaseMutex();
+                    if (!File.Exists(filePath))
+                    {
+                        Log.Error($"State file creation failed: {filePath}");
+                    }
                 }
             }
         }

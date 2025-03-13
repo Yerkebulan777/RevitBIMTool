@@ -131,7 +131,7 @@ public static class RevitPathHelper
         {
             try
             {
-                _ = Directory.CreateDirectory(directoryPath);
+                Directory.CreateDirectory(directoryPath);
             }
             finally
             {
