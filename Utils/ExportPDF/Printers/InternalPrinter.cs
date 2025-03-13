@@ -9,7 +9,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
     internal sealed class InternalPrinter : PrinterControl
     {
         public override string RegistryPath => @"SOFTWARE\Autodesk\Revit";
-        public override string PrinterName => string.Empty;
+        public override string PrinterName => "InternalPrinter";
 
         public int revitVersion;
 
@@ -31,7 +31,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
 #if R23
             ColorDepthType colorDepthType = model.IsColorEnabled ? ColorDepthType.Color : ColorDepthType.BlackLine;
 
-            Log.Debug("Экспорт в PDF с встроенного механизма Revit...");
+            Log.Debug("Export to PDF from internal Revit...");
 
             PDFExportOptions options = new()
             {
@@ -48,6 +48,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
             if (doc.Export(folder, viewIds, options))
             {
                 model.SheetPath = Path.Combine(folder, model.SheetName);
+                Thread.Sleep(1000);
                 return true;
             }
 #endif
