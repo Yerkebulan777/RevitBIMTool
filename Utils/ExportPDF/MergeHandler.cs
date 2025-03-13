@@ -12,11 +12,13 @@ internal static class MergeHandler
 
     public static void Combine(List<SheetModel> sheetModels, string outputFullName, bool deleteOriginals = true)
     {
-        Log.Information($"Sheets count for PDF combining: {sheetModels?.Count ?? 0}");
+        List<SheetModel> validSheets = sheetModels?.Where(s => s.IsSuccessfully).ToList();
+
+        Log.Information($"Sheets count for PDF combining: {validSheets?.Count ?? 0}");
 
         RevitPathHelper.DeleteExistsFile(outputFullName);
 
-        if (sheetModels is not null && sheetModels.Any())
+        if (validSheets is not null && validSheets.Any())
         {
             using FileStream stream = new(outputFullName, FileMode.Create);
             using Document outputDocument = new();
@@ -24,15 +26,10 @@ internal static class MergeHandler
             outputDocument.Open();
             int totalPages = 0;
 
-            foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
+            foreach (SheetModel model in SheetModel.SortSheetModels(validSheets))
             {
-                if (!File.Exists(model.FilePath))
-                {
-                    Log.Warning($"Sheet file not found: {model.FilePath}");
-                    continue;
-                }
-
                 PdfReader reader = null;
+
                 try
                 {
                     reader = new PdfReader(model.FilePath);
