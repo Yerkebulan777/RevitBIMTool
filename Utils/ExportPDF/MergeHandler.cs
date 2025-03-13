@@ -6,10 +6,11 @@ using System.IO;
 using Document = iTextSharp.text.Document;
 
 namespace RevitBIMTool.Utils.ExportPDF;
+
 internal static class MergeHandler
 {
 
-    public static void Combine(List<SheetModel> sheetModels, string directory, string outputFullName, bool deleted = true)
+    public static void Combine(List<SheetModel> sheetModels, string outputFullName, bool deleted = true)
     {
         RevitPathHelper.DeleteExistsFile(outputFullName);
 
@@ -20,15 +21,13 @@ internal static class MergeHandler
 
         foreach (SheetModel model in SheetModel.SortSheetModels(sheetModels))
         {
+            PdfReader reader = null;
             if (File.Exists(model.SheetPath))
             {
-                PdfReader reader = null;
                 try
                 {
                     reader = new PdfReader(model.SheetPath);
                     reader.ConsolidateNamedDestinations();
-
-                    Log.Debug(model.SheetName);
 
                     for (int num = 1; num <= reader.NumberOfPages; num++)
                     {
@@ -46,18 +45,16 @@ internal static class MergeHandler
                 }
                 finally
                 {
+                    model.Dispose();
                     if (reader != null)
                     {
                         copy.FreeReader(reader);
                         reader.Close();
-                    }
-
-                    model.Dispose();
-
-                    if (deleted && File.Exists(model.SheetPath))
-                    {
-                        try { File.Delete(model.SheetPath); }
-                        catch (Exception ex) { Log.Error(ex, ex.Message); }
+                        if (deleted)
+                        {
+                            Log.Debug(model.SheetName);
+                            RevitPathHelper.DeleteExistsFile(model.SheetPath);
+                        }
                     }
                 }
             }

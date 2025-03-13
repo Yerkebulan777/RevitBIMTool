@@ -50,7 +50,7 @@ internal sealed class ExportToPDFHandler
 
             if (sheetModels.Count > 0)
             {
-                MergeHandler.Combine(sheetModels, folder, exportPath);
+                MergeHandler.Combine(sheetModels, exportPath);
                 SystemFolderOpener.OpenFolder(exportDirectory);
                 RevitPathHelper.DeleteDirectory(folder);
             }
