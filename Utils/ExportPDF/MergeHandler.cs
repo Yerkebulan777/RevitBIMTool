@@ -17,7 +17,7 @@ internal static class MergeHandler
 
         if (validSheets is null || validSheets.Count == 0)
         {
-            Log.Error("Нет листов для объединения!");
+            Log.Error("No sheets available for merging");
             return;
         }
 
@@ -40,7 +40,6 @@ internal static class MergeHandler
                     for (int num = 1; num <= reader.NumberOfPages; num++)
                     {
                         PdfImportedPage page = copy.GetImportedPage(reader, num);
-
                         if (page != null && outputDocument.IsOpen())
                         {
                             copy.AddPage(page);
@@ -49,18 +48,20 @@ internal static class MergeHandler
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, ex.Message);
+                    Log.Error(ex, $"Error processing file {model.FilePath}: {ex.Message}");
                 }
                 finally
                 {
-                    model.Dispose();
-                    if (reader != null)
+                    try
                     {
                         copy.FreeReader(reader);
                         reader.Close();
+                    }
+                    finally
+                    {
+                        model.Dispose();
                         if (deleted)
                         {
-                            Log.Debug(model.SheetName);
                             RevitPathHelper.DeleteExistsFile(model.FilePath);
                         }
                     }
