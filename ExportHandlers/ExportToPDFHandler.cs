@@ -33,6 +33,7 @@ internal sealed class ExportToPDFHandler
 
         Log.Information($"Total sheets: {sheetData.Values.Sum(lst => lst.Count)}");
         Log.Information($"Available printer: {printer.PrinterName}");
+        Log.Information($"Temp directory: {tempDirectory}");
         Log.Information($"Section: {section}");
 
         if (sheetData.Count > 0)

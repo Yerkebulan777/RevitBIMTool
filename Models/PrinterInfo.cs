@@ -1,6 +1,6 @@
 ﻿namespace RevitBIMTool.Utils.ExportPDF;
 
-internal static partial class PrinterMemoryManager
+internal static partial class PrinterManager
 {
     // Структура для хранения информации о принтерах
     private class PrinterInfo
