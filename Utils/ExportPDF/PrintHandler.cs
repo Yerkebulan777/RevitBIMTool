@@ -272,13 +272,19 @@ internal static class PrintHandler
         {
             if (await RevitPathHelper.AwaitExistsFileAsync(filePath))
             {
-                model.SheetPath = filePath;
-                return true;
+                if (IsValidPdfFile(filePath))
+                {
+                    model.SheetPath = filePath;
+                    return true;
+                }
             }
         }
 
         return false;
     }
+
+
+
 
 
 

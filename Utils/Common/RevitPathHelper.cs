@@ -163,17 +163,22 @@ public static class RevitPathHelper
 
         while (counter < durationInSeconds)
         {
-            await Task.Delay(1000);
-
-            lock (sectionAcronyms)
+            try
             {
-                counter++;
+                await Task.Delay(1000);
 
-                if (File.Exists(filePath))
+                lock (sectionAcronyms)
                 {
-                    Log.Debug($"Waiting: {counter} seconds");
-                    return true;
+                    return IsValidFile(filePath);
                 }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+            }
+            finally
+            {
+                Log.Debug($"Waiting: {counter++} seconds");
             }
         }
 
@@ -196,6 +201,18 @@ public static class RevitPathHelper
             File.Move(info.FullName, path);
         }
     }
+
+
+    public static bool IsValidFile(string filePath)
+    {
+        if (File.Exists(filePath))
+        {
+            FileInfo fileInfo = new(filePath);
+            return fileInfo.Length >= 100;
+        }
+        return false;
+    }
+
 
 
 }
