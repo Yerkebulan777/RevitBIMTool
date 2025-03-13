@@ -1,240 +1,246 @@
 ﻿using RevitBIMTool.Utils.ExportPDF.Printers;
+using RevitBIMTool.Utils.SystemHelpers;
 using Serilog;
 using System.IO;
+using System.Xml.Serialization;
 
-namespace RevitBIMTool.Utils.ExportPDF
+namespace RevitBIMTool.Utils.ExportPDF;
+
+/// <summary>
+/// Модель данных для хранения состояния принтеров
+/// </summary>
+[Serializable]
+[XmlRoot("PrinterStates")]
+internal class PrinterStates
 {
-    /// <summary>
-    /// Менеджер состояний принтеров для многопроцессной среды
-    /// </summary>
-    internal static class PrinterStateManager
+    [XmlElement("LastUpdate")]
+    public DateTime LastUpdate { get; set; }
+
+    [XmlArray("Printers")]
+    [XmlArrayItem("Printer")]
+    public List<PrinterInfo> Printers { get; set; } = [];
+}
+
+/// <summary>
+/// Модель данных для хранения информации о принтере
+/// </summary>
+[Serializable]
+internal class PrinterInfo
+{
+    [XmlAttribute("Name")]
+    public string PrinterName { get; set; }
+
+    [XmlElement("IsAvailable")]
+    public bool IsAvailable { get; set; }
+
+    // Конструктор без параметров для сериализации
+    public PrinterInfo() { }
+
+    public PrinterInfo(string name, bool isAvailable)
     {
-        private const string MutexName = "Global\\RevitPrinterStateMutex";
-        private const string StateFileName = "revit-printer-state.txt";
-        private static readonly string _stateFilePath;
+        IsAvailable = isAvailable;
+        PrinterName = name;
+    }
+}
 
-        // Модель данных для хранения информации о принтере
-        public class PrinterInfo
+internal static class PrinterStateManager
+{
+    private const string StateMutexName = "Global\\RevitPrinterStateMutex";
+    private static readonly string userDocsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+    private static readonly string appDataFolder = Path.Combine(userDocsPath, "RevitBIMTool");
+    private static readonly string _stateFilePath = Path.Combine(appDataFolder, "PrinterState.xml");
+
+    static PrinterStateManager()
+    {
+        EnsureStateFileExists();
+    }
+
+    /// <summary>
+    /// Создает файл состояния принтеров, если он отсутствует
+    /// </summary>
+    private static void EnsureStateFileExists()
+    {
+        if (!File.Exists(_stateFilePath))
         {
-            public string PrinterName { get; set; }
-            public DateTime LastSuccessTime { get; set; }
-            public int IsAvailable { get; set; }
-
-            public PrinterInfo()
+            PrinterStates initialState = new()
             {
-                // Конструктор без параметров
+                LastUpdate = DateTime.Now,
+                Printers = []
+            };
+
+            // Добавляем информацию о всех принтерах
+            foreach (PrinterControl printer in GetPrinters())
+            {
+                initialState.Printers.Add(new PrinterInfo(printer.PrinterName, true));
             }
 
-            public PrinterInfo(string name, bool isAvailable)
-            {
-                PrinterName = name;
-                LastSuccessTime = DateTime.Now;
-                IsAvailable = isAvailable ? 1 : 0;
-            }
-
-            // Преобразование в строку для записи в файл
-            public string ToFileString()
-            {
-                return $"{PrinterName}|{IsAvailable}|{LastSuccessTime.Ticks}";
-            }
-
-            // Создание объекта из строки файла
-            public static PrinterInfo FromFileString(string fileString)
-            {
-                string[] parts = fileString.Split('|');
-                if (parts.Length != 3)
-                    return null;
-
-                PrinterInfo info = new PrinterInfo();
-                info.PrinterName = parts[0];
-
-                if (int.TryParse(parts[1], out int available))
-                    info.IsAvailable = available;
-
-                if (long.TryParse(parts[2], out long ticks))
-                    info.LastSuccessTime = new DateTime(ticks);
-
-                return info;
-            }
+            _ = XmlHelper.SaveToXml(initialState, _stateFilePath);
         }
+    }
 
-        // Инициализация пути к файлу состояния
-        static PrinterStateManager()
+    /// <summary>
+    /// Попытка получить доступный принтер для печати
+    /// </summary>
+    public static bool TryRetrievePrinter(out PrinterControl availablePrinter)
+    {
+        int retryCount = 0;
+        availablePrinter = null;
+        const int maxRetries = 1000;
+        const int retryDelay = 1000;
+
+        while (retryCount < maxRetries)
         {
-            string myDocumentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            string appDataFolder = Path.Combine(myDocumentsPath, "RevitBIMTool");
+            retryCount++;
+            Thread.Sleep(retryDelay);
+            Log.Debug($"Поиск доступного принтера...");
 
-            // Обеспечиваем существование директории
-            if (!Directory.Exists(appDataFolder))
+            foreach (PrinterControl printer in GetPrinters())
             {
-                Directory.CreateDirectory(appDataFolder);
-            }
-
-            _stateFilePath = Path.Combine(appDataFolder, StateFileName);
-            Log.Debug($"Файл состояния принтеров будет сохранен по пути: {_stateFilePath}");
-        }
-
-        /// <summary>
-        /// Попытка получить доступный принтер для печати
-        /// </summary>
-        /// <param name="availablePrinter">Найденный принтер</param>
-        /// <returns>True, если принтер найден</returns>
-        public static bool TryRetrievePrinter(out PrinterControl availablePrinter)
-        {
-            availablePrinter = null;
-            int retryCount = 0;
-
-            while (retryCount < 1000)  // Используем тот же цикл, что и в оригинале
-            {
-                retryCount++;
-                Thread.Sleep(1000);  // Пауза между попытками
-                Log.Debug($"Поиск доступного принтера... Попытка #{retryCount}/1000");
-
-                // Используем мьютекс для синхронизации доступа между процессами
-                using (Mutex mutex = new Mutex(false, MutexName))
+                try
                 {
-                    try
+                    if (printer.IsAvailable())
                     {
-                        if (mutex.WaitOne(5000))  // Ожидаем доступ к ресурсу с таймаутом
+                        if (SetPrinterAvailability(printer.PrinterName, false))
                         {
-                            try
-                            {
-                                // Перебираем принтеры в заданном порядке приоритета
-                                foreach (PrinterControl printer in GetPrinters())
-                                {
-                                    try
-                                    {
-                                        if (printer.IsAvailable())
-                                        {
-                                            availablePrinter = printer;
-                                            Log.Debug($"Найден доступный принтер: {printer.PrinterName}");
-
-                                            // Сохраняем информацию о рабочем принтере
-                                            SavePrinterState(printer.PrinterName, true);
-
-                                            return true;
-                                        }
-                                        else
-                                        {
-                                            Log.Debug($"Принтер {printer.PrinterName} недоступен");
-                                            SavePrinterState(printer.PrinterName, false);
-                                        }
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        Log.Error($"Ошибка при проверке принтера {printer.PrinterName}: {ex.Message}");
-                                        SavePrinterState(printer.PrinterName, false);
-                                    }
-                                }
-                            }
-                            finally
-                            {
-                                mutex.ReleaseMutex();  // Всегда освобождаем мьютекс
-                            }
+                            Log.Debug($"Доступный принтер: {printer.PrinterName}");
+                            availablePrinter = printer;
+                            return true;
                         }
-                        else
-                        {
-                            Log.Warning("Не удалось получить доступ к мьютексу принтера (таймаут)");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error($"Ошибка синхронизации при поиске принтера: {ex.Message}");
                     }
                 }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, ex.Message);
+                }
             }
-
-            Log.Error("Не найден доступный принтер после 1000 попыток.");
-            return false;
         }
 
-        /// <summary>
-        /// Получить список принтеров в порядке приоритета
-        /// </summary>
-        public static List<PrinterControl> GetPrinters()
-        {
-            return new List<PrinterControl>
-            {
-                new Pdf24Printer(),
-                new CreatorPrinter(),
-                new ClawPdfPrinter(),
-                new InternalPrinter()
-            };
-        }
+        Log.Error($"Не найден доступный принтер!");
 
-        /// <summary>
-        /// Сохранение информации о состоянии принтера
-        /// </summary>
-        private static void SavePrinterState(string printerName, bool isAvailable)
+        return false;
+    }
+
+    /// <summary>
+    /// Получить список принтеров в порядке приоритета
+    /// </summary>
+    public static List<PrinterControl> GetPrinters()
+    {
+        return
+        [
+            new Pdf24Printer(),
+            new CreatorPrinter(),
+            new ClawPdfPrinter(),
+            new InternalPrinter()
+        ];
+    }
+
+    /// <summary>
+    /// Проверяет, доступен ли принтер
+    /// </summary>
+    public static bool IsPrinterAvailable(string printerName)
+    {
+        using Mutex mutex = new(false, StateMutexName);
+
+        if (mutex.WaitOne(5000))
         {
             try
             {
-                // Загружаем текущие данные о принтерах
-                Dictionary<string, PrinterInfo> printerDict = LoadPrinterStates();
+                PrinterStates states = XmlHelper.LoadFromXml<PrinterStates>(_stateFilePath);
 
-                // Обновляем информацию о принтере
-                if (printerDict.ContainsKey(printerName))
+                if (states == null)
                 {
-                    printerDict[printerName].IsAvailable = isAvailable ? 1 : 0;
-                    printerDict[printerName].LastSuccessTime = DateTime.Now;
+                    Log.Warning("Не удалось загрузить файл состояния принтеров");
+                    return false;
+                }
+
+                PrinterInfo printerInfo = states.Printers.Find(p => p.PrinterName == printerName);
+
+                if (printerInfo == null)
+                {
+                    // Если принтера нет в списке, добавляем его
+                    printerInfo = new PrinterInfo(printerName, true);
+                    states.Printers.Add(printerInfo);
+                    states.LastUpdate = DateTime.Now;
+                    XmlHelper.SaveToXml(states, _stateFilePath);
+                }
+
+                return printerInfo.IsAvailable;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"Ошибка при проверке доступности принтера {printerName}: {ex.Message}");
+                return false;
+            }
+            finally
+            {
+                mutex.ReleaseMutex();
+            }
+        }
+        else
+        {
+            Log.Warning("Таймаут ожидания доступа к файлу состояния принтеров");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Устанавливает доступность принтера
+    /// </summary>
+    public static bool SetPrinterAvailability(string printerName, bool isAvailable)
+    {
+        using Mutex mutex = new(false, StateMutexName);
+
+        if (mutex.WaitOne(5000))
+        {
+            try
+            {
+                PrinterStates states = XmlHelper.LoadFromXml<PrinterStates>(_stateFilePath);
+
+                if (states == null)
+                {
+                    Log.Warning("Не удалось загрузить файл состояния принтеров");
+                    return false;
+                }
+
+                PrinterInfo printerInfo = states.Printers.Find(p => p.PrinterName == printerName);
+
+                if (printerInfo == null)
+                {
+                    // Если принтера нет в списке, добавляем его
+                    printerInfo = new PrinterInfo(printerName, isAvailable);
+                    states.Printers.Add(printerInfo);
                 }
                 else
                 {
-                    printerDict[printerName] = new PrinterInfo(printerName, isAvailable);
+                    // Меняем состояние существующего принтера
+                    printerInfo.IsAvailable = isAvailable;
                 }
 
-                // Сохраняем все записи в файл
-                List<string> lines = new List<string>();
-                lines.Add($"# Состояние принтеров Revit, обновлено: {DateTime.Now}");
-
-                foreach (PrinterInfo info in printerDict.Values)
-                {
-                    lines.Add(info.ToFileString());
-                }
-
-                File.WriteAllLines(_stateFilePath, lines);
-
-                Log.Debug($"Сохранено состояние принтера {printerName}: {(isAvailable ? "доступен" : "недоступен")}");
+                states.LastUpdate = DateTime.Now;
+                return XmlHelper.SaveToXml(states, _stateFilePath);
             }
             catch (Exception ex)
             {
-                Log.Error($"Ошибка при сохранении состояния принтера: {ex.Message}");
+                Log.Error(ex, $"Ошибка при изменении доступности принтера {printerName}: {ex.Message}");
+                return false;
+            }
+            finally
+            {
+                mutex.ReleaseMutex();
             }
         }
-
-        /// <summary>
-        /// Загрузка информации о принтерах из файла
-        /// </summary>
-        private static Dictionary<string, PrinterInfo> LoadPrinterStates()
+        else
         {
-            Dictionary<string, PrinterInfo> result = new Dictionary<string, PrinterInfo>();
-
-            try
-            {
-                if (File.Exists(_stateFilePath))
-                {
-                    string[] lines = File.ReadAllLines(_stateFilePath);
-
-                    foreach (string line in lines)
-                    {
-                        // Пропускаем комментарии и пустые строки
-                        if (string.IsNullOrWhiteSpace(line) || line.StartsWith("#"))
-                            continue;
-
-                        PrinterInfo info = PrinterInfo.FromFileString(line);
-                        if (info != null && !string.IsNullOrEmpty(info.PrinterName))
-                        {
-                            result[info.PrinterName] = info;
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error($"Ошибка при чтении файла состояний принтеров: {ex.Message}");
-            }
-
-            return result;
+            Log.Warning("Таймаут ожидания доступа к файлу состояния принтеров");
+            return false;
         }
+    }
+
+    /// <summary>
+    /// Освобождает принтер, делая его доступным для других процессов
+    /// </summary>
+    public static bool ReleasePrinter(string printerName)
+    {
+        return SetPrinterAvailability(printerName, true);
     }
 }

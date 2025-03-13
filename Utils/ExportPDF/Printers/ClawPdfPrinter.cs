@@ -37,7 +37,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
         }
 
 
-        public override bool Print(Document doc, SheetModel model)
+        public override bool DoPrint(Document doc, SheetModel model)
         {
             string autoSaveKey = System.IO.Path.Combine(RegistryPath, "AutoSave");
             string folder = Path.GetDirectoryName(model.FilePath).Replace("\\", "\\\\");

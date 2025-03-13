@@ -4,6 +4,7 @@ using RevitBIMTool.Model;
 using RevitBIMTool.Utils.SystemHelpers;
 using Serilog;
 using System.IO;
+using System.Reflection;
 
 
 namespace RevitBIMTool.Utils.ExportPDF.Printers
@@ -17,11 +18,11 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
 
         public abstract void ResetPrinterSettings();
 
-        public abstract bool Print(Document doc, SheetModel model);
+        public abstract bool DoPrint(Document doc, SheetModel model);
 
         public virtual bool IsPrinterInstalled()
         {
-            const string printersPath = @"SYSTEM\CurrentControlSet\Control\Print\Printers";
+            const string printersPath = @"SYSTEM\CurrentControlSet\Control\DoPrint\Printers";
 
             bool isInstalled = RegistryHelper.IsKeyExists(Registry.LocalMachine, Path.Combine(printersPath, PrinterName));
 
@@ -36,7 +37,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
         {
             if (IsPrinterInstalled())
             {
-                if (0 == PrintHandler.GetPrinterStatus(this))
+                if (PrinterStateManager.IsPrinterAvailable(PrinterName))
                 {
                     Log.Debug($"{PrinterName} printer is available!");
 
