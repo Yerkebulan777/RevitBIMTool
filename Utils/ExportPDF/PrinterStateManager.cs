@@ -35,7 +35,6 @@ public class PrinterInfo
     [XmlElement("IsAvailable")]
     public bool IsAvailable { get; set; }
 
-    // Конструктор без параметров для сериализации
     public PrinterInfo() { }
 
     public PrinterInfo(string name, bool isAvailable)
