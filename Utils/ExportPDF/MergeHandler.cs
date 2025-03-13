@@ -10,7 +10,7 @@ namespace RevitBIMTool.Utils.ExportPDF;
 internal static class MergeHandler
 {
 
-    public static void Combine(List<SheetModel> sheetModels, string directory, string outputFullName, bool deleteOriginals = true)
+    public static void Combine(List<SheetModel> sheetModels, string outputFullName, bool deleteOriginals = true)
     {
         Log.Information($"Sheets count for PDF combining: {sheetModels?.Count ?? 0}");
 
