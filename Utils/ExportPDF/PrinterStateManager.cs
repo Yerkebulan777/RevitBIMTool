@@ -21,6 +21,7 @@ internal class PrinterStates
     public List<PrinterInfo> Printers { get; set; } = [];
 }
 
+
 /// <summary>
 /// Модель данных для хранения информации о принтере
 /// </summary>
@@ -42,6 +43,7 @@ internal class PrinterInfo
         PrinterName = name;
     }
 }
+
 
 internal static class PrinterStateManager
 {
