@@ -66,7 +66,7 @@ internal class SheetModel : IDisposable
     /// <summary>
     /// Получает или устанавливает путь к файлу
     /// </summary>
-    public string FilePath { get; set; }
+    public string TempFilePath { get; set; }
 
     /// <summary>
     /// Инициализирует новый экземпляр класса SheetModel

@@ -5,7 +5,7 @@ VisualStudioVersion = 17.8.34408.163
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RevitBIMTool", "RevitBIMTool.csproj", "{CCDF64C4-F6D1-420D-9077-4F74703371CD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceLibrary", "..\AutomationService\ServiceLibrary\ServiceLibrary.csproj", "{8F6729B9-9F36-4723-831A-E255AC49C341}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceLibrary", "K:\04_Файлообменник\BIM\YerkebulanZhumabaeyv\YandexDisk\AwesomeAddings\AutomationService\ServiceLibrary\ServiceLibrary.csproj", "{8F6729B9-9F36-4723-831A-E255AC49C341}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

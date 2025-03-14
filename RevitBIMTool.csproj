@@ -60,7 +60,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\AutomationService\ServiceLibrary\ServiceLibrary.csproj" />
+      <ProjectReference Include="K:\04_Файлообменник\BIM\YerkebulanZhumabaeyv\YandexDisk\AwesomeAddings\AutomationService\ServiceLibrary\ServiceLibrary.csproj" />
     </ItemGroup>
 
     <ItemGroup>
