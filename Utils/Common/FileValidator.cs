@@ -3,75 +3,123 @@ using System.Text;
 
 namespace RevitBIMTool.Utils.Common
 {
-    /// <summary>
-    /// Статический класс для проверки валидности и актуальности файлов
-    /// </summary>
     public static class FileValidator
     {
         /// <summary>
-        /// Проверяет существование файла и его минимальный размер
+        /// Checks if file exists and has minimum size
         /// </summary>
-        public static bool IsValid(string filePath, long minSizeBytes = 100)
+        public static bool IsValid(string filePath, out string message, long minSizeBytes = 100)
         {
-            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+            if (string.IsNullOrEmpty(filePath))
             {
+                message = "File path is null or empty";
                 return false;
             }
 
-            FileInfo fileInfo = new FileInfo(filePath);
-            return fileInfo.Length >= minSizeBytes;
-        }
+            FileInfo fileInfo = new(filePath);
 
-        /// <summary>
-        /// Проверяет актуальность файла на основе времени последнего изменения
-        /// </summary>
-        public static bool IsRecent(string filePath, int maxDaysOld = 7)
-        {
-            if (!IsValid(filePath))
+            if (!fileInfo.Exists)
             {
+                message = $"File does not exist: {filePath}";
                 return false;
             }
 
-            DateTime lastModified = File.GetLastWriteTime(filePath);
-            TimeSpan age = DateTime.Now - lastModified;
+            if (fileInfo.Length < minSizeBytes)
+            {
+                message = $"File size: {fileInfo.Length} bytes";
+                return false;
+            }
 
-            return age.TotalDays <= maxDaysOld;
+            try
+            {
+                File.GetAttributes(filePath);
+            }
+            catch (Exception ex)
+            {
+                message = $"Error: {ex.Message}";
+                return false;
+            }
+
+            message = null;
+            return true;
         }
 
         /// <summary>
-        /// Проверяет актуальность целевого файла относительно исходного
+        /// Checks if file has been modified recently
         /// </summary>
-        public static bool IsUpdated(string targetPath, string sourcePath, out string output, int maxDaysOld = 100)
+        public static bool IsRecent(string filePath, out string message, int daysSpan = 1)
         {
-            bool result = false;
-            StringBuilder sb = new StringBuilder();
-
-            if (IsValid(targetPath))
+            if (IsValid(filePath, out message))
             {
-                DateTime targetLastDate = File.GetLastWriteTime(targetPath);
-                DateTime sourceLastDate = File.GetLastWriteTime(sourcePath);
+                StringBuilder sb = new();
 
-                sb.AppendLine($"Target last write: {targetLastDate:yyyy-MM-dd}");
-                sb.AppendLine($"Source last write: {sourceLastDate:yyyy-MM-dd}");
+                DateTime currentDate = DateTime.Now;
+                DateTime lastModified = File.GetLastWriteTime(filePath);
+                TimeSpan sinceModified = currentDate - lastModified;
 
-                if (targetLastDate > sourceLastDate)
-                {
-                    DateTime currentDate = DateTime.Now;
+                sb.AppendLine($"Current date: {currentDate:yyyy-MM-dd HH:mm:ss}");
+                sb.AppendLine($"Last modified: {lastModified:yyyy-MM-dd HH:mm:ss}");
+                sb.AppendLine($"Time elapsed since last change: {sinceModified.TotalDays} days");
 
-                    TimeSpan sourceAge = currentDate - sourceLastDate;
-                    TimeSpan targetAge = currentDate - targetLastDate;
+                message = sb.ToString();
 
-                    sb.AppendLine($"Source difference in days: {sourceAge.Days}");
-                    sb.AppendLine($"Target difference in days: {targetAge.Days}");
-
-                    result = targetAge.Days < maxDaysOld;
-                }
+                return sinceModified.TotalDays < daysSpan;
             }
 
-            sb.AppendLine($"Is updated file: {result}");
-            output = sb.ToString();
+            return false;
+        }
 
+        /// <summary>
+        /// Checks if one file is newer than another
+        /// </summary>
+        public static bool IsNewer(string filePath, string referencePath, out string message, int thresholdMinutes = 5)
+        {
+            StringBuilder sb = new();
+
+            if (!IsValid(filePath, out string validMessage))
+            {
+                sb.AppendLine(validMessage);
+                message = sb.ToString();
+                return false;
+            }
+
+            if (!File.Exists(referencePath))
+            {
+                sb.AppendLine($"Reference file does not exist: {referencePath}");
+                message = sb.ToString();
+                return false;
+            }
+
+            DateTime fileDate = File.GetLastWriteTime(filePath);
+            DateTime referenceDate = File.GetLastWriteTime(referencePath);
+            TimeSpan difference = fileDate - referenceDate;
+
+            bool result = difference.TotalMinutes > thresholdMinutes;
+
+            sb.AppendLine($"File date: {fileDate:yyyy-MM-dd HH:mm:ss}");
+            sb.AppendLine($"Reference date: {referenceDate:yyyy-MM-dd HH:mm:ss}");
+            sb.AppendLine($"Time difference: {difference.TotalMinutes:F2} minutes");
+            sb.AppendLine($"Threshold: {thresholdMinutes} minutes");
+            sb.AppendLine($"File is newer: {result}");
+
+            message = sb.ToString();
             return result;
         }
+
+        /// <summary>
+        /// Checks if target file is updated relative to source file
+        /// </summary>
+        public static bool IsUpdated(string targetPath, string sourcePath, out string message, int maxDaysOld = 100)
+        {
+            if (!IsValid(targetPath, out message))
+            {
+                return false;
+            }
+
+            return IsNewer(targetPath, sourcePath, out message) && IsRecent(targetPath, out message, maxDaysOld);
+        }
     }
+
+
+
 }

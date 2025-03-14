@@ -169,7 +169,7 @@ public static class PathHelper
 
                 lock (sectionAcronyms)
                 {
-                    return FileValidator.IsValid(filePath);
+                    return FileValidator.IsValid(filePath, out _);
                 }
             }
             catch (Exception ex)

@@ -94,7 +94,7 @@ internal static class PrintSettingsHelper
                         if (printSetup.SaveAs(formatName))
                         {
                             printManager.Apply();
-                            _ = trx.Commit();
+                            trx.Commit();
                             break;
                         }
                     }
@@ -109,7 +109,7 @@ internal static class PrintSettingsHelper
             {
                 if (!trx.HasEnded())
                 {
-                    _ = trx.RollBack();
+                    trx.RollBack();
                 }
             }
         }

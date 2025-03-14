@@ -56,7 +56,7 @@ internal static class SheetHelper
                 {
                     string folderName = folderInfo.Name;
                     folderName = matchPrefix.Replace(folderName, string.Empty);
-                    _ = stringBuilder.Append(folderName);
+                    stringBuilder.Append(folderName);
                 }
             }
         }
