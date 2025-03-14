@@ -17,9 +17,9 @@ internal sealed class ExportToPDFHandler
 
     public void Execute(UIDocument uidoc, string revitFilePath, string exportDirectory)
     {
-        DirectoryInfo systemTemp = Directory.GetParent(Path.GetTempPath());
+        DirectoryInfo tempBase = Directory.GetParent(Path.GetTempPath());
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
-        string tempDirectory = Path.Combine(systemTemp.FullName, $"{revitFileName}");
+        string tempDirectory = Path.Combine(tempBase.FullName, $"{revitFileName}");
         string section = RevitPathHelper.GetSectionName(revitFilePath);
 
         bool colorTypeEnabled = section is not ("KJ" or "KR" or "KG");
