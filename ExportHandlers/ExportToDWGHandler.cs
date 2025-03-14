@@ -60,7 +60,8 @@ internal static class ExportToDWGHandler
                 }
             }
 
-            string sourсeFolder = Path.Combine(Path.GetTempPath(), revitFileName);
+            DirectoryInfo tempBase = Directory.GetParent(Path.GetTempPath());
+            string sourсeFolder = Path.Combine(tempBase.FullName, revitFileName);
             string targetFolder = Path.Combine(exportDirectory, revitFileName);
 
             if (ExportFileToDWG(uidoc.Document, sourсeFolder, sheetModels))
