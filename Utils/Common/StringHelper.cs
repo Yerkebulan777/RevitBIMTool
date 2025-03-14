@@ -5,27 +5,28 @@ using System.Text;
 namespace RevitBIMTool.Utils.Common;
 internal static class StringHelper
 {
-    public static string ReplaceInvalidChars(string textLine)
+    public static string ReplaceInvalidChars(string inputString)
     {
         char[] invalidChars = Path.GetInvalidFileNameChars();
 
-        StringBuilder result = new(textLine.Length);
+        StringBuilder stringBuilder = new(inputString.Length);
 
-        if (!string.IsNullOrWhiteSpace(textLine))
+        if (!string.IsNullOrEmpty(inputString))
         {
-            textLine = textLine.TrimEnd('_');
-            textLine = textLine.Normalize();
-
-            foreach (char c in textLine)
+            foreach (char c in inputString)
             {
                 if (!invalidChars.Contains(c))
                 {
-                    _ = result.Append(c);
+                    _ = stringBuilder.Append(c);
                 }
             }
         }
 
-        return result.ToString();
+        string resultString = stringBuilder.ToString();
+        resultString = resultString.Normalize();
+        resultString = resultString.Trim('_');
+
+        return resultString;
     }
 
 

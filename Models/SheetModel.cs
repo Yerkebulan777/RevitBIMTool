@@ -24,15 +24,15 @@ internal class SheetModel : IDisposable
         SheetOrientation = orientation;
     }
 
-    public bool IsValid { get; internal set; }
-    public string SheetName { get; internal set; }
-    public double DigitNumber { get; internal set; }
-    public string StringNumber { get; internal set; }
+    public bool IsValid { get; set; }
+    public string SheetName { get; set; }
+    public double DigitNumber { get; set; }
+    public string StringNumber { get; set; }
     public string PaperName => SheetPapeSize.PaperName;
-    public object OrganizationGroupName { get; internal set; }
-    public bool IsColorEnabled { get; internal set; }
-    public bool IsSuccessfully { get; internal set; }
-    public string FilePath { get; internal set; }
+    public object OrganizationGroupName { get; set; }
+    public bool IsColorEnabled { get; set; }
+    public bool IsSuccessfully { get; set; }
+    public string FilePath { get; set; }
 
 
     public static string GetSheetNumber(ViewSheet sheet)

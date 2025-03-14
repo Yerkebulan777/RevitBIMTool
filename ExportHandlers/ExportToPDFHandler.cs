@@ -20,9 +20,9 @@ internal sealed class ExportToPDFHandler
         DirectoryInfo tempBase = Directory.GetParent(Path.GetTempPath());
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
         string tempDirectory = Path.Combine(tempBase.FullName, $"{revitFileName}");
-        string section = RevitPathHelper.GetSectionName(revitFilePath);
+        string sectionName = RevitPathHelper.GetSectionName(revitFilePath);
 
-        bool colorTypeEnabled = section is not ("KJ" or "KR" or "KG");
+        bool colorTypeEnabled = sectionName is not ("KJ" or "KR" or "KG");
 
         if (!PrinterStateManager.TryRetrievePrinter(out printer))
         {
@@ -35,7 +35,7 @@ internal sealed class ExportToPDFHandler
         Log.Information($"Total sheets: {sheetData.Values.Sum(lst => lst.Count)}");
         Log.Information($"Available printer: {printer.PrinterName}");
         Log.Information($"Temp directory: {tempDirectory}");
-        Log.Information($"Section: {section}");
+        Log.Information($"Section: {sectionName}");
 
         if (sheetData.Count > 0)
         {
