@@ -33,7 +33,7 @@ internal static class ExportToDWGHandler
     {
         Log.Information("Start export to DWG...");
 
-        RevitPathHelper.EnsureDirectory(exportDirectory);
+        PathHelper.EnsureDirectory(exportDirectory);
 
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
 
@@ -65,7 +65,7 @@ internal static class ExportToDWGHandler
 
             if (ExportFileToDWG(uidoc.Document, sourсeFolder, sheetModels))
             {
-                RevitPathHelper.MoveAllFiles(sourсeFolder, targetFolder);
+                ExportHelper.MoveAllFiles(sourсeFolder, targetFolder);
                 ExportHelper.CreateZipFolder(targetFolder, exportDirectory);
             }
 
@@ -82,7 +82,7 @@ internal static class ExportToDWGHandler
 
         int totalSheets = sheetModels.Count;
 
-        RevitPathHelper.EnsureDirectory(folder);
+        PathHelper.EnsureDirectory(folder);
 
         Log.Information($"Total valid sheets {totalSheets}");
 

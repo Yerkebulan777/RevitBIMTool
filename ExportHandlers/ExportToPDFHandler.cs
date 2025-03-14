@@ -20,7 +20,7 @@ internal sealed class ExportToPDFHandler
         DirectoryInfo tempBase = Directory.GetParent(Path.GetTempPath());
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
         string tempDirectory = Path.Combine(tempBase.FullName, $"{revitFileName}");
-        string sectionName = RevitPathHelper.GetSectionName(revitFilePath);
+        string sectionName = PathHelper.GetSectionName(revitFilePath);
 
         bool colorTypeEnabled = sectionName is not ("KJ" or "KR" or "KG");
 
@@ -43,8 +43,8 @@ internal sealed class ExportToPDFHandler
 
             Log.Debug("Start export to PDF...");
 
-            RevitPathHelper.EnsureDirectory(tempDirectory);
-            RevitPathHelper.EnsureDirectory(exportDirectory);
+            PathHelper.EnsureDirectory(tempDirectory);
+            PathHelper.EnsureDirectory(exportDirectory);
 
             string exportPath = Path.Combine(exportDirectory, $"{revitFileName}.pdf");
 
@@ -56,7 +56,7 @@ internal sealed class ExportToPDFHandler
             {
                 MergeHandler.Combine(sheetModels, exportPath);
                 SystemFolderOpener.OpenFolder(exportDirectory);
-                RevitPathHelper.DeleteDirectory(tempDirectory);
+                PathHelper.DeleteDirectory(tempDirectory);
             }
         }
     }

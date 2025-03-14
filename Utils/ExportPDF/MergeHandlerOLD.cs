@@ -11,7 +11,7 @@ internal static class MergeHandlerOLD
 {
     public static void CombinePDFsFromFolder(List<SheetModel> sheetModels, string directory, string outputFullName, bool deleted = true)
     {
-        RevitPathHelper.DeleteExistsFile(outputFullName);
+        PathHelper.DeleteExistsFile(outputFullName);
 
         using Document outputDocument = new();
         using FileStream stream = new(outputFullName, FileMode.Create);

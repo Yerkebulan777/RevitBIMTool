@@ -30,7 +30,7 @@ namespace RevitBIMTool.ExportHandlers
                         model.ExportBaseFile = Path.Combine(model.ExportFolder, $"{revitFileName}.pdf");
                         if (!ExportHelper.IsFileUpdated(model.ExportBaseFile, revitFilePath, out output))
                         {
-                            RevitPathHelper.DeleteExistsFile(model.ExportBaseFile);
+                            PathHelper.DeleteExistsFile(model.ExportBaseFile);
                             Thread.Sleep(model.CommandNumber * 1000);
                             result = true;
                         }
@@ -42,7 +42,7 @@ namespace RevitBIMTool.ExportHandlers
                         model.ExportBaseFile = Path.Combine(model.ExportFolder, $"{revitFileName}.zip");
                         if (!ExportHelper.IsFileUpdated(model.ExportBaseFile, revitFilePath, out output))
                         {
-                            RevitPathHelper.DeleteExistsFile(model.ExportBaseFile);
+                            PathHelper.DeleteExistsFile(model.ExportBaseFile);
                             Thread.Sleep(model.CommandNumber * 1000);
                             result = true;
                         }
@@ -54,7 +54,7 @@ namespace RevitBIMTool.ExportHandlers
                         model.ExportBaseFile = Path.Combine(model.ExportFolder, $"{revitFileName}.nwc");
                         if (!ExportHelper.IsFileUpdated(model.ExportBaseFile, revitFilePath, out output))
                         {
-                            RevitPathHelper.DeleteExistsFile(model.ExportBaseFile);
+                            PathHelper.DeleteExistsFile(model.ExportBaseFile);
                             Thread.Sleep(model.CommandNumber * 1000);
                             result = true;
                         }

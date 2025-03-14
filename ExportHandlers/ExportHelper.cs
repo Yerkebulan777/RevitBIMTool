@@ -12,7 +12,7 @@ internal static class ExportHelper
 {
     public static string SetDirectory(string revitFilePath, string folderName, bool date)
     {
-        string exportDirectory = RevitPathHelper.DetermineDirectory(revitFilePath, folderName);
+        string exportDirectory = PathHelper.DetermineDirectory(revitFilePath, folderName);
 
         if (string.IsNullOrEmpty(exportDirectory))
         {
@@ -25,7 +25,7 @@ internal static class ExportHelper
             exportDirectory = Path.Combine(exportDirectory, formatedDate);
         }
 
-        RevitPathHelper.EnsureDirectory(exportDirectory);
+        PathHelper.EnsureDirectory(exportDirectory);
 
         return exportDirectory;
     }
@@ -62,6 +62,22 @@ internal static class ExportHelper
         sb.AppendLine($"Is updated file: {result}");
         output = sb.ToString();
         return result;
+    }
+
+    public static void MoveAllFiles(string source, string destination)
+    {
+        PathHelper.EnsureDirectory(destination);
+
+        DirectoryInfo directory = new(source);
+
+        foreach (FileInfo info in directory.EnumerateFiles())
+        {
+            string path = Path.Combine(destination, info.Name);
+
+            PathHelper.DeleteExistsFile(path);
+
+            File.Move(info.FullName, path);
+        }
     }
 
 

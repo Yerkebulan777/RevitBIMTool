@@ -20,8 +20,8 @@ namespace RevitBIMTool.Utils
 
                 string logDir = Path.Combine(MyDocuments, "RevitBIMTool");
                 string logPath = Path.Combine(logDir, $"{logFileName}.txt");
-                RevitPathHelper.DeleteExistsFile(logPath);
-                RevitPathHelper.EnsureDirectory(logDir);
+                PathHelper.DeleteExistsFile(logPath);
+                PathHelper.EnsureDirectory(logDir);
 
                 Log.Logger = new LoggerConfiguration()
                     .WriteTo.File(logPath)
@@ -41,8 +41,8 @@ namespace RevitBIMTool.Utils
 
             string logDir = Path.Combine(MyDocuments, "RevitBIMTool");
             string logPath = Path.Combine(logDir, $"{logFileName}.txt");
-            RevitPathHelper.DeleteExistsFile(logPath);
-            RevitPathHelper.EnsureDirectory(logDir);
+            PathHelper.DeleteExistsFile(logPath);
+            PathHelper.EnsureDirectory(logDir);
 
             Log.Logger = new LoggerConfiguration()
                 .WriteTo.File(logPath)

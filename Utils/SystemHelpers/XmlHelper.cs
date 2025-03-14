@@ -15,7 +15,7 @@ public static class XmlHelper
     /// </summary>
     public static void SaveToXml<T>(T obj, string filePath) where T : class
     {
-        RevitPathHelper.EnsureDirectory(Path.GetDirectoryName(filePath));
+        PathHelper.EnsureDirectory(Path.GetDirectoryName(filePath));
 
         using (Mutex mutex = new(false, mutexId))
         {

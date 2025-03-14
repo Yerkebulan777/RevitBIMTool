@@ -7,7 +7,7 @@ using Path = System.IO.Path;
 
 
 namespace RevitBIMTool.Utils.Common;
-public static class RevitPathHelper
+public static class PathHelper
 {
     private static readonly string[] sectionAcronyms =
     {
@@ -165,7 +165,7 @@ public static class RevitPathHelper
         {
             try
             {
-                await Task.Delay(1000);
+                await Task.Delay(100);
 
                 lock (sectionAcronyms)
                 {
@@ -182,24 +182,9 @@ public static class RevitPathHelper
             }
         }
 
+        Log.Warning($"File {filePath} not found!");
+
         return false;
-    }
-
-
-    public static void MoveAllFiles(string source, string destination)
-    {
-        EnsureDirectory(destination);
-
-        DirectoryInfo directory = new(source);
-
-        foreach (FileInfo info in directory.EnumerateFiles())
-        {
-            string path = Path.Combine(destination, info.Name);
-
-            DeleteExistsFile(path);
-
-            File.Move(info.FullName, path);
-        }
     }
 
 

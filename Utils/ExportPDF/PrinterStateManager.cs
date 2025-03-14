@@ -67,7 +67,7 @@ internal static class PrinterStateManager
     /// </summary>
     private static void EnsureStateFileExists()
     {
-        RevitPathHelper.EnsureDirectory(appDataFolder);
+        PathHelper.EnsureDirectory(appDataFolder);
 
         if (!File.Exists(stateFilePath))
         {

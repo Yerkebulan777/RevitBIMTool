@@ -211,11 +211,11 @@ internal static class PrintHelper
 
         printManager.PrintToFileName = filePath;
 
-        RevitPathHelper.DeleteExistsFile(filePath);
+        PathHelper.DeleteExistsFile(filePath);
 
         if (printManager.SubmitPrint(model.ViewSheet))
         {
-            if (await RevitPathHelper.AwaitExistsFileAsync(filePath))
+            if (await PathHelper.AwaitExistsFileAsync(filePath))
             {
                 model.IsSuccessfully = true;
                 return true;

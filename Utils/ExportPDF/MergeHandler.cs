@@ -14,7 +14,7 @@ internal static class MergeHandler
     {
         List<SheetModel> validSheets = sheetModels?.Where(s => s.IsSuccessfully).ToList();
 
-        RevitPathHelper.DeleteExistsFile(outputFullName);
+        PathHelper.DeleteExistsFile(outputFullName);
 
         if (validSheets is null || !validSheets.Any())
         {
@@ -73,7 +73,7 @@ internal static class MergeHandler
 
                 if (deleteOriginals)
                 {
-                    RevitPathHelper.DeleteExistsFile(model.TempFilePath);
+                    PathHelper.DeleteExistsFile(model.TempFilePath);
                 }
             }
 

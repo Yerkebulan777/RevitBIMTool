@@ -19,7 +19,7 @@ internal static class ExportToNWCHandler
 
         Log.Debug("Start export to NWC...");
 
-        RevitPathHelper.EnsureDirectory(exportDirectory);
+        PathHelper.EnsureDirectory(exportDirectory);
 
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
         string targetPath = Path.Combine(exportDirectory, $"{revitFileName}.nwc");
