@@ -1,5 +1,4 @@
 ﻿using Autodesk.Revit.DB;
-using RevitBIMTool.Model;
 using RevitBIMTool.Utils.Common;
 using RevitBIMTool.Utils.ExportPDF.Printers;
 using Serilog;
@@ -8,6 +7,7 @@ using Document = Autodesk.Revit.DB.Document;
 using Element = Autodesk.Revit.DB.Element;
 using PaperSize = System.Drawing.Printing.PaperSize;
 using PrintRange = Autodesk.Revit.DB.PrintRange;
+using SheetModel = RevitBIMTool.Models.SheetModel;
 
 namespace RevitBIMTool.Utils.ExportPDF;
 
