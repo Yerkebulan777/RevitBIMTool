@@ -43,16 +43,6 @@ namespace RevitBIMTool.Utils.Common
         /// <returns>Имя организационной группы</returns>
         public static string GetOrganizationGroupName(Document doc, ViewSheet viewSheet)
         {
-            if (doc == null)
-            {
-                throw new ArgumentNullException(nameof(doc));
-            }
-
-            if (viewSheet == null)
-            {
-                throw new ArgumentNullException(nameof(viewSheet));
-            }
-
             Regex matchPrefix = new(@"^(\s*)");
             StringBuilder stringBuilder = new();
 
@@ -72,7 +62,7 @@ namespace RevitBIMTool.Utils.Common
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Ошибка при получении имени организационной группы");
+                Log.Error(ex, ex.Message);
             }
 
             return StringHelper.ReplaceInvalidChars(stringBuilder.ToString());
@@ -81,38 +71,17 @@ namespace RevitBIMTool.Utils.Common
         /// <summary>
         /// Форматирует имя листа по заданным параметрам
         /// </summary>
-        /// <param name="doc">Документ Revit</param>
-        /// <param name="viewSheet">Лист Revit</param>
-        /// <param name="projectName">Имя проекта</param>
-        /// <param name="extension">Расширение файла</param>
-        /// <returns>Форматированное имя листа</returns>
         public static string FormatSheetName(Document doc, ViewSheet viewSheet, string projectName, string extension = null)
         {
-            if (doc == null)
-            {
-                throw new ArgumentNullException(nameof(doc));
-            }
-
-            if (viewSheet == null)
-            {
-                throw new ArgumentNullException(nameof(viewSheet));
-            }
-
-            if (string.IsNullOrEmpty(projectName))
-            {
-                throw new ArgumentNullException(nameof(projectName));
-            }
-
-            string safeProjectName = projectName.Substring(0, Math.Min(30, projectName.Length));
             string sheetNumber = GetSheetNumber(viewSheet);
             string groupName = GetOrganizationGroupName(doc, viewSheet);
-            string sheetName = StringHelper.ReplaceInvalidChars(viewSheet.Name);
+            string sheetTitle = string.IsNullOrWhiteSpace(groupName)
+                ? StringHelper.NormalizeLength($"{projectName} - Лист-{sheetNumber} - {viewSheet.Name}")
+                : StringHelper.NormalizeLength($"{projectName} - Лист - {groupName}-{sheetNumber} - {viewSheet.Name}");
 
-            string formattedName = string.IsNullOrWhiteSpace(groupName)
-                ? StringHelper.NormalizeLength($"{safeProjectName} - Лист - {sheetNumber} - {sheetName}")
-                : StringHelper.NormalizeLength($"{safeProjectName} - Лист - {groupName}-{sheetNumber} - {sheetName}");
+            string sheetName = string.IsNullOrEmpty(extension) ? sheetTitle : $"{sheetTitle}.{extension}"; 
 
-            return string.IsNullOrEmpty(extension) ? formattedName : $"{formattedName}.{extension}";
+            return StringHelper.ReplaceInvalidChars(sheetTitle);
         }
 
         /// <summary>
