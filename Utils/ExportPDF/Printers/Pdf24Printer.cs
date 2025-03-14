@@ -40,7 +40,7 @@ internal sealed class Pdf24Printer : PrinterControl
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "(Default)", string.Empty);
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveFilename", "$fileName");
 
-        PrinterStateManager.SetAvailability(PrinterName, true);
+        PrinterStateManager.ReleasePrinter(PrinterName);
     }
 
 

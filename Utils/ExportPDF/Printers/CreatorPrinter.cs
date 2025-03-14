@@ -43,7 +43,7 @@ internal sealed class CreatorPrinter : PrinterControl
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "TargetDirectory", "<Desktop>");
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<Title>");
 
-        PrinterStateManager.SetAvailability(PrinterName, true);
+        PrinterStateManager.ReleasePrinter(PrinterName);
     }
 
 
