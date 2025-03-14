@@ -74,12 +74,13 @@ namespace RevitBIMTool.Utils.Common
         public static string FormatSheetName(Document doc, ViewSheet viewSheet, string projectName, string extension = null)
         {
             string sheetNumber = GetSheetNumber(viewSheet);
+
             string groupName = GetOrganizationGroupName(doc, viewSheet);
+
             string sheetTitle = string.IsNullOrWhiteSpace(groupName)
                 ? StringHelper.NormalizeLength($"{projectName} - Лист-{sheetNumber} - {viewSheet.Name}")
                 : StringHelper.NormalizeLength($"{projectName} - Лист - {groupName}-{sheetNumber} - {viewSheet.Name}");
-
-            string sheetName = string.IsNullOrEmpty(extension) ? sheetTitle : $"{sheetTitle}.{extension}"; 
+            _ = string.IsNullOrEmpty(extension) ? sheetTitle : $"{sheetTitle}.{extension}";
 
             return StringHelper.ReplaceInvalidChars(sheetTitle);
         }
@@ -87,34 +88,25 @@ namespace RevitBIMTool.Utils.Common
         /// <summary>
         /// Парсит номер листа для получения числового значения
         /// </summary>
-        /// <param name="sheetNumber">Номер листа</param>
-        /// <returns>Числовое значение номера листа или null, если невозможно распарсить</returns>
-        public static double? ParseSheetNumber(string sheetNumber)
+        public static double ParseSheetNumber(string sheetNumber)
         {
             if (string.IsNullOrEmpty(sheetNumber))
             {
-                return null;
+                return 0;
             }
 
             string digitNumber = Regex.Replace(sheetNumber, @"[^0-9,.]", string.Empty);
 
-            return double.TryParse(digitNumber, NumberStyles.Any, CultureInfo.InvariantCulture, out double number) ? number : null;
+            return double.TryParse(digitNumber, NumberStyles.Any, CultureInfo.InvariantCulture, out double number) ? number : 0;
         }
 
         /// <summary>
         /// Получает имя формата с ориентацией листа
         /// </summary>
-        /// <param name="paperName">Название формата бумаги</param>
-        /// <param name="orientation">Ориентация листа</param>
-        /// <returns>Имя формата с ориентацией</returns>
         public static string GetFormatNameWithOrientation(string paperName, PageOrientationType orientation)
         {
-            if (string.IsNullOrEmpty(paperName))
-            {
-                throw new ArgumentNullException(nameof(paperName));
-            }
-
             string orientationText = Enum.GetName(typeof(PageOrientationType), orientation);
+
             return $"{paperName} {orientationText}";
         }
 
@@ -131,30 +123,26 @@ namespace RevitBIMTool.Utils.Common
             string groupName = GetOrganizationGroupName(doc, model.ViewSheet);
             string formattedName = FormatSheetName(doc, model.ViewSheet, projectName, extension);
 
-            double? digitNumber = ParseSheetNumber(sheetNumber);
+            double digitNumber = ParseSheetNumber(sheetNumber);
 
             bool isValid = false;
-            if (digitNumber.HasValue)
+
+            if (digitNumber > 0)
             {
-                if (!groupName.StartsWith("#") && digitNumber.Value < 500)
+                if (!groupName.StartsWith("#") && digitNumber < 500)
                 {
                     isValid = model.ViewSheet.CanBePrinted;
                 }
             }
 
             object organizationGroup = groupName;
+
             if (string.IsNullOrWhiteSpace(groupName))
             {
                 organizationGroup = Regex.Replace(sheetNumber, @"[0-9.]", string.Empty);
             }
 
-            model.SetProperties(
-                formattedName,
-                sheetNumber,
-                digitNumber ?? 0,
-                organizationGroup,
-                isValid
-            );
+            model.SetProperties(formattedName, sheetNumber, digitNumber, organizationGroup, isValid);
         }
 
         /// <summary>
@@ -170,7 +158,7 @@ namespace RevitBIMTool.Utils.Common
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Ошибка при создании модели листа");
+                Log.Error(ex, $"Error creating a sheet model: {ex.Message}");
             }
 
             return model;
