@@ -29,7 +29,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowAllNotifications", "False");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "SkipPrintDialog", "True");
 
-            PrinterStateManager.SetAvailability(PrinterName, false);
+            PrinterStateManager.ReservePrinter(PrinterName);
         }
 
 

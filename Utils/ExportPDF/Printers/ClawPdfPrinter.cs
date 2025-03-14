@@ -26,7 +26,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<InputFilename>");
             RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", "<InputFilePath>");
 
-            PrinterStateManager.SetAvailability(PrinterName, false);
+            PrinterStateManager.ReservePrinter(PrinterName);
         }
 
 

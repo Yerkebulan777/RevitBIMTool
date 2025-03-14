@@ -226,10 +226,21 @@ internal static class PrinterStateManager
     }
 
     /// <summary>
+    /// Резервирует принтер, делая его недоступным для других процессов
+    /// </summary>
+    public static bool ReservePrinter(string printerName)
+    {
+        return SetAvailability(printerName, false);
+    }
+
+    /// <summary>
     /// Освобождает принтер, делая его доступным для других процессов
     /// </summary>
     public static bool ReleasePrinter(string printerName)
     {
         return SetAvailability(printerName, true);
     }
+
+
+
 }

@@ -32,7 +32,7 @@ internal sealed class CreatorPrinter : PrinterControl
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "Name", "<DefaultProfile>");
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowProgress", "False");
 
-        PrinterStateManager.SetAvailability(PrinterName, false);
+        PrinterStateManager.ReservePrinter(PrinterName);
     }
 
 
