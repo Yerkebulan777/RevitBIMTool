@@ -11,8 +11,8 @@ namespace RevitBIMTool.Utils.ExportPDF;
 /// Модель данных для хранения состояния принтеров
 /// </summary>
 [Serializable]
-[XmlRoot("PrinterStates")]
-public class PrinterStates
+[XmlRoot("PrinterStateData")]
+public class PrinterStateData
 {
     [XmlElement("LastUpdate")]
     public DateTime LastUpdate { get; set; }
@@ -71,7 +71,7 @@ internal static class PrinterStateManager
 
         if (!File.Exists(stateFilePath))
         {
-            PrinterStates initialState = new()
+            PrinterStateData initialState = new()
             {
                 LastUpdate = DateTime.Now,
                 Printers = []
@@ -157,7 +157,7 @@ internal static class PrinterStateManager
         {
             try
             {
-                PrinterStates states = XmlHelper.LoadFromXml<PrinterStates>(stateFilePath);
+                PrinterStateData states = XmlHelper.LoadFromXml<PrinterStateData>(stateFilePath);
                 PrinterInfo printerInfo = AddPrinterIfNotExists(states, printerName, true);
                 XmlHelper.SaveToXml(states, stateFilePath);
                 return printerInfo.IsAvailable;
@@ -187,7 +187,7 @@ internal static class PrinterStateManager
         {
             try
             {
-                PrinterStates states = XmlHelper.LoadFromXml<PrinterStates>(stateFilePath);
+                PrinterStateData states = XmlHelper.LoadFromXml<PrinterStateData>(stateFilePath);
                 PrinterInfo printerInfo = AddPrinterIfNotExists(states, printerName, isAvailable);
                 states.LastUpdate = DateTime.Now;
                 printerInfo.IsAvailable = isAvailable;
@@ -212,7 +212,7 @@ internal static class PrinterStateManager
     /// <summary>
     /// Добавляет принтер в список, если его там нет
     /// </summary>
-    public static PrinterInfo AddPrinterIfNotExists(PrinterStates states, string printerName, bool isAvailable)
+    public static PrinterInfo AddPrinterIfNotExists(PrinterStateData states, string printerName, bool isAvailable)
     {
         PrinterInfo printerInfo = states.Printers.Find(p => p.PrinterName == printerName);
 
