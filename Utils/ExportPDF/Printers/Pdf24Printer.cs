@@ -15,6 +15,8 @@ internal sealed class Pdf24Printer : PrinterControl
 
     public override void InitializePrinter()
     {
+        Log.Debug("Initialize PDF24 printer");
+
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveOpenDir", 0);
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "Handler", "autoSave");
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveShowProgress", 0);
@@ -22,20 +24,23 @@ internal sealed class Pdf24Printer : PrinterControl
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveUseFileChooser", 0);
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveFilename", "$fileName");
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveProfile", "default/medium");
-        RegistryHelper.SetValue(Registry.CurrentUser, PrintHandler.StatusPath, PrinterName, 1);
+
+        PrinterStateManager.SetAvailability(PrinterName, false);
     }
 
 
     public override void ResetPrinterSettings()
     {
         Log.Debug("Reset print settings");
+
         string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveDir", desktop);
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveUseFileCmd", 0);
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShellCmd", string.Empty);
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "(Default)", string.Empty);
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveFilename", "$fileName");
-        RegistryHelper.SetValue(Registry.CurrentUser, PrintHandler.StatusPath, PrinterName, 0);
+
+        PrinterStateManager.SetAvailability(PrinterName, true);
     }
 
 
@@ -43,7 +48,7 @@ internal sealed class Pdf24Printer : PrinterControl
     {
         string folder = Path.GetDirectoryName(model.TempFilePath).Replace("\\", "\\\\");
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveDir", folder);
-        return PrintHandler.ExecutePrintAsync(doc, folder, model).Result;
+        return PrintHelper.ExecutePrintAsync(doc, folder, model).Result;
     }
 
 

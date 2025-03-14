@@ -11,13 +11,9 @@ using SheetModel = RevitBIMTool.Models.SheetModel;
 
 namespace RevitBIMTool.Utils.ExportPDF;
 
-internal static class PrintHandler
+internal static class PrintHelper
 {
-    // Компьютер\HKEY_CURRENT_USER\Printers
-    public const string StatusPath = @"Printers";
-
-
-    private static void ResetAndApplyPrinterSettings(Document doc, string printerName)
+    private static void SetupPrinterSettings(Document doc, string printerName)
     {
         PrintManager printManager = doc.PrintManager;
 
@@ -77,7 +73,7 @@ internal static class PrintHandler
     {
         string projectTitle = doc.Title;
 
-        ResetAndApplyPrinterSettings(doc, printerName);
+        SetupPrinterSettings(doc, printerName);
 
         FilteredElementCollector collector = new(doc);
 

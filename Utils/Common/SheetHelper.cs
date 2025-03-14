@@ -171,32 +171,23 @@ namespace RevitBIMTool.Utils.Common
         {
             try
             {
-                // Получаем параметры размеров листа
                 double sheetWidth = titleBlock.get_Parameter(BuiltInParameter.SHEET_WIDTH).AsDouble();
                 double sheetHeight = titleBlock.get_Parameter(BuiltInParameter.SHEET_HEIGHT).AsDouble();
                 string sheetNumber = titleBlock.get_Parameter(BuiltInParameter.SHEET_NUMBER).AsString();
 
-                // Конвертируем размеры из футов в миллиметры (если нужно)
                 double widthInMm = UnitManager.FootToMm(sheetWidth);
                 double heightInMm = UnitManager.FootToMm(sheetHeight);
 
-                // Определяем ориентацию
                 PageOrientationType orientation = widthInMm > heightInMm ? PageOrientationType.Landscape : PageOrientationType.Portrait;
 
-                // Находим ViewSheet по номеру
                 ViewSheet viewSheet = FindViewSheetByNumber(doc, sheetNumber);
 
-                if (viewSheet != null && viewSheet.CanBePrinted)
+                if (viewSheet is not null && viewSheet.CanBePrinted)
                 {
-                    // Создаем бумажный размер на основе размеров листа
-                    PaperSize paperSize = new(
-                        $"Custom {widthInMm:F0}x{heightInMm:F0}",
-                        (int)widthInMm,
-                        (int)heightInMm
-                    );
-
-                    // Создаем модель листа
+                    string customPaperName = $"Custom {widthInMm:F0}x{heightInMm:F0}";
+                    PaperSize paperSize = new(customPaperName, (int)widthInMm, (int)heightInMm);
                     SheetModel model = CreateSheetModel(doc, viewSheet, projectName, paperSize, orientation, extension);
+
                     model.IsColorEnabled = isColorEnabled;
 
                     return model;
@@ -213,17 +204,13 @@ namespace RevitBIMTool.Utils.Common
         /// <summary>
         /// Находит ViewSheet по номеру
         /// </summary>
-        /// <param name="doc">Документ Revit</param>
-        /// <param name="sheetNumber">Номер листа</param>
-        /// <returns>ViewSheet или null, если не найден</returns>
         private static ViewSheet FindViewSheetByNumber(Document doc, string sheetNumber)
         {
-            if (doc == null || string.IsNullOrEmpty(sheetNumber))
+            if (string.IsNullOrEmpty(sheetNumber))
             {
                 return null;
             }
 
-            // Создаем фильтр по номеру листа
             ParameterValueProvider provider = new(new ElementId(BuiltInParameter.SHEET_NUMBER));
 
 #if R19 || R21
@@ -234,11 +221,7 @@ namespace RevitBIMTool.Utils.Common
 
             ElementParameterFilter filter = new(rule);
 
-            // Получаем первый подходящий лист
-            return new FilteredElementCollector(doc)
-                .OfClass(typeof(ViewSheet))
-                .WherePasses(filter)
-                .FirstOrDefault() as ViewSheet;
+            return new FilteredElementCollector(doc).OfClass(typeof(ViewSheet)).WherePasses(filter).Cast<ViewSheet>().FirstOrDefault();
         }
 
         #endregion

@@ -16,13 +16,13 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
 
         public override void InitializePrinter()
         {
-
+            Log.Debug("Initialize Internal printer");
         }
 
 
         public override void ResetPrinterSettings()
         {
-
+            Log.Debug("Reset print settings");
         }
 
 
@@ -66,9 +66,10 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
 
         public override bool IsAvailable()
         {
+            Log.Debug($"Revit version: {RevitBIMToolApp.Version}");
+
             if (int.TryParse(RevitBIMToolApp.Version, out revitVersion))
             {
-                Log.Debug($"Revit version: {revitVersion}");
                 return revitVersion >= 2023;
             }
 

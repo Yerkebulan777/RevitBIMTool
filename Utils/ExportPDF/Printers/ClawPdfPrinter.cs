@@ -16,33 +16,38 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
 
         public override void InitializePrinter()
         {
-            string autoSaveKey = System.IO.Path.Combine(RegistryPath, "AutoSave");
+            Log.Debug("Initialize clawPDF printer");
+
+            string autoSaveKey = Path.Combine(RegistryPath, "AutoSave");
             RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "Enabled", "True");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "OpenViewer", "False");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowProgress", "False");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "SkipPrintDialog", "True");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<InputFilename>");
             RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", "<InputFilePath>");
-            RegistryHelper.SetValue(Registry.CurrentUser, PrintHandler.StatusPath, PrinterName, 1);
+
+            PrinterStateManager.SetAvailability(PrinterName, false);
         }
 
 
         public override void ResetPrinterSettings()
         {
             Log.Debug("Reset print settings");
+
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "OpenViewer", "True");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowProgress", "True");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<Title>");
-            RegistryHelper.SetValue(Registry.CurrentUser, PrintHandler.StatusPath, PrinterName, 0);
+
+            PrinterStateManager.SetAvailability(PrinterName, true);
         }
 
 
         public override bool DoPrint(Document doc, SheetModel model)
         {
-            string autoSaveKey = System.IO.Path.Combine(RegistryPath, "AutoSave");
+            string autoSaveKey = Path.Combine(RegistryPath, "AutoSave");
             string folder = Path.GetDirectoryName(model.TempFilePath).Replace("\\", "\\\\");
             RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", folder);
-            return PrintHandler.ExecutePrintAsync(doc, folder, model).Result;
+            return PrintHelper.ExecutePrintAsync(doc, folder, model).Result;
         }
 
     }

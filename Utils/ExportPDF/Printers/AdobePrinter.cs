@@ -16,9 +16,11 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
 
         public override void InitializePrinter()
         {
-            string autoSave = System.IO.Path.Combine(RegistryPath, "AutoSave");
-            string outputDirKey = System.IO.Path.Combine(RegistryPath, "OutputDir");
-            string promptUserKey = System.IO.Path.Combine(RegistryPath, "PromptForAdobePDF");
+            Log.Debug("Initialize Adobe PDF printer");
+
+            string autoSave = Path.Combine(RegistryPath, "AutoSave");
+            string outputDirKey = Path.Combine(RegistryPath, "OutputDir");
+            string promptUserKey = Path.Combine(RegistryPath, "PromptForAdobePDF");
 
             RegistryHelper.SetValue(Registry.CurrentUser, autoSave, "Enabled", "True");
             RegistryHelper.SetValue(Registry.CurrentUser, promptUserKey, "Enabled", "False");
@@ -27,17 +29,19 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowAllNotifications", "False");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "SkipPrintDialog", "True");
 
-            RegistryHelper.SetValue(Registry.CurrentUser, PrintHandler.StatusPath, PrinterName, 1);
+            PrinterStateManager.SetAvailability(PrinterName, false);
         }
 
 
         public override void ResetPrinterSettings()
         {
             Log.Debug("Reset print settings");
+
             string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "OutputDir", desktop);
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<Title>");
-            RegistryHelper.SetValue(Registry.CurrentUser, PrintHandler.StatusPath, PrinterName, 0);
+
+            PrinterStateManager.SetAvailability(PrinterName, true);
         }
 
 
@@ -45,7 +49,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
         {
             string folder = Path.GetDirectoryName(model.TempFilePath).Replace("\\", "\\\\");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "OutputDir", folder);
-            return PrintHandler.ExecutePrintAsync(doc, folder, model).Result;
+            return PrintHelper.ExecutePrintAsync(doc, folder, model).Result;
         }
     }
 

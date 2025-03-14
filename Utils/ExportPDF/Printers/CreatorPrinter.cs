@@ -15,8 +15,10 @@ internal sealed class CreatorPrinter : PrinterControl
 
     public override void InitializePrinter()
     {
-        string autoSave = System.IO.Path.Combine(RegistryPath, "AutoSave");
-        string openViewerKey = System.IO.Path.Combine(RegistryPath, "OpenViewer");
+        Log.Debug("Initialize PDFCreator printer");
+
+        string autoSave = Path.Combine(RegistryPath, "AutoSave");
+        string openViewerKey = Path.Combine(RegistryPath, "OpenViewer");
         RegistryHelper.SetValue(Registry.CurrentUser, autoSave, "Enabled", "True");
         RegistryHelper.SetValue(Registry.CurrentUser, openViewerKey, "Enabled", "False");
         RegistryHelper.SetValue(Registry.CurrentUser, openViewerKey, "OpenWithPdfArchitect", "False");
@@ -30,16 +32,18 @@ internal sealed class CreatorPrinter : PrinterControl
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "Name", "<DefaultProfile>");
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowProgress", "False");
 
-        RegistryHelper.SetValue(Registry.CurrentUser, PrintHandler.StatusPath, PrinterName, 1);
+        PrinterStateManager.SetAvailability(PrinterName, false);
     }
 
 
     public override void ResetPrinterSettings()
     {
         Log.Debug("Reset print settings");
+
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "TargetDirectory", "<Desktop>");
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<Title>");
-        RegistryHelper.SetValue(Registry.CurrentUser, PrintHandler.StatusPath, PrinterName, 0);
+
+        PrinterStateManager.SetAvailability(PrinterName, true);
     }
 
 
@@ -47,7 +51,7 @@ internal sealed class CreatorPrinter : PrinterControl
     {
         string folder = Path.GetDirectoryName(model.TempFilePath).Replace("\\", "\\\\");
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "TargetDirectory", folder);
-        return PrintHandler.ExecutePrintAsync(doc, folder, model).Result;
+        return PrintHelper.ExecutePrintAsync(doc, folder, model).Result;
     }
 
 

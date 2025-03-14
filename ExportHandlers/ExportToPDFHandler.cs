@@ -30,7 +30,7 @@ internal sealed class ExportToPDFHandler
             RevitFileHelper.CloseRevitApplication();
         }
 
-        sheetData = PrintHandler.GetData(uidoc.Document, printer.PrinterName, colorTypeEnabled);
+        sheetData = PrintHelper.GetData(uidoc.Document, printer.PrinterName, colorTypeEnabled);
 
         Log.Information($"Total sheets: {sheetData.Values.Sum(lst => lst.Count)}");
         Log.Information($"Available printer: {printer.PrinterName}");
@@ -48,7 +48,7 @@ internal sealed class ExportToPDFHandler
 
             string exportPath = Path.Combine(exportDirectory, $"{revitFileName}.pdf");
 
-            sheetModels = PrintHandler.PrintSheetData(uidoc.Document, printer, sheetData, tempDirectory);
+            sheetModels = PrintHelper.PrintSheetData(uidoc.Document, printer, sheetData, tempDirectory);
 
             Log.Information($"Total valid sheets: {sheetModels.Count}");
 
