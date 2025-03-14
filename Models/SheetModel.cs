@@ -6,12 +6,11 @@ namespace RevitBIMTool.Models;
 internal class SheetModel : IDisposable
 {
     private bool _isDisposed;
-    private ViewSheet _viewSheet;
 
     /// <summary>
     /// Получает ViewSheet Revit
     /// </summary>
-    public ViewSheet ViewSheet => _viewSheet;
+    public ViewSheet ViewSheet { get; private set; }
 
     /// <summary>
     /// Получает размер бумаги листа
@@ -74,7 +73,7 @@ internal class SheetModel : IDisposable
     /// <param name="sheet">Лист Revit</param>
     public SheetModel(ViewSheet sheet)
     {
-        _viewSheet = sheet ?? throw new ArgumentNullException(nameof(sheet));
+        ViewSheet = sheet ?? throw new ArgumentNullException(nameof(sheet));
     }
 
     /// <summary>
@@ -119,13 +118,10 @@ internal class SheetModel : IDisposable
     /// </summary>
     protected virtual void Dispose(bool disposing)
     {
-        if (_isDisposed)
-            return;
-
-        if (disposing && _viewSheet != null)
+        if (disposing && ViewSheet != null)
         {
-            _viewSheet.Dispose();
-            _viewSheet = null;
+            ViewSheet.Dispose();
+            ViewSheet = null;
         }
 
         _isDisposed = true;

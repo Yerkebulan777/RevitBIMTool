@@ -56,7 +56,7 @@ namespace RevitBIMTool.Utils.Common
                     {
                         string folderName = folderInfo.Name;
                         folderName = matchPrefix.Replace(folderName, string.Empty);
-                        stringBuilder.Append(folderName);
+                        _ = stringBuilder.Append(folderName);
                     }
                 }
             }
@@ -80,9 +80,8 @@ namespace RevitBIMTool.Utils.Common
             string sheetTitle = string.IsNullOrWhiteSpace(groupName)
                 ? StringHelper.NormalizeLength($"{projectName} - Лист-{sheetNumber} - {viewSheet.Name}")
                 : StringHelper.NormalizeLength($"{projectName} - Лист - {groupName}-{sheetNumber} - {viewSheet.Name}");
-            string.IsNullOrEmpty(extension) ? sheetTitle : $"{sheetTitle}.{extension}";
 
-            return StringHelper.ReplaceInvalidChars(sheetTitle);
+            return StringHelper.ReplaceInvalidChars(string.IsNullOrEmpty(extension) ? sheetTitle : $"{sheetTitle}.{extension}");
         }
 
         /// <summary>
@@ -121,7 +120,7 @@ namespace RevitBIMTool.Utils.Common
         {
             string sheetNumber = GetSheetNumber(model.ViewSheet);
             string groupName = GetOrganizationGroupName(doc, model.ViewSheet);
-            string formattedName = FormatSheetName(doc, model.ViewSheet, projectName, extension);
+            string sheetName = FormatSheetName(doc, model.ViewSheet, projectName, extension);
 
             double digitNumber = ParseSheetNumber(sheetNumber);
 
@@ -131,6 +130,7 @@ namespace RevitBIMTool.Utils.Common
             {
                 if (!groupName.StartsWith("#") && digitNumber < 500)
                 {
+                    Log.Debug($"Sheet number: {digitNumber}");
                     isValid = model.ViewSheet.CanBePrinted;
                 }
             }
@@ -142,7 +142,7 @@ namespace RevitBIMTool.Utils.Common
                 organizationGroup = Regex.Replace(sheetNumber, @"[0-9.]", string.Empty);
             }
 
-            model.SetProperties(formattedName, sheetNumber, digitNumber, organizationGroup, isValid);
+            model.SetProperties(sheetName, sheetNumber, digitNumber, organizationGroup, isValid);
         }
 
         /// <summary>

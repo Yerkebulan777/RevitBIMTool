@@ -36,7 +36,6 @@ internal static class PrintHelper
         string projectTitle = doc.Title;
 
         FilteredElementCollector collector = new(doc);
-
         collector = collector.OfCategory(BuiltInCategory.OST_TitleBlocks);
         collector = collector.OfClass(typeof(FamilyInstance));
         collector = collector.WhereElementIsNotElementType();
