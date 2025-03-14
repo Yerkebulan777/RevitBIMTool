@@ -5,8 +5,6 @@ namespace RevitBIMTool.Models;
 
 internal class SheetModel : IDisposable
 {
-    private bool _isDisposed;
-
     /// <summary>
     /// Получает ViewSheet Revit
     /// </summary>
@@ -123,8 +121,6 @@ internal class SheetModel : IDisposable
             ViewSheet.Dispose();
             ViewSheet = null;
         }
-
-        _isDisposed = true;
     }
 
     /// <summary>

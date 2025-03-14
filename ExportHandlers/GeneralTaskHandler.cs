@@ -28,7 +28,7 @@ namespace RevitBIMTool.ExportHandlers
 
                         model.ExportFolder = ExportHelper.SetDirectory(revitFilePath, "03_PDF", true);
                         model.ExportBaseFile = Path.Combine(model.ExportFolder, $"{revitFileName}.pdf");
-                        if (!ExportHelper.IsFileUpdated(model.ExportBaseFile, revitFilePath, out output))
+                        if (!FileValidator.IsUpdated(model.ExportBaseFile, revitFilePath, out output))
                         {
                             PathHelper.DeleteExistsFile(model.ExportBaseFile);
                             Thread.Sleep(model.CommandNumber * 1000);
@@ -40,7 +40,7 @@ namespace RevitBIMTool.ExportHandlers
 
                         model.ExportFolder = ExportHelper.SetDirectory(revitFilePath, "02_DWG", true);
                         model.ExportBaseFile = Path.Combine(model.ExportFolder, $"{revitFileName}.zip");
-                        if (!ExportHelper.IsFileUpdated(model.ExportBaseFile, revitFilePath, out output))
+                        if (!FileValidator.IsUpdated(model.ExportBaseFile, revitFilePath, out output))
                         {
                             PathHelper.DeleteExistsFile(model.ExportBaseFile);
                             Thread.Sleep(model.CommandNumber * 1000);
@@ -52,7 +52,7 @@ namespace RevitBIMTool.ExportHandlers
 
                         model.ExportFolder = ExportHelper.SetDirectory(revitFilePath, "05_NWC", false);
                         model.ExportBaseFile = Path.Combine(model.ExportFolder, $"{revitFileName}.nwc");
-                        if (!ExportHelper.IsFileUpdated(model.ExportBaseFile, revitFilePath, out output))
+                        if (!FileValidator.IsUpdated(model.ExportBaseFile, revitFilePath, out output))
                         {
                             PathHelper.DeleteExistsFile(model.ExportBaseFile);
                             Thread.Sleep(model.CommandNumber * 1000);
