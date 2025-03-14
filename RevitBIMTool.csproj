@@ -60,7 +60,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="ServiceLibrary\ServiceLibrary.csproj" />
+      <ProjectReference Include="..\AutomationService\ServiceLibrary\ServiceLibrary.csproj" />
     </ItemGroup>
 
     <ItemGroup>
