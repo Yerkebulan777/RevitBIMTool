@@ -48,9 +48,9 @@ internal sealed class ExportToPDFHandler
 
             Log.Information("Start process export to PDF...");
 
-            string exportPath = Path.Combine(exportDirectory, $"{revitFileName}.pdf");
-
             sheetModels = PrintHelper.PrintSheetData(uidoc.Document, printer, sheetData, tempDirectory);
+
+            string exportPath = Path.Combine(exportDirectory, $"{revitFileName}.pdf");
 
             Log.Information($"Total valid sheets: {sheetModels.Count}");
 
