@@ -44,6 +44,7 @@ internal sealed class InternalPrinter : PrinterControl
         {
             Combine = false,
             StopOnError = true,
+            FileName = sheetName,
             HideScopeBoxes = true,
             HideCropBoundaries = true,
             HideReferencePlane = true,
@@ -52,7 +53,6 @@ internal sealed class InternalPrinter : PrinterControl
             ExportQuality = PDFExportQualityType.DPI300,
             ColorDepth = colorDepthType,
             ZoomType = ZoomType.Zoom,
-            FileName = sheetName,
             ZoomPercentage = 100,
         };
 
@@ -64,7 +64,7 @@ internal sealed class InternalPrinter : PrinterControl
 
             if (await PathHelper.AwaitExistsFileAsync(model.TempFilePath))
             {
-                Log.Debug($"Exported to PDF successfully, destination: {model.TempFilePath}");
+                Log.Debug($"Export to PDF: {model.SheetName}");
                 model.IsSuccessfully = true;
                 Thread.Sleep(100);
                 return true;
@@ -81,4 +81,7 @@ internal sealed class InternalPrinter : PrinterControl
 
         return int.TryParse(RevitBIMToolApp.Version, out revitVersion) && revitVersion >= 2023;
     }
+
+
+
 }

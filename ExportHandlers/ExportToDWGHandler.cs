@@ -94,7 +94,7 @@ internal static class ExportToDWGHandler
             if (doc.Export(folder, sheetModel.SheetName, elemIds, dwgOptions))
             {
                 spinWait.SpinOnce();
-                Thread.Sleep(1000);
+                Thread.Sleep(100);
                 count++;
             }
         }

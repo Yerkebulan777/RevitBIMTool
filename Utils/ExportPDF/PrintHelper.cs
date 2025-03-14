@@ -131,7 +131,7 @@ internal static class PrintHelper
 
                             model.TempFilePath = Path.Combine(folder, model.SheetName);
 
-                            if (!File.Exists(model.TempFilePath) && printer.DoPrint(doc, model))
+                            if (File.Exists(model.TempFilePath) || printer.DoPrint(doc, model))
                             {
                                 model.IsSuccessfully = true;
                                 resultFilePaths.Add(model);
@@ -176,6 +176,7 @@ internal static class PrintHelper
         {
             if (await PathHelper.AwaitExistsFileAsync(filePath))
             {
+                Log.Debug($"Export to PDF: {model.SheetName}");
                 model.IsSuccessfully = true;
                 return true;
             }
