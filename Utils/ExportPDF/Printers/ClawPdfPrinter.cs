@@ -49,7 +49,6 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
             RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", folder);
             return PrintHelper.ExecutePrintAsync(doc, folder, model).Result;
         }
-
     }
 
 
