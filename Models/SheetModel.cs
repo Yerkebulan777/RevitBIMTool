@@ -86,6 +86,13 @@ internal class SheetModel : IDisposable
         SheetOrientation = orientation;
     }
 
+    public string GetFormatNameWithSheetOrientation()
+    {
+        string orientationText = Enum.GetName(typeof(PageOrientationType), SheetOrientation);
+        string formatName = $"{PaperName} {orientationText}";
+        return formatName;
+    }
+
     /// <summary>
     /// Устанавливает свойства листа на основе данных
     /// </summary>

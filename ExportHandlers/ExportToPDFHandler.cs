@@ -1,5 +1,5 @@
 ﻿using Autodesk.Revit.UI;
-using RevitBIMTool.Model;
+using RevitBIMTool.Models;
 using RevitBIMTool.Utils.Common;
 using RevitBIMTool.Utils.ExportPDF;
 using RevitBIMTool.Utils.ExportPDF.Printers;

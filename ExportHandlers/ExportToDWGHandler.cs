@@ -1,6 +1,6 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using RevitBIMTool.Model;
+using RevitBIMTool.Models;
 using RevitBIMTool.Utils.Common;
 using Serilog;
 using System.IO;
@@ -86,7 +86,7 @@ internal static class ExportToDWGHandler
 
         Log.Information($"Total valid sheets {totalSheets}");
 
-        foreach (SheetModel sheetModel in SheetModel.SortSheetModels(sheetModels))
+        foreach (SheetModel sheetModel in SheetHelper.SortSheetModels(sheetModels))
         {
             ICollection<ElementId> elemIds = [sheetModel.ViewSheet.Id];
 

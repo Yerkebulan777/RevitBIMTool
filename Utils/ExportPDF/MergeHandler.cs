@@ -1,5 +1,5 @@
 ﻿using iTextSharp.text.pdf;
-using RevitBIMTool.Model;
+using RevitBIMTool.Models;
 using RevitBIMTool.Utils.Common;
 using Serilog;
 using System.IO;
@@ -30,7 +30,7 @@ internal static class MergeHandler
 
             int totalPages = 0;
 
-            foreach (SheetModel model in SheetModel.SortSheetModels(validSheets))
+            foreach (SheetModel model in SheetHelper.SortSheetModels(validSheets))
             {
                 PdfReader reader = null;
 
