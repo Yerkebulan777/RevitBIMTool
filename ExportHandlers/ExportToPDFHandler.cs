@@ -43,10 +43,10 @@ internal sealed class ExportToPDFHandler
         {
             printer.InitializePrinter();
 
-            Log.Debug("Start export to PDF...");
-
             PathHelper.EnsureDirectory(tempDirectory);
             PathHelper.EnsureDirectory(exportDirectory);
+
+            Log.Information("Start process export to PDF...");
 
             string exportPath = Path.Combine(exportDirectory, $"{revitFileName}.pdf");
 
