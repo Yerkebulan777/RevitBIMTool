@@ -79,7 +79,7 @@ internal static class MergeHandler
 
         }
 
-        Log.Information("Merged {TotalPages} pages", totalPages);
+        Log.Information($"Merged {totalPages} pages");
 
         if (totalPages == 0)
         {

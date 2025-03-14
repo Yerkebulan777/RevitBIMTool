@@ -6,7 +6,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using PaperSize = System.Drawing.Printing.PaperSize;
 
-
 namespace RevitBIMTool.Utils.Common
 {
     internal static class SheetHelper
@@ -294,29 +293,10 @@ namespace RevitBIMTool.Utils.Common
         /// </summary>
         public static List<SheetModel> SortSheets(List<SheetModel> sheetModels)
         {
-            return sheetModels == null
-                ? []
-                : sheetModels
+            return sheetModels?
                 .Where(sm => sm.IsValid)
                 .OrderBy(sm => sm.OrganizationGroupName)
-                .ThenBy(sm => sm.DigitNumber)
-                .ToList();
-        }
-
-        /// <summary>
-        /// Фильтрует только валидные листы из списка
-        /// </summary>
-        public static List<SheetModel> FilterValidSheets(List<SheetModel> sheetModels)
-        {
-            return sheetModels == null ? [] : sheetModels.Where(sm => sm.IsValid).ToList();
-        }
-
-        /// <summary>
-        /// Фильтрует успешно обработанные листы
-        /// </summary>
-        public static List<SheetModel> FilterSuccessfulSheets(List<SheetModel> sheetModels)
-        {
-            return sheetModels == null ? [] : sheetModels.Where(sm => sm.IsSuccessfully).ToList();
+                .ThenBy(sm => sm.DigitNumber).ToList();
         }
 
         /// <summary>
