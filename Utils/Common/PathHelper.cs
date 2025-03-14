@@ -5,8 +5,8 @@ using System.Diagnostics;
 using System.IO;
 using Path = System.IO.Path;
 
-
 namespace RevitBIMTool.Utils.Common;
+
 public static class PathHelper
 {
     private static readonly string[] sectionAcronyms =
@@ -186,5 +186,7 @@ public static class PathHelper
 
         return false;
     }
+
+
 
 }
