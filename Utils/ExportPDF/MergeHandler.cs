@@ -28,11 +28,11 @@ internal static class MergeHandler
 
             foreach (SheetModel model in SheetHelper.SortSheetModels(validSheets))
             {
-                if (File.Exists(model.FilePath))
+                if (File.Exists(model.TempFilePath))
                 {
                     try
                     {
-                        using PdfReader reader = new PdfReader(model.FilePath);
+                        using PdfReader reader = new PdfReader(model.TempFilePath);
                         int pageCount = reader.NumberOfPages;
                         Log.Debug($"{model.SheetName}: {pageCount} pages");
 
@@ -55,13 +55,13 @@ internal static class MergeHandler
                         model.Dispose();
                         if (deleteOriginals)
                         {
-                            RevitPathHelper.DeleteExistsFile(model.FilePath);
+                            RevitPathHelper.DeleteExistsFile(model.TempFilePath);
                         }
                     }
                 }
                 else
                 {
-                    Log.Warning($"{model.FilePath} not found");
+                    Log.Warning($"{model.TempFilePath} not found");
                 }
             }
 

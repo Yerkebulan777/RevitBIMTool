@@ -174,9 +174,9 @@ internal static class PrintHandler
                         {
                             SheetModel model = sheetModels[idx];
 
-                            model.FilePath = Path.Combine(folder, model.SheetName);
+                            model.TempFilePath = Path.Combine(folder, model.SheetName);
 
-                            if (!File.Exists(model.FilePath) && printer.DoPrint(doc, model))
+                            if (!File.Exists(model.TempFilePath) && printer.DoPrint(doc, model))
                             {
                                 model.IsSuccessfully = true;
                                 resultFilePaths.Add(model);
