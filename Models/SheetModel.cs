@@ -1,131 +1,134 @@
 ﻿using Autodesk.Revit.DB;
-using RevitBIMTool.Utils.Common;
-using System.Globalization;
-using System.Text;
-using System.Text.RegularExpressions;
 using PaperSize = System.Drawing.Printing.PaperSize;
 
+namespace RevitBIMTool.Models;
 
-namespace RevitBIMTool.Model;
 internal class SheetModel : IDisposable
 {
-    public ViewSheet ViewSheet { get; }
+    private bool _isDisposed;
+    private ViewSheet _viewSheet;
+
+    /// <summary>
+    /// Получает ViewSheet Revit
+    /// </summary>
+    public ViewSheet ViewSheet => _viewSheet;
+
+    /// <summary>
+    /// Получает размер бумаги листа
+    /// </summary>
+    public PaperSize SheetPapeSize { get; }
+
+    /// <summary>
+    /// Получает ориентацию листа
+    /// </summary>
+    public PageOrientationType SheetOrientation { get; }
+
+    /// <summary>
+    /// Получает или устанавливает флаг валидности листа
+    /// </summary>
+    public bool IsValid { get; private set; }
+
+    /// <summary>
+    /// Получает или устанавливает имя листа
+    /// </summary>
+    public string SheetName { get; private set; }
+
+    /// <summary>
+    /// Получает или устанавливает числовой номер листа
+    /// </summary>
+    public double DigitNumber { get; private set; }
+
+    /// <summary>
+    /// Получает или устанавливает строковый номер листа
+    /// </summary>
+    public string StringNumber { get; private set; }
+
+    /// <summary>
+    /// Получает имя формата бумаги
+    /// </summary>
+    public string PaperName => SheetPapeSize?.PaperName;
+
+    /// <summary>
+    /// Получает или устанавливает имя организационной группы
+    /// </summary>
+    public object OrganizationGroupName { get; private set; }
+
+    /// <summary>
+    /// Получает или устанавливает флаг включения цвета
+    /// </summary>
+    public bool IsColorEnabled { get; set; }
+
+    /// <summary>
+    /// Получает или устанавливает флаг успешности операции
+    /// </summary>
+    public bool IsSuccessfully { get; set; }
+
+    /// <summary>
+    /// Получает или устанавливает путь к файлу
+    /// </summary>
+    public string FilePath { get; set; }
+
+    /// <summary>
+    /// Инициализирует новый экземпляр класса SheetModel
+    /// </summary>
+    /// <param name="sheet">Лист Revit</param>
     public SheetModel(ViewSheet sheet)
     {
-        ViewSheet = sheet;
+        _viewSheet = sheet ?? throw new ArgumentNullException(nameof(sheet));
     }
 
-    public readonly PaperSize SheetPapeSize;
-    public readonly PageOrientationType SheetOrientation;
-    public SheetModel(ViewSheet sheet, PaperSize size, PageOrientationType orientation)
+    /// <summary>
+    /// Инициализирует новый экземпляр класса SheetModel с указанным размером и ориентацией
+    /// </summary>
+    public SheetModel(ViewSheet sheet, PaperSize size, PageOrientationType orientation) : this(sheet)
     {
-        ViewSheet = sheet;
-        SheetPapeSize = size;
+        SheetPapeSize = size ?? throw new ArgumentNullException(nameof(size));
         SheetOrientation = orientation;
     }
 
-    public bool IsValid { get; set; }
-    public string SheetName { get; set; }
-    public double DigitNumber { get; set; }
-    public string StringNumber { get; set; }
-    public string PaperName => SheetPapeSize.PaperName;
-    public object OrganizationGroupName { get; set; }
-    public bool IsColorEnabled { get; set; }
-    public bool IsSuccessfully { get; set; }
-    public string FilePath { get; set; }
-
-
-    public static string GetSheetNumber(ViewSheet sheet)
+    /// <summary>
+    /// Устанавливает свойства листа на основе данных
+    /// </summary>
+    internal void SetProperties(string sheetName, string stringNumber, double digitNumber, object groupName, bool isValid)
     {
-        string sheetNumber = StringHelper.ReplaceInvalidChars(sheet.SheetNumber);
-
-        if (!string.IsNullOrWhiteSpace(sheetNumber))
-        {
-            sheetNumber = sheetNumber.TrimStart('0');
-            sheetNumber = sheetNumber.TrimEnd('.');
-        }
-
-        return sheetNumber.Trim();
-    }
-
-
-    public static string GetOrganizationGroupName(Document doc, ViewSheet viewSheet)
-    {
-        Regex matchPrefix = new(@"^(\s*)");
-        StringBuilder stringBuilder = new();
-
-        BrowserOrganization organization = BrowserOrganization.GetCurrentBrowserOrganizationForSheets(doc);
-
-        foreach (FolderItemInfo folderInfo in organization.GetFolderItems(viewSheet.Id))
-        {
-            if (folderInfo.IsValidObject)
-            {
-                string folderName = folderInfo.Name;
-                folderName = matchPrefix.Replace(folderName, string.Empty);
-                _ = stringBuilder.Append(folderName);
-            }
-        }
-
-        return StringHelper.ReplaceInvalidChars(stringBuilder.ToString());
-    }
-
-
-    public void SetSheetName(Document doc, string projectName, string extension = null)
-    {
-        string sheetNumber = GetSheetNumber(ViewSheet);
-        string groupName = GetOrganizationGroupName(doc, ViewSheet);
-        string sheetName = StringHelper.ReplaceInvalidChars(ViewSheet.Name);
-        projectName = projectName.Substring(0, Math.Min(30, projectName.Length));
-
-        sheetName = string.IsNullOrWhiteSpace(groupName)
-            ? StringHelper.NormalizeLength($"{projectName} - Лист - {sheetNumber} - {sheetName}")
-            : StringHelper.NormalizeLength($"{projectName} - Лист - {groupName}-{sheetNumber} - {sheetName}");
-
         OrganizationGroupName = groupName;
-
-        if (string.IsNullOrWhiteSpace(groupName))
-        {
-            OrganizationGroupName = Regex.Replace(sheetNumber, @"[0-9.]", string.Empty);
-        }
-
-        string digitNumber = Regex.Replace(sheetNumber, @"[^0-9,.]", string.Empty);
-
-        SheetName = string.IsNullOrEmpty(extension) ? sheetName : $"{sheetName}.{extension}";
-
-        if (double.TryParse(digitNumber, NumberStyles.Any, CultureInfo.InvariantCulture, out double number))
-        {
-            if (!groupName.StartsWith("#") && number < 500)
-            {
-                IsValid = ViewSheet.CanBePrinted;
-                StringNumber = sheetNumber;
-                DigitNumber = number;
-            }
-        }
+        StringNumber = stringNumber;
+        DigitNumber = digitNumber;
+        SheetName = sheetName;
+        IsValid = isValid;
     }
 
-
-    public string GetFormatNameWithSheetOrientation()
-    {
-        string orientationText = Enum.GetName(typeof(PageOrientationType), SheetOrientation);
-        string formatName = $"{PaperName} {orientationText}";
-
-        return formatName;
-    }
-
-
-    public static List<SheetModel> SortSheetModels(List<SheetModel> sheetModels)
-    {
-        return sheetModels
-            .Where(sm => sm.IsValid)
-            .OrderBy(sm => sm.OrganizationGroupName)
-            .ThenBy(sm => sm.DigitNumber).ToList();
-    }
-
-
+    /// <summary>
+    /// Освобождает ресурсы, используемые объектом SheetModel
+    /// </summary>
     public void Dispose()
     {
-        ViewSheet.Dispose();
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
 
+    /// <summary>
+    /// Освобождает управляемые и неуправляемые ресурсы
+    /// </summary>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_isDisposed)
+            return;
 
+        if (disposing && _viewSheet != null)
+        {
+            _viewSheet.Dispose();
+            _viewSheet = null;
+        }
+
+        _isDisposed = true;
+    }
+
+    /// <summary>
+    /// Деструктор
+    /// </summary>
+    ~SheetModel()
+    {
+        Dispose(false);
+    }
 }
