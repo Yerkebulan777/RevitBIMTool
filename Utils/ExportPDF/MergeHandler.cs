@@ -34,35 +34,38 @@ internal static class MergeHandler
             {
                 PdfReader reader = null;
 
-                try
+                if (File.Exists(model.FilePath))
                 {
-                    reader = new PdfReader(model.FilePath);
-                    reader.ConsolidateNamedDestinations();
-
-                    for (int num = 1; num <= reader.NumberOfPages; num++)
+                    try
                     {
-                        PdfImportedPage page = copy.GetImportedPage(reader, num);
-                        if (page != null && outputDocument.IsOpen())
+                        reader = new PdfReader(model.FilePath);
+                        reader.ConsolidateNamedDestinations();
+
+                        for (int num = 1; num <= reader.NumberOfPages; num++)
                         {
-                            copy.AddPage(page);
-                            totalPages++;
+                            PdfImportedPage page = copy.GetImportedPage(reader, num);
+                            if (page != null && outputDocument.IsOpen())
+                            {
+                                copy.AddPage(page);
+                                totalPages++;
+                            }
                         }
+
+                        copy.FreeReader(reader);
                     }
-
-                    copy.FreeReader(reader);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, $"Error processing PDF sheet {model.SheetName}: {ex.Message}");
-                }
-                finally
-                {
-                    reader?.Close();
-                    model.Dispose();
-
-                    if (deleteOriginals)
+                    catch (Exception ex)
                     {
-                        RevitPathHelper.DeleteExistsFile(model.FilePath);
+                        Log.Error(ex, $"Error processing PDF sheet {model.SheetName}: {ex.Message}");
+                    }
+                    finally
+                    {
+                        reader?.Close();
+                        model.Dispose();
+
+                        if (deleteOriginals)
+                        {
+                            RevitPathHelper.DeleteExistsFile(model.FilePath);
+                        }
                     }
                 }
             }
