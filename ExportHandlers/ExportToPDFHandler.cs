@@ -30,7 +30,7 @@ internal sealed class ExportToPDFHandler
             RevitFileHelper.CloseRevitApplication();
         }
 
-        sheetData = PrintHandler.GetData(uidoc.Document, printer.PrinterName, revitFileName, colorTypeEnabled);
+        sheetData = PrintHandler.GetData(uidoc.Document, printer.PrinterName, colorTypeEnabled);
 
         Log.Information($"Total sheets: {sheetData.Values.Sum(lst => lst.Count)}");
         Log.Information($"Available printer: {printer.PrinterName}");

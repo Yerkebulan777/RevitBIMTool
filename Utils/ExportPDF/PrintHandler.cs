@@ -73,8 +73,10 @@ internal static class PrintHandler
     }
 
 
-    public static Dictionary<string, List<SheetModel>> GetData(Document doc, string printerName, string title, bool isColorEnabled = true)
+    public static Dictionary<string, List<SheetModel>> GetData(Document doc, string printerName, bool isColorEnabled = true)
     {
+        string projectTitle = doc.Title;
+
         ResetAndApplyPrinterSettings(doc, printerName);
 
         FilteredElementCollector collector = new(doc);
@@ -111,7 +113,7 @@ internal static class PrintHandler
 
                     SheetModel model = new(viewSheet, papeSize, orientType);
 
-                    model.SetSheetName(doc, title, "pdf");
+                    model.SetSheetName(doc, projectTitle, "pdf");
 
                     if (model.IsValid)
                     {
