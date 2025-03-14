@@ -75,10 +75,10 @@ namespace RevitBIMTool.ExportHandlers
         {
             StringBuilder sb = new();
 
-            _ = sb.AppendLine("Start task... ");
-            _ = sb.AppendLine($"Command: [{model.CommandNumber}]");
-            _ = sb.AppendLine($"File name: {model.RevitFileName}");
-            _ = sb.AppendLine($"Directory: {model.ExportFolder}");
+            sb.AppendLine("Start task... ");
+            sb.AppendLine($"Command: [{model.CommandNumber}]");
+            sb.AppendLine($"File name: {model.RevitFileName}");
+            sb.AppendLine($"Directory: {model.ExportFolder}");
 
             Log.Information(sb.ToString());
 

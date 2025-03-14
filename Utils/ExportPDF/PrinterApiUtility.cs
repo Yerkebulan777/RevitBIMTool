@@ -64,13 +64,13 @@ public static class PrinterApiUtility
 
             if (currentMinSide < average && average < currentMaxSide)
             {
-                _ = strBuilder.AppendLine($"Search format ({searсhMinSide} x {searchMaxSide})");
-                _ = strBuilder.AppendLine($"{currentName} ({currentMinSide} x {currentMaxSide})");
+                strBuilder.AppendLine($"Search format ({searсhMinSide} x {searchMaxSide})");
+                strBuilder.AppendLine($"{currentName} ({currentMinSide} x {currentMaxSide})");
 
                 if (IsEquals(searсhMinSide, currentMinSide) && IsEquals(searchMaxSide, currentMaxSide))
                 {
                     resultSize = currentSize;
-                    _ = strBuilder.Clear();
+                    strBuilder.Clear();
                     result = true;
                     break;
                 }

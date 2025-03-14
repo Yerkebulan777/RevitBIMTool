@@ -128,7 +128,7 @@ internal sealed class RevitViewHelper
                     view3D.DisplayStyle = style;
                     view3D.DetailLevel = detail;
 
-                    _ = trans.Commit();
+                    trans.Commit();
                 }
             }
             finally
@@ -213,7 +213,7 @@ internal sealed class RevitViewHelper
                     }
                 }
 
-                _ = trx.Commit();
+                trx.Commit();
             }
         }
         finally
@@ -222,7 +222,7 @@ internal sealed class RevitViewHelper
 
             if (!trx.HasEnded())
             {
-                _ = trx.RollBack();
+                trx.RollBack();
             }
         }
 
@@ -481,7 +481,7 @@ internal sealed class RevitViewHelper
                 if (hideIds.Count > 0)
                 {
                     activeView.HideElements(hideIds);
-                    _ = trx.Commit();
+                    trx.Commit();
                 }
             }
         }
@@ -491,7 +491,7 @@ internal sealed class RevitViewHelper
 
             if (!trx.HasEnded())
             {
-                _ = trx.RollBack();
+                trx.RollBack();
             }
         }
 

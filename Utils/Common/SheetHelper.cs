@@ -56,7 +56,7 @@ namespace RevitBIMTool.Utils.Common
                     {
                         string folderName = folderInfo.Name;
                         folderName = matchPrefix.Replace(folderName, string.Empty);
-                        _ = stringBuilder.Append(folderName);
+                        stringBuilder.Append(folderName);
                     }
                 }
             }
@@ -80,7 +80,7 @@ namespace RevitBIMTool.Utils.Common
             string sheetTitle = string.IsNullOrWhiteSpace(groupName)
                 ? StringHelper.NormalizeLength($"{projectName} - Лист-{sheetNumber} - {viewSheet.Name}")
                 : StringHelper.NormalizeLength($"{projectName} - Лист - {groupName}-{sheetNumber} - {viewSheet.Name}");
-            _ = string.IsNullOrEmpty(extension) ? sheetTitle : $"{sheetTitle}.{extension}";
+            string.IsNullOrEmpty(extension) ? sheetTitle : $"{sheetTitle}.{extension}";
 
             return StringHelper.ReplaceInvalidChars(sheetTitle);
         }

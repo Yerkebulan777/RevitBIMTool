@@ -37,14 +37,14 @@ internal static class PrintHelper
             }
             catch (Exception ex)
             {
-                _ = trx.RollBack();
+                trx.RollBack();
                 Log.Error(ex, $"Reset settings: {ex.Message}");
             }
             finally
             {
                 if (!trx.HasEnded())
                 {
-                    _ = trx.Commit();
+                    trx.Commit();
                 }
             }
         }
@@ -181,13 +181,13 @@ internal static class PrintHelper
                     }
                 }
 
-                _ = trx.Commit();
+                trx.Commit();
             }
             catch (Exception ex)
             {
                 if (!trx.HasEnded())
                 {
-                    _ = trx.RollBack();
+                    trx.RollBack();
                     Log.Error(ex, ex.Message);
                 }
             }

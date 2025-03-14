@@ -17,7 +17,7 @@ internal static class StringHelper
             {
                 if (!invalidChars.Contains(c))
                 {
-                    _ = stringBuilder.Append(c);
+                    stringBuilder.Append(c);
                 }
             }
         }

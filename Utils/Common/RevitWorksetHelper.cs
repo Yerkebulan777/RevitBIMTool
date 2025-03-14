@@ -54,7 +54,7 @@ internal static class RevitWorksetHelper
 
                 if (!trx.HasEnded())
                 {
-                    _ = trx.RollBack();
+                    trx.RollBack();
                 }
             }
         }

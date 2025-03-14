@@ -56,7 +56,7 @@ internal static class RevitPrinterUtil
                             if (printSetup.SaveAs(formatName))
                             {
                                 printManager.Apply();
-                                _ = trx.Commit();
+                                trx.Commit();
                                 break;
                             }
                         }
@@ -71,7 +71,7 @@ internal static class RevitPrinterUtil
                 {
                     if (!trx.HasEnded())
                     {
-                        _ = trx.RollBack();
+                        trx.RollBack();
                     }
                 }
             }

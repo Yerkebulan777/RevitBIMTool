@@ -155,7 +155,7 @@ namespace RevitBIMTool.Utils
                     {
                         foreach (MEPSize size in segment.GetSizes())
                         {
-                            _ = sizes.Add(size.NominalDiameter);
+                            sizes.Add(size.NominalDiameter);
                         }
                     }
                 }

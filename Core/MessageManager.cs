@@ -72,7 +72,7 @@ public static class MessageManager
                 MainInstruction = "Information: ",
                 MainIcon = TaskDialogIcon.TaskDialogIconInformation
             };
-            _ = dialog.Show();
+            dialog.Show();
         }
     }
 

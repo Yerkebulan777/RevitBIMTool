@@ -101,7 +101,7 @@ internal static class ExportHelper
                 {
                     try
                     {
-                        _ = archive.CreateEntryFromFile(info.FullName, info.Name);
+                        archive.CreateEntryFromFile(info.FullName, info.Name);
                     }
                     catch (Exception ex)
                     {

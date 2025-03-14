@@ -67,7 +67,7 @@ internal sealed class RevitActionHandler
                 stopwatch.Stop();
             }
 
-            _ = sb.AppendLine($"Time elapsed: {stopwatch.Elapsed:h\\:mm\\:ss}");
+            sb.AppendLine($"Time elapsed: {stopwatch.Elapsed:h\\:mm\\:ss}");
 
             return sb.ToString();
         }

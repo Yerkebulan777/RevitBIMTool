@@ -69,7 +69,7 @@ public sealed class RevitPurginqHelper
                     {
                         try
                         {
-                            _ = doc.Delete(item.Value);
+                            doc.Delete(item.Value);
                             status = trx.Commit();
                         }
                         finally

@@ -34,7 +34,7 @@ namespace RevitBIMTool.Utils
 
                         MoveScheduleOrGroup(doc, ssi, 0.1);
                     }
-                    _ = trx1.Commit();
+                    trx1.Commit();
                 }
             }
 
@@ -54,7 +54,7 @@ namespace RevitBIMTool.Utils
                         ssi.Pinned = true;
                     }
 
-                    _ = trx2.Commit();
+                    trx2.Commit();
                 }
             }
         }

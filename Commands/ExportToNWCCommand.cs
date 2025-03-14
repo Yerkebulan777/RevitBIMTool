@@ -34,7 +34,7 @@ internal sealed class ExportToNWCCommand : IExternalCommand, IExternalCommandAva
         }
         catch (Exception ex)
         {
-            _ = TaskDialog.Show("Exception", "Exception: \n" + ex);
+            TaskDialog.Show("Exception", "Exception: \n" + ex);
             Clipboard.SetText(ex.ToString());
             return Result.Failed;
         }

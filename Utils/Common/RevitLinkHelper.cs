@@ -69,7 +69,7 @@ namespace RevitBIMTool.Utils
         {
             try
             {
-                _ = linkType.Reload();
+                linkType.Reload();
             }
             catch (Exception ex)
             {
@@ -82,7 +82,7 @@ namespace RevitBIMTool.Utils
         {
             try
             {
-                _ = doc.Delete(id);
+                doc.Delete(id);
             }
             catch (Exception ex)
             {

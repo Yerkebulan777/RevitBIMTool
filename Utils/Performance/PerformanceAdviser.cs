@@ -81,11 +81,11 @@ namespace RevitBIMTool.Utils.Performance
             {
                 //Pass the element IDs of the flipped doors to the revit failure reporting APIs.
                 FailureMessage fm = new(m_doorWarningId);
-                _ = fm.SetFailingElements(m_FlippedDoors);
+                fm.SetFailingElements(m_FlippedDoors);
                 Transaction failureReportingTransaction = new(document, "Failure reporting transaction");
-                _ = failureReportingTransaction.Start();
-                _ = document.PostFailure(fm);
-                _ = failureReportingTransaction.Commit();
+                failureReportingTransaction.Start();
+                document.PostFailure(fm);
+                failureReportingTransaction.Commit();
                 m_FlippedDoors.Clear();
             }
         }
