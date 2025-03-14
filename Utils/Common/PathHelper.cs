@@ -169,7 +169,7 @@ public static class PathHelper
 
                 lock (sectionAcronyms)
                 {
-                    return IsValidFile(filePath);
+                    return FileValidator.IsValid(filePath);
                 }
             }
             catch (Exception ex)
@@ -186,18 +186,5 @@ public static class PathHelper
 
         return false;
     }
-
-
-    public static bool IsValidFile(string filePath)
-    {
-        if (File.Exists(filePath))
-        {
-            FileInfo fileInfo = new(filePath);
-            return fileInfo.Length >= 100;
-        }
-        return false;
-    }
-
-
 
 }
