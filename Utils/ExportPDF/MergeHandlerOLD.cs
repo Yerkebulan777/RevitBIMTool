@@ -26,6 +26,7 @@ internal static class MergeHandlerOLD
                 PdfReader reader = new(model.TempFilePath);
                 reader.ConsolidateNamedDestinations();
                 Log.Debug(model.SheetName);
+
                 try
                 {
                     for (int num = 1; num <= reader.NumberOfPages; num++)
