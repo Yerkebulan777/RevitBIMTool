@@ -6,51 +6,13 @@ using System.IO;
 using Document = Autodesk.Revit.DB.Document;
 using Element = Autodesk.Revit.DB.Element;
 using PaperSize = System.Drawing.Printing.PaperSize;
-using PrintRange = Autodesk.Revit.DB.PrintRange;
+
 using SheetModel = RevitBIMTool.Models.SheetModel;
 
 namespace RevitBIMTool.Utils.ExportPDF;
 
 internal static class PrintHelper
 {
-    private static void SetupPrinterSettings(Document doc, string printerName)
-    {
-        PrintManager printManager = doc.PrintManager;
-
-        List<PrintSetting> printSettings = RevitPrinterUtil.GetPrintSettings(doc);
-
-        using Transaction trx = new(doc, "ResetPrintSetting");
-
-        if (TransactionStatus.Started == trx.Start())
-        {
-            try
-            {
-                if (!string.IsNullOrEmpty(printerName))
-                {
-                    printManager.SelectNewPrintDriver(printerName);
-                }
-
-                printSettings.ForEach(set => doc.Delete(set.Id));
-                printManager.PrintRange = PrintRange.Current;
-                printManager.PrintToFile = true;
-                printManager.Apply();
-            }
-            catch (Exception ex)
-            {
-                trx.RollBack();
-                Log.Error(ex, $"Reset settings: {ex.Message}");
-            }
-            finally
-            {
-                if (!trx.HasEnded())
-                {
-                    trx.Commit();
-                }
-            }
-        }
-    }
-
-
     private static Element GetViewSheetByNumber(Document document, string sheetNumber)
     {
         ParameterValueProvider pvp = new(new ElementId(BuiltInParameter.SHEET_NUMBER));
@@ -72,8 +34,6 @@ internal static class PrintHelper
     public static Dictionary<string, List<SheetModel>> GetData(Document doc, string printerName, bool isColorEnabled = true)
     {
         string projectTitle = doc.Title;
-
-        SetupPrinterSettings(doc, printerName);
 
         FilteredElementCollector collector = new(doc);
 
@@ -105,7 +65,7 @@ internal static class PrintHelper
 
                 if (PrinterApiUtility.GetPaperSize(widthInMm, heighInMm, out PaperSize papeSize))
                 {
-                    PageOrientationType orientType = RevitPrinterUtil.GetOrientation(widthInMm, heighInMm);
+                    PageOrientationType orientType = PrintSettingsHelper.GetOrientation(widthInMm, heighInMm);
 
                     SheetModel model = new(viewSheet, papeSize, orientType);
 
@@ -119,7 +79,7 @@ internal static class PrintHelper
 
                         if (!sheetPrintData.TryGetValue(formatName, out List<SheetModel> sheetList))
                         {
-                            RevitPrinterUtil.SetPrintSettings(doc, model, formatName, colorType);
+                            PrintSettingsHelper.SetPrintSettings(doc, model, formatName, colorType);
                             sheetList = [model];
                         }
                         else
@@ -142,7 +102,7 @@ internal static class PrintHelper
 
     public static List<SheetModel> PrintSheetData(Document doc, PrinterControl printer, Dictionary<string, List<SheetModel>> sheetData, string folder)
     {
-        List<PrintSetting> printAllSettings = RevitPrinterUtil.GetPrintSettings(doc);
+        List<PrintSetting> printAllSettings = PrintSettingsHelper.GetPrintSettings(doc);
 
         List<SheetModel> resultFilePaths = new(sheetData.Values.Count);
 

@@ -5,6 +5,7 @@ using RevitBIMTool.Utils.ExportPDF.Printers;
 using RevitBIMTool.Utils.SystemHelpers;
 using Serilog;
 using System.IO;
+using System.Windows.Controls;
 using UIDocument = Autodesk.Revit.UI.UIDocument;
 
 namespace RevitBIMTool.ExportHandlers;
@@ -29,6 +30,8 @@ internal sealed class ExportToPDFHandler
             Log.Fatal("No available printer found!");
             RevitFileHelper.CloseRevitApplication();
         }
+
+        PrintSettingsHelper.SetupPrinterSettings(uidoc.Document, printer.PrinterName);
 
         sheetData = PrintHelper.GetData(uidoc.Document, printer.PrinterName, colorTypeEnabled);
 
