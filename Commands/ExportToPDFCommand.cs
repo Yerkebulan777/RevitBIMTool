@@ -18,7 +18,7 @@ internal sealed class ExportToPDFCommand : IExternalCommand, IExternalCommandAva
     public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
     {
         Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-        if (commandData.Application == null) { return Result.Cancelled; }
+        if (commandData.Application is null) { return Result.Cancelled; }
 
         UIApplication uiapp = commandData.Application;
         UIDocument uidoc = uiapp.ActiveUIDocument;

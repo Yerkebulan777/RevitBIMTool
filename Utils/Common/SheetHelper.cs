@@ -164,74 +164,14 @@ namespace RevitBIMTool.Utils.Common
             return model;
         }
 
-        /// <summary>
-        /// Создает модель листа на основе информации из TitleBlock (штампа)
-        /// </summary>
-        public static SheetModel CreateFromTitleBlock(Document doc, FamilyInstance titleBlock, string projectName, bool isColorEnabled = true, string extension = null)
-        {
-            try
-            {
-                double sheetWidth = titleBlock.get_Parameter(BuiltInParameter.SHEET_WIDTH).AsDouble();
-                double sheetHeight = titleBlock.get_Parameter(BuiltInParameter.SHEET_HEIGHT).AsDouble();
-                string sheetNumber = titleBlock.get_Parameter(BuiltInParameter.SHEET_NUMBER).AsString();
-
-                double widthInMm = UnitManager.FootToMm(sheetWidth);
-                double heightInMm = UnitManager.FootToMm(sheetHeight);
-
-                PageOrientationType orientation = widthInMm > heightInMm ? PageOrientationType.Landscape : PageOrientationType.Portrait;
-
-                ViewSheet viewSheet = FindViewSheetByNumber(doc, sheetNumber);
-
-                if (viewSheet is not null && viewSheet.CanBePrinted)
-                {
-                    string customPaperName = $"Custom {widthInMm:F0}x{heightInMm:F0}";
-                    PaperSize paperSize = new(customPaperName, (int)widthInMm, (int)heightInMm);
-                    SheetModel model = CreateSheetModel(doc, viewSheet, projectName, paperSize, orientation, extension);
-
-                    model.IsColorEnabled = isColorEnabled;
-
-                    return model;
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, $"Ошибка при создании модели листа из штампа: {ex.Message}");
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Находит ViewSheet по номеру
-        /// </summary>
-        private static ViewSheet FindViewSheetByNumber(Document doc, string sheetNumber)
-        {
-            if (string.IsNullOrEmpty(sheetNumber))
-            {
-                return null;
-            }
-
-            ParameterValueProvider provider = new(new ElementId(BuiltInParameter.SHEET_NUMBER));
-
-#if R19 || R21
-            FilterStringRule rule = new FilterStringRule(provider, new FilterStringEquals(), sheetNumber, false);
-#else
-            FilterStringRule rule = new(provider, new FilterStringEquals(), sheetNumber);
-#endif
-
-            ElementParameterFilter filter = new(rule);
-
-            return new FilteredElementCollector(doc).OfClass(typeof(ViewSheet)).WherePasses(filter).Cast<ViewSheet>().FirstOrDefault();
-        }
-
         #endregion
 
         #region Операции с коллекциями листов
 
         /// <summary>
-        /// Сортирует модели листов по организационной группе и номеру
+        /// Сортирует модели листов 
         /// </summary>
-        public static List<SheetModel> SortSheets(List<SheetModel> sheetModels)
+        public static List<SheetModel> SortSheetModels(List<SheetModel> sheetModels)
         {
             return sheetModels?
                 .Where(sm => sm.IsValid)
@@ -239,42 +179,7 @@ namespace RevitBIMTool.Utils.Common
                 .ThenBy(sm => sm.DigitNumber).ToList();
         }
 
-        /// <summary>
-        /// Группирует листы по имени формата с ориентацией
-        /// </summary>
-        public static Dictionary<string, List<SheetModel>> GroupSheetsByFormat(List<SheetModel> sheetModels)
-        {
-            if (sheetModels == null)
-            {
-                return [];
-            }
-
-            Dictionary<string, List<SheetModel>> result = [];
-
-            foreach (SheetModel sheet in sheetModels.Where(s => s.IsValid))
-            {
-                string formatName = GetFormatNameWithOrientation(sheet.PaperName, sheet.SheetOrientation);
-
-                if (!result.TryGetValue(formatName, out List<SheetModel> sheetList))
-                {
-                    sheetList = [];
-                    result[formatName] = sheetList;
-                }
-
-                sheetList.Add(sheet);
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// Сортирует модели листов (совместимость со старым кодом)
-        /// </summary>
-        public static List<SheetModel> SortSheetModels(List<SheetModel> sheetModels)
-        {
-            return SortSheets(sheetModels);
-        }
-
         #endregion
+
     }
 }
