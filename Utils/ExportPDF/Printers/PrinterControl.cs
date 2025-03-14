@@ -44,7 +44,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
                 }
             }
 
-            Log.Debug($"{PrinterName} printer is busy");
+            Log.Debug($"{PrinterName} printer not available!");
 
             return false;
         }
