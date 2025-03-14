@@ -108,11 +108,8 @@ internal static class PrinterStateManager
                 {
                     if (printer.IsAvailable())
                     {
-                        if (SetAvailability(printer.PrinterName, false))
-                        {
-                            availablePrinter = printer;
-                            return true;
-                        }
+                        availablePrinter = printer;
+                        return true;
                     }
                 }
                 catch (Exception ex)
