@@ -1,4 +1,5 @@
-﻿using iTextSharp.text.pdf;
+﻿using iTextSharp.text.exceptions;
+using iTextSharp.text.pdf;
 using RevitBIMTool.Models;
 using RevitBIMTool.Utils.Common;
 using Serilog;
@@ -13,70 +14,78 @@ internal static class MergeHandler
     {
         List<SheetModel> validSheets = sheetModels?.Where(s => s.IsSuccessfully).ToList();
 
-        Log.Information($"Combining {validSheets?.Count ?? 0} sheets");
-
         RevitPathHelper.DeleteExistsFile(outputFullName);
 
-        if (validSheets is not null && validSheets.Any())
+        if (validSheets is null || !validSheets.Any())
         {
-            using Document outputDocument = new();
-            using FileStream stream = new(outputFullName, FileMode.Create);
-            using PdfCopy copy = new PdfSmartCopy(outputDocument, stream);
+            Log.Warning("No valid sheets to merge");
+            throw new Exception("No valid sheets to merge");
+        }
 
-            outputDocument.Open();
-            int totalPages = 0;
+        using Document outputDocument = new();
+        using FileStream stream = new(outputFullName, FileMode.Create);
+        using PdfCopy copy = new(outputDocument, stream);
 
-            foreach (SheetModel model in SheetHelper.SortSheetModels(validSheets))
+        outputDocument.Open();
+        int totalPages = 0;
+
+        Log.Information($"Merging {validSheets?.Count ?? 0} sheets");
+
+        foreach (SheetModel model in SheetHelper.SortSheetModels(validSheets))
+        {
+            Log.Debug($"Sheet: {model.SheetName}");
+
+            if (!File.Exists(model.TempFilePath))
             {
-                if (File.Exists(model.TempFilePath))
+                Log.Warning($"File not found: {model.TempFilePath}");
+            }
+
+            try
+            {
+                using PdfReader reader = new(model.TempFilePath);
+                int pageCount = reader.NumberOfPages;
+
+                for (int num = 1; num <= pageCount; num++)
                 {
                     try
                     {
-                        using PdfReader reader = new PdfReader(model.TempFilePath);
-                        int pageCount = reader.NumberOfPages;
-                        Log.Debug($"{model.SheetName}: {pageCount} pages");
-
-                        for (int num = 1; num <= pageCount; num++)
-                        {
-                            PdfImportedPage page = copy.GetImportedPage(reader, num);
-                            if (page != null && outputDocument.IsOpen())
-                            {
-                                copy.AddPage(page);
-                                totalPages++;
-                            }
-                        }
+                        PdfImportedPage page = copy.GetImportedPage(reader, num);
+                        copy.AddPage(page);
+                        totalPages++;
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, $"{model.SheetName} failed");
-                    }
-                    finally
-                    {
-                        model.Dispose();
-                        if (deleteOriginals)
-                        {
-                            RevitPathHelper.DeleteExistsFile(model.TempFilePath);
-                        }
+                        Log.Error(ex, $"Error adding page {num}");
                     }
                 }
-                else
+            }
+            catch (BadPasswordException ex)
+            {
+                Log.Error(ex, $"Encrypt error: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"Failed: {ex.Message}");
+            }
+            finally
+            {
+                model.Dispose();
+
+                if (deleteOriginals)
                 {
-                    Log.Warning($"{model.TempFilePath} not found");
+                    RevitPathHelper.DeleteExistsFile(model.TempFilePath);
                 }
             }
 
-            if (totalPages > 0)
+        }
+
+        Log.Information("Merged {TotalPages} pages", totalPages);
+
+        if (totalPages == 0)
+        {
+            if (File.Exists(outputFullName))
             {
-                Log.Information($"{totalPages} pages combined");
-            }
-            else
-            {
-                stream.Close();
-                Log.Warning("No pages added");
-                if (File.Exists(outputFullName))
-                {
-                    File.Delete(outputFullName);
-                }
+                File.Delete(outputFullName);
             }
         }
     }
