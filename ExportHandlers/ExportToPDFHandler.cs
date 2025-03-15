@@ -30,6 +30,8 @@ internal sealed class ExportToPDFHandler
             RevitFileHelper.CloseRevitApplication();
         }
 
+        PrinterStateManager.ReservePrinter(printer.PrinterName);
+
         PrintSettingsHelper.SetupPrinterSettings(uidoc.Document, printer.PrinterName);
 
         sheetData = PrintHelper.GetData(uidoc.Document, printer.PrinterName, colorTypeEnabled);
