@@ -17,11 +17,15 @@ internal sealed class ExportToPdfCommand : IExternalCommand, IExternalCommandAva
     public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
     {
         Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-        if (commandData.Application is null) { return Result.Cancelled; }
 
         UIApplication uiapp = commandData.Application;
         UIDocument uidoc = uiapp.ActiveUIDocument;
         Document doc = uidoc.Document;
+
+        if (commandData.Application is null) 
+        { 
+            return Result.Cancelled; 
+        }
 
         try
         {
@@ -33,7 +37,7 @@ internal sealed class ExportToPdfCommand : IExternalCommand, IExternalCommandAva
         }
         catch (Exception ex)
         {
-            TaskDialog.Show("Exception", "Exception: \n" + ex);
+            _ = TaskDialog.Show("Exception", "Exception: \n" + ex);
             Clipboard.SetText(ex.ToString());
             return Result.Failed;
         }
