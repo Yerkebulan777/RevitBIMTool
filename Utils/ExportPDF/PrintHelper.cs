@@ -176,7 +176,7 @@ internal static class PrintHelper
 
         if (printManager.SubmitPrint(model.ViewSheet))
         {
-            Log.Debug("Printed {SheetName} !", model.SheetName);
+            Log.Debug("Printed {SheetName}.", model.SheetName);
 
             if (await PathHelper.AwaitExistsFileAsync(filePath))
             {

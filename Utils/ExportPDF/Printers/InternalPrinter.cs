@@ -48,12 +48,12 @@ internal sealed class InternalPrinter : PrinterControl
 
         if (doc.Export(folderPath, viewIds, options))
         {
-            Log.Debug("Exported to PDF: {SheetName}", model.SheetName);
+            Log.Debug("Printed {SheetName}.", model.SheetName);
 
             if (await PathHelper.AwaitExistsFileAsync(model.TempFilePath))
             {
-                Log.Debug("Export to PDF: {SheetName}", model.SheetName);
                 model.IsSuccessfully = true;
+                Log.Debug("File exist!");
                 Thread.Sleep(100);
                 return true;
             }
