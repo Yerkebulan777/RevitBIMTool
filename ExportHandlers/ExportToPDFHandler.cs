@@ -9,7 +9,7 @@ using UIDocument = Autodesk.Revit.UI.UIDocument;
 
 namespace RevitBIMTool.ExportHandlers;
 
-internal sealed class ExportToPDFHandler
+internal sealed class ExportToPdfHandler
 {
     private PrinterControl printer;
     private List<SheetModel> sheetModels;
@@ -64,7 +64,4 @@ internal sealed class ExportToPDFHandler
             }
         }
     }
-
-
-
 }
