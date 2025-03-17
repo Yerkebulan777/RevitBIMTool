@@ -30,9 +30,9 @@ public static class SetupUIPanel
 
         if (ribbonPanel != null)
         {
-            if (ribbonPanel.CreatePushButton(typeof(ExportToPDFCommand), "ExportToNWC to PDF") is PushButton button01)
+            if (ribbonPanel.CreatePushButton(typeof(ExportToPdfCommand), "ExportToNWC to PDF") is PushButton button01)
             {
-                button01.AvailabilityClassName = typeof(ExportToPDFCommand).FullName;
+                button01.AvailabilityClassName = typeof(ExportToPdfCommand).FullName;
                 button01.SetImage("/RevitBIMTool;component/Resources/Icons/RibbonIcon16.png");
                 button01.SetLargeImage("/RevitBIMTool;component/Resources/Icons/RibbonIcon32.png");
                 ribbonPanel.AddSeparator();
