@@ -10,14 +10,15 @@ namespace RevitBIMTool.Utils.SystemHelpers;
 public static class XmlHelper
 {
     private const string MUTEX_PREFIX = "Global\\XmlMutexWorker_";
+
     private static readonly ConcurrentDictionary<Type, XmlSerializer> _serializerCache = new();
 
     /// <summary>
     /// Saves an object to XML file using file-specific mutex
     /// </summary>
-    public static bool SaveToXml<T>(T obj, string filePath) where T : class
+    public static bool SaveToXml<T>(T xmlObject, string filePath) where T : class
     {
-        if (obj is null || string.IsNullOrWhiteSpace(filePath))
+        if (xmlObject is null || string.IsNullOrWhiteSpace(filePath))
         {
             Log.Error("Invalid parameters: object or path is null");
             return false;
@@ -47,7 +48,7 @@ public static class XmlHelper
 
             using (XmlWriter writer = XmlWriter.Create(filePath, settings))
             {
-                serializer.Serialize(writer, obj);
+                serializer.Serialize(writer, xmlObject);
             }
 
             return File.Exists(filePath);
@@ -89,6 +90,7 @@ public static class XmlHelper
             XmlSerializer serializer = _serializerCache.GetOrAdd(typeof(T), t => new XmlSerializer(t));
 
             using FileStream stream = new(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+
             if (stream.Length == 0)
             {
                 Log.Warning("XML file is empty: {FilePath}", filePath);
@@ -96,6 +98,7 @@ public static class XmlHelper
             }
 
             object deserializedObject = serializer.Deserialize(stream);
+
             T result = deserializedObject as T;
 
             if (result == null)

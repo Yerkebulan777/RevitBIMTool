@@ -81,7 +81,7 @@ internal static class PrinterStateManager
                 initialState.Printers.Add(new PrinterInfo(printer.PrinterName, true));
             }
 
-            XmlHelper.SaveToXml(initialState, stateFilePath);
+            _ = XmlHelper.SaveToXml(initialState, stateFilePath);
         }
     }
 
@@ -151,7 +151,7 @@ internal static class PrinterStateManager
 
             PrinterStateData states = XmlHelper.LoadFromXml<PrinterStateData>(stateFilePath);
             PrinterInfo printerInfo = AddPrinterIfNotExists(states, printerName, true);
-            XmlHelper.SaveToXml(states, stateFilePath);
+            _ = XmlHelper.SaveToXml(states, stateFilePath);
             return printerInfo.IsAvailable;
         }
         catch (Exception ex)
@@ -172,9 +172,8 @@ internal static class PrinterStateManager
             PrinterInfo printerInfo = AddPrinterIfNotExists(states, printerName, isAvailable);
             states.LastUpdate = DateTime.Now;
             printerInfo.IsAvailable = isAvailable;
-            XmlHelper.SaveToXml(states, stateFilePath);
 
-            return true;
+            return XmlHelper.SaveToXml(states, stateFilePath);
         }
         catch (Exception ex)
         {
@@ -188,6 +187,11 @@ internal static class PrinterStateManager
     /// </summary>
     public static PrinterInfo AddPrinterIfNotExists(PrinterStateData states, string printerName, bool isAvailable)
     {
+        if (states is null)
+        {
+            throw new ArgumentNullException(nameof(states), "Printer state data cannot be null");
+        }
+
         PrinterInfo printerInfo = states.Printers.Find(p => p.PrinterName == printerName);
 
         if (printerInfo is null)
@@ -214,7 +218,5 @@ internal static class PrinterStateManager
     {
         return SetAvailability(printerName, true);
     }
-
-
 
 }
