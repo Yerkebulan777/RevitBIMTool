@@ -144,13 +144,13 @@ internal static class PrintHelper
                     }
                 }
 
-                trx.Commit();
+                _ = trx.Commit();
             }
             catch (Exception ex)
             {
                 if (!trx.HasEnded())
                 {
-                    trx.RollBack();
+                    _ = trx.RollBack();
                     Log.Error(ex, ex.Message);
                 }
             }
@@ -174,21 +174,19 @@ internal static class PrintHelper
 
         PathHelper.DeleteExistsFile(filePath);
 
-        Log.Debug("Start submit print...");
-
         if (printManager.SubmitPrint(model.ViewSheet))
         {
+            Log.Debug("Printed {SheetName} !", model.SheetName);
+
             if (await PathHelper.AwaitExistsFileAsync(filePath))
             {
-                Log.Debug("Export to PDF: {SheetName}", model.SheetName);
                 model.IsSuccessfully = true;
+                Log.Debug("File exist!");
                 return true;
             }
         }
 
         return false;
     }
-
-
 
 }
