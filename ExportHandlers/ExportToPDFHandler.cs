@@ -11,10 +11,6 @@ namespace RevitBIMTool.ExportHandlers;
 
 internal sealed class ExportToPdfHandler
 {
-    private PrinterControl printer;
-    private List<SheetModel> sheetModels;
-    private Dictionary<string, List<SheetModel>> sheetData;
-
     public void Execute(UIDocument uidoc, string revitFilePath, string exportDirectory)
     {
         DirectoryInfo tempBase = Directory.GetParent(Path.GetTempPath());
@@ -24,44 +20,49 @@ internal sealed class ExportToPdfHandler
 
         bool colorTypeEnabled = sectionName is not ("KJ" or "KR" or "KG");
 
-        if (!PrinterStateManager.TryRetrievePrinter(out printer))
+        if (!PrinterStateManager.TryRetrievePrinter(out PrinterControl printer))
         {
             Log.Fatal("No available printer found!");
             RevitFileHelper.CloseRevitApplication();
         }
 
-        PrinterStateManager.ReservePrinter(printer.PrinterName);
+        Dictionary<string, List<SheetModel>> sheetData;
 
-        PrintSettingsHelper.SetupPrinterSettings(uidoc.Document, printer.PrinterName);
-
-        sheetData = PrintHelper.GetData(uidoc.Document, printer.PrinterName, colorTypeEnabled);
-
-        Log.Information($"Total sheets: {sheetData.Values.Sum(lst => lst.Count)}");
-        Log.Information($"Available printer: {printer.PrinterName}");
-        Log.Information($"Temp directory: {tempDirectory}");
-        Log.Information($"Section: {sectionName}");
-
-        if (sheetData.Count > 0)
+        if (PrinterStateManager.ReservePrinter(printer.PrinterName))
         {
-            printer.InitializePrinter();
+            PrintSettingsHelper.SetupPrinterSettings(uidoc.Document, printer.PrinterName);
 
-            PathHelper.EnsureDirectory(tempDirectory);
-            PathHelper.EnsureDirectory(exportDirectory);
+            sheetData = PrintHelper.GetData(uidoc.Document, printer.PrinterName, colorTypeEnabled);
 
-            Log.Information("Start process export to PDF...");
+            Log.Information($"Total sheets: {sheetData.Values.Sum(lst => lst.Count)}");
+            Log.Information($"Available printer: {printer.PrinterName}");
+            Log.Information($"Temp directory: {tempDirectory}");
+            Log.Information($"Section: {sectionName}");
 
-            sheetModels = PrintHelper.PrintSheetData(uidoc.Document, printer, sheetData, tempDirectory);
-
-            string exportPath = Path.Combine(exportDirectory, $"{revitFileName}.pdf");
-
-            Log.Information($"Total valid sheets: {sheetModels.Count}");
-
-            if (sheetModels.Count > 0)
+            if (sheetData.Count > 0)
             {
-                MergeHandler.Combine(sheetModels, exportPath);
-                SystemFolderOpener.OpenFolder(exportDirectory);
-                PathHelper.DeleteDirectory(tempDirectory);
+                printer.InitializePrinter();
+
+                PathHelper.EnsureDirectory(tempDirectory);
+                PathHelper.EnsureDirectory(exportDirectory);
+
+                Log.Information("Start process export to PDF...");
+
+                List<SheetModel> sheetModels = PrintHelper.PrintSheetData(uidoc.Document, printer, sheetData, tempDirectory);
+
+                string exportPath = Path.Combine(exportDirectory, $"{revitFileName}.pdf");
+
+                Log.Information($"Total valid sheets: {sheetModels.Count}");
+
+                if (sheetModels.Count > 0)
+                {
+                    MergeHandler.Combine(sheetModels, exportPath);
+                    SystemFolderOpener.OpenFolder(exportDirectory);
+                    PathHelper.DeleteDirectory(tempDirectory);
+                }
             }
         }
+
+
     }
 }
