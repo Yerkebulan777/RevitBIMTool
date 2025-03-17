@@ -18,7 +18,8 @@ internal sealed class ExportToPdfHandler
         string tempDirectory = Path.Combine(tempBase.FullName, $"{revitFileName}");
         string sectionName = PathHelper.GetSectionName(revitFilePath);
 
-        bool colorTypeEnabled = sectionName is not ("KJ" or "KR" or "KG");
+        Log.Information("Temp directory: {TempDirectory}", tempDirectory);
+        Log.Information("Export directory: {ExportDirectory}", exportDirectory);
 
         if (!PrinterStateManager.TryRetrievePrinter(out PrinterControl printer))
         {
@@ -26,18 +27,17 @@ internal sealed class ExportToPdfHandler
             RevitFileHelper.CloseRevitApplication();
         }
 
-        Dictionary<string, List<SheetModel>> sheetData;
+        Log.Information("Available printer: {PrinterName}", printer.PrinterName);
 
         if (PrinterStateManager.ReservePrinter(printer.PrinterName))
         {
+            Dictionary<string, List<SheetModel>> sheetData;
+
+            bool colorTypeEnabled = sectionName is not ("KJ" or "KR" or "KG");
+
             PrintSettingsHelper.SetupPrinterSettings(uidoc.Document, printer.PrinterName);
 
             sheetData = PrintHelper.GetData(uidoc.Document, printer.PrinterName, colorTypeEnabled);
-
-            Log.Information($"Total sheets: {sheetData.Values.Sum(lst => lst.Count)}");
-            Log.Information($"Available printer: {printer.PrinterName}");
-            Log.Information($"Temp directory: {tempDirectory}");
-            Log.Information($"Section: {sectionName}");
 
             if (sheetData.Count > 0)
             {
@@ -52,7 +52,7 @@ internal sealed class ExportToPdfHandler
 
                 string exportPath = Path.Combine(exportDirectory, $"{revitFileName}.pdf");
 
-                Log.Information($"Total valid sheets: {sheetModels.Count}");
+                Log.Information("Total sheets: {TotalSheets}", sheetData.Values.Sum(lst => lst.Count));
 
                 if (sheetModels.Count > 0)
                 {
@@ -62,7 +62,5 @@ internal sealed class ExportToPdfHandler
                 }
             }
         }
-
-
     }
 }
