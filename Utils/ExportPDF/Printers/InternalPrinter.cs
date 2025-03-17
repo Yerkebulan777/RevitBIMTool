@@ -12,7 +12,6 @@ internal sealed class InternalPrinter : PrinterControl
     public override string PrinterName => "Internal Printer";
     public override string RevitFilePath { get; set; }
 
-
     public override bool DoPrint(Document doc, SheetModel model)
     {
         return DoPrintAsync(doc, model).Result;
@@ -75,12 +74,13 @@ internal sealed class InternalPrinter : PrinterControl
 
     public override bool IsAvailable(string revitFilePath)
     {
-        if (int.TryParse(RevitBIMToolApp.Version, out int revitVersion))
+        if (int.TryParse(RevitBIMToolApp.Version, out int version))
         {
-            Log.Debug("Revit version: {RevitVersion}", revitVersion);
+            Log.Debug("Revit version: {RevitVersion}", version);
             RevitFilePath = revitFilePath;
-            return revitVersion >= 2023;
+            return version >= 2023;
         }
+
         return false;
     }
 }

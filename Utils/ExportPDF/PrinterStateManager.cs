@@ -177,7 +177,6 @@ internal static class PrinterStateManager
             Log.Error(ex, "{PrinterName}: {Message}", printerName, ex.Message);
             throw new InvalidOperationException($"{printerName}: {ex.Message}");
         }
-
     }
 
     /// <summary>

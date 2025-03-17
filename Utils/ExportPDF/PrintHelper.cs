@@ -107,6 +107,8 @@ internal static class PrintHelper
 
         using Transaction trx = new(doc, "ExportToPDF");
 
+        string revitFilePath = printer.RevitFilePath;
+
         if (TransactionStatus.Started == trx.Start())
         {
             try
@@ -131,9 +133,9 @@ internal static class PrintHelper
 
                             model.TempFilePath = Path.Combine(folder, model.SheetName);
 
-                            //bool isPrinted = FileValidator.IsNewer(model.TempFilePath, , out _);
+                            bool isPrinted = FileValidator.IsNewer(model.TempFilePath, revitFilePath, out _);
 
-                            if ((true) && printer.DoPrint(doc, model))
+                            if (isPrinted && printer.DoPrint(doc, model))
                             {
                                 model.IsSuccessfully = true;
                                 successfulSheetModels.Add(model);

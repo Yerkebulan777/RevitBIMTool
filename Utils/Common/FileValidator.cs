@@ -72,7 +72,7 @@ public static class FileValidator
     /// <summary>
     /// Checks if one file is newer than another
     /// </summary>
-    public static bool IsNewer(string filePath, string referencePath, out string message, int thresholdMinutes = 5)
+    public static bool IsNewer(string filePath, string referencePath, out string message, int thresholdMinutes = 15)
     {
         StringBuilder sb = new();
 
