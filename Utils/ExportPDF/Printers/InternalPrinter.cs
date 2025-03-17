@@ -8,7 +8,6 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers;
 
 internal sealed class InternalPrinter : PrinterControl
 {
-
     public override string RegistryPath => "Undefined registry path";
     public override string PrinterName => "Internal Printer";
     public override string RevitFilePath { get; set; }
