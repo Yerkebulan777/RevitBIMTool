@@ -1,5 +1,4 @@
-﻿using Autodesk.Revit.DB;
-using RevitBIMTool.Utils.Common;
+﻿using RevitBIMTool.Utils.Common;
 using RevitBIMTool.Utils.ExportPDF.Printers;
 using RevitBIMTool.Utils.SystemHelpers;
 using Serilog;
@@ -178,7 +177,7 @@ internal static class PrinterStateManager
             Log.Error(ex, "{PrinterName}: {Message}", printerName, ex.Message);
             throw new InvalidOperationException($"{printerName}: {ex.Message}");
         }
-        
+
     }
 
     /// <summary>
