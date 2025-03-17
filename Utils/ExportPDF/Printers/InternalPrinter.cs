@@ -38,10 +38,10 @@ internal sealed class InternalPrinter : PrinterControl
             HideScopeBoxes = true,
             HideCropBoundaries = true,
             HideReferencePlane = true,
+            ColorDepth = colorDepthType,
             PaperFormat = ExportPaperFormat.Default,
             RasterQuality = RasterQualityType.Medium,
             ExportQuality = PDFExportQualityType.DPI300,
-            ColorDepth = colorDepthType,
             ZoomType = ZoomType.Zoom,
             ZoomPercentage = 100,
         };
