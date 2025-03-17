@@ -103,7 +103,7 @@ internal static class PrintHelper
     {
         List<PrintSetting> printAllSettings = PrintSettingsManager.GetPrintSettings(doc);
 
-        List<SheetModel> resultFilePaths = new(sheetData.Values.Count);
+        List<SheetModel> successfulSheetModels = new(sheetData.Values.Count);
 
         using Transaction trx = new(doc, "ExportToPDF");
 
@@ -131,10 +131,12 @@ internal static class PrintHelper
 
                             model.TempFilePath = Path.Combine(folder, model.SheetName);
 
-                            if (File.Exists(model.TempFilePath) || printer.DoPrint(doc, model))
+                            //bool isPrinted = FileValidator.IsNewer(model.TempFilePath, , out _);
+
+                            if ((true) && printer.DoPrint(doc, model))
                             {
                                 model.IsSuccessfully = true;
-                                resultFilePaths.Add(model);
+                                successfulSheetModels.Add(model);
                             }
                         }
                     }
@@ -156,7 +158,7 @@ internal static class PrintHelper
             }
         }
 
-        return resultFilePaths;
+        return successfulSheetModels;
     }
 
 

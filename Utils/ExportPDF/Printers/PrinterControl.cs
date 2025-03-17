@@ -9,6 +9,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers;
 
 internal abstract class PrinterControl
 {
+    public abstract string RevitFileName { get; set; }
     public abstract string RegistryPath { get; }
     public abstract string PrinterName { get; }
 

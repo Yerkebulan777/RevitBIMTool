@@ -64,6 +64,7 @@ internal class SheetModel : IDisposable
     /// Получает или устанавливает путь к файлу
     /// </summary>
     public string TempFilePath { get; set; }
+    public string RevitFilePath { get; internal set; }
 
     /// <summary>
     /// Инициализирует новый экземпляр класса SheetModel

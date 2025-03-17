@@ -10,6 +10,7 @@ internal sealed class InternalPrinter : PrinterControl
 {
     public override string RegistryPath => @"SOFTWARE\Autodesk\Revit";
     public override string PrinterName => "InternalPrinter";
+    public override string RevitFileName { get; set; }
 
     public int revitVersion;
 
