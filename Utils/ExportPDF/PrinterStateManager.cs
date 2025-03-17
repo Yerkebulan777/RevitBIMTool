@@ -52,7 +52,6 @@ public class PrinterInfo
 
 internal static class PrinterStateManager
 {
-    private const string StateMutexName = "Global\\RevitPrinterStateMutex";
     private static readonly string userDocsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
     private static readonly string appDataFolder = Path.Combine(userDocsPath, "RevitBIMTool");
     private static readonly string stateFilePath = Path.Combine(appDataFolder, "PrinterState.xml");
@@ -143,34 +142,23 @@ internal static class PrinterStateManager
     /// </summary>
     public static bool IsPrinterAvailable(string printerName)
     {
-        if (string.IsNullOrEmpty(printerName))
+        try
         {
-            throw new ArgumentNullException(nameof(printerName));
+            if (string.IsNullOrEmpty(printerName))
+            {
+                throw new ArgumentNullException(nameof(printerName));
+            }
+
+            PrinterStateData states = XmlHelper.LoadFromXml<PrinterStateData>(stateFilePath);
+            PrinterInfo printerInfo = AddPrinterIfNotExists(states, printerName, true);
+            XmlHelper.SaveToXml(states, stateFilePath);
+            return printerInfo.IsAvailable;
         }
-
-        using Mutex mutex = new(false, StateMutexName);
-
-        if (mutex.WaitOne(5000))
+        catch (Exception ex)
         {
-            try
-            {
-                PrinterStateData states = XmlHelper.LoadFromXml<PrinterStateData>(stateFilePath);
-                PrinterInfo printerInfo = AddPrinterIfNotExists(states, printerName, true);
-                XmlHelper.SaveToXml(states, stateFilePath);
-                return printerInfo.IsAvailable;
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "{PrinterName}: {Message}", printerName, ex.Message);
-                throw new InvalidOperationException($"{printerName}: {ex.Message}");
-            }
-            finally
-            {
-                mutex.ReleaseMutex();
-            }
+            Log.Error(ex, "{PrinterName}: {Message}", printerName, ex.Message);
+            throw new InvalidOperationException($"{printerName}: {ex.Message}");
         }
-
-        return false;
     }
 
     /// <summary>
@@ -178,32 +166,21 @@ internal static class PrinterStateManager
     /// </summary>
     public static bool SetAvailability(string printerName, bool isAvailable)
     {
-        using Mutex mutex = new(false, StateMutexName);
-
-        if (mutex.WaitOne(5000))
+        try
         {
-            try
-            {
-                PrinterStateData states = XmlHelper.LoadFromXml<PrinterStateData>(stateFilePath);
-                PrinterInfo printerInfo = AddPrinterIfNotExists(states, printerName, isAvailable);
-                states.LastUpdate = DateTime.Now;
-                printerInfo.IsAvailable = isAvailable;
-                XmlHelper.SaveToXml(states, stateFilePath);
+            PrinterStateData states = XmlHelper.LoadFromXml<PrinterStateData>(stateFilePath);
+            PrinterInfo printerInfo = AddPrinterIfNotExists(states, printerName, isAvailable);
+            states.LastUpdate = DateTime.Now;
+            printerInfo.IsAvailable = isAvailable;
+            XmlHelper.SaveToXml(states, stateFilePath);
 
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, ex.Message);
-                return false;
-            }
-            finally
-            {
-                mutex.ReleaseMutex();
-            }
+            return true;
         }
-
-        return false;
+        catch (Exception ex)
+        {
+            Log.Error(ex, "{PrinterName}: {Message}", printerName, ex.Message);
+            throw new InvalidOperationException($"{printerName}: {ex.Message}");
+        }
     }
 
     /// <summary>
