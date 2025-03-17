@@ -9,7 +9,6 @@ namespace RevitBIMTool.Utils.SystemHelpers;
 
 public static class XmlHelper
 {
-    private const string mutexId = "Global\\XmlMutexFileWorker";
     private static readonly ConcurrentDictionary<Type, XmlSerializer> _serializerCache = new();
 
     /// <summary>
@@ -39,7 +38,8 @@ public static class XmlHelper
             return false;
         }
 
-        using Mutex mutex = new(false, mutexId, out _);
+        using Mutex mutex = new(false, $"Global\\XmlMutex{filePath}Worker", out _);
+
         if (!mutex.WaitOne(5000))
         {
             Log.Error("Failed to acquire mutex lock for XML file: {FilePath}", filePath);
@@ -116,7 +116,7 @@ public static class XmlHelper
             return defaultValue;
         }
 
-        using (Mutex mutex = new(false, mutexId, out _))
+        using (Mutex mutex = new(false, $"Global\\XmlMutex{filePath}Worker", out _))
         {
             if (mutex.WaitOne(5000))
             {
