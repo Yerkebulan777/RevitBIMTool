@@ -14,6 +14,7 @@ internal sealed class InternalPrinter : PrinterControl
 
     public override bool DoPrint(Document doc, SheetModel model)
     {
+
         return DoPrintAsync(doc, model).Result;
     }
 
@@ -49,6 +50,7 @@ internal sealed class InternalPrinter : PrinterControl
         if (doc.Export(folderPath, viewIds, options))
         {
             Log.Debug("Printed {SheetName}.", model.SheetName);
+            Log.Debug("File path: {FilePath}", model.RevitFilePath);
 
             if (await PathHelper.AwaitExistsFileAsync(model.TempFilePath))
             {
