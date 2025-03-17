@@ -7,13 +7,12 @@ using RevitBIMTool.Utils.Common;
 using System.Globalization;
 using System.Windows;
 
-
 namespace RevitBIMTool.Commands;
 
 [Transaction(TransactionMode.Manual)]
 [Regeneration(RegenerationOption.Manual)]
 
-internal sealed class ExportToPDFCommand : IExternalCommand, IExternalCommandAvailability
+internal sealed class ExportToPdfCommand : IExternalCommand, IExternalCommandAvailability
 {
     public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
     {
@@ -42,7 +41,6 @@ internal sealed class ExportToPDFCommand : IExternalCommand, IExternalCommandAva
 
         return Result.Succeeded;
     }
-
 
     public bool IsCommandAvailable(UIApplication applicationData, CategorySet selectedCategories)
     {
