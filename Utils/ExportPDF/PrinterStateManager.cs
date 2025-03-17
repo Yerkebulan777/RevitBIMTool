@@ -29,7 +29,7 @@ public class PrinterStateData
 [Serializable]
 public class PrinterInfo
 {
-    [XmlAttribute("Name")]
+    [XmlAttribute("PrinterName")]
     public string PrinterName { get; set; }
 
     [XmlElement("IsAvailable")]
