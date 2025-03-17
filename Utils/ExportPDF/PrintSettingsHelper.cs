@@ -32,7 +32,7 @@ internal static class PrintSettingsHelper
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"Printer settings: {ex.Message}");
+                Log.Error(ex, "Printer settings: {Message}", ex.Message);
             }
             finally
             {
@@ -75,6 +75,7 @@ internal static class PrintSettingsHelper
         currentPrintSetting.PrintParameters.MaskCoincidentLines = false;
 
         using Transaction trx = new(doc, "SavePrintSettings");
+
         if (TransactionStatus.Started == trx.Start())
         {
             try
@@ -102,8 +103,8 @@ internal static class PrintSettingsHelper
             }
             catch (Exception ex)
             {
-                Log.Error(ex, ex.Message);
-                throw new Exception(ex.Message);
+                Log.Error(ex, "{Message}", ex.Message);
+                throw new InvalidOperationException("Setting print settings error!", ex);
             }
             finally
             {
@@ -120,7 +121,4 @@ internal static class PrintSettingsHelper
     {
         return new FilteredElementCollector(doc).OfClass(typeof(PrintSetting)).Cast<PrintSetting>().ToList();
     }
-
-
-
 }

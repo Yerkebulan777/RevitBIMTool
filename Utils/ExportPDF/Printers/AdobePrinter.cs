@@ -5,14 +5,12 @@ using RevitBIMTool.Utils.SystemHelpers;
 using Serilog;
 using System.IO;
 
-
 namespace RevitBIMTool.Utils.ExportPDF.Printers
 {
-    internal sealed class AdobePDFPrinter : PrinterControl
+    internal sealed class AdobePdfPrinter : PrinterControl
     {
         public override string RegistryPath => @"SOFTWARE\Adobe\Acrobat Distiller\Printer";
         public override string PrinterName => "Adobe PDF";
-
 
         public override void InitializePrinter()
         {
@@ -30,7 +28,6 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "SkipPrintDialog", "True");
         }
 
-
         public override void ResetPrinterSettings()
         {
             Log.Debug("Reset print settings");
@@ -42,7 +39,6 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
             PrinterStateManager.ReleasePrinter(PrinterName);
         }
 
-
         public override bool DoPrint(Document doc, SheetModel model)
         {
             string folder = Path.GetDirectoryName(model.TempFilePath).Replace("\\", "\\\\");
@@ -50,7 +46,4 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
             return PrintHelper.ExecutePrintAsync(doc, folder, model).Result;
         }
     }
-
-
-
 }
