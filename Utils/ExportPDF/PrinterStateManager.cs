@@ -161,8 +161,8 @@ internal static class PrinterStateManager
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"{printerName}: {ex.Message}");
-                return false;
+                Log.Error(ex, "{PrinterName}: {Message}", printerName, ex.Message);
+                throw new InvalidOperationException($"{printerName}: {ex.Message}");
             }
             finally
             {

@@ -64,7 +64,7 @@ internal static class PrintHelper
 
                 if (PrinterApiUtility.GetPaperSize(widthInMm, heighInMm, out PaperSize papeSize))
                 {
-                    PageOrientationType orientType = PrintSettingsHelper.GetOrientation(widthInMm, heighInMm);
+                    PageOrientationType orientType = PrintSettingsManager.GetOrientation(widthInMm, heighInMm);
 
                     SheetModel model = new(viewSheet, papeSize, orientType);
 
@@ -78,7 +78,7 @@ internal static class PrintHelper
 
                         if (!sheetPrintData.TryGetValue(formatName, out List<SheetModel> sheetList))
                         {
-                            PrintSettingsHelper.SetPrintSettings(doc, model, formatName, colorType);
+                            PrintSettingsManager.SetPrintSettings(doc, model, formatName, colorType);
                             sheetList = [model];
                         }
                         else
@@ -101,7 +101,7 @@ internal static class PrintHelper
 
     public static List<SheetModel> PrintSheetData(Document doc, PrinterControl printer, Dictionary<string, List<SheetModel>> sheetData, string folder)
     {
-        List<PrintSetting> printAllSettings = PrintSettingsHelper.GetPrintSettings(doc);
+        List<PrintSetting> printAllSettings = PrintSettingsManager.GetPrintSettings(doc);
 
         List<SheetModel> resultFilePaths = new(sheetData.Values.Count);
 
@@ -162,8 +162,6 @@ internal static class PrintHelper
 
     public static async Task<bool> ExecutePrintAsync(Document doc, string folder, SheetModel model)
     {
-        Log.Debug("Start submit print...");
-
         string filePath = Path.Combine(folder, model.SheetName);
 
         PrintManager printManager = doc.PrintManager;
@@ -172,11 +170,13 @@ internal static class PrintHelper
 
         PathHelper.DeleteExistsFile(filePath);
 
+        Log.Debug("Start submit print...");
+
         if (printManager.SubmitPrint(model.ViewSheet))
         {
             if (await PathHelper.AwaitExistsFileAsync(filePath))
             {
-                Log.Debug($"Export to PDF: {model.SheetName}");
+                Log.Debug("Export to PDF: {SheetName}", model.SheetName);
                 model.IsSuccessfully = true;
                 return true;
             }

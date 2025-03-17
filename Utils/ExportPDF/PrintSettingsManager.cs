@@ -4,9 +4,9 @@ using Serilog;
 
 namespace RevitBIMTool.Utils.ExportPDF;
 
-internal static class PrintSettingsHelper
+internal static class PrintSettingsManager
 {
-    public static void SetupPrinterSettings(Document doc, string printerName)
+    public static void ResetPrinterSettings(Document doc, string printerName)
     {
         PrintManager printManager = doc.PrintManager;
 

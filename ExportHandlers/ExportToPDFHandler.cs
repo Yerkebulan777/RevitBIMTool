@@ -35,7 +35,7 @@ internal sealed class ExportToPdfHandler
 
             bool colorTypeEnabled = sectionName is not ("KJ" or "KR" or "KG");
 
-            PrintSettingsHelper.SetupPrinterSettings(uidoc.Document, printer.PrinterName);
+            PrintSettingsManager.ResetPrinterSettings(uidoc.Document, printer.PrinterName);
 
             sheetData = PrintHelper.GetData(uidoc.Document, printer.PrinterName, colorTypeEnabled);
 

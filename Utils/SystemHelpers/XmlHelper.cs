@@ -10,9 +10,9 @@ public static class XmlHelper
 {
     private const string mutexId = "Global\\XmlMutexWorker";
 
-    /// <summary>
-    /// Сохраняет объект в XML файл с использованием Mutex
-    /// </summary>
+    /// <summary>  
+    /// Сохраняет объект в XML файл с использованием Mutex  
+    /// </summary>  
     public static void SaveToXml<T>(T obj, string filePath) where T : class
     {
         PathHelper.EnsureDirectory(Path.GetDirectoryName(filePath));
@@ -46,30 +46,31 @@ public static class XmlHelper
                     mutex.ReleaseMutex();
                     if (!File.Exists(filePath))
                     {
-                        Log.Error($"State file creation failed: {filePath}");
+                        Log.Error("State file creation failed: {FilePath}", filePath);
                     }
                 }
             }
         }
     }
 
-    /// <summary>
-    /// Загружает объект из XML файла с использованием Mutex
-    /// </summary>
+    /// <summary>  
+    /// Загружает объект из XML файла с использованием Mutex  
+    /// </summary>  
     public static T LoadFromXml<T>(string filePath, T defaultValue = default) where T : class
     {
         T result = defaultValue;
-
-        if (!File.Exists(filePath))
-        {
-            Log.Debug($"XML файл не существует: {filePath}");
-            return defaultValue;
-        }
 
         using (Mutex mutex = new(false, mutexId))
         {
             if (mutex.WaitOne(5000))
             {
+                if (!File.Exists(filePath))
+                {
+                    SaveToXml(defaultValue, filePath);
+
+                    return defaultValue;
+                }
+
                 try
                 {
                     XmlSerializer serializer = new(typeof(T));
