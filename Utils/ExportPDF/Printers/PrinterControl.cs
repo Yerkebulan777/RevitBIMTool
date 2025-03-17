@@ -32,12 +32,12 @@ internal abstract class PrinterControl
         return isInstalled && isPathExists;
     }
 
-    public virtual bool IsAvailable(string revitFileName)
+    public virtual bool IsAvailable(string revitFilePath)
     {
         if (IsPrinterInstalled() && PrinterStateManager.IsPrinterAvailable(PrinterName))
         {
             Log.Debug("{PrinterName} printer is available!");
-            RevitFilePath = revitFileName;
+            RevitFilePath = revitFilePath;
             return true;
         }
 

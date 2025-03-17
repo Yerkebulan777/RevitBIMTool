@@ -8,6 +8,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers;
 
 internal sealed class InternalPrinter : PrinterControl
 {
+
     public override string RegistryPath => "Undefined registry path";
     public override string PrinterName => "Internal Printer";
     public override string RevitFilePath { get; set; }
@@ -65,11 +66,22 @@ internal sealed class InternalPrinter : PrinterControl
 
     public override void InitializePrinter()
     {
-        throw new NotImplementedException();
+        /// No need to initialize the internal printer
     }
 
     public override void ResetPrinterSettings()
     {
-        throw new NotImplementedException();
+        /// No need to reset the internal printer settings
+    }
+
+    public override bool IsAvailable(string revitFilePath)
+    {
+        if (int.TryParse(RevitBIMToolApp.Version, out int revitVersion))
+        {
+            Log.Debug("Revit version: {RevitVersion}", revitVersion);
+            RevitFilePath = revitFilePath;
+            return revitVersion >= 2023;
+        }
+        return false;
     }
 }
