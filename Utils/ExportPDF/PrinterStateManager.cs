@@ -179,6 +179,73 @@ internal static class PrinterStateManager
         }
     }
 
+
+    /// <summary>
+    /// Сохраняет данные о состоянии принтеров с валидацией и обновлением существующих записей
+    /// </summary>
+    /// <param name="states">Данные о состоянии принтеров для сохранения</param>
+    /// <returns>Успешность операции сохранения</returns>
+    public static bool SavePrinterState(PrinterStateData states)
+    {
+        if (states?.Printers == null)
+        {
+            return false;
+        }
+
+        try
+        {
+            // Загружаем текущие данные из файла для синхронизации
+            PrinterStateData currentStates = XmlHelper.LoadFromXml<PrinterStateData>(stateFilePath);
+
+            // Если файл существует и данные получены успешно
+            if (currentStates?.Printers != null)
+            {
+                // Создаем словарь нормализованных имен принтеров и их состояний
+                Dictionary<string, PrinterInfo> mergedPrinters = new(StringComparer.OrdinalIgnoreCase);
+
+                // Сначала добавляем текущие данные из файла
+                foreach (PrinterInfo printer in currentStates.Printers)
+                {
+                    string normalizedName = printer.PrinterName.Replace(" ", "");
+                    mergedPrinters[normalizedName] = printer;
+                }
+
+                // Затем обновляем или добавляем новые данные
+                foreach (PrinterInfo printer in states.Printers)
+                {
+                    string normalizedName = printer.PrinterName.Replace(" ", "");
+
+                    // Если принтер уже существует, обновляем его статус
+                    if (mergedPrinters.TryGetValue(normalizedName, out PrinterInfo existingPrinter))
+                    {
+                        existingPrinter.IsAvailable = printer.IsAvailable;
+                        Log.Debug("Updated printer status: {PrinterName}", existingPrinter.PrinterName);
+                    }
+                    else
+                    {
+                        // Иначе добавляем новый принтер
+                        mergedPrinters[normalizedName] = printer;
+                        Log.Debug("Added new printer: {PrinterName}", printer.PrinterName);
+                    }
+                }
+
+                // Обновляем список принтеров с объединенными данными
+                states.Printers = mergedPrinters.Values.ToList();
+            }
+
+            // Обновляем временную метку
+            states.LastUpdate = DateTime.Now;
+
+            // Сохраняем обновленные данные
+            return XmlHelper.SaveToXml(states, stateFilePath);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to save printer state with validation: {Message}", ex.Message);
+            return false;
+        }
+    }
+
     /// <summary>
     /// Добавляет принтер в список, если его там нет то создает новый
     /// </summary>

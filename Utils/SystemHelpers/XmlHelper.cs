@@ -57,6 +57,27 @@ public static class XmlHelper
         return false;
     }
 
+
+    /// <summary>
+    /// Нормализует строку, удаляя пробелы и применяя CamelCase
+    /// </summary>
+    public static string NormalizeString(string input)
+    {
+        if (string.IsNullOrEmpty(input))
+        {
+            return string.Empty;
+        }
+
+        string normalized = input.Replace(" ", "");
+
+        if (normalized.Length > 1)
+        {
+            normalized = char.ToUpperInvariant(normalized[0]) + normalized.Substring(1);
+        }
+
+        return normalized;
+    }
+
     /// <summary>
     /// Loads an object from XML file using file-specific mutex
     /// </summary>
@@ -92,4 +113,6 @@ public static class XmlHelper
         Log.Error("Failed to acquire mutex!");
         return defaultValue;
     }
+
+
 }
