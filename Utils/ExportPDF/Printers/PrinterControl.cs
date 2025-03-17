@@ -26,24 +26,20 @@ internal abstract class PrinterControl
 
         bool isPathExists = RegistryHelper.IsKeyExists(Registry.CurrentUser, RegistryPath);
 
-        Log.Debug($"Is {PrinterName} isInstalled {isInstalled} and {RegistryPath} exists {isPathExists}!");
+        Log.Debug("Is {PrinterName} isInstalled {IsInstalled}!", PrinterName, isInstalled);
 
         return isInstalled && isPathExists;
     }
 
     public virtual bool IsAvailable()
     {
-        if (IsPrinterInstalled())
+        if (IsPrinterInstalled() && PrinterStateManager.IsPrinterAvailable(PrinterName))
         {
-            if (PrinterStateManager.IsPrinterAvailable(PrinterName))
-            {
-                Log.Debug($"{PrinterName} printer is available!");
-
-                return true;
-            }
+            Log.Debug("{PrinterName} printer is available!");
+            return true;
         }
 
-        Log.Debug($"{PrinterName} printer not available!");
+        Log.Debug("Printer not available!");
 
         return false;
     }

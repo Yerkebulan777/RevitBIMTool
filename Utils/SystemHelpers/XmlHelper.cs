@@ -9,7 +9,7 @@ namespace RevitBIMTool.Utils.SystemHelpers;
 
 public static class XmlHelper
 {
-    private const string MUTEX_PREFIX = "Global\\XmlMutexWorker_";
+    private const string PREFIX = "Global\\XmlMutexWorker_";
 
     private static readonly ConcurrentDictionary<Type, XmlSerializer> _serializerCache = new();
 
@@ -18,50 +18,44 @@ public static class XmlHelper
     /// </summary>
     public static bool SaveToXml<T>(T xmlObject, string filePath) where T : class
     {
-        if (xmlObject is null || string.IsNullOrWhiteSpace(filePath))
+        using Mutex mutex = new(false, PREFIX + filePath.GetHashCode());
+
+        if (mutex.WaitOne())
         {
-            Log.Error("Invalid parameters: object or path is null");
-            return false;
-        }
-
-        PathHelper.EnsureDirectory(Path.GetDirectoryName(filePath));
-        string mutexId = MUTEX_PREFIX + filePath.GetHashCode();
-
-        using Mutex mutex = new(false, mutexId);
-
-        if (!mutex.WaitOne())
-        {
-            Log.Error("Failed to acquire mutex for file: {FilePath}", filePath);
-            return false;
-        }
-
-        try
-        {
-            XmlSerializer serializer = _serializerCache.GetOrAdd(typeof(T), t => new XmlSerializer(t));
-
-            XmlWriterSettings settings = new()
+            try
             {
-                Indent = true,
-                IndentChars = "  ",
-                Encoding = System.Text.Encoding.UTF8
-            };
+                XmlSerializer serializer = _serializerCache.GetOrAdd(typeof(T), t => new XmlSerializer(t));
 
-            using (XmlWriter writer = XmlWriter.Create(filePath, settings))
-            {
-                serializer.Serialize(writer, xmlObject);
+                XmlWriterSettings settings = new()
+                {
+                    Indent = true,
+                    IndentChars = "  ",
+                    Encoding = System.Text.Encoding.UTF8
+                };
+
+                using (XmlWriter writer = XmlWriter.Create(filePath, settings))
+                {
+                    serializer.Serialize(writer, xmlObject);
+                }
+
+                bool result = File.Exists(filePath);
+                Log.Debug("XML file saved:", result);
+
+                return result;
             }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "XML save error: {Message}", ex.Message);
+                return false;
+            }
+            finally
+            {
+                mutex.ReleaseMutex();
+            }
+        }
 
-            return File.Exists(filePath);
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "XML save error: {Message}", ex.Message);
-            return false;
-        }
-        finally
-        {
-            mutex.ReleaseMutex();
-        }
+        Log.Error("Failed to acquire mutex!");
+        return false;
     }
 
     /// <summary>
@@ -69,53 +63,34 @@ public static class XmlHelper
     /// </summary>
     public static T LoadFromXml<T>(string filePath, T defaultValue = default) where T : class
     {
-        if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
+        using Mutex mutex = new(false, PREFIX + filePath.GetHashCode());
+
+        if (mutex.WaitOne())
         {
-            Log.Debug("XML file unavailable: {FilePath}", filePath);
-            return defaultValue;
-        }
-
-        string mutexId = MUTEX_PREFIX + filePath.GetHashCode();
-
-        using Mutex mutex = new(false, mutexId);
-
-        if (!mutex.WaitOne())
-        {
-            Log.Error("Failed to acquire mutex for file: {FilePath}", filePath);
-            return defaultValue;
-        }
-
-        try
-        {
-            XmlSerializer serializer = _serializerCache.GetOrAdd(typeof(T), t => new XmlSerializer(t));
-
-            using FileStream stream = new(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-
-            if (stream.Length == 0)
+            try
             {
-                Log.Warning("XML file is empty: {FilePath}", filePath);
+                XmlSerializer serializer = _serializerCache.GetOrAdd(typeof(T), t => new XmlSerializer(t));
+
+                using FileStream stream = new(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+
+                object deserializedObject = serializer.Deserialize(stream);
+
+                T result = deserializedObject as T;
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "XML load error: {Message}", ex.Message);
                 return defaultValue;
             }
-
-            object deserializedObject = serializer.Deserialize(stream);
-
-            T result = deserializedObject as T;
-
-            if (result == null)
+            finally
             {
-                Log.Warning("Type mismatch: {ExpectedType}", typeof(T).Name);
+                mutex.ReleaseMutex();
             }
+        }
 
-            return result;
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "XML load error: {Message}", ex.Message);
-            return defaultValue;
-        }
-        finally
-        {
-            mutex.ReleaseMutex();
-        }
+        Log.Error("Failed to acquire mutex!");
+        return defaultValue;
     }
 }

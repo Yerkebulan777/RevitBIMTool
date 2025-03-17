@@ -1,4 +1,5 @@
-﻿using RevitBIMTool.Utils.Common;
+﻿using Autodesk.Revit.DB;
+using RevitBIMTool.Utils.Common;
 using RevitBIMTool.Utils.ExportPDF.Printers;
 using RevitBIMTool.Utils.SystemHelpers;
 using Serilog;
@@ -81,7 +82,10 @@ internal static class PrinterStateManager
                 initialState.Printers.Add(new PrinterInfo(printer.PrinterName, true));
             }
 
-            _ = XmlHelper.SaveToXml(initialState, stateFilePath);
+            if (XmlHelper.SaveToXml(initialState, stateFilePath))
+            {
+                Log.Debug("Printer state file created successfully!");
+            }
         }
     }
 
@@ -92,6 +96,7 @@ internal static class PrinterStateManager
     {
         int retryCount = 0;
         availablePrinter = null;
+
         const int maxRetries = 1000;
         const int retryDelay = 1000;
 
@@ -144,14 +149,8 @@ internal static class PrinterStateManager
     {
         try
         {
-            if (string.IsNullOrEmpty(printerName))
-            {
-                throw new ArgumentNullException(nameof(printerName));
-            }
-
             PrinterStateData states = XmlHelper.LoadFromXml<PrinterStateData>(stateFilePath);
-            PrinterInfo printerInfo = AddPrinterIfNotExists(states, printerName, true);
-            _ = XmlHelper.SaveToXml(states, stateFilePath);
+            PrinterInfo printerInfo = EnsurePrinterExists(states, printerName);
             return printerInfo.IsAvailable;
         }
         catch (Exception ex)
@@ -169,8 +168,7 @@ internal static class PrinterStateManager
         try
         {
             PrinterStateData states = XmlHelper.LoadFromXml<PrinterStateData>(stateFilePath);
-            PrinterInfo printerInfo = AddPrinterIfNotExists(states, printerName, isAvailable);
-            states.LastUpdate = DateTime.Now;
+            PrinterInfo printerInfo = EnsurePrinterExists(states, printerName);
             printerInfo.IsAvailable = isAvailable;
 
             return XmlHelper.SaveToXml(states, stateFilePath);
@@ -180,24 +178,24 @@ internal static class PrinterStateManager
             Log.Error(ex, "{PrinterName}: {Message}", printerName, ex.Message);
             throw new InvalidOperationException($"{printerName}: {ex.Message}");
         }
+        
     }
 
     /// <summary>
-    /// Добавляет принтер в список, если его там нет
+    /// Добавляет принтер в список, если его там нет то создает новый
     /// </summary>
-    public static PrinterInfo AddPrinterIfNotExists(PrinterStateData states, string printerName, bool isAvailable)
+    public static PrinterInfo EnsurePrinterExists(PrinterStateData states, string printerName, bool isAvailable = true)
     {
-        if (states is null)
-        {
-            throw new ArgumentNullException(nameof(states), "Printer state data cannot be null");
-        }
-
-        PrinterInfo printerInfo = states.Printers.Find(p => p.PrinterName == printerName);
+        PrinterInfo printerInfo = states.Printers?.Find(p => p.PrinterName == printerName);
 
         if (printerInfo is null)
         {
-            printerInfo = new PrinterInfo(printerName, isAvailable);
-            states.Printers.Add(printerInfo);
+            states.Printers.Add(new PrinterInfo(printerName, isAvailable));
+
+            if (!XmlHelper.SaveToXml(states, stateFilePath))
+            {
+                throw new InvalidOperationException("Failed to save printer state");
+            }
         }
 
         return printerInfo;
