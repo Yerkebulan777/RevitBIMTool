@@ -9,7 +9,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers;
 
 internal abstract class PrinterControl
 {
-    public abstract string RevitFileName { get; set; }
+    public abstract string RevitFilePath { get; set; }
     public abstract string RegistryPath { get; }
     public abstract string PrinterName { get; }
 
@@ -32,11 +32,12 @@ internal abstract class PrinterControl
         return isInstalled && isPathExists;
     }
 
-    public virtual bool IsAvailable()
+    public virtual bool IsAvailable(string filePath)
     {
         if (IsPrinterInstalled() && PrinterStateManager.IsPrinterAvailable(PrinterName))
         {
             Log.Debug("{PrinterName} printer is available!");
+            RevitFilePath = filePath;
             return true;
         }
 

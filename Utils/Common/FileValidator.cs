@@ -119,7 +119,4 @@ namespace RevitBIMTool.Utils.Common
             return IsNewer(targetPath, sourcePath, out message) && IsRecent(targetPath, out message, maxDaysOld);
         }
     }
-
-
-
 }

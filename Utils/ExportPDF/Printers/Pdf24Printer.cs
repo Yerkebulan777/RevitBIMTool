@@ -11,7 +11,7 @@ internal sealed class Pdf24Printer : PrinterControl
 {
     public override string RegistryPath => @"SOFTWARE\PDF24\Services\PDF";
     public override string PrinterName => "PDF24";
-    public override string RevitFileName { get; set; }
+    public override string RevitFilePath { get; set; }
 
     public override void InitializePrinter()
     {

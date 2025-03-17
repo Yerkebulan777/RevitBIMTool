@@ -9,19 +9,19 @@ using UIDocument = Autodesk.Revit.UI.UIDocument;
 
 namespace RevitBIMTool.ExportHandlers;
 
-internal sealed class ExportToPdfHandler
+internal static class ExportToPdfHandler
 {
-    public void Execute(UIDocument uidoc, string revitFilePath, string exportDirectory)
+    public static void Execute(UIDocument uidoc, string revitFilePath, string exportDirectory)
     {
         DirectoryInfo tempBase = Directory.GetParent(Path.GetTempPath());
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
         string tempDirectory = Path.Combine(tempBase.FullName, $"{revitFileName}");
         string sectionName = PathHelper.GetSectionName(revitFilePath);
 
-        Log.Information("Temp directory: {TempDirectory}", tempDirectory);
-        Log.Information("Export directory: {ExportDirectory}", exportDirectory);
+        Log.Information("Temp directory path: {TempDirectory}", tempDirectory);
+        Log.Information("Export folder path: {ExportDirectory}", exportDirectory);
 
-        if (!PrinterStateManager.TryRetrievePrinter(out PrinterControl printer))
+        if (!PrinterStateManager.TryRetrievePrinter(revitFilePath, out PrinterControl printer))
         {
             Log.Fatal("No available printer found!");
             RevitFileHelper.CloseRevitApplication();

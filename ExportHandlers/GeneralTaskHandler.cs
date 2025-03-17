@@ -85,8 +85,7 @@ namespace RevitBIMTool.ExportHandlers
             switch (model.CommandNumber)
             {
                 case 1: // PDF
-                    ExportToPdfHandler handler = new();
-                    handler.Execute(uidoc, model.RevitFilePath, model.ExportFolder);
+                    ExportToPdfHandler.Execute(uidoc, model.RevitFilePath, model.ExportFolder);
                     break;
 
                 case 2: // DWG
