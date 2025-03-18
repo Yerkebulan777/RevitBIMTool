@@ -164,6 +164,49 @@ internal static class PrintHelper
     }
 
 
+    public static bool ExportSheet(Document doc, SheetModel model)
+    {
+#if R23
+        ColorDepthType colorType;
+
+        if (model.IsColorEnabled)
+        {
+            colorType = ColorDepthType.Color;
+        }
+        else
+        {
+            colorType = ColorDepthType.BlackLine;
+        }
+
+        string fileName = Path.GetFileNameWithoutExtension(model.TempFilePath);
+        string folderPath = Path.GetDirectoryName(model.TempFilePath);
+
+        Log.Debug("Exporting sheet {Sheet}", fileName);
+
+        PDFExportOptions options = new()
+        {
+            Combine = false,
+            StopOnError = true,
+            FileName = fileName,
+            HideScopeBoxes = true,
+            HideCropBoundaries = true,
+            HideReferencePlane = true,
+            ColorDepth = colorType,
+            PaperFormat = ExportPaperFormat.Default,
+            RasterQuality = RasterQualityType.Medium,
+            ExportQuality = PDFExportQualityType.DPI300,
+            ZoomType = ZoomType.Zoom,
+            ZoomPercentage = 100,
+        };
+
+        IList<ElementId> viewIds = [model.ViewSheet.Id];
+        return doc.Export(folderPath, viewIds, options);
+#else
+        return false;
+#endif
+    }
+
+
     public static bool ExecutePrint(Document doc, string folder, SheetModel model)
     {
         string filePath = Path.Combine(folder, model.SheetName);

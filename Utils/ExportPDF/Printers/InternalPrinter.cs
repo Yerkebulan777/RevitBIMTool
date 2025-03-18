@@ -15,48 +15,7 @@ internal sealed class InternalPrinter : PrinterControl
 
     public override bool DoPrint(Document doc, SheetModel model)
     {
-#if R23
-        ColorDepthType colorDepthType = model.IsColorEnabled ? ColorDepthType.Color : ColorDepthType.BlackLine;
-
-        string sheetName = Path.GetFileNameWithoutExtension(model.TempFilePath);
-        string folderPath = Path.GetDirectoryName(model.TempFilePath);
-
-        Log.Debug("SheetName: {TempFilePath}", sheetName);
-        Log.Debug("Directory: {TempFilePath}", folderPath);
-
-        PDFExportOptions options = new()
-        {
-            Combine = false,
-            StopOnError = true,
-            FileName = sheetName,
-            HideScopeBoxes = true,
-            HideCropBoundaries = true,
-            HideReferencePlane = true,
-            ColorDepth = colorDepthType,
-            PaperFormat = ExportPaperFormat.Default,
-            RasterQuality = RasterQualityType.Medium,
-            ExportQuality = PDFExportQualityType.DPI300,
-            ZoomType = ZoomType.Zoom,
-            ZoomPercentage = 100,
-        };
-
-        IList<ElementId> viewIds = [model.ViewSheet.Id];
-
-        if (doc.Export(folderPath, viewIds, options))
-        {
-            Log.Debug("Printed {SheetName}.", sheetName);
-
-            string expectedFile = Path.Combine(folderPath, $"{sheetName}.pdf");
-
-            if (PathHelper.AwaitExistsFile(expectedFile))
-            {
-                model.IsSuccessfully = true;
-                Thread.Sleep(100);
-                return true;
-            }
-        }
-#endif
-        return false;
+        return PrintHelper.ExportSheet(doc, model);
     }
 
 

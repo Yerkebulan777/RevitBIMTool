@@ -161,15 +161,15 @@ public static class PathHelper
     {
         int counter = 0;
 
-        while (counter < duration)
+        while (counter < 1000)
         {
             counter++;
 
             try
             {
-                if (FileValidator.IsValid(filePath, out _))
+                if (FileValidator.IsValid(filePath, out string msg))
                 {
-                    Log.Debug("File valid!");
+                    Log.Debug(msg);
                     return true;
                 }
             }
@@ -179,11 +179,9 @@ public static class PathHelper
             }
             finally
             {
-                Thread.Sleep(100);
+                Thread.Sleep(duration);
             }
         }
-
-        Log.Warning("File {FilePath} not found!", filePath);
 
         return false;
     }

@@ -40,7 +40,7 @@ public static class FileValidator
             return false;
         }
 
-        message = null;
+        message = "File valid!";
         return true;
     }
 
