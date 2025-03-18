@@ -12,6 +12,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
         public override string RegistryPath => @"SOFTWARE\Adobe\Acrobat Distiller\Printer";
         public override string PrinterName => "Adobe PDF";
         public override string RevitFilePath { get; set; }
+        public override bool IsInternal => false;
 
         public override void InitializePrinter()
         {

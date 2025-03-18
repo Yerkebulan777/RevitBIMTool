@@ -31,7 +31,7 @@ internal static class PrintHelper
     }
 
 
-    public static Dictionary<string, List<SheetModel>> GetData(Document doc, string printerName, bool isColorEnabled = true)
+    public static Dictionary<string, List<SheetModel>> GetData(Document doc, PrinterControl printer, bool isColorEnabled = true)
     {
         string projectTitle = doc.Title;
 
@@ -59,7 +59,7 @@ internal static class PrintHelper
             {
                 if (!PrinterApiUtility.GetPaperSize(widthInMm, heighInMm, out _))
                 {
-                    Log.Debug(PrinterApiUtility.AddFormat(printerName, widthInMm, heighInMm));
+                    Log.Debug(PrinterApiUtility.AddFormat(printer.PrinterName, widthInMm, heighInMm));
                 }
 
                 if (PrinterApiUtility.GetPaperSize(widthInMm, heighInMm, out PaperSize papeSize))

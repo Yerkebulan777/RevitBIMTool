@@ -1,44 +1,44 @@
 ﻿using Autodesk.Revit.DB;
 using RevitBIMTool.Models;
+using RevitBIMTool.Utils.ExportPDF.Printers;
 using Serilog;
 
 namespace RevitBIMTool.Utils.ExportPDF;
 
 internal static class PrintSettingsManager
 {
-    public static void ResetPrinterSettings(Document doc, string printerName)
+    public static void ResetPrinterSettings(Document doc, PrinterControl printer)
     {
-        PrintManager printManager = doc.PrintManager;
-
-        List<PrintSetting> printSettings = GetPrintSettings(doc);
-
-        using Transaction trx = new(doc, "ResetPrintSetting");
-
-        if (TransactionStatus.Started == trx.Start())
+        if (printer is not null && !printer.IsInternal)
         {
-            try
+            PrintManager printManager = doc.PrintManager;
+
+            List<PrintSetting> printSettings = GetPrintSettings(doc);
+
+            using Transaction trx = new(doc, "ResetPrintSetting");
+
+            if (TransactionStatus.Started == trx.Start())
             {
-                if (!string.IsNullOrEmpty(printerName))
+                try
                 {
-                    printManager.SelectNewPrintDriver(printerName);
+                    printManager.SelectNewPrintDriver(printer.PrinterName);
+                    printSettings.ForEach(set => doc.Delete(set.Id));
+                    printManager.PrintRange = PrintRange.Current;
+                    printManager.PrintToFile = true;
+                    printManager.Apply();
+
+                    trx.Commit();
                 }
-
-                printSettings.ForEach(set => doc.Delete(set.Id));
-                printManager.PrintRange = PrintRange.Current;
-                printManager.PrintToFile = true;
-                printManager.Apply();
-
-                trx.Commit();
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Printer settings: {Message}", ex.Message);
-            }
-            finally
-            {
-                if (!trx.HasEnded())
+                catch (Exception ex)
                 {
-                    trx.RollBack();
+                    Log.Error(ex, "ResetPrinterSettings: {Message}", ex.Message);
+                }
+                finally
+                {
+                    if (!trx.HasEnded())
+                    {
+                        trx.RollBack();
+                    }
                 }
             }
         }

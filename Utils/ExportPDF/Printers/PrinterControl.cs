@@ -12,6 +12,7 @@ internal abstract class PrinterControl
     public abstract string RevitFilePath { get; set; }
     public abstract string RegistryPath { get; }
     public abstract string PrinterName { get; }
+    public abstract bool IsInternal { get; }
 
     public abstract void InitializePrinter();
 

@@ -27,17 +27,17 @@ internal static class ExportToPdfHandler
             RevitFileHelper.CloseRevitApplication();
         }
 
+        Log.Information("Available printer: {PrinterName}", printer.PrinterName);
+
         if (PrinterStateManager.ReservePrinter(printer.PrinterName))
         {
             Dictionary<string, List<SheetModel>> sheetData;
 
             bool colorTypeEnabled = sectionName is not ("KJ" or "KR" or "KG");
 
-            Log.Information("Available printer: {PrinterName}", printer.PrinterName);
+            PrintSettingsManager.ResetPrinterSettings(uidoc.Document, printer);
 
-            PrintSettingsManager.ResetPrinterSettings(uidoc.Document, printer.PrinterName);
-
-            sheetData = PrintHelper.GetData(uidoc.Document, printer.PrinterName, colorTypeEnabled);
+            sheetData = PrintHelper.GetData(uidoc.Document, printer, colorTypeEnabled);
 
             if (sheetData.Count > 0)
             {
