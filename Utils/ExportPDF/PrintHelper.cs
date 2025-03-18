@@ -33,8 +33,6 @@ internal static class PrintHelper
 
     public static Dictionary<string, List<SheetModel>> GetData(Document doc, PrinterControl printer, bool isColorEnabled = true)
     {
-        string projectTitle = doc.Title;
-
         FilteredElementCollector collector = new(doc);
         collector = collector.OfCategory(BuiltInCategory.OST_TitleBlocks);
         collector = collector.OfClass(typeof(FamilyInstance));
@@ -43,6 +41,8 @@ internal static class PrintHelper
         ColorDepthType colorType = isColorEnabled ? ColorDepthType.Color : ColorDepthType.BlackLine;
 
         Dictionary<string, List<SheetModel>> sheetPrintData = new(collector.GetElementCount());
+
+        string revitFileName = Path.GetFileNameWithoutExtension(printer.RevitFilePath);
 
         foreach (FamilyInstance titleBlock in collector.Cast<FamilyInstance>())
         {
@@ -68,7 +68,7 @@ internal static class PrintHelper
 
                     SheetModel model = new(viewSheet, papeSize, orientType);
 
-                    model.SetSheetName(doc, projectTitle, "pdf");
+                    model.SetSheetName(doc, revitFileName, "pdf");
 
                     if (model.IsValid)
                     {
