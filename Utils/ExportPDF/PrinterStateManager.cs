@@ -104,12 +104,14 @@ internal static class PrinterStateManager
         while (retryCount < maxRetries)
         {
             retryCount++;
-            Thread.Sleep(retryDelay);
+            
             Log.Debug("Searching for an available printer...");
 
             for (int idx = 0; idx < printerList.Count; idx++)
             {
                 PrinterControl printer = printerList[idx];
+                Log.Debug("Wait 1 second..");
+                Thread.Sleep(retryDelay);
 
                 if (IsPrinterAvailable(printer))
                 {
@@ -145,23 +147,28 @@ internal static class PrinterStateManager
     /// </summary>
     public static bool IsPrinterAvailable(PrinterControl printer)
     {
+        bool isAvailable = false;
+
         if (printer.IsPrinterInstalled())
         {
             try
             {
                 PrinterStateData states = XmlHelper.LoadFromXml<PrinterStateData>(stateFilePath);
                 PrinterInfo printerInfo = EnsurePrinterExists(states, printer.PrinterName);
-                printer.RevitFilePath = stateFilePath;
-                return printerInfo.IsAvailable;
+                isAvailable = printerInfo.IsAvailable;
             }
             catch (Exception ex)
             {
                 Log.Error(ex, "{PrinterName}: {Message}", printer.PrinterName, ex.Message);
                 throw new InvalidOperationException($"{printer.PrinterName}: {ex.Message}");
             }
+            finally
+            {
+                Log.Debug("Is available: {IsAvailable}", isAvailable);
+            }
         }
 
-        return false;
+        return isAvailable;
     }
 
     /// <summary>
