@@ -109,8 +109,6 @@ internal static class PrintHelper
 
         string revitFilePath = printer.RevitFilePath;
 
-        Log.Debug("\nExport to prf transaction...");
-
         if (TransactionStatus.Started == trx.Start())
         {
             try
@@ -131,11 +129,13 @@ internal static class PrintHelper
                         {
                             SheetModel model = sheetModels[idx];
 
+                            Log.Debug("Stert export {SheetName}...", model.SheetName);
+
                             model.TempFilePath = Path.Combine(folder, model.SheetName);
 
                             bool isPrinted = FileValidator.IsNewer(model.TempFilePath, revitFilePath, out _);
 
-                            if (isPrinted && printer.DoPrint(doc, model))
+                            if (isPrinted || printer.DoPrint(doc, model))
                             {
                                 model.IsSuccessfully = true;
                                 successfulSheetModels.Add(model);

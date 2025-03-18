@@ -43,16 +43,16 @@ internal static class ExportToPdfHandler
             {
                 printer.InitializePrinter();
 
+                Log.Information("Start export to PDF...");
+
                 PathHelper.EnsureDirectory(tempDirectory);
                 PathHelper.EnsureDirectory(exportDirectory);
 
-                Log.Information("Start process export to PDF...");
+                Log.Information("Total sheets: {TotalSheets}", sheetData.Values.Sum(lst => lst.Count));
 
                 List<SheetModel> sheetModels = PrintHelper.PrintSheetData(uidoc.Document, printer, sheetData, tempDirectory);
 
                 string exportPath = Path.Combine(exportDirectory, $"{revitFileName}.pdf");
-
-                Log.Information("Total sheets: {TotalSheets}", sheetData.Values.Sum(lst => lst.Count));
 
                 if (sheetModels.Count > 0)
                 {
