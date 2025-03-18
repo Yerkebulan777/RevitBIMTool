@@ -18,10 +18,9 @@ internal sealed class InternalPrinter : PrinterControl
 #if R23
         ColorDepthType colorDepthType = model.IsColorEnabled ? ColorDepthType.Color : ColorDepthType.BlackLine;
 
-        Log.Debug("Exporting to PDF using the internal printer, destination: {TempFilePath}", model.TempFilePath);
+        Log.Debug("Exporting to PDF, destination: {TempFilePath}", model.TempFilePath);
 
-        string sheetName = Path.GetFileNameWithoutExtension(model.SheetName);
-
+        string sheetName = Path.GetFileNameWithoutExtension(model.TempFilePath);
         string folderPath = Path.GetDirectoryName(model.TempFilePath);
 
         PDFExportOptions options = new()
@@ -44,9 +43,9 @@ internal sealed class InternalPrinter : PrinterControl
 
         if (doc.Export(folderPath, viewIds, options))
         {
-            Log.Debug("Printed {SheetName}.", model.SheetName);
+            Log.Debug("Printed {SheetName}.", sheetName);
 
-            if (PathHelper.AwaitExistsFile(model.TempFilePath))
+            if (PathHelper.AwaitExistsFile($"{model.TempFilePath}.pdf"))
             {
                 model.IsSuccessfully = true;
                 Thread.Sleep(100);
