@@ -57,7 +57,7 @@ internal static class PrintHelper
 
             if (sheetElem is ViewSheet viewSheet && viewSheet.CanBePrinted)
             {
-                if (!PrinterApiUtility.GetPaperSize(widthInMm, heighInMm, out _))
+                if (!PrinterApiUtility.GetPaperSize(widthInMm, heighInMm, out _) || !printer.IsInternal)
                 {
                     Log.Debug(PrinterApiUtility.AddFormat(printer.PrinterName, widthInMm, heighInMm));
                 }
