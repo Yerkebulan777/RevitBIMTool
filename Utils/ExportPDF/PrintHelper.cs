@@ -111,10 +111,10 @@ internal static class PrintHelper
 
         if (TransactionStatus.Started == trx.Start())
         {
+            Log.Debug("Start transaction ...");
+
             try
             {
-                Log.Debug("Start transaction ...");
-
                 foreach (string settingName in sheetData.Keys)
                 {
                     PrintManager printManager = doc.PrintManager;
