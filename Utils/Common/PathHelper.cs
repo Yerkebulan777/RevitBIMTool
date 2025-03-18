@@ -131,7 +131,7 @@ public static class PathHelper
         {
             try
             {
-                Directory.CreateDirectory(directoryPath);
+                _ = Directory.CreateDirectory(directoryPath);
             }
             finally
             {
@@ -157,19 +157,20 @@ public static class PathHelper
     }
 
 
-    public static async Task<bool> AwaitExistsFileAsync(string filePath, int durationInSeconds = 300)
+    public static bool AwaitExistsFile(string filePath, int duration = 300)
     {
         int counter = 0;
 
-        while (counter < durationInSeconds)
+        while (counter < duration)
         {
+            counter++;
+
             try
             {
-                await Task.Delay(100);
-
-                lock (sectionAcronyms)
+                if (FileValidator.IsValid(filePath, out _))
                 {
-                    return FileValidator.IsValid(filePath, out _);
+                    Log.Debug("File valid!");
+                    return true;
                 }
             }
             catch (Exception ex)
@@ -178,11 +179,11 @@ public static class PathHelper
             }
             finally
             {
-                Log.Debug($"Waiting: {counter++} seconds");
+                Thread.Sleep(100);
             }
         }
 
-        Log.Warning($"File {filePath} not found!");
+        Log.Warning("File {FilePath} not found!", filePath);
 
         return false;
     }

@@ -15,12 +15,6 @@ internal sealed class InternalPrinter : PrinterControl
 
     public override bool DoPrint(Document doc, SheetModel model)
     {
-
-        return DoPrintAsync(doc, model).Result;
-    }
-
-    public async Task<bool> DoPrintAsync(Document doc, SheetModel model)
-    {
 #if R23
         ColorDepthType colorDepthType = model.IsColorEnabled ? ColorDepthType.Color : ColorDepthType.BlackLine;
 
@@ -52,10 +46,9 @@ internal sealed class InternalPrinter : PrinterControl
         {
             Log.Debug("Printed {SheetName}.", model.SheetName);
 
-            if (await PathHelper.AwaitExistsFileAsync(model.TempFilePath))
+            if (PathHelper.AwaitExistsFile(model.TempFilePath))
             {
                 model.IsSuccessfully = true;
-                Log.Debug("File exist!");
                 Thread.Sleep(100);
                 return true;
             }
@@ -63,6 +56,7 @@ internal sealed class InternalPrinter : PrinterControl
 #endif
         return false;
     }
+
 
     public override void InitializePrinter()
     {

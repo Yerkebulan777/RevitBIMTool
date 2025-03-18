@@ -139,7 +139,6 @@ internal static class PrintHelper
                             {
                                 model.IsSuccessfully = true;
                                 successfulSheetModels.Add(model);
-                                Log.Debug("Printed {SheetName}", model.SheetName);
                             }
                         }
                     }
@@ -165,7 +164,7 @@ internal static class PrintHelper
     }
 
 
-    public static async Task<bool> ExecutePrintAsync(Document doc, string folder, SheetModel model)
+    public static bool ExecutePrint(Document doc, string folder, SheetModel model)
     {
         string filePath = Path.Combine(folder, model.SheetName);
 
@@ -179,7 +178,7 @@ internal static class PrintHelper
         {
             Log.Debug("Printed {SheetName}.", model.SheetName);
 
-            if (await PathHelper.AwaitExistsFileAsync(filePath))
+            if (PathHelper.AwaitExistsFile(filePath))
             {
                 model.IsSuccessfully = true;
                 Log.Debug("File exist!");
