@@ -34,7 +34,7 @@ internal abstract class PrinterControl
             result = RegistryHelper.IsKeyExists(Registry.LocalMachine, Path.Combine(printersPath, PrinterName));
         }
 
-        Log.Information("{PrinterName} is installed: {IsInstalled}!", PrinterName, result);
+        Log.Information("{PrinterName} is installed: {IsInstalled}", PrinterName, result);
 
         return result;
     }

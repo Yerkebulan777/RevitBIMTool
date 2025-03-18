@@ -56,7 +56,7 @@ internal static class SheetHelper
                 {
                     string folderName = folderInfo.Name;
                     folderName = matchPrefix.Replace(folderName, string.Empty);
-                    stringBuilder.Append(folderName);
+                    _ = stringBuilder.Append(folderName);
                 }
             }
         }
@@ -122,15 +122,16 @@ internal static class SheetHelper
         string groupName = GetOrganizationGroupName(doc, model.ViewSheet);
         string sheetName = FormatSheetName(doc, model.ViewSheet, projectName, extension);
 
-        double digitNumber = ParseSheetNumber(sheetNumber);
+        double digitNumber = 0;
 
         bool isValid = false;
 
-        if (digitNumber > 0)
+        if (!groupName.StartsWith("#"))
         {
-            if (!groupName.StartsWith("#") && digitNumber < 500)
+            digitNumber = ParseSheetNumber(sheetNumber);
+
+            if (digitNumber is > 0 and < 500)
             {
-                Log.Debug($"Sheet number: {digitNumber}");
                 isValid = model.ViewSheet.CanBePrinted;
             }
         }
@@ -158,7 +159,7 @@ internal static class SheetHelper
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"Error creating a sheet model: {ex.Message}");
+            Log.Error(ex, "Error creating a sheet model: {Message}", ex.Message);
         }
 
         return model;

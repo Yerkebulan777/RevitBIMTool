@@ -109,10 +109,10 @@ internal static class PrintHelper
 
         string revitFilePath = printer.RevitFilePath;
 
+        Log.Debug("\nExport to prf transaction...");
+
         if (TransactionStatus.Started == trx.Start())
         {
-            Log.Debug("Start transaction ...");
-
             try
             {
                 foreach (string settingName in sheetData.Keys)
@@ -139,6 +139,7 @@ internal static class PrintHelper
                             {
                                 model.IsSuccessfully = true;
                                 successfulSheetModels.Add(model);
+                                Log.Debug("Printed {SheetName}", model.SheetName);
                             }
                         }
                     }
