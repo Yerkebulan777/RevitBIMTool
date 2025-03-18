@@ -66,23 +66,18 @@ internal sealed class InternalPrinter : PrinterControl
 
     public override void InitializePrinter()
     {
-        /// No need to initialize the internal printer
+        //if (int.TryParse(RevitBIMToolApp.Version, out int version))
+        //{
+        //    Log.Debug("Revit version: {RevitVersion}", version);
+        //    RevitFilePath = revitFilePath;
+        //    return version >= 2023;
+        //}
+
+        //return false;
     }
 
     public override void ResetPrinterSettings()
     {
         /// No need to reset the internal printer settings
-    }
-
-    public override bool IsAvailable(string revitFilePath)
-    {
-        if (int.TryParse(RevitBIMToolApp.Version, out int version))
-        {
-            Log.Debug("Revit version: {RevitVersion}", version);
-            RevitFilePath = revitFilePath;
-            return version >= 2023;
-        }
-
-        return false;
     }
 }

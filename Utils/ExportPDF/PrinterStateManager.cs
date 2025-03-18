@@ -107,17 +107,12 @@ internal static class PrinterStateManager
 
             foreach (PrinterControl printer in GetPrinters())
             {
-                try
+                if (IsPrinterAvailable(printer))
                 {
-                    if (printer.IsAvailable(revitFilePath))
-                    {
-                        availablePrinter = printer;
-                        return true;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, ex.Message);
+                    Log.Debug("Printer is available!");
+                    printer.RevitFilePath = revitFilePath;
+                    availablePrinter = printer;
+                    return true;
                 }
             }
         }
@@ -144,19 +139,25 @@ internal static class PrinterStateManager
     /// <summary>
     /// Проверяет, доступен ли принтер
     /// </summary>
-    public static bool IsPrinterAvailable(string printerName)
+    public static bool IsPrinterAvailable(PrinterControl printer)
     {
-        try
+        if (printer.IsPrinterInstalled())
         {
-            PrinterStateData states = XmlHelper.LoadFromXml<PrinterStateData>(stateFilePath);
-            PrinterInfo printerInfo = EnsurePrinterExists(states, printerName);
-            return printerInfo.IsAvailable;
+            try
+            {
+                PrinterStateData states = XmlHelper.LoadFromXml<PrinterStateData>(stateFilePath);
+                PrinterInfo printerInfo = EnsurePrinterExists(states, printer.PrinterName);
+                printer.RevitFilePath = stateFilePath;
+                return printerInfo.IsAvailable;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "{PrinterName}: {Message}", printer.PrinterName, ex.Message);
+                throw new InvalidOperationException($"{printer.PrinterName}: {ex.Message}");
+            }
         }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "{PrinterName}: {Message}", printerName, ex.Message);
-            throw new InvalidOperationException($"{printerName}: {ex.Message}");
-        }
+
+        return false;
     }
 
     /// <summary>

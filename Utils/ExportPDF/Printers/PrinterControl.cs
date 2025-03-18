@@ -22,28 +22,22 @@ internal abstract class PrinterControl
 
     public virtual bool IsPrinterInstalled()
     {
-        const string printersPath = @"SYSTEM\CurrentControlSet\Control\DoPrint\Printers";
+        bool result = false;
 
-        bool isInstalled = RegistryHelper.IsKeyExists(Registry.LocalMachine, Path.Combine(printersPath, PrinterName));
-
-        bool isPathExists = RegistryHelper.IsKeyExists(Registry.CurrentUser, RegistryPath);
-
-        Log.Debug("Is {PrinterName} isInstalled {IsInstalled}!", PrinterName, isInstalled);
-
-        return isInstalled && isPathExists;
-    }
-
-    public virtual bool IsAvailable(string revitFilePath)
-    {
-        if (IsPrinterInstalled() && PrinterStateManager.IsPrinterAvailable(PrinterName))
+        if (IsInternal && int.TryParse(RevitBIMToolApp.Version, out int version))
         {
-            Log.Debug("{PrinterName} printer is available!");
-            RevitFilePath = revitFilePath;
-            return true;
+            result = version >= 2023;
+        }
+        else if (RegistryHelper.IsKeyExists(Registry.CurrentUser, RegistryPath))
+        {
+            const string printersPath = @"SYSTEM\CurrentControlSet\Control\DoPrint\Printers";
+            result = RegistryHelper.IsKeyExists(Registry.LocalMachine, Path.Combine(printersPath, PrinterName));
         }
 
-        Log.Debug("Printer not available!");
-        return false;
+        Log.Debug("{PrinterName} is installed: {IsInstalled}!", PrinterName, result);
+
+        return result;
     }
+
 
 }
