@@ -5,18 +5,11 @@ using System.IO;
 
 namespace RevitBIMTool.Utils.ExportPDF
 {
-    /// <summary>
-    /// Отслеживает и обрабатывает файлы, экспортированные Revit
-    /// </summary>
     internal static class RevitExportFileTracker
     {
         /// <summary>
         /// Находит и обрабатывает файл, созданный Revit после экспорта
         /// </summary>
-        /// <param name="expectedFilePath">Ожидаемый путь к файлу</param>
-        /// <param name="exportFolder">Папка экспорта</param>
-        /// <param name="model">Модель листа</param>
-        /// <returns>True, если файл найден и обработан успешно</returns>
         public static bool TrackExportedFile(string expectedFilePath, string exportFolder, SheetModel model)
         {
             // Проверяем, существует ли файл с ожидаемым именем
@@ -28,12 +21,10 @@ namespace RevitBIMTool.Utils.ExportPDF
                 return true;
             }
 
-            // Ищем любые PDF-файлы, созданные Revit в заданной папке
-            string[] pdfFiles = Directory.GetFiles(exportFolder, "*.pdf");
-
             // Проверяем, содержит ли имя файла номер листа
             string sheetNumber = model.StringNumber;
-            foreach (string pdfFile in pdfFiles)
+
+            foreach (string pdfFile in Directory.GetFiles(exportFolder, "*.pdf"))
             {
                 string fileName = Path.GetFileNameWithoutExtension(pdfFile);
 
@@ -43,7 +34,7 @@ namespace RevitBIMTool.Utils.ExportPDF
                     Log.Information("Found matching file: {FileName}", Path.GetFileName(pdfFile));
 
                     // Пытаемся переименовать в ожидаемое имя
-                    if (RenameFile(pdfFile, expectedFilePath))
+                    if (TryRenameFile(pdfFile, expectedFilePath))
                     {
                         model.TempFilePath = expectedFilePath;
                     }
@@ -65,10 +56,12 @@ namespace RevitBIMTool.Utils.ExportPDF
         /// <summary>
         /// Проверяет, создан ли файл недавно (последние 2 минуты)
         /// </summary>
-        private static bool IsRecentFile(string filePath)
+        public static bool IsRecentFile(string filePath)
         {
             if (!File.Exists(filePath))
+            {
                 return false;
+            }
 
             DateTime fileTimeUtc = File.GetLastWriteTimeUtc(filePath);
             TimeSpan timeElapsed = DateTime.UtcNow - fileTimeUtc;
@@ -78,18 +71,11 @@ namespace RevitBIMTool.Utils.ExportPDF
         /// <summary>
         /// Переименовывает файл с обработкой ошибок
         /// </summary>
-        private static bool RenameFile(string sourcePath, string targetPath)
+        public static bool TryRenameFile(string sourcePath, string targetPath)
         {
             try
             {
-                // Удаляем целевой файл, если он существует
-                if (File.Exists(targetPath))
-                    File.Delete(targetPath);
-
                 File.Move(sourcePath, targetPath);
-                Log.Information("File renamed: {OldName} → {NewName}",
-                    Path.GetFileName(sourcePath),
-                    Path.GetFileName(targetPath));
                 return true;
             }
             catch (Exception ex)
@@ -116,4 +102,7 @@ namespace RevitBIMTool.Utils.ExportPDF
             }
         }
     }
+
+
+
 }
