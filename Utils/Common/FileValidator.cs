@@ -111,7 +111,9 @@ namespace RevitBIMTool.Utils.Common
             bool combinedPredicate(string file)
             {
                 string fileName = Path.GetFileName(expectedFilePath);
-                return (Path.GetFileName(file) == fileName || IsFileRecent(file, TimeSpan.FromMinutes(30))) && IsFileValid(file);
+                bool isFileNameEquals = Path.GetFileName(file) == fileName;
+                bool isFileRecent = IsFileRecent(file, TimeSpan.FromMinutes(30));
+                return (isFileNameEquals || isFileRecent) && IsFileValid(file);
             }
 
             return VerifyFile(ref existingFiles, expectedFilePath, combinedPredicate, 300);
@@ -123,9 +125,6 @@ namespace RevitBIMTool.Utils.Common
         public static bool VerifyFile(ref List<string> existingFiles, string expectedFilePath, Func<string, bool> matchPredicate, int timeout)
         {
             string folderPath = Path.GetDirectoryName(expectedFilePath);
-            string fileName = Path.GetFileName(expectedFilePath);
-
-            Log.Debug("Verify file: {FileName}", fileName);
 
             int attempt = 0;
 
@@ -137,10 +136,10 @@ namespace RevitBIMTool.Utils.Common
 
                     string matchedFile = FindMatch(folderPath, existingFiles, matchPredicate);
 
-                    if (matchedFile != null)
+                    if (!string.IsNullOrEmpty(matchedFile))
                     {
                         string resultPath = RenameFile(matchedFile, expectedFilePath);
-                        Log.Information("Match found: {File}", resultPath);
+                        Log.Information("Match: {File}", Path.GetFileName(resultPath));
                         existingFiles.Add(resultPath);
                         return true;
                     }
