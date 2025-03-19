@@ -1,5 +1,4 @@
-﻿using RevitBIMTool.Models;
-using Serilog;
+﻿using Serilog;
 using System.IO;
 
 namespace RevitBIMTool.Utils.Common
@@ -13,16 +12,28 @@ namespace RevitBIMTool.Utils.Common
         #region Basic Validation
 
         /// <summary>
+        /// Проверяет, был ли файл изменен в указанный период времени
+        /// </summary>
+        public static bool IsFileRecent(string filePath, TimeSpan timeSpan)
+        {
+            try
+            {
+                DateTime fileTimeUtc = File.GetLastWriteTimeUtc(filePath);
+                TimeSpan timeElapsed = DateTime.UtcNow - fileTimeUtc;
+                return timeElapsed < timeSpan;
+            }
+            catch (Exception)
+            {
+                Log.Error("IsFileRecent: {File}", filePath);
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Проверяет, существует ли файл и имеет ли он минимальный размер
         /// </summary>
         public static bool IsFileValid(string filePath, long minSizeBytes = 100)
         {
-            if (string.IsNullOrEmpty(filePath))
-            {
-                Log.Warning("Empty path");
-                return false;
-            }
-
             try
             {
                 FileInfo fileInfo = new(filePath);
@@ -39,40 +50,12 @@ namespace RevitBIMTool.Utils.Common
                     return false;
                 }
 
-                // Проверка доступности файла
-                _ = File.GetAttributes(filePath);
-                Log.Debug("Valid: {File}", Path.GetFileName(filePath));
+                File.GetAttributes(filePath);
                 return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                Log.Error("Validation failed: {File}", Path.GetFileName(filePath));
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Проверяет, был ли файл недавно изменен
-        /// </summary>
-        public static bool IsFileRecently(string filePath, int daysSpan = 1)
-        {
-            if (!IsFileValid(filePath))
-            {
-                return false;
-            }
-
-            try
-            {
-                DateTime lastModified = File.GetLastWriteTimeUtc(filePath);
-                TimeSpan sinceModified = DateTime.UtcNow - lastModified;
-
-                Log.Debug("File age: {File} - {Days}d", Path.GetFileName(filePath), Math.Round(sinceModified.TotalDays, 1));
-
-                return sinceModified.TotalDays < daysSpan;
-            }
-            catch (Exception)
-            {
-                Log.Error("Age check failed: {File}", Path.GetFileName(filePath));
+                Log.Error(ex, ex.Message);
                 return false;
             }
         }
@@ -80,30 +63,25 @@ namespace RevitBIMTool.Utils.Common
         /// <summary>
         /// Проверяет, новее ли один файл другого
         /// </summary>
-        public static bool IsFileNewer(string filePath, string referencePath, int thresholdMinutes = 15)
+        public static bool IsFileNewer(string filePath, string referencePath, int minutes = 30)
         {
-            if (!IsFileValid(filePath))
+            if (IsFileValid(filePath))
             {
-                return false;
+                try
+                {
+                    DateTime fileDate = File.GetLastWriteTimeUtc(filePath);
+                    DateTime refDate = File.GetLastWriteTimeUtc(referencePath);
+                    double diffMin = (fileDate - refDate).TotalMinutes;
+                    return diffMin > minutes;
+                }
+                catch (Exception)
+                {
+                    Log.Error("Date comparison failed: {File}", filePath);
+                    return false;
+                }
             }
 
-            try
-            {
-                DateTime fileDate = File.GetLastWriteTimeUtc(filePath);
-                DateTime refDate = File.GetLastWriteTimeUtc(referencePath);
-                double diffMin = (fileDate - refDate).TotalMinutes;
-                bool result = diffMin > thresholdMinutes;
-
-                Log.Debug("Compare: {File} vs ref, diff: {Diff}min, result: {Result}",
-                    Path.GetFileName(filePath), Math.Round(diffMin, 1), result);
-
-                return result;
-            }
-            catch (Exception)
-            {
-                Log.Error("Date comparison failed: {File}", Path.GetFileName(filePath));
-                return false;
-            }
+            return false;
         }
 
         /// <summary>
@@ -111,7 +89,13 @@ namespace RevitBIMTool.Utils.Common
         /// </summary>
         public static bool IsUpdated(string targetPath, string sourcePath, int maxDaysOld = 100)
         {
-            return IsFileValid(targetPath) && IsFileNewer(targetPath, sourcePath) && IsFileRecently(targetPath, maxDaysOld);
+            if (IsFileValid(targetPath) && IsFileNewer(targetPath, sourcePath))
+            {
+                Log.Debug("Updated: {File}", Path.GetFileName(targetPath));
+                TimeSpan timeSpan = TimeSpan.FromDays(maxDaysOld);
+                return IsFileRecent(targetPath, timeSpan);
+            }
+            return false;
         }
 
         #endregion
@@ -119,15 +103,20 @@ namespace RevitBIMTool.Utils.Common
 
         #region File Monitoring
 
-        /// <summary>
-        /// Универсальный метод для ожидания и отслеживания создания файла
-        /// </summary>
-        /// <param name="expectedFilePath">Ожидаемый путь к файлу</param>
-        /// <param name="matchPredicate">Функция для проверки соответствия найденного файла</param>
-        /// <param name="resultPath">Найденный путь к файлу</param>
-        /// <param name="timeoutMs">Таймаут между проверками в мс</param>
-        /// <param name="maxAttempts">Максимальное число попыток</param>
-        /// <returns>true, если файл найден или создан</returns>
+        private static string FindMatchingFile(string folder, string[] existingFiles, Func<string, bool> matchPredicate)
+        {
+            string[] currentFiles = Directory.GetFiles(folder, "*.pdf");
+
+            foreach (string file in currentFiles.Except(existingFiles))
+            {
+                if (matchPredicate(file))
+                {
+                    return file;
+                }
+            }
+            return null;
+        }
+
         public static bool VerifyFile(string expectedFilePath, Func<string, bool> matchPredicate, out string resultPath, int timeoutMs = 300)
         {
             resultPath = null;
@@ -150,23 +139,19 @@ namespace RevitBIMTool.Utils.Common
                         return true;
                     }
 
-                    string[] newFiles = GetNewFiles(exportFolder, existingFiles);
+                    // Составляем предикат, включающий проверку на свежесть файла и соответствие имени
+                    bool combinedPredicate(string file) =>
+                        IsRecentFile(file) && (Path.GetFileName(file) == fileName || matchPredicate(file));
 
-                    foreach (string file in newFiles)
+                    string matchedFile = FindMatchingFile(exportFolder, existingFiles, combinedPredicate);
+
+                    if (matchedFile != null)
                     {
-                        if (!IsRecentFile(file))
-                        {
-                            continue;
-                        }
+                        resultPath = matchedFile != expectedFilePath && TryRenameFile(matchedFile, expectedFilePath)
+                            ? expectedFilePath
+                            : matchedFile;
 
-                        bool isMatch = Path.GetFileName(file) == fileName || matchPredicate(file);
-
-                        if (isMatch)
-                        {
-                            resultPath = file != expectedFilePath && TryRenameFile(file, expectedFilePath) ? expectedFilePath : file;
-
-                            return true;
-                        }
+                        return true;
                     }
 
                     // Обновляем список существующих файлов
@@ -184,79 +169,7 @@ namespace RevitBIMTool.Utils.Common
             return false;
         }
 
-        /// <summary>
-        /// Базовая проверка файла с поддержкой обратной совместимости
-        /// </summary>
-        public static bool VerifyFile(string expectedFilePath)
-        {
-            return VerifyFile(expectedFilePath, _ => false, out string unused);
-        }
 
-        /// <summary>
-        /// Перегрузка для обратной совместимости с SheetModel
-        /// </summary>
-        public static bool VerifyFile(string expectedFilePath, SheetModel model, int timeoutMs = 300)
-        {
-            string sheetNumber = model.StringNumber ?? "";
-
-            bool result = VerifyFile(
-                expectedFilePath,
-                file => !string.IsNullOrEmpty(sheetNumber) &&
-                    Path.GetFileNameWithoutExtension(file).Contains(sheetNumber),
-                out string resultPath,
-                timeoutMs
-            );
-
-            if (result && !string.IsNullOrEmpty(resultPath))
-            {
-                model.TempFilePath = resultPath;
-                model.IsSuccessfully = true;
-            }
-
-            return result;
-        }
-
-
-        public static string[] GetNewFiles(string folder, string[] existingFiles, string pattern = "*.pdf")
-        {
-            try
-            {
-                if (!Directory.Exists(folder))
-                {
-                    return Array.Empty<string>();
-                }
-
-                string[] currentFiles = Directory.GetFiles(folder, pattern);
-                return currentFiles.Except(existingFiles).ToArray();
-            }
-            catch
-            {
-                return Array.Empty<string>();
-            }
-        }
-
-        /// <summary>
-        /// Проверяет, создан ли файл недавно (последние 2 минуты)
-        /// </summary>
-        public static bool IsRecentFile(string filePath, int recentMinutes = 2)
-        {
-            if (!File.Exists(filePath))
-            {
-                return false;
-            }
-
-            try
-            {
-                DateTime fileTimeUtc = File.GetLastWriteTimeUtc(filePath);
-                TimeSpan timeElapsed = DateTime.UtcNow - fileTimeUtc;
-                return timeElapsed.TotalMinutes < recentMinutes;
-            }
-            catch (Exception)
-            {
-                Log.Error("Recency check failed: {File}", Path.GetFileName(filePath));
-                return false;
-            }
-        }
 
         /// <summary>
         /// Переименовывает файл с обработкой ошибок
