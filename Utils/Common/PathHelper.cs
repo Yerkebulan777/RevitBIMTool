@@ -167,7 +167,7 @@ public static class PathHelper
 
             try
             {
-                if (FileValidator.IsValid(filePath, out string msg))
+                if (FileValidator.IsFileValid(filePath, out string msg))
                 {
                     Log.Debug(msg);
                     return true;

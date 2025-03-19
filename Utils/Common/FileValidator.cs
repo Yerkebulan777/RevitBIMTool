@@ -8,7 +8,7 @@ public static class FileValidator
     /// <summary>
     /// Checks if file exists and has minimum size
     /// </summary>
-    public static bool IsValid(string filePath, out string message, long minSizeBytes = 100)
+    public static bool IsFileValid(string filePath, out string message, long minSizeBytes = 100)
     {
         if (string.IsNullOrEmpty(filePath))
         {
@@ -33,32 +33,31 @@ public static class FileValidator
         try
         {
             File.GetAttributes(filePath);
+            message = $"Is file valid!";
+            return true;
         }
         catch (Exception ex)
         {
             message = $"Error: {ex.Message}";
             return false;
         }
-
-        message = "File valid!";
-        return true;
     }
 
     /// <summary>
     /// Checks if file has been modified recently
     /// </summary>
-    public static bool IsRecent(string filePath, out string message, int daysSpan = 1)
+    public static bool IsFileRecently(string filePath, out string message, int daysSpan = 1)
     {
-        if (IsValid(filePath, out message))
+        if (IsFileValid(filePath, out message))
         {
             StringBuilder sb = new();
 
-            DateTime currentDate = DateTime.Now;
-            DateTime lastModified = File.GetLastWriteTime(filePath);
+            DateTime currentDate = DateTime.UtcNow;
+            DateTime lastModified = File.GetLastWriteTimeUtc(filePath);
             TimeSpan sinceModified = currentDate - lastModified;
 
-            sb.AppendLine($"Current date: {currentDate:yyyy-MM-dd HH:mm:ss}");
-            sb.AppendLine($"Last modified: {lastModified:yyyy-MM-dd HH:mm:ss}");
+            sb.AppendLine($"Current date (UTC): {currentDate:yyyy-MM-dd HH:mm:ss}");
+            sb.AppendLine($"Last modified (UTC): {lastModified:yyyy-MM-dd HH:mm:ss}");
             sb.AppendLine($"Time elapsed since last change: {sinceModified.TotalDays} days");
 
             message = sb.ToString();
@@ -72,37 +71,30 @@ public static class FileValidator
     /// <summary>
     /// Checks if one file is newer than another
     /// </summary>
-    public static bool IsNewer(string filePath, string referencePath, out string message, int thresholdMinutes = 15)
+    public static bool IsFileNewer(string filePath, string referencePath, out string message, int thresholdMinutes = 15)
     {
-        StringBuilder sb = new();
+        StringBuilder logBuilder = new();
 
-        if (!IsValid(filePath, out string validMessage))
+        if (!IsFileValid(filePath, out string validMessage))
         {
-            sb.AppendLine(validMessage);
-            message = sb.ToString();
+            logBuilder.AppendLine(validMessage);
+            message = logBuilder.ToString();
             return false;
         }
 
-        if (!File.Exists(referencePath))
-        {
-            sb.AppendLine($"Reference file does not exist: {referencePath}");
-            message = sb.ToString();
-            return false;
-        }
-
-        DateTime fileDate = File.GetLastWriteTime(filePath);
-        DateTime referenceDate = File.GetLastWriteTime(referencePath);
+        DateTime fileDate = File.GetLastWriteTimeUtc(filePath);
+        DateTime referenceDate = File.GetLastWriteTimeUtc(referencePath);
         TimeSpan difference = fileDate - referenceDate;
 
         bool result = difference.TotalMinutes > thresholdMinutes;
 
-        sb.AppendLine($"File date: {fileDate:yyyy-MM-dd HH:mm:ss}");
-        sb.AppendLine($"Reference date: {referenceDate:yyyy-MM-dd HH:mm:ss}");
-        sb.AppendLine($"Time difference: {difference.TotalMinutes:F2} minutes");
-        sb.AppendLine($"Threshold: {thresholdMinutes} minutes");
-        sb.AppendLine($"File is newer: {result}");
+        logBuilder.AppendLine($"File date (UTC): {fileDate:yyyy-MM-dd HH:mm:ss}");
+        logBuilder.AppendLine($"Reference date (UTC): {referenceDate:yyyy-MM-dd HH:mm:ss}");
+        logBuilder.AppendLine($"Time difference: {difference.TotalMinutes:F2} minutes");
+        logBuilder.AppendLine($"Threshold: {thresholdMinutes} minutes");
+        logBuilder.AppendLine($"File is newer: {result}");
 
-        message = sb.ToString();
+        message = logBuilder.ToString();
         return result;
     }
 
@@ -111,11 +103,14 @@ public static class FileValidator
     /// </summary>
     public static bool IsUpdated(string targetPath, string sourcePath, out string message, int maxDaysOld = 100)
     {
-        if (!IsValid(targetPath, out message))
+        if (!IsFileValid(targetPath, out message))
         {
             return false;
         }
 
-        return IsNewer(targetPath, sourcePath, out message) && IsRecent(targetPath, out message, maxDaysOld);
+        return IsFileNewer(targetPath, sourcePath, out message) && IsFileRecently(targetPath, out message, maxDaysOld);
     }
+
+
+
 }

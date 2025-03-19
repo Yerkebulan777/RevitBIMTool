@@ -133,7 +133,7 @@ internal static class PrintHelper
 
                             model.TempFilePath = Path.Combine(folder, model.SheetName);
 
-                            bool isPrinted = FileValidator.IsNewer(model.TempFilePath, revitFilePath, out _);
+                            bool isPrinted = FileValidator.IsFileNewer(model.TempFilePath, revitFilePath, out _);
 
                             if (isPrinted || printer.DoPrint(doc, model))
                             {

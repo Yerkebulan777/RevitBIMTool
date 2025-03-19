@@ -1,132 +1,78 @@
 ﻿using RevitBIMTool.Models;
+using RevitBIMTool.Utils.Common;
 using Serilog;
 using System.IO;
 
 namespace RevitBIMTool.Utils.ExportPDF
 {
     /// <summary>
-    /// Эффективный монитор файлов для отслеживания экспорта PDF из Revit
+    /// Отслеживает и обрабатывает файлы, экспортированные Revit
     /// </summary>
-    internal static class ExportFileMonitor
+    internal static class RevitExportFileTracker
     {
         /// <summary>
-        /// Максимальное количество попыток найти файл
+        /// Находит и обрабатывает файл, созданный Revit после экспорта
         /// </summary>
-        private const int MaxAttempts = 5;
-
-        /// <summary>
-        /// Задержка между попытками в миллисекундах
-        /// </summary>
-        private const int DelayBetweenAttempts = 200;
-
-        /// <summary>
-        /// Словарь для отслеживания существующих файлов по каталогам
-        /// </summary>
-        private static readonly Dictionary<string, string[]> ExistingFilesByFolder = [];
-
-        /// <summary>
-        /// Запоминает существующие PDF-файлы в указанной папке
-        /// </summary>
-        public static void CaptureExistingFiles(string folderPath)
-        {
-            try
-            {
-                string[] files = Directory.GetFiles(folderPath, "*.pdf");
-                ExistingFilesByFolder[folderPath] = files;
-                Log.Debug("Captured {Count} existing PDF files in folder: {Folder}", files.Length, folderPath);
-            }
-            catch (Exception ex)
-            {
-                Log.Error("Error capturing existing files: {Error}", ex.Message);
-                ExistingFilesByFolder[folderPath] = new string[0];
-            }
-        }
-
-        /// <summary>
-        /// Сбрасывает кэш существующих файлов
-        /// </summary>
-        public static void Reset()
-        {
-            ExistingFilesByFolder.Clear();
-        }
-
-        /// <summary>
-        /// Находит экспортированный файл и обновляет модель листа
-        /// </summary>
+        /// <param name="expectedFilePath">Ожидаемый путь к файлу</param>
+        /// <param name="exportFolder">Папка экспорта</param>
         /// <param name="model">Модель листа</param>
-        /// <param name="processedModels">Список уже обработанных моделей (для проверки дубликатов)</param>
         /// <returns>True, если файл найден и обработан успешно</returns>
-        public static bool FindExportedFile(SheetModel model, ref List<SheetModel> processedModels)
+        public static bool TrackExportedFile(string expectedFilePath, string exportFolder, SheetModel model)
         {
-            // Получаем пути из модели
-            string expectedFilePath = model.TempFilePath;
-            string exportFolder = Path.GetDirectoryName(expectedFilePath);
-
-            // Добавляем расширение PDF, если его нет
-            if (!expectedFilePath.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
-            {
-                expectedFilePath += ".pdf";
-            }
-
-            // Проверка на дубликаты по пути к временному файлу
-            if (processedModels.Any(m => m.TempFilePath == expectedFilePath && m.IsSuccessfully))
-            {
-                Log.Debug("Sheet {SheetNumber} already processed", model.StringNumber);
-                model.IsSuccessfully = true;
-                return true;
-            }
-
-            // Быстрая проверка ожидаемого файла (без длительного ожидания)
-            if (File.Exists(expectedFilePath))
+            // Проверяем, существует ли файл с ожидаемым именем
+            if (PathHelper.AwaitExistsFile(expectedFilePath))
             {
                 Log.Information("File exported with expected name: {FileName}", Path.GetFileName(expectedFilePath));
                 model.TempFilePath = expectedFilePath;
                 model.IsSuccessfully = true;
-                processedModels.Add(model);
                 return true;
             }
 
-            // Получаем список существующих файлов до экспорта
-            string[] existingFiles = ExistingFilesByFolder.ContainsKey(exportFolder)
-                ? ExistingFilesByFolder[exportFolder]
-                : new string[0];
+            // Ищем любые PDF-файлы, созданные Revit в заданной папке
+            string[] pdfFiles = Directory.GetFiles(exportFolder, "*.pdf");
 
-            // Эффективный поиск нового файла с ограниченным числом попыток
-            for (int attempt = 0; attempt < MaxAttempts; attempt++)
+            // Проверяем, содержит ли имя файла номер листа
+            string sheetNumber = model.StringNumber;
+            foreach (string pdfFile in pdfFiles)
             {
-                string newFile = FindNewFile(exportFolder, existingFiles);
+                string fileName = Path.GetFileNameWithoutExtension(pdfFile);
 
-                if (!string.IsNullOrEmpty(newFile))
+                // Если имя файла содержит номер листа и файл свежий (создан недавно)
+                if (fileName.Contains(sheetNumber) && IsRecentFile(pdfFile))
                 {
-                    Log.Information("Found new file at attempt {Attempt}: {FileName}",
-                        attempt + 1, Path.GetFileName(newFile));
+                    Log.Information("Found matching file: {FileName}", Path.GetFileName(pdfFile));
 
                     // Пытаемся переименовать в ожидаемое имя
-                    if (RenameFile(newFile, expectedFilePath))
+                    if (RenameFile(pdfFile, expectedFilePath))
                     {
                         model.TempFilePath = expectedFilePath;
                     }
                     else
                     {
                         // Если переименование не удалось, используем найденный файл
-                        model.TempFilePath = newFile;
+                        model.TempFilePath = pdfFile;
                     }
 
                     model.IsSuccessfully = true;
-                    processedModels.Add(model);
                     return true;
-                }
-
-                // Короткая пауза перед следующей попыткой
-                if (attempt < MaxAttempts - 1)
-                {
-                    System.Threading.Thread.Sleep(DelayBetweenAttempts);
                 }
             }
 
-            Log.Warning("No new file found after {Attempts} attempts for sheet: {SheetNumber}",
-                MaxAttempts, model.StringNumber);
+            Log.Warning("No matching exported file found for sheet: {SheetNumber}", sheetNumber);
             return false;
+        }
+
+        /// <summary>
+        /// Проверяет, создан ли файл недавно (последние 2 минуты)
+        /// </summary>
+        private static bool IsRecentFile(string filePath)
+        {
+            if (!File.Exists(filePath))
+                return false;
+
+            DateTime fileTimeUtc = File.GetLastWriteTimeUtc(filePath);
+            TimeSpan timeElapsed = DateTime.UtcNow - fileTimeUtc;
+            return timeElapsed.TotalMinutes <= 2;
         }
 
         /// <summary>
@@ -138,12 +84,10 @@ namespace RevitBIMTool.Utils.ExportPDF
             {
                 // Удаляем целевой файл, если он существует
                 if (File.Exists(targetPath))
-                {
                     File.Delete(targetPath);
-                }
 
                 File.Move(sourcePath, targetPath);
-                Log.Debug("File renamed: {OldName} → {NewName}",
+                Log.Information("File renamed: {OldName} → {NewName}",
                     Path.GetFileName(sourcePath),
                     Path.GetFileName(targetPath));
                 return true;
@@ -156,30 +100,19 @@ namespace RevitBIMTool.Utils.ExportPDF
         }
 
         /// <summary>
-        /// Находит один новый файл, появившийся в папке после экспорта
+        /// Отслеживает новые файлы, созданные в папке во время экспорта
         /// </summary>
-        /// <returns>Путь к найденному файлу или null, если файл не найден</returns>
-        private static string FindNewFile(string folder, string[] existingFiles)
+        public static string[] GetNewFiles(string folder, string[] existingFiles)
         {
             try
             {
                 string[] currentFiles = Directory.GetFiles(folder, "*.pdf");
-
-                // Находим и возвращаем первый новый файл
-                foreach (string file in currentFiles)
-                {
-                    if (!existingFiles.Contains(file))
-                    {
-                        return file;
-                    }
-                }
-
-                return null;
+                return currentFiles.Except(existingFiles).ToArray();
             }
             catch (Exception ex)
             {
-                Log.Error("Error searching for new file: {Error}", ex.Message);
-                return null;
+                Log.Error("Error while searching for new files: {Error}", ex.Message);
+                return Array.Empty<string>();
             }
         }
     }
