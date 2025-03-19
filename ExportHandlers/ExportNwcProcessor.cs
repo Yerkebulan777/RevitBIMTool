@@ -63,7 +63,7 @@ internal static class ExportNwcProcessor
             instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, ductCat, "(клапан)анемостат_10авп").ToElements());
             instansesToHide.AddRange(CollectorHelper.GetInstancesByFamilyName(doc, mechCat, "Задание на отверстие").ToElements());
 
-            Log.Debug($"Total number of items found for hiding: {instansesToHide.Count}");
+            Log.Debug("Total number of items found for hiding: {Count}", instansesToHide.Count);
 
             RevitWorksetHelper.SetWorksetsToVisible(doc, view);
             RevitWorksetHelper.HideWorksetsByPattern(doc, view, @"^@.+");
@@ -108,7 +108,7 @@ internal static class ExportNwcProcessor
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"Failed export to nwc {ex.Message}");
+            Log.Error(ex, "Error export to nwc: {SheetName}", ex.Message);
         }
         finally
         {
