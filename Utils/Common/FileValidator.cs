@@ -1,143 +1,279 @@
-﻿using Serilog;
+﻿using RevitBIMTool.Models;
+using Serilog;
 using System.IO;
-using System.Text;
 
-namespace RevitBIMTool.Utils.Common;
-
-public static class FileValidator
+namespace RevitBIMTool.Utils.Common
 {
     /// <summary>
-    /// Checks if file exists and has minimum size
+    /// Объединенный класс для работы с файлами, проверки их валидности и мониторинга
     /// </summary>
-    public static bool IsFileValid(string filePath, out string message, long minSizeBytes = 100)
+    public static class FileValidator
     {
-        if (string.IsNullOrEmpty(filePath))
+        #region Basic Validation
+
+        /// <summary>
+        /// Проверяет, существует ли файл и имеет ли он минимальный размер
+        /// </summary>
+        public static bool IsFileValid(string filePath, long minSizeBytes = 100)
         {
-            message = "File path is null or empty";
-            return false;
-        }
-
-        FileInfo fileInfo = new(filePath);
-
-        if (!fileInfo.Exists)
-        {
-            message = $"File does not exist: {filePath}";
-            return false;
-        }
-
-        if (fileInfo.Length < minSizeBytes)
-        {
-            message = $"File size: {fileInfo.Length} bytes";
-            return false;
-        }
-
-        try
-        {
-            _ = File.GetAttributes(filePath);
-            message = $"Is file valid!";
-            return true;
-        }
-        catch (Exception ex)
-        {
-            message = $"Error: {ex.Message}";
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// Checks if file has been modified recently
-    /// </summary>
-    public static bool IsFileRecently(string filePath, out string message, int daysSpan = 1)
-    {
-        if (IsFileValid(filePath, out message))
-        {
-            StringBuilder sb = new();
-
-            DateTime currentDate = DateTime.UtcNow;
-            DateTime lastModified = File.GetLastWriteTimeUtc(filePath);
-            TimeSpan sinceModified = currentDate - lastModified;
-
-            _ = sb.AppendLine($"Current date (UTC): {currentDate:yyyy-MM-dd HH:mm:ss}");
-            _ = sb.AppendLine($"Last modified (UTC): {lastModified:yyyy-MM-dd HH:mm:ss}");
-            _ = sb.AppendLine($"Time elapsed since last change: {sinceModified.TotalDays} days");
-
-            message = sb.ToString();
-
-            return sinceModified.TotalDays < daysSpan;
-        }
-
-        return false;
-    }
-
-    /// <summary>
-    /// Checks if one file is newer than another
-    /// </summary>
-    public static bool IsFileNewer(string filePath, string referencePath, out string message, int thresholdMinutes = 15)
-    {
-        StringBuilder logBuilder = new();
-
-        if (!IsFileValid(filePath, out string validMessage))
-        {
-            _ = logBuilder.AppendLine(validMessage);
-            message = logBuilder.ToString();
-            return false;
-        }
-
-        DateTime fileDate = File.GetLastWriteTimeUtc(filePath);
-        DateTime referenceDate = File.GetLastWriteTimeUtc(referencePath);
-        TimeSpan difference = fileDate - referenceDate;
-
-        bool result = difference.TotalMinutes > thresholdMinutes;
-
-        _ = logBuilder.AppendLine($"File date (UTC): {fileDate:yyyy-MM-dd HH:mm:ss}");
-        _ = logBuilder.AppendLine($"Reference date (UTC): {referenceDate:yyyy-MM-dd HH:mm:ss}");
-        _ = logBuilder.AppendLine($"Time difference: {difference.TotalMinutes:F2} minutes");
-        _ = logBuilder.AppendLine($"Threshold: {thresholdMinutes} minutes");
-        _ = logBuilder.AppendLine($"File is newer: {result}");
-
-        message = logBuilder.ToString();
-        return result;
-    }
-
-    /// <summary>
-    /// Checks if target file is updated relative to source file
-    /// </summary>
-    public static bool IsUpdated(string targetPath, string sourcePath, out string message, int maxDaysOld = 100)
-    {
-        return IsFileValid(targetPath, out message) && IsFileNewer(targetPath, sourcePath, out message) && IsFileRecently(targetPath, out message, maxDaysOld);
-    }
-
-
-
-    public static bool AwaitExistsFile(string filePath, int duration = 300)
-    {
-        int counter = 0;
-
-        while (counter < 1000)
-        {
-            counter++;
+            if (string.IsNullOrEmpty(filePath))
+            {
+                Log.Warning("Empty path");
+                return false;
+            }
 
             try
             {
-                if (IsFileValid(filePath, out string msg))
+                FileInfo fileInfo = new(filePath);
+
+                if (!fileInfo.Exists)
                 {
-                    Log.Debug(msg);
-                    return true;
+                    Log.Warning("Missing file: {Path}", Path.GetFileName(filePath));
+                    return false;
                 }
+
+                if (fileInfo.Length < minSizeBytes)
+                {
+                    Log.Warning("Small file: {Size}b", fileInfo.Length);
+                    return false;
+                }
+
+                // Проверка доступности файла
+                _ = File.GetAttributes(filePath);
+                Log.Debug("Valid: {File}", Path.GetFileName(filePath));
+                return true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Log.Error(ex, ex.Message);
-            }
-            finally
-            {
-                Thread.Sleep(duration);
+                Log.Error("Validation failed: {File}", Path.GetFileName(filePath));
+                return false;
             }
         }
 
-        return false;
+        /// <summary>
+        /// Проверяет, был ли файл недавно изменен
+        /// </summary>
+        public static bool IsFileRecently(string filePath, int daysSpan = 1)
+        {
+            if (!IsFileValid(filePath))
+            {
+                return false;
+            }
+
+            try
+            {
+                DateTime lastModified = File.GetLastWriteTimeUtc(filePath);
+                TimeSpan sinceModified = DateTime.UtcNow - lastModified;
+
+                Log.Debug("File age: {File} - {Days}d", Path.GetFileName(filePath), Math.Round(sinceModified.TotalDays, 1));
+
+                return sinceModified.TotalDays < daysSpan;
+            }
+            catch (Exception)
+            {
+                Log.Error("Age check failed: {File}", Path.GetFileName(filePath));
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Проверяет, новее ли один файл другого
+        /// </summary>
+        public static bool IsFileNewer(string filePath, string referencePath, int thresholdMinutes = 15)
+        {
+            if (!IsFileValid(filePath))
+            {
+                return false;
+            }
+
+            try
+            {
+                DateTime fileDate = File.GetLastWriteTimeUtc(filePath);
+                DateTime refDate = File.GetLastWriteTimeUtc(referencePath);
+                double diffMin = (fileDate - refDate).TotalMinutes;
+                bool result = diffMin > thresholdMinutes;
+
+                Log.Debug("Compare: {File} vs ref, diff: {Diff}min, result: {Result}",
+                    Path.GetFileName(filePath), Math.Round(diffMin, 1), result);
+
+                return result;
+            }
+            catch (Exception)
+            {
+                Log.Error("Date comparison failed: {File}", Path.GetFileName(filePath));
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Проверяет, обновлен ли целевой файл относительно исходного
+        /// </summary>
+        public static bool IsUpdated(string targetPath, string sourcePath, int maxDaysOld = 100)
+        {
+            if (!IsFileValid(targetPath))
+            {
+                return false;
+            }
+
+            return IsFileNewer(targetPath, sourcePath) && IsFileRecently(targetPath, maxDaysOld);
+        }
+
+        #endregion
+
+        #region File Monitoring
+
+        /// <summary>
+        /// Ожидает и отслеживает создание файла, работая как с прямым путем, так и с поиском по шаблонам
+        /// </summary>
+        /// <param name="expectedFilePath">Ожидаемый путь к файлу</param>
+        /// <param name="exportFolder">Папка для поиска альтернативных файлов</param>
+        /// <param name="model">Модель листа, для которой отслеживается файл</param>
+        /// <param name="timeoutMs">Таймаут между проверками в мс</param>
+        /// <param name="attempts">Максимальное число попыток</param>
+        /// <returns>true, если файл найден или создан</returns>
+        public static bool VerifyFile(string expectedFilePath, string exportFolder, SheetModel model, int timeoutMs = 300, int attempts = 60)
+        {
+            int count = 0;
+
+            string[] existingFiles = Directory.Exists(exportFolder)
+                ? Directory.GetFiles(exportFolder, "*.pdf")
+                : Array.Empty<string>();
+
+            string sheetNumber = model.StringNumber;
+            Log.Debug("Tracking file for sheet: {Sheet}", sheetNumber);
+
+            while (count < attempts)
+            {
+                count++;
+
+                // Проверка ожидаемого пути к файлу
+                if (IsFileValid(expectedFilePath))
+                {
+                    Log.Information("Found expected file: {File}", Path.GetFileName(expectedFilePath));
+                    model.TempFilePath = expectedFilePath;
+                    model.IsSuccessfully = true;
+                    return true;
+                }
+
+                // Поиск новых подходящих файлов в папке
+                try
+                {
+                    // Получаем новые файлы, созданные после начала отслеживания
+                    string[] currentFiles = Directory.GetFiles(exportFolder, "*.pdf");
+                    string[] newFiles = currentFiles.Except(existingFiles).ToArray();
+
+                    foreach (string pdfFile in newFiles)
+                    {
+                        // Проверяем, создан ли файл недавно
+                        if (!IsRecentFile(pdfFile))
+                        {
+                            continue;
+                        }
+
+                        string fileName = Path.GetFileNameWithoutExtension(pdfFile);
+
+                        // Проверяем, содержит ли имя файла номер листа
+                        if (fileName.Contains(sheetNumber) ||
+                            (Path.GetFileName(pdfFile) == Path.GetFileName(expectedFilePath)))
+                        {
+                            Log.Information("Found match: {File} (attempt {Try})",
+                                Path.GetFileName(pdfFile), count);
+
+                            // Пытаемся переименовать файл в ожидаемое имя
+                            model.TempFilePath = pdfFile != expectedFilePath && TryRenameFile(pdfFile, expectedFilePath) ? expectedFilePath : pdfFile;
+
+                            model.IsSuccessfully = true;
+                            return true;
+                        }
+                    }
+
+                    // Обновляем список существующих файлов
+                    existingFiles = currentFiles;
+                }
+                catch (Exception ex)
+                {
+                    Log.Debug("Search attempt {Try} failed: {Error}", count, ex.Message);
+                }
+
+                Thread.Sleep(timeoutMs);
+            }
+
+            Log.Warning("File not found after {Max} count for sheet: {Sheet}",
+                attempts, sheetNumber);
+            return false;
+        }
+
+        /// <summary>
+        /// Проверяет, создан ли файл недавно (последние 2 минуты)
+        /// </summary>
+        public static bool IsRecentFile(string filePath, int recentMinutes = 2)
+        {
+            if (!File.Exists(filePath))
+            {
+                return false;
+            }
+
+            try
+            {
+                DateTime fileTimeUtc = File.GetLastWriteTimeUtc(filePath);
+                TimeSpan timeElapsed = DateTime.UtcNow - fileTimeUtc;
+                return timeElapsed.TotalMinutes < recentMinutes;
+            }
+            catch (Exception)
+            {
+                Log.Error("Recency check failed: {File}", Path.GetFileName(filePath));
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Переименовывает файл с обработкой ошибок
+        /// </summary>
+        public static bool TryRenameFile(string sourcePath, string targetPath)
+        {
+            try
+            {
+                // Если целевой файл уже существует, удаляем его
+                if (File.Exists(targetPath))
+                {
+                    File.Delete(targetPath);
+                }
+
+                File.Move(sourcePath, targetPath);
+                Log.Debug("Renamed: {Old} → {New}",
+                    Path.GetFileName(sourcePath), Path.GetFileName(targetPath));
+                return true;
+            }
+            catch (Exception)
+            {
+                Log.Error("Rename failed: {File}", Path.GetFileName(sourcePath));
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Получает список новых файлов, созданных в папке после предыдущей проверки
+        /// </summary>
+        public static string[] GetNewFiles(string folder, string[] existingFiles, string pattern = "*.pdf")
+        {
+            try
+            {
+                if (!Directory.Exists(folder))
+                {
+                    Log.Warning("Dir missing: {Dir}", Path.GetFileName(folder));
+                    return Array.Empty<string>();
+                }
+
+                string[] currentFiles = Directory.GetFiles(folder, pattern);
+                return currentFiles.Except(existingFiles).ToArray();
+            }
+            catch (Exception)
+            {
+                Log.Error("File listing failed: {Dir}", Path.GetFileName(folder));
+                return Array.Empty<string>();
+            }
+        }
+
+        #endregion
     }
-
-
-
 }

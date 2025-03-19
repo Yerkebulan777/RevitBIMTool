@@ -3,7 +3,7 @@ using PaperSize = System.Drawing.Printing.PaperSize;
 
 namespace RevitBIMTool.Models;
 
-internal class SheetModel : IDisposable
+public class SheetModel : IDisposable
 {
     /// <summary>
     /// Получает ViewSheet Revit
