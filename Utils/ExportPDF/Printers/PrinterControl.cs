@@ -12,9 +12,6 @@ internal abstract class PrinterControl
     public abstract string PrinterName { get; }
     public abstract bool IsInternal { get; }
 
-    public abstract void InitializePrinter();
-
-    public abstract void ResetPrinterSettings();
 
     public virtual bool IsPrinterInstalled()
     {
@@ -22,6 +19,10 @@ internal abstract class PrinterControl
         ? int.TryParse(RevitBimToolApp.Version, out int version) && version >= 2023
         : RegistryHelper.IsKeyExists(Registry.CurrentUser, RegistryPath);
     }
+
+    public abstract void InitializePrinter();
+
+    public abstract void ResetPrinterSettings();
 
     public abstract bool DoPrint(Document doc, SheetModel model, string folder);
 

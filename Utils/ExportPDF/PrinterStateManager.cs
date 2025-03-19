@@ -164,7 +164,7 @@ internal static class PrinterStateManager
             }
             finally
             {
-                Log.Debug("Is available: {IsAvailable}", isAvailable);
+                Log.Debug("{PrinterName} is available: {IsAvailable}", printer.PrinterName, isAvailable);
             }
         }
 

@@ -43,6 +43,7 @@ internal static class MergeHandler
             try
             {
                 using PdfReader reader = new(model.TempFilePath);
+
                 int pageCount = reader.NumberOfPages;
 
                 for (int num = 1; num <= pageCount; num++)
