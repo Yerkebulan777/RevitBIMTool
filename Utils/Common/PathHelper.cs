@@ -1,6 +1,5 @@
 ﻿using Autodesk.Revit.DB;
 using Microsoft.Win32;
-using Serilog;
 using System.Diagnostics;
 using System.IO;
 using Path = System.IO.Path;
@@ -155,10 +154,5 @@ public static class PathHelper
             }
         }
     }
-
-
-
-
-
 
 }

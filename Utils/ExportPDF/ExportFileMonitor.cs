@@ -5,7 +5,7 @@ using System.IO;
 
 namespace RevitBIMTool.Utils.ExportPDF
 {
-    internal static class RevitExportFileTracker
+    internal static class ExportFileMonitor
     {
         /// <summary>
         /// Находит и обрабатывает файл, созданный Revit после экспорта
@@ -13,13 +13,13 @@ namespace RevitBIMTool.Utils.ExportPDF
         public static bool TrackExportedFile(string expectedFilePath, string exportFolder, SheetModel model)
         {
             // Проверяем, существует ли файл с ожидаемым именем
-            if (PathHelper.AwaitExistsFile(expectedFilePath))
-            {
-                Log.Information("File exported with expected name: {FileName}", Path.GetFileName(expectedFilePath));
-                model.TempFilePath = expectedFilePath;
-                model.IsSuccessfully = true;
-                return true;
-            }
+            //if (PathHelper.AwaitExistsFile(expectedFilePath))
+            //{
+            //    Log.Information("File exported with expected name: {FileName}", Path.GetFileName(expectedFilePath));
+            //    model.TempFilePath = expectedFilePath;
+            //    model.IsSuccessfully = true;
+            //    return true;
+            //}
 
             // Проверяем, содержит ли имя файла номер листа
             string sheetNumber = model.StringNumber;
