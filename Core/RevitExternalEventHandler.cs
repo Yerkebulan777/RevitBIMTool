@@ -15,7 +15,7 @@ namespace RevitBIMTool.Core
         private readonly ExternalEvent externalEvent;
 
 
-        public RevitExternalEventHandler(string version, int length)
+        public RevitExternalEventHandler(string version)
         {
             externalEvent = ExternalEvent.Create(this);
             startTime = DateTime.Now;

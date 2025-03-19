@@ -50,7 +50,7 @@ namespace RevitBIMTool.Utils.Common
                     return false;
                 }
 
-                File.GetAttributes(filePath);
+                _ = File.GetAttributes(filePath);
                 return true;
             }
             catch (Exception ex)
@@ -103,73 +103,63 @@ namespace RevitBIMTool.Utils.Common
 
         #region File Monitoring
 
-        private static string FindMatchingFile(string folder, string[] existingFiles, Func<string, bool> matchPredicate)
+        /// <summary>
+        /// Проверяет наличие файла, используя составной предикат по имени и новизне файла, а также его валидности.
+        /// </summary>
+        public static bool VerifyFile(ref List<string> existingFiles, string expectedFilePath)
         {
-            string[] currentFiles = Directory.GetFiles(folder, "*.pdf");
-
-            foreach (string file in currentFiles.Except(existingFiles))
+            bool combinedPredicate(string file)
             {
-                if (matchPredicate(file))
-                {
-                    return file;
-                }
+                string fileName = Path.GetFileName(expectedFilePath);
+                return (Path.GetFileName(file) == fileName || IsFileRecent(file, TimeSpan.FromMinutes(30))) && IsFileValid(file);
             }
-            return null;
+
+            return VerifyFile(ref existingFiles, expectedFilePath, combinedPredicate, 300);
         }
 
-        public static bool VerifyFile(string expectedFilePath, Func<string, bool> matchPredicate, out string resultPath, int timeoutMs = 300)
+        /// <summary>
+        /// Выполняет проверку файла с использованием переданного предиката, пытаясь найти и переименовать файл в ожидаемый путь.
+        /// </summary>
+        public static bool VerifyFile(ref List<string> existingFiles, string expectedFilePath, Func<string, bool> matchPredicate, int timeout)
         {
-            resultPath = null;
-            string exportFolder = Path.GetDirectoryName(expectedFilePath);
-            string[] existingFiles = Directory.GetFiles(exportFolder, "*.pdf");
+            string folderPath = Path.GetDirectoryName(expectedFilePath);
             string fileName = Path.GetFileName(expectedFilePath);
 
-            Log.Debug("Tracking file: {FileName}", fileName);
+            Log.Debug("Verify file: {FileName}", fileName);
 
-            int attempt = 1;
+            int attempt = 0;
 
             while (attempt < 1000)
             {
                 try
                 {
-                    // Проверка ожидаемого файла
-                    if (IsFileValid(expectedFilePath))
-                    {
-                        resultPath = expectedFilePath;
-                        return true;
-                    }
+                    attempt++;
 
-                    // Составляем предикат, включающий проверку на свежесть файла и соответствие имени
-                    bool combinedPredicate(string file) =>
-                        IsRecentFile(file) && (Path.GetFileName(file) == fileName || matchPredicate(file));
-
-                    string matchedFile = FindMatchingFile(exportFolder, existingFiles, combinedPredicate);
+                    string matchedFile = FindMatch(folderPath, existingFiles, matchPredicate);
 
                     if (matchedFile != null)
                     {
-                        resultPath = matchedFile != expectedFilePath && TryRenameFile(matchedFile, expectedFilePath)
-                            ? expectedFilePath
-                            : matchedFile;
-
-                        return true;
+                        existingFiles.Add(matchedFile);
+                        Log.Information("Match found: {File}", matchedFile);
+                        return TryRenameFile(matchedFile, expectedFilePath);
                     }
-
-                    // Обновляем список существующих файлов
-                    existingFiles = Directory.GetFiles(exportFolder, "*.pdf");
                 }
-                catch (Exception)
+                finally
                 {
-                    // Игнорируем ошибки и продолжаем
+                    Thread.Sleep(timeout);
                 }
-
-                Thread.Sleep(timeoutMs);
-                attempt++;
             }
 
             return false;
         }
 
-
+        /// <summary>
+        /// Ищет в указанной папке PDF-файлы, не находящиеся в списке существующих файлов, и возвращает первый соответствующий предикату.
+        /// </summary>
+        private static string FindMatch(string folder, List<string> existingFiles, Func<string, bool> matchPredicate)
+        {
+            return Directory.GetFiles(folder, "*.pdf").Except(existingFiles).FirstOrDefault(matchPredicate);
+        }
 
         /// <summary>
         /// Переименовывает файл с обработкой ошибок
@@ -178,22 +168,18 @@ namespace RevitBIMTool.Utils.Common
         {
             try
             {
-                // Если целевой файл уже существует, удаляем его
-                if (File.Exists(targetPath))
+                if (sourcePath != targetPath)
                 {
-                    File.Delete(targetPath);
+                    File.Move(sourcePath, targetPath);
                 }
-
-                File.Move(sourcePath, targetPath);
-                Log.Debug("Renamed: {Old} → {New}",
-                    Path.GetFileName(sourcePath), Path.GetFileName(targetPath));
-                return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                Log.Error("Rename failed: {File}", Path.GetFileName(sourcePath));
-                return false;
+                Log.Error(ex, "Rename failed: {SourcePath}", sourcePath);
+                throw new Exception("Rename failed", ex);
             }
+
+            return true;
         }
 
         #endregion

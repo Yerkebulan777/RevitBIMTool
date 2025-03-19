@@ -105,6 +105,8 @@ internal static class PrintHelper
 
         List<SheetModel> successfulSheetModels = new(sheetData.Values.Count);
 
+        List<string> existingFiles = Directory.GetFiles(folder).ToList();
+
         using Transaction trx = new(doc, "ExportToPDF");
 
         string revitFilePath = printer.RevitFilePath;
@@ -129,28 +131,33 @@ internal static class PrintHelper
                         {
                             SheetModel model = sheetModels[idx];
 
-                            Log.Debug("Stert export {SheetName}...", model.SheetName);
+                            string filePath = Path.Combine(folder, model.SheetName);
 
-                            bool isPrinted = FileValidator.IsFileNewer(model.TempFilePath, revitFilePath);
+                            bool isPrinted = FileValidator.IsFileNewer(filePath, revitFilePath);
 
                             if (isPrinted || printer.DoPrint(doc, model, folder))
                             {
-                                string filePath = Path.Combine(folder, model.SheetName);
-                                model.IsSuccessfully = true;
-                                model.TempFilePath = filePath;
-                                successfulSheetModels.Add(model);
+                                Log.Debug("Exported {SheetName}...", model.SheetName);
+
+                                if (FileValidator.VerifyFile(ref existingFiles, filePath))
+                                {
+                                    Log.Debug("File exist!");
+                                    model.IsSuccessfully = true;
+                                    model.TempFilePath = filePath;
+                                    successfulSheetModels.Add(model);
+                                }
                             }
                         }
                     }
                 }
 
-                _ = trx.Commit();
+                trx.Commit();
             }
             catch (Exception ex)
             {
                 if (!trx.HasEnded())
                 {
-                    _ = trx.RollBack();
+                    trx.RollBack();
                     Log.Error(ex, ex.Message);
                 }
             }
@@ -193,7 +200,7 @@ internal static class PrintHelper
     }
 
 
-    public static bool ExecutePrint(Document doc, SheetModel model, string folder)
+    public static bool ExecutePrint(Document doc, SheetModel model, string folder, ref List<string> existingFiles)
     {
         string filePath = Path.Combine(folder, model.SheetName);
 
@@ -207,12 +214,7 @@ internal static class PrintHelper
         {
             Log.Debug("Printed {SheetName}.", model.SheetName);
 
-            if (FileValidator.VerifyFile(filePath))
-            {
-                model.IsSuccessfully = true;
-                Log.Debug("File exist!");
-                return true;
-            }
+
         }
 
         return false;

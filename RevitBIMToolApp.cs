@@ -32,9 +32,9 @@ internal sealed class RevitBIMToolApp : IExternalApplication
         }
         finally
         {
-            if (TaskRequestContainer.Instance.ValidateData(Version, out int count))
+            if (TaskRequestContainer.Instance.ValidateData(Version, out _))
             {
-                externalEventHandler = new RevitExternalEventHandler(Version, count);
+                externalEventHandler = new RevitExternalEventHandler(Version);
 
                 if (ExternalEventRequest.Denied != externalEventHandler.Raise())
                 {
@@ -47,9 +47,9 @@ internal sealed class RevitBIMToolApp : IExternalApplication
     }
 
 
-    public Result OnShutdown(UIControlledApplication uiapp)
+    public Result OnShutdown(UIControlledApplication application)
     {
-        uiapp.Idling -= new EventHandler<IdlingEventArgs>(OnIdling);
+        application.Idling -= new EventHandler<IdlingEventArgs>(OnIdling);
 
         Log.CloseAndFlush();
 
