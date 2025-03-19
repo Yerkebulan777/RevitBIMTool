@@ -131,11 +131,13 @@ internal static class PrintHelper
 
                             Log.Debug("Stert export {SheetName}...", model.SheetName);
 
-                            model.TempFilePath = Path.Combine(folder, model.SheetName);
+                            var filePath = Path.Combine(folder, model.SheetName);
+
+                            model.TempFilePath = filePath;
 
                             bool isPrinted = FileValidator.IsFileNewer(model.TempFilePath, revitFilePath, out _);
 
-                            if (isPrinted || printer.DoPrint(doc, model))
+                            if (isPrinted || printer.DoPrint(doc, model, folder))
                             {
                                 model.IsSuccessfully = true;
                                 successfulSheetModels.Add(model);
@@ -164,7 +166,7 @@ internal static class PrintHelper
     }
 
 
-    public static bool ExportSheet(Document doc, SheetModel model)
+    public static bool ExportSheet(Document doc, SheetModel model, string folder)
     {
 #if R23
         ColorDepthType colorType;
@@ -178,20 +180,15 @@ internal static class PrintHelper
             colorType = ColorDepthType.BlackLine;
         }
 
-        string fileName = Path.GetFileNameWithoutExtension(model.TempFilePath);
-        string folderPath = Path.GetDirectoryName(model.TempFilePath);
-
-        Log.Debug("Exporting sheet {Sheet}", fileName);
-
         PDFExportOptions options = new()
         {
             Combine = false,
             StopOnError = true,
-            FileName = fileName,
             HideScopeBoxes = true,
+            ColorDepth = colorType,
             HideCropBoundaries = true,
             HideReferencePlane = true,
-            ColorDepth = colorType,
+            FileName = model.SheetName,
             PaperFormat = ExportPaperFormat.Default,
             RasterQuality = RasterQualityType.Medium,
             ExportQuality = PDFExportQualityType.DPI300,
@@ -199,8 +196,9 @@ internal static class PrintHelper
             ZoomPercentage = 100,
         };
 
+        Log.Debug("Exporting sheet {Sheet}", model.SheetName);
         IList<ElementId> viewIds = [model.ViewSheet.Id];
-        return doc.Export(folderPath, viewIds, options);
+        return doc.Export(folder, viewIds, options);
 #else
         return false;
 #endif

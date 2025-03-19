@@ -13,9 +13,9 @@ internal sealed class InternalPrinter : PrinterControl
     public override string RevitFilePath { get; set; }
     public override bool IsInternal => true;
 
-    public override bool DoPrint(Document doc, SheetModel model)
+    public override bool DoPrint(Document doc, SheetModel model, string folder)
     {
-        return PrintHelper.ExportSheet(doc, model);
+        return PrintHelper.ExportSheet(doc, model, folder);
     }
 
 

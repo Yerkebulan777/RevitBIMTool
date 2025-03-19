@@ -48,10 +48,10 @@ internal sealed class CreatorPrinter : PrinterControl
     }
 
 
-    public override bool DoPrint(Document doc, SheetModel model)
+    public override bool DoPrint(Document doc, SheetModel model, string folder)
     {
-        string folder = Path.GetDirectoryName(model.TempFilePath).Replace("\\", "\\\\");
-        RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "TargetDirectory", folder);
+        string directory = folder.Replace("\\", "\\\\");
+        RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "TargetDirectory", directory);
         return PrintHelper.ExecutePrint(doc, folder, model);
     }
 

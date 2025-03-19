@@ -45,10 +45,10 @@ internal sealed class Pdf24Printer : PrinterControl
     }
 
 
-    public override bool DoPrint(Document doc, SheetModel model)
+    public override bool DoPrint(Document doc, SheetModel model, string folder)
     {
-        string folder = Path.GetDirectoryName(model.TempFilePath).Replace("\\", "\\\\");
-        RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveDir", folder);
+        string directory = folder.Replace("\\", "\\\\");
+        RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveDir", directory);
         return PrintHelper.ExecutePrint(doc, folder, model);
     }
 

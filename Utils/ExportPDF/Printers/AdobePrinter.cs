@@ -41,10 +41,10 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
             PrinterStateManager.ReleasePrinter(PrinterName);
         }
 
-        public override bool DoPrint(Document doc, SheetModel model)
+        public override bool DoPrint(Document doc, SheetModel model, string folder)
         {
-            string folder = Path.GetDirectoryName(model.TempFilePath).Replace("\\", "\\\\");
-            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "OutputDir", folder);
+            string directory = folder.Replace("\\", "\\\\");
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "OutputDir", directory);
             return PrintHelper.ExecutePrint(doc, folder, model);
         }
     }

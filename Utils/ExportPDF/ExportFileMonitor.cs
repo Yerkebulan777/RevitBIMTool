@@ -65,7 +65,7 @@ namespace RevitBIMTool.Utils.ExportPDF
 
             DateTime fileTimeUtc = File.GetLastWriteTimeUtc(filePath);
             TimeSpan timeElapsed = DateTime.UtcNow - fileTimeUtc;
-            return timeElapsed.TotalMinutes <= 2;
+            return timeElapsed.TotalMinutes < 2;
         }
 
         /// <summary>
@@ -92,8 +92,7 @@ namespace RevitBIMTool.Utils.ExportPDF
         {
             try
             {
-                string[] currentFiles = Directory.GetFiles(folder, "*.pdf");
-                return currentFiles.Except(existingFiles).ToArray();
+                return [.. Directory.GetFiles(folder, "*.pdf").Except(existingFiles)];
             }
             catch (Exception ex)
             {

@@ -18,8 +18,6 @@ internal abstract class PrinterControl
 
     public abstract void ResetPrinterSettings();
 
-    public abstract bool DoPrint(Document doc, SheetModel model);
-
     public virtual bool IsPrinterInstalled()
     {
         bool result = false;
@@ -38,6 +36,10 @@ internal abstract class PrinterControl
 
         return result;
     }
+
+    public abstract bool DoPrint(Document doc, SheetModel model, string folder);
+
+
 
 
 }
