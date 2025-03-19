@@ -18,11 +18,11 @@ internal sealed class InternalPrinter : PrinterControl
 
     public override void InitializePrinter()
     {
-        /// No need to initialize the internal printer
+        PrinterStateManager.ReleasePrinter(PrinterName);
     }
 
     public override void ResetPrinterSettings()
     {
-        /// No need to reset the internal printer settings
+        PrinterStateManager.ReleasePrinter(PrinterName);
     }
 }

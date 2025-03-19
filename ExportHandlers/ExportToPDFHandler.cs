@@ -29,38 +29,39 @@ internal static class ExportToPdfHandler
 
         Log.Information("Available printer: {PrinterName}", printer.PrinterName);
 
-        if (PrinterStateManager.ReservePrinter(printer.PrinterName))
+        Dictionary<string, List<SheetModel>> sheetData;
+
+        bool colorTypeEnabled = sectionName is not ("KJ" or "KR" or "KG");
+
+        PrintSettingsManager.ResetPrinterSettings(uidoc.Document, printer);
+
+        sheetData = PrintHelper.GetData(uidoc.Document, printer, colorTypeEnabled);
+
+        if (sheetData.Count > 0)
         {
-            Dictionary<string, List<SheetModel>> sheetData;
+            printer.InitializePrinter();
 
-            bool colorTypeEnabled = sectionName is not ("KJ" or "KR" or "KG");
+            Log.Information("Start export to PDF...");
 
-            PrintSettingsManager.ResetPrinterSettings(uidoc.Document, printer);
+            PathHelper.EnsureDirectory(tempDirectory);
+            PathHelper.EnsureDirectory(exportDirectory);
 
-            sheetData = PrintHelper.GetData(uidoc.Document, printer, colorTypeEnabled);
+            Log.Information("Total sheets: {TotalSheets}", sheetData.Values.Sum(lst => lst.Count));
 
-            if (sheetData.Count > 0)
+            List<SheetModel> sheetModels = PrintHelper.PrintSheetData(uidoc.Document, printer, sheetData, tempDirectory);
+
+            string exportPath = Path.Combine(exportDirectory, $"{revitFileName}.pdf");
+
+            if (sheetModels.Count > 0)
             {
-                printer.InitializePrinter();
-
-                Log.Information("Start export to PDF...");
-
-                PathHelper.EnsureDirectory(tempDirectory);
-                PathHelper.EnsureDirectory(exportDirectory);
-
-                Log.Information("Total sheets: {TotalSheets}", sheetData.Values.Sum(lst => lst.Count));
-
-                List<SheetModel> sheetModels = PrintHelper.PrintSheetData(uidoc.Document, printer, sheetData, tempDirectory);
-
-                string exportPath = Path.Combine(exportDirectory, $"{revitFileName}.pdf");
-
-                if (sheetModels.Count > 0)
-                {
-                    MergeHandler.Combine(sheetModels, exportPath);
-                    SystemFolderOpener.OpenFolder(exportDirectory);
-                    PathHelper.DeleteDirectory(tempDirectory);
-                }
+                MergeHandler.Combine(sheetModels, exportPath);
+                SystemFolderOpener.OpenFolder(exportDirectory);
+                PathHelper.DeleteDirectory(tempDirectory);
             }
         }
+
     }
+
+
+
 }

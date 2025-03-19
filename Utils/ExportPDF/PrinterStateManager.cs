@@ -104,7 +104,7 @@ internal static class PrinterStateManager
         while (retryCount < maxRetries)
         {
             retryCount++;
-            
+
             Log.Debug("Searching for an available printer...");
 
             for (int idx = 0; idx < printerList.Count; idx++)
@@ -302,17 +302,25 @@ internal static class PrinterStateManager
     /// <summary>
     /// Резервирует принтер, делая его недоступным для других процессов
     /// </summary>
-    public static bool ReservePrinter(string printerName)
+    public static void ReservePrinter(string printerName)
     {
-        return SetAvailability(printerName, false);
+        if (SetAvailability(printerName, false))
+        {
+            Log.Debug("{PrinterName} is reserved", printerName);
+        }
     }
 
     /// <summary>
     /// Освобождает принтер, делая его доступным для других процессов
     /// </summary>
-    public static bool ReleasePrinter(string printerName)
+    public static void ReleasePrinter(string printerName)
     {
-        return SetAvailability(printerName, true);
+        if (SetAvailability(printerName, true))
+        {
+            Log.Debug("{PrinterName} is released", printerName);
+        }
     }
+
+
 
 }
