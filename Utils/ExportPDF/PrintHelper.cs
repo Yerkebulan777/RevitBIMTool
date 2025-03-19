@@ -200,7 +200,7 @@ internal static class PrintHelper
     }
 
 
-    public static bool ExecutePrint(Document doc, SheetModel model, string folder, ref List<string> existingFiles)
+    public static bool ExecutePrint(Document doc, SheetModel model, string folder)
     {
         string filePath = Path.Combine(folder, model.SheetName);
 
@@ -210,15 +210,9 @@ internal static class PrintHelper
 
         PathHelper.DeleteExistsFile(filePath);
 
-        if (printManager.SubmitPrint(model.ViewSheet))
-        {
-            Log.Debug("Printed {SheetName}.", model.SheetName);
-
-
-        }
-
-        return false;
+        return printManager.SubmitPrint(model.ViewSheet);
     }
+
 
 
 }
