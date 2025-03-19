@@ -3,6 +3,7 @@ using Microsoft.Win32;
 using RevitBIMTool.Models;
 using RevitBIMTool.Utils.SystemHelpers;
 using Serilog;
+using System.Diagnostics;
 using System.IO;
 
 namespace RevitBIMTool.Utils.ExportPDF.Printers;
@@ -22,6 +23,8 @@ internal abstract class PrinterControl
     {
         bool result = false;
 
+        Debug.WriteLine(PrinterName);
+
         if (IsInternal && int.TryParse(RevitBimToolApp.Version, out int version))
         {
             result = version >= 2023;
@@ -38,7 +41,6 @@ internal abstract class PrinterControl
     }
 
     public abstract bool DoPrint(Document doc, SheetModel model, string folder);
-
 
 
 
