@@ -40,17 +40,15 @@ namespace RevitBIMTool.Utils.Common
 
                 if (!fileInfo.Exists)
                 {
-                    Log.Warning("Missing file: {Path}", Path.GetFileName(filePath));
                     return false;
                 }
 
                 if (fileInfo.Length < minSizeBytes)
                 {
-                    Log.Warning("Small file: {Size}b", fileInfo.Length);
                     return false;
                 }
 
-                _ = File.GetAttributes(filePath);
+                File.GetAttributes(filePath);
                 return true;
             }
             catch (Exception ex)
