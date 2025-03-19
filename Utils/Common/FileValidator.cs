@@ -120,53 +120,51 @@ namespace RevitBIMTool.Utils.Common
         #region File Monitoring
 
         /// <summary>
-        /// Ожидает и отслеживает создание файла, работая как с прямым путем, так и с поиском по шаблонам
+        /// Универсальный метод для ожидания и отслеживания создания файла
         /// </summary>
         /// <param name="expectedFilePath">Ожидаемый путь к файлу</param>
-        /// <param name="exportFolder">Папка для поиска альтернативных файлов</param>
-        /// <param name="model">Модель листа, для которой отслеживается файл</param>
+        /// <param name="matchPredicate">Функция для проверки соответствия найденного файла</param>
+        /// <param name="resultPath">Найденный путь к файлу</param>
         /// <param name="timeoutMs">Таймаут между проверками в мс</param>
-        /// <param name="attempts">Максимальное число попыток</param>
+        /// <param name="maxAttempts">Максимальное число попыток</param>
         /// <returns>true, если файл найден или создан</returns>
-        public static bool VerifyFile(string expectedFilePath, SheetModel model, int timeoutMs = 300, int attempts = 60)
+        public static bool VerifyFile(string expectedFilePath, Func<string, bool> matchPredicate, out string resultPath, int timeoutMs = 300)
         {
+            resultPath = null;
             string exportFolder = Path.GetDirectoryName(expectedFilePath);
             string[] existingFiles = Directory.GetFiles(exportFolder, "*.pdf");
-            string sheetNumber = model.StringNumber;
+            string fileName = Path.GetFileName(expectedFilePath);
 
-            Log.Debug("Tracking: {0}", sheetNumber);
+            Log.Debug("Tracking file: {FileName}", fileName);
 
-            for (int attempt = 1; attempt <= attempts; attempt++)
+            int attempt = 1;
+
+            while (attempt < 1000)
             {
-                // Проверка ожидаемого файла
-                if (IsFileValid(expectedFilePath))
-                {
-                    model.TempFilePath = expectedFilePath;
-                    model.IsSuccessfully = true;
-                    return true;
-                }
-
                 try
                 {
+                    // Проверка ожидаемого файла
+                    if (IsFileValid(expectedFilePath))
+                    {
+                        resultPath = expectedFilePath;
+                        return true;
+                    }
+
                     string[] newFiles = GetNewFiles(exportFolder, existingFiles);
 
-                    foreach (string pdfFile in newFiles)
+                    foreach (string file in newFiles)
                     {
-                        if (!IsRecentFile(pdfFile))
+                        if (!IsRecentFile(file))
+                        {
                             continue;
+                        }
 
-                        string fileName = Path.GetFileNameWithoutExtension(pdfFile);
-                        bool isMatch = fileName.Contains(sheetNumber) ||
-                                       Path.GetFileName(pdfFile) == Path.GetFileName(expectedFilePath);
+                        bool isMatch = Path.GetFileName(file) == fileName || matchPredicate(file);
 
                         if (isMatch)
                         {
-                            // Переименовываем если нужно и возможно
-                            model.TempFilePath = (pdfFile != expectedFilePath && TryRenameFile(pdfFile, expectedFilePath))
-                                ? expectedFilePath
-                                : pdfFile;
+                            resultPath = file != expectedFilePath && TryRenameFile(file, expectedFilePath) ? expectedFilePath : file;
 
-                            model.IsSuccessfully = true;
                             return true;
                         }
                     }
@@ -180,18 +178,53 @@ namespace RevitBIMTool.Utils.Common
                 }
 
                 Thread.Sleep(timeoutMs);
+                attempt++;
             }
 
-            Log.Warning("Not found: {0}", sheetNumber);
             return false;
         }
+
+        /// <summary>
+        /// Базовая проверка файла с поддержкой обратной совместимости
+        /// </summary>
+        public static bool VerifyFile(string expectedFilePath)
+        {
+            return VerifyFile(expectedFilePath, _ => false, out string unused);
+        }
+
+        /// <summary>
+        /// Перегрузка для обратной совместимости с SheetModel
+        /// </summary>
+        public static bool VerifyFile(string expectedFilePath, SheetModel model, int timeoutMs = 300)
+        {
+            string sheetNumber = model.StringNumber ?? "";
+
+            bool result = VerifyFile(
+                expectedFilePath,
+                file => !string.IsNullOrEmpty(sheetNumber) &&
+                    Path.GetFileNameWithoutExtension(file).Contains(sheetNumber),
+                out string resultPath,
+                timeoutMs
+            );
+
+            if (result && !string.IsNullOrEmpty(resultPath))
+            {
+                model.TempFilePath = resultPath;
+                model.IsSuccessfully = true;
+            }
+
+            return result;
+        }
+
 
         public static string[] GetNewFiles(string folder, string[] existingFiles, string pattern = "*.pdf")
         {
             try
             {
                 if (!Directory.Exists(folder))
+                {
                     return Array.Empty<string>();
+                }
 
                 string[] currentFiles = Directory.GetFiles(folder, pattern);
                 return currentFiles.Except(existingFiles).ToArray();
