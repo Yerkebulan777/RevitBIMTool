@@ -207,7 +207,7 @@ internal static class PrintHelper
         {
             Log.Debug("Printed {SheetName}.", model.SheetName);
 
-            if (PathHelper.AwaitExistsFile(filePath))
+            if (FileValidator.VerifyFile(filePath))
             {
                 model.IsSuccessfully = true;
                 Log.Debug("File exist!");

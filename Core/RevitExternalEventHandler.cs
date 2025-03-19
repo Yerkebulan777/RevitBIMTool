@@ -23,7 +23,7 @@ namespace RevitBIMTool.Core
         }
 
 
-        public void Execute(UIApplication uiapp)
+        public void Execute(UIApplication app)
         {
             RevitActionHandler handler = new();
 
@@ -39,7 +39,7 @@ namespace RevitBIMTool.Core
 
                     SynchronizationContext.SetSynchronizationContext(context);
 
-                    string result = handler.RunDocumentAction(uiapp, model, GeneralTaskHandler.RunTask);
+                    string result = handler.RunDocumentAction(app, model, GeneralTaskHandler.RunTask);
 
                     Log.Information(" \n Result: {Result} ", result);
 

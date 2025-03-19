@@ -9,6 +9,7 @@ namespace RevitBIMTool.Utils.Common
     /// </summary>
     public static class FileValidator
     {
+
         #region Basic Validation
 
         /// <summary>
@@ -115,6 +116,7 @@ namespace RevitBIMTool.Utils.Common
 
         #endregion
 
+
         #region File Monitoring
 
         /// <summary>
@@ -126,8 +128,9 @@ namespace RevitBIMTool.Utils.Common
         /// <param name="timeoutMs">Таймаут между проверками в мс</param>
         /// <param name="attempts">Максимальное число попыток</param>
         /// <returns>true, если файл найден или создан</returns>
-        public static bool VerifyFile(string expectedFilePath, string exportFolder, SheetModel model, int timeoutMs = 300, int attempts = 60)
+        public static bool VerifyFile(string expectedFilePath, SheetModel model, int timeoutMs = 300, int attempts = 60)
         {
+            string exportFolder = Path.GetDirectoryName(expectedFilePath);
             string[] existingFiles = Directory.GetFiles(exportFolder, "*.pdf");
             string sheetNumber = model.StringNumber;
 
