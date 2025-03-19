@@ -166,17 +166,16 @@ namespace RevitBIMTool.Utils.Common
         /// </summary>
         public static bool TryRenameFile(string sourcePath, string targetPath)
         {
-            try
+            if (sourcePath != targetPath)
             {
-                if (sourcePath != targetPath)
+                try
                 {
                     File.Move(sourcePath, targetPath);
                 }
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Rename failed: {SourcePath}", sourcePath);
-                throw new Exception("Rename failed", ex);
+                catch (Exception ex)
+                {
+                    throw new IOException("Rename failed", ex);
+                }
             }
 
             return true;

@@ -105,7 +105,7 @@ internal static class PrintHelper
 
         List<SheetModel> successfulSheetModels = new(sheetData.Values.Count);
 
-        List<string> existingFiles = Directory.GetFiles(folder).ToList();
+        List<string> existingFiles = [.. Directory.GetFiles(folder)];
 
         using Transaction trx = new(doc, "ExportToPDF");
 
@@ -151,13 +151,13 @@ internal static class PrintHelper
                     }
                 }
 
-                trx.Commit();
+                _ = trx.Commit();
             }
             catch (Exception ex)
             {
                 if (!trx.HasEnded())
                 {
-                    trx.RollBack();
+                    _ = trx.RollBack();
                     Log.Error(ex, ex.Message);
                 }
             }

@@ -3,7 +3,7 @@
         <Name>RevitBIMTool</Name>
         <Assembly>RevitBIMTool/RevitBIMTool.dll</Assembly>
         <AddInId>81CDD554-EB51-4D9D-9BFD-ACC330F15B4C</AddInId>
-        <FullClassName>RevitBIMTool.RevitBIMToolApp</FullClassName>
+        <FullClassName>RevitBIMTool.RevitBimToolApp</FullClassName>
         <VendorId>Development: Yerkebulan</VendorId>
         <VendorDescription></VendorDescription>
         <VendorEmail></VendorEmail>

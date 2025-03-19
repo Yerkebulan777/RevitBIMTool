@@ -22,7 +22,7 @@ internal abstract class PrinterControl
     {
         bool result = false;
 
-        if (IsInternal && int.TryParse(RevitBIMToolApp.Version, out int version))
+        if (IsInternal && int.TryParse(RevitBimToolApp.Version, out int version))
         {
             result = version >= 2023;
         }

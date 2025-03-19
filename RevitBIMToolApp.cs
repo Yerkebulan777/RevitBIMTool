@@ -7,38 +7,35 @@ using ServiceLibrary.Models;
 
 namespace RevitBIMTool;
 
-internal sealed class RevitBIMToolApp : IExternalApplication
+internal sealed class RevitBimToolApp : IExternalApplication
 {
     public static string Version { get; set; }
 
-    private RevitExternalEventHandler externalEventHandler;
-
-
     #region IExternalApplication
 
-    public Result OnStartup(UIControlledApplication uiapp)
+    public Result OnStartup(UIControlledApplication application)
     {
         try
         {
-            uiapp = uiapp ?? throw new ArgumentNullException(nameof(uiapp));
-            Version = uiapp.ControlledApplication.VersionNumber;
-            SetupUIPanel.Initialize(uiapp);
+            application = application ?? throw new ArgumentNullException(nameof(application));
+            Version = application.ControlledApplication.VersionNumber;
+            SetupUIPanel.Initialize(application);
         }
         catch (Exception ex)
         {
             System.Windows.Clipboard.SetText(ex.Message);
-            uiapp.ControlledApplication.WriteJournalComment(ex.Message, true);
+            application.ControlledApplication.WriteJournalComment(ex.Message, true);
             return Result.Failed;
         }
         finally
         {
             if (TaskRequestContainer.Instance.ValidateData(Version, out _))
             {
-                externalEventHandler = new RevitExternalEventHandler(Version);
+                var externalEventHandler = new RevitExternalEventHandler(Version);
 
                 if (ExternalEventRequest.Denied != externalEventHandler.Raise())
                 {
-                    uiapp.Idling += new EventHandler<IdlingEventArgs>(OnIdling);
+                    application.Idling += new EventHandler<IdlingEventArgs>(OnIdling);
                 }
             }
         }
