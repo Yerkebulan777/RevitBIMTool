@@ -28,8 +28,8 @@ internal sealed class ExportToDWGCommand : IExternalCommand, IExternalCommandAva
             LoggerHelper.SetupLogger(doc.Title);
             RevitLinkHelper.CheckAndRemoveUnloadedLinks(doc);
             string revitFilePath = PathHelper.GetRevitFilePath(doc);
-            string exportDirectory = ExportManager.SetDirectory(revitFilePath, "02_DWG", true);
-            DWGExportProcessor.Execute(uidoc, revitFilePath, exportDirectory);
+            string exportDirectory = CommonExportManager.SetDirectory(revitFilePath, "02_DWG", true);
+            ExportDwgProcessor.Execute(uidoc, revitFilePath, exportDirectory);
         }
         catch (Exception ex)
         {

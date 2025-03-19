@@ -11,7 +11,7 @@ using System.Windows.Threading;
 
 namespace RevitBIMTool.ExportHandlers;
 
-internal static class NwcExportProcessor
+internal static class ExportNwcProcessor
 {
     public static void Execute(UIDocument uidoc, string revitFilePath, string exportDirectory)
     {

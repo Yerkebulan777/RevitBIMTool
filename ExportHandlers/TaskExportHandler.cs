@@ -26,7 +26,7 @@ namespace RevitBIMTool.ExportHandlers
                 {
                     case 1: // PDF
 
-                        model.ExportFolder = ExportManager.SetDirectory(revitFilePath, "03_PDF", true);
+                        model.ExportFolder = CommonExportManager.SetDirectory(revitFilePath, "03_PDF", true);
                         model.ExportBaseFile = Path.Combine(model.ExportFolder, $"{revitFileName}.pdf");
                         if (!FileValidator.IsUpdated(model.ExportBaseFile, revitFilePath))
                         {
@@ -38,7 +38,7 @@ namespace RevitBIMTool.ExportHandlers
 
                     case 2: // DWG
 
-                        model.ExportFolder = ExportManager.SetDirectory(revitFilePath, "02_DWG", true);
+                        model.ExportFolder = CommonExportManager.SetDirectory(revitFilePath, "02_DWG", true);
                         model.ExportBaseFile = Path.Combine(model.ExportFolder, $"{revitFileName}.zip");
                         if (!FileValidator.IsUpdated(model.ExportBaseFile, revitFilePath))
                         {
@@ -50,7 +50,7 @@ namespace RevitBIMTool.ExportHandlers
 
                     case 3: // NWC
 
-                        model.ExportFolder = ExportManager.SetDirectory(revitFilePath, "05_NWC", false);
+                        model.ExportFolder = CommonExportManager.SetDirectory(revitFilePath, "05_NWC", false);
                         model.ExportBaseFile = Path.Combine(model.ExportFolder, $"{revitFileName}.nwc");
                         if (!FileValidator.IsUpdated(model.ExportBaseFile, revitFilePath))
                         {
@@ -69,7 +69,6 @@ namespace RevitBIMTool.ExportHandlers
             return result;
         }
 
-
         public static string RunTask(UIDocument uidoc, TaskRequest model)
         {
             StringBuilder sb = new();
@@ -84,17 +83,17 @@ namespace RevitBIMTool.ExportHandlers
             switch (model.CommandNumber)
             {
                 case 1: // PDF
-                    PdfExportProcessor.Execute(uidoc, model.RevitFilePath, model.ExportFolder);
+                    ExportPdfProcessor.Execute(uidoc, model.RevitFilePath, model.ExportFolder);
                     break;
 
                 case 2: // DWG
 
-                    DWGExportProcessor.Execute(uidoc, model.RevitFilePath, model.ExportFolder);
+                    ExportDwgProcessor.Execute(uidoc, model.RevitFilePath, model.ExportFolder);
                     break;
 
                 case 3: // NWC
 
-                    NwcExportProcessor.Execute(uidoc, model.RevitFilePath, model.ExportFolder);
+                    ExportNwcProcessor.Execute(uidoc, model.RevitFilePath, model.ExportFolder);
                     break;
 
                 default:
@@ -104,7 +103,6 @@ namespace RevitBIMTool.ExportHandlers
 
             return sb.ToString();
         }
-
 
     }
 

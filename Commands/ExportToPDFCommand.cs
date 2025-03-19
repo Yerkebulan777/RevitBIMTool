@@ -32,8 +32,8 @@ internal sealed class ExportToPdfCommand : IExternalCommand, IExternalCommandAva
             LoggerHelper.SetupLogger(doc.Title);
             RevitLinkHelper.CheckAndRemoveUnloadedLinks(doc);
             string revitFilePath = PathHelper.GetRevitFilePath(doc);
-            string exportDirectory = ExportManager.SetDirectory(revitFilePath, "03_PDF", true);
-            PdfExportProcessor.Execute(uidoc, revitFilePath, exportDirectory);
+            string exportDirectory = CommonExportManager.SetDirectory(revitFilePath, "03_PDF", true);
+            ExportPdfProcessor.Execute(uidoc, revitFilePath, exportDirectory);
         }
         catch (Exception ex)
         {

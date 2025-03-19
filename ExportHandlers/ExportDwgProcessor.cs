@@ -8,9 +8,8 @@ using Element = Autodesk.Revit.DB.Element;
 
 namespace RevitBIMTool.ExportHandlers;
 
-internal static class DWGExportProcessor
+internal static class ExportDwgProcessor
 {
-
     private static readonly DWGExportOptions dwgOptions = new()
     {
         ACAPreference = ACAObjectPreference.Geometry,
@@ -66,8 +65,8 @@ internal static class DWGExportProcessor
 
             if (ExportFileToDWG(uidoc.Document, sourсeFolder, sheetModels))
             {
-                ExportManager.MoveAllFiles(sourсeFolder, targetFolder);
-                ExportManager.CreateZipFolder(targetFolder, exportDirectory);
+                CommonExportManager.MoveAllFiles(sourсeFolder, targetFolder);
+                CommonExportManager.CreateZipFolder(targetFolder, exportDirectory);
             }
 
         }

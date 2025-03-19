@@ -5,9 +5,9 @@ using ServiceLibrary.Helpers;
 using System.IO;
 using System.IO.Compression;
 
-
 namespace RevitBIMTool.ExportHandlers;
-internal static class ExportManager
+
+internal static class CommonExportManager
 {
     public static string SetDirectory(string revitFilePath, string folderName, bool date)
     {
