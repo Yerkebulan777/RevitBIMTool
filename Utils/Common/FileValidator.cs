@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using Serilog;
+using System.IO;
 using System.Text;
 
 namespace RevitBIMTool.Utils.Common;
@@ -32,7 +33,7 @@ public static class FileValidator
 
         try
         {
-            File.GetAttributes(filePath);
+            _ = File.GetAttributes(filePath);
             message = $"Is file valid!";
             return true;
         }
@@ -56,9 +57,9 @@ public static class FileValidator
             DateTime lastModified = File.GetLastWriteTimeUtc(filePath);
             TimeSpan sinceModified = currentDate - lastModified;
 
-            sb.AppendLine($"Current date (UTC): {currentDate:yyyy-MM-dd HH:mm:ss}");
-            sb.AppendLine($"Last modified (UTC): {lastModified:yyyy-MM-dd HH:mm:ss}");
-            sb.AppendLine($"Time elapsed since last change: {sinceModified.TotalDays} days");
+            _ = sb.AppendLine($"Current date (UTC): {currentDate:yyyy-MM-dd HH:mm:ss}");
+            _ = sb.AppendLine($"Last modified (UTC): {lastModified:yyyy-MM-dd HH:mm:ss}");
+            _ = sb.AppendLine($"Time elapsed since last change: {sinceModified.TotalDays} days");
 
             message = sb.ToString();
 
@@ -77,7 +78,7 @@ public static class FileValidator
 
         if (!IsFileValid(filePath, out string validMessage))
         {
-            logBuilder.AppendLine(validMessage);
+            _ = logBuilder.AppendLine(validMessage);
             message = logBuilder.ToString();
             return false;
         }
@@ -88,11 +89,11 @@ public static class FileValidator
 
         bool result = difference.TotalMinutes > thresholdMinutes;
 
-        logBuilder.AppendLine($"File date (UTC): {fileDate:yyyy-MM-dd HH:mm:ss}");
-        logBuilder.AppendLine($"Reference date (UTC): {referenceDate:yyyy-MM-dd HH:mm:ss}");
-        logBuilder.AppendLine($"Time difference: {difference.TotalMinutes:F2} minutes");
-        logBuilder.AppendLine($"Threshold: {thresholdMinutes} minutes");
-        logBuilder.AppendLine($"File is newer: {result}");
+        _ = logBuilder.AppendLine($"File date (UTC): {fileDate:yyyy-MM-dd HH:mm:ss}");
+        _ = logBuilder.AppendLine($"Reference date (UTC): {referenceDate:yyyy-MM-dd HH:mm:ss}");
+        _ = logBuilder.AppendLine($"Time difference: {difference.TotalMinutes:F2} minutes");
+        _ = logBuilder.AppendLine($"Threshold: {thresholdMinutes} minutes");
+        _ = logBuilder.AppendLine($"File is newer: {result}");
 
         message = logBuilder.ToString();
         return result;
@@ -103,12 +104,38 @@ public static class FileValidator
     /// </summary>
     public static bool IsUpdated(string targetPath, string sourcePath, out string message, int maxDaysOld = 100)
     {
-        if (!IsFileValid(targetPath, out message))
+        return IsFileValid(targetPath, out message) && IsFileNewer(targetPath, sourcePath, out message) && IsFileRecently(targetPath, out message, maxDaysOld);
+    }
+
+
+
+    public static bool AwaitExistsFile(string filePath, int duration = 300)
+    {
+        int counter = 0;
+
+        while (counter < 1000)
         {
-            return false;
+            counter++;
+
+            try
+            {
+                if (IsFileValid(filePath, out string msg))
+                {
+                    Log.Debug(msg);
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+            }
+            finally
+            {
+                Thread.Sleep(duration);
+            }
         }
 
-        return IsFileNewer(targetPath, sourcePath, out message) && IsFileRecently(targetPath, out message, maxDaysOld);
+        return false;
     }
 
 

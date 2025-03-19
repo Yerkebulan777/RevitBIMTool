@@ -1,8 +1,5 @@
 ﻿using Autodesk.Revit.DB;
 using RevitBIMTool.Models;
-using RevitBIMTool.Utils.Common;
-using Serilog;
-using System.IO;
 
 namespace RevitBIMTool.Utils.ExportPDF.Printers;
 

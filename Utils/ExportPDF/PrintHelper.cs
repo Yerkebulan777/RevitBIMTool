@@ -131,15 +131,13 @@ internal static class PrintHelper
 
                             Log.Debug("Stert export {SheetName}...", model.SheetName);
 
-                            var filePath = Path.Combine(folder, model.SheetName);
-
-                            model.TempFilePath = filePath;
-
                             bool isPrinted = FileValidator.IsFileNewer(model.TempFilePath, revitFilePath, out _);
 
                             if (isPrinted || printer.DoPrint(doc, model, folder))
                             {
+                                string filePath = Path.Combine(folder, model.SheetName);
                                 model.IsSuccessfully = true;
+                                model.TempFilePath = filePath;
                                 successfulSheetModels.Add(model);
                             }
                         }
@@ -169,17 +167,7 @@ internal static class PrintHelper
     public static bool ExportSheet(Document doc, SheetModel model, string folder)
     {
 #if R23
-        ColorDepthType colorType;
-
-        if (model.IsColorEnabled)
-        {
-            colorType = ColorDepthType.Color;
-        }
-        else
-        {
-            colorType = ColorDepthType.BlackLine;
-        }
-
+        ColorDepthType colorType = model.IsColorEnabled ? ColorDepthType.Color : ColorDepthType.BlackLine;
         PDFExportOptions options = new()
         {
             Combine = false,

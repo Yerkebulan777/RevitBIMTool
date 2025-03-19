@@ -157,34 +157,7 @@ public static class PathHelper
     }
 
 
-    public static bool AwaitExistsFile(string filePath, int duration = 300)
-    {
-        int counter = 0;
 
-        while (counter < 1000)
-        {
-            counter++;
-
-            try
-            {
-                if (FileValidator.IsFileValid(filePath, out string msg))
-                {
-                    Log.Debug(msg);
-                    return true;
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, ex.Message);
-            }
-            finally
-            {
-                Thread.Sleep(duration);
-            }
-        }
-
-        return false;
-    }
 
 
 
