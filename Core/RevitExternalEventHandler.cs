@@ -33,7 +33,7 @@ namespace RevitBIMTool.Core
 
             while (requestContainer.PopTaskModel(versionNumber, out TaskRequest model))
             {
-                if (GeneralTaskHandler.IsValidTask(ref model, out string output))
+                if (GeneralTaskHandler.IsValidTask(ref model))
                 {
                     LoggerHelper.SetupLogger(context, model.RevitFileName);
 
@@ -41,7 +41,7 @@ namespace RevitBIMTool.Core
 
                     string result = handler.RunDocumentAction(uiapp, model, GeneralTaskHandler.RunTask);
 
-                    Log.Information($" \n Result: {result} ");
+                    Log.Information(" \n Result: {Result} ", result);
 
                     if (RevitFileHelper.IsTimeOut(ref startTime))
                     {

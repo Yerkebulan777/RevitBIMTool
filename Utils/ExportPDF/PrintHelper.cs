@@ -131,7 +131,7 @@ internal static class PrintHelper
 
                             Log.Debug("Stert export {SheetName}...", model.SheetName);
 
-                            bool isPrinted = FileValidator.IsFileNewer(model.TempFilePath, revitFilePath, out _);
+                            bool isPrinted = FileValidator.IsFileNewer(model.TempFilePath, revitFilePath);
 
                             if (isPrinted || printer.DoPrint(doc, model, folder))
                             {

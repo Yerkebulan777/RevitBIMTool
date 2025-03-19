@@ -110,12 +110,7 @@ namespace RevitBIMTool.Utils.Common
         /// </summary>
         public static bool IsUpdated(string targetPath, string sourcePath, int maxDaysOld = 100)
         {
-            if (!IsFileValid(targetPath))
-            {
-                return false;
-            }
-
-            return IsFileNewer(targetPath, sourcePath) && IsFileRecently(targetPath, maxDaysOld);
+            return IsFileValid(targetPath) && IsFileNewer(targetPath, sourcePath) && IsFileRecently(targetPath, maxDaysOld);
         }
 
         #endregion
@@ -133,54 +128,40 @@ namespace RevitBIMTool.Utils.Common
         /// <returns>true, если файл найден или создан</returns>
         public static bool VerifyFile(string expectedFilePath, string exportFolder, SheetModel model, int timeoutMs = 300, int attempts = 60)
         {
-            int count = 0;
-
-            string[] existingFiles = Directory.Exists(exportFolder)
-                ? Directory.GetFiles(exportFolder, "*.pdf")
-                : Array.Empty<string>();
-
+            string[] existingFiles = Directory.GetFiles(exportFolder, "*.pdf");
             string sheetNumber = model.StringNumber;
-            Log.Debug("Tracking file for sheet: {Sheet}", sheetNumber);
 
-            while (count < attempts)
+            Log.Debug("Tracking: {0}", sheetNumber);
+
+            for (int attempt = 1; attempt <= attempts; attempt++)
             {
-                count++;
-
-                // Проверка ожидаемого пути к файлу
+                // Проверка ожидаемого файла
                 if (IsFileValid(expectedFilePath))
                 {
-                    Log.Information("Found expected file: {File}", Path.GetFileName(expectedFilePath));
                     model.TempFilePath = expectedFilePath;
                     model.IsSuccessfully = true;
                     return true;
                 }
 
-                // Поиск новых подходящих файлов в папке
                 try
                 {
-                    // Получаем новые файлы, созданные после начала отслеживания
-                    string[] currentFiles = Directory.GetFiles(exportFolder, "*.pdf");
-                    string[] newFiles = currentFiles.Except(existingFiles).ToArray();
+                    string[] newFiles = GetNewFiles(exportFolder, existingFiles);
 
                     foreach (string pdfFile in newFiles)
                     {
-                        // Проверяем, создан ли файл недавно
                         if (!IsRecentFile(pdfFile))
-                        {
                             continue;
-                        }
 
                         string fileName = Path.GetFileNameWithoutExtension(pdfFile);
+                        bool isMatch = fileName.Contains(sheetNumber) ||
+                                       Path.GetFileName(pdfFile) == Path.GetFileName(expectedFilePath);
 
-                        // Проверяем, содержит ли имя файла номер листа
-                        if (fileName.Contains(sheetNumber) ||
-                            (Path.GetFileName(pdfFile) == Path.GetFileName(expectedFilePath)))
+                        if (isMatch)
                         {
-                            Log.Information("Found match: {File} (attempt {Try})",
-                                Path.GetFileName(pdfFile), count);
-
-                            // Пытаемся переименовать файл в ожидаемое имя
-                            model.TempFilePath = pdfFile != expectedFilePath && TryRenameFile(pdfFile, expectedFilePath) ? expectedFilePath : pdfFile;
+                            // Переименовываем если нужно и возможно
+                            model.TempFilePath = (pdfFile != expectedFilePath && TryRenameFile(pdfFile, expectedFilePath))
+                                ? expectedFilePath
+                                : pdfFile;
 
                             model.IsSuccessfully = true;
                             return true;
@@ -188,19 +169,34 @@ namespace RevitBIMTool.Utils.Common
                     }
 
                     // Обновляем список существующих файлов
-                    existingFiles = currentFiles;
+                    existingFiles = Directory.GetFiles(exportFolder, "*.pdf");
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    Log.Debug("Search attempt {Try} failed: {Error}", count, ex.Message);
+                    // Игнорируем ошибки и продолжаем
                 }
 
                 Thread.Sleep(timeoutMs);
             }
 
-            Log.Warning("File not found after {Max} count for sheet: {Sheet}",
-                attempts, sheetNumber);
+            Log.Warning("Not found: {0}", sheetNumber);
             return false;
+        }
+
+        public static string[] GetNewFiles(string folder, string[] existingFiles, string pattern = "*.pdf")
+        {
+            try
+            {
+                if (!Directory.Exists(folder))
+                    return Array.Empty<string>();
+
+                string[] currentFiles = Directory.GetFiles(folder, pattern);
+                return currentFiles.Except(existingFiles).ToArray();
+            }
+            catch
+            {
+                return Array.Empty<string>();
+            }
         }
 
         /// <summary>
@@ -248,29 +244,6 @@ namespace RevitBIMTool.Utils.Common
             {
                 Log.Error("Rename failed: {File}", Path.GetFileName(sourcePath));
                 return false;
-            }
-        }
-
-        /// <summary>
-        /// Получает список новых файлов, созданных в папке после предыдущей проверки
-        /// </summary>
-        public static string[] GetNewFiles(string folder, string[] existingFiles, string pattern = "*.pdf")
-        {
-            try
-            {
-                if (!Directory.Exists(folder))
-                {
-                    Log.Warning("Dir missing: {Dir}", Path.GetFileName(folder));
-                    return Array.Empty<string>();
-                }
-
-                string[] currentFiles = Directory.GetFiles(folder, pattern);
-                return currentFiles.Except(existingFiles).ToArray();
-            }
-            catch (Exception)
-            {
-                Log.Error("File listing failed: {Dir}", Path.GetFileName(folder));
-                return Array.Empty<string>();
             }
         }
 
