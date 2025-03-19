@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 using View = Autodesk.Revit.DB.View;
 
 
-namespace RevitBIMTool.Utils;
+namespace RevitBIMTool.Utils.Common;
 
 internal static class RevitWorksetHelper
 {
@@ -41,7 +41,7 @@ internal static class RevitWorksetHelper
                         }
                     }
 
-                    status = trx.Commit();
+                    trx.Commit();
                 }
             }
             catch (Exception ex)
@@ -60,11 +60,10 @@ internal static class RevitWorksetHelper
         }
     }
 
-
     public static void HideWorksetsByPattern(Document doc, View view, string pattern)
     {
         IList<Workset> worksetList = new FilteredWorksetCollector(doc).OfKind(WorksetKind.UserWorkset).ToWorksets();
-        worksetList = worksetList.Where(w => Regex.IsMatch(w.Name, pattern, RegexOptions.IgnoreCase)).ToList();
+        worksetList = [.. worksetList.Where(w => Regex.IsMatch(w.Name, pattern, RegexOptions.IgnoreCase))];
 
         if (worksetList.Count > 0)
         {
@@ -84,7 +83,7 @@ internal static class RevitWorksetHelper
 
                     try
                     {
-                        status = subTrans.Start();
+                        subTrans.Start();
 
                         WorksetId wid = new(workset.Id.IntegerValue);
 
@@ -101,24 +100,21 @@ internal static class RevitWorksetHelper
                             view.SetWorksetVisibility(wid, WorksetVisibility.Hidden);
                         }
 
-                        status = subTrans.Commit();
+                        subTrans.Commit();
                     }
                     catch (Exception ex)
                     {
                         builder.AppendLine(ex.Message);
-                        status = subTrans.RollBack();
+                        subTrans.RollBack();
                     }
                     finally
                     {
-                        Log.Debug($"\n{builder}");
+                        Log.Debug(builder.ToString());
                     }
                 }
 
-                status = trans.Commit();
+                trans.Commit();
             }
         }
     }
-
-
-
 }
