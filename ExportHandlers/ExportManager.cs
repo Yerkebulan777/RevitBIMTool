@@ -29,7 +29,6 @@ internal static class ExportManager
         return exportDirectory;
     }
 
-
     public static void MoveAllFiles(string source, string destination)
     {
         PathHelper.EnsureDirectory(destination);
@@ -46,7 +45,6 @@ internal static class ExportManager
         }
     }
 
-
     public static void CreateZipFolder(string exportFolder, string exportDirectory)
     {
         string zipFilePath = $"{exportFolder}.zip";
@@ -55,28 +53,24 @@ internal static class ExportManager
 
         SystemFolderOpener.OpenFolder(exportDirectory);
 
-        Log.Debug($"Start create Zip file by path {zipFilePath}");
+        Log.Debug("Start create Zip file by path {ZipFilePath}", zipFilePath);
 
         using ZipArchive archive = ZipFile.Open(zipFilePath, ZipArchiveMode.Create);
 
         foreach (FileInfo info in directory.EnumerateFiles())
         {
-            if (FilePathHelper.IsFileAccessible(info.FullName))
+            if (FilePathHelper.IsFileAccessible(info))
             {
-                if (info.Length > 0)
+                try
                 {
-                    try
-                    {
-                        _ = archive.CreateEntryFromFile(info.FullName, info.Name);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error($"Failed: {info.Name} {ex.Message}");
-                    }
+                    archive.CreateEntryFromFile(info.FullName, info.Name);
                 }
+                catch (Exception ex)
+                {
+                    Log.Error("Failed: {FileName} {ErrorMessage}", info.Name, ex.Message);
+                }
+
             }
         }
-
     }
-
 }

@@ -2,6 +2,7 @@
 using RevitBIMTool.Utils.Common;
 using RevitBIMTool.Utils.ExportPDF.Printers;
 using Serilog;
+using System.Diagnostics;
 using System.IO;
 using Document = Autodesk.Revit.DB.Document;
 using Element = Autodesk.Revit.DB.Element;
@@ -137,7 +138,7 @@ internal static class PrintHelper
 
                             if (isPrinted || printer.DoPrint(doc, model, folder))
                             {
-                                Log.Debug("Exported {SheetName}...", model.SheetName);
+                                Debug.WriteLine("Exported {SheetName}", model.SheetName);
 
                                 if (FileValidator.VerifyFile(ref existingFiles, filePath))
                                 {
