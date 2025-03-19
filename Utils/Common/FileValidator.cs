@@ -139,9 +139,10 @@ namespace RevitBIMTool.Utils.Common
 
                     if (matchedFile != null)
                     {
-                        existingFiles.Add(matchedFile);
-                        Log.Information("Match found: {File}", matchedFile);
-                        return TryRenameFile(matchedFile, expectedFilePath);
+                        string resultPath = RenameFile(matchedFile, expectedFilePath);
+                        Log.Information("Match found: {File}", resultPath);
+                        existingFiles.Add(resultPath);
+                        return true;
                     }
                 }
                 finally
@@ -162,23 +163,24 @@ namespace RevitBIMTool.Utils.Common
         }
 
         /// <summary>
-        /// Переименовывает файл с обработкой ошибок
+        /// Пытается переименовать файл и возвращает путь к файлу после попытки.
         /// </summary>
-        public static bool TryRenameFile(string sourcePath, string targetPath)
+        public static string RenameFile(string sourcePath, string targetPath)
         {
             if (sourcePath != targetPath)
             {
                 try
                 {
                     File.Move(sourcePath, targetPath);
+                    return targetPath; // Переименование удалось
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    throw new IOException("Rename failed", ex);
+                    return sourcePath;
                 }
             }
 
-            return true;
+            return sourcePath;
         }
 
         #endregion
