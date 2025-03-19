@@ -2,9 +2,6 @@
 using Microsoft.Win32;
 using RevitBIMTool.Models;
 using RevitBIMTool.Utils.SystemHelpers;
-using Serilog;
-using System.Diagnostics;
-using System.IO;
 
 namespace RevitBIMTool.Utils.ExportPDF.Printers;
 
@@ -21,27 +18,12 @@ internal abstract class PrinterControl
 
     public virtual bool IsPrinterInstalled()
     {
-        bool result = false;
-
-        Debug.WriteLine(PrinterName);
-
-        if (IsInternal && int.TryParse(RevitBimToolApp.Version, out int version))
-        {
-            result = version >= 2023;
-        }
-        else if (RegistryHelper.IsKeyExists(Registry.CurrentUser, RegistryPath))
-        {
-            const string printersPath = @"SYSTEM\CurrentControlSet\Control\DoPrint\Printers";
-            result = RegistryHelper.IsKeyExists(Registry.LocalMachine, Path.Combine(printersPath, PrinterName));
-        }
-
-        Log.Information("{PrinterName} is installed: {IsInstalled}", PrinterName, result);
-
-        return result;
+        return IsInternal
+        ? int.TryParse(RevitBimToolApp.Version, out int version) && version >= 2023
+        : RegistryHelper.IsKeyExists(Registry.CurrentUser, RegistryPath);
     }
 
     public abstract bool DoPrint(Document doc, SheetModel model, string folder);
-
 
 
 }
