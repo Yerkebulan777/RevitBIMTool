@@ -205,7 +205,7 @@ internal static class PrintHelper
     }
 
 
-    public static bool ExecutePrint(Document doc, string folder, SheetModel model)
+    public static bool ExecutePrint(Document doc, SheetModel model, string folder)
     {
         string filePath = Path.Combine(folder, model.SheetName);
 

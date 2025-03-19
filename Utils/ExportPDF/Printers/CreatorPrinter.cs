@@ -52,7 +52,7 @@ internal sealed class CreatorPrinter : PrinterControl
     {
         string directory = folder.Replace("\\", "\\\\");
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "TargetDirectory", directory);
-        return PrintHelper.ExecutePrint(doc, folder, model);
+        return PrintHelper.ExecutePrint(doc, model, folder);
     }
 
 

@@ -49,7 +49,7 @@ internal sealed class Pdf24Printer : PrinterControl
     {
         string directory = folder.Replace("\\", "\\\\");
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveDir", directory);
-        return PrintHelper.ExecutePrint(doc, folder, model);
+        return PrintHelper.ExecutePrint(doc, model, folder);
     }
 
 
