@@ -29,8 +29,8 @@ internal sealed class ExportToNWCCommand : IExternalCommand, IExternalCommandAva
             LoggerHelper.SetupLogger(doc.Title);
             RevitLinkHelper.CheckAndRemoveUnloadedLinks(doc);
             string revitFilePath = PathHelper.GetRevitFilePath(doc);
-            string exportDirectory = ExportHelper.SetDirectory(revitFilePath, "05_NWC", false);
-            ExportToNWCHandler.Execute(uidoc, revitFilePath, exportDirectory);
+            string exportDirectory = ExportManager.SetDirectory(revitFilePath, "05_NWC", false);
+            NwcExportProcessor.Execute(uidoc, revitFilePath, exportDirectory);
         }
         catch (Exception ex)
         {

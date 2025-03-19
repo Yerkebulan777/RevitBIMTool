@@ -9,7 +9,7 @@ using UIDocument = Autodesk.Revit.UI.UIDocument;
 
 namespace RevitBIMTool.ExportHandlers;
 
-internal static class ExportToPdfHandler
+internal static class PdfExportProcessor
 {
     public static void Execute(UIDocument uidoc, string revitFilePath, string exportDirectory)
     {

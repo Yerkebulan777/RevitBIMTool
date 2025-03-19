@@ -4,11 +4,10 @@ using Serilog;
 using ServiceLibrary.Helpers;
 using System.IO;
 using System.IO.Compression;
-using System.Text;
 
 
 namespace RevitBIMTool.ExportHandlers;
-internal static class ExportHelper
+internal static class ExportManager
 {
     public static string SetDirectory(string revitFilePath, string folderName, bool date)
     {
@@ -68,7 +67,7 @@ internal static class ExportHelper
                 {
                     try
                     {
-                        archive.CreateEntryFromFile(info.FullName, info.Name);
+                        _ = archive.CreateEntryFromFile(info.FullName, info.Name);
                     }
                     catch (Exception ex)
                     {

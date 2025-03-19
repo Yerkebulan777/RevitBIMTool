@@ -6,9 +6,9 @@ using Serilog;
 using System.IO;
 using Element = Autodesk.Revit.DB.Element;
 
-
 namespace RevitBIMTool.ExportHandlers;
-internal static class ExportToDWGHandler
+
+internal static class DWGExportProcessor
 {
 
     private static readonly DWGExportOptions dwgOptions = new()
@@ -66,8 +66,8 @@ internal static class ExportToDWGHandler
 
             if (ExportFileToDWG(uidoc.Document, sourсeFolder, sheetModels))
             {
-                ExportHelper.MoveAllFiles(sourсeFolder, targetFolder);
-                ExportHelper.CreateZipFolder(targetFolder, exportDirectory);
+                ExportManager.MoveAllFiles(sourсeFolder, targetFolder);
+                ExportManager.CreateZipFolder(targetFolder, exportDirectory);
             }
 
         }
