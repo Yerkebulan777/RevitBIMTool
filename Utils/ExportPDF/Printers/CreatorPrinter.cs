@@ -18,6 +18,8 @@ internal sealed class CreatorPrinter : PrinterControl
     {
         Log.Debug("Initialize PDFCreator printer");
 
+        PrinterStateManager.ReservePrinter(PrinterName);
+
         string autoSave = Path.Combine(RegistryPath, "AutoSave");
         string openViewerKey = Path.Combine(RegistryPath, "OpenViewer");
         RegistryHelper.SetValue(Registry.CurrentUser, autoSave, "Enabled", "True");
@@ -32,19 +34,17 @@ internal sealed class CreatorPrinter : PrinterControl
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "SkipPrintDialog", "True");
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "Name", "<DefaultProfile>");
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowProgress", "False");
-
-        PrinterStateManager.ReservePrinter(PrinterName);
     }
 
 
-    public override void ResetPrinterSettings()
+    public override void ReleasePrinterSettings()
     {
-        Log.Debug("Reset print settings");
+        Log.Debug("Release print settings");
+
+        PrinterStateManager.ReleasePrinter(PrinterName);
 
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "TargetDirectory", "<Desktop>");
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<Title>");
-
-        PrinterStateManager.ReleasePrinter(PrinterName);
     }
 
 

@@ -18,6 +18,8 @@ internal sealed class Pdf24Printer : PrinterControl
     {
         Log.Debug("Initialize PDF24 printer");
 
+        PrinterStateManager.ReservePrinter(PrinterName);
+
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveOpenDir", 0);
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "Handler", "autoSave");
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveShowProgress", 0);
@@ -25,14 +27,14 @@ internal sealed class Pdf24Printer : PrinterControl
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveUseFileChooser", 0);
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveFilename", "$fileName");
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveProfile", "default/medium");
-
-        PrinterStateManager.ReservePrinter(PrinterName);
     }
 
 
-    public override void ResetPrinterSettings()
+    public override void ReleasePrinterSettings()
     {
-        Log.Debug("Reset print settings");
+        Log.Debug("Release print settings");
+
+        PrinterStateManager.ReleasePrinter(PrinterName);
 
         string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveDir", desktop);
@@ -40,8 +42,6 @@ internal sealed class Pdf24Printer : PrinterControl
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShellCmd", string.Empty);
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "(Default)", string.Empty);
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveFilename", "$fileName");
-
-        PrinterStateManager.ReleasePrinter(PrinterName);
     }
 
 

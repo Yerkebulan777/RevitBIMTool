@@ -22,7 +22,7 @@ internal abstract class PrinterControl
 
     public abstract void InitializePrinter();
 
-    public abstract void ResetPrinterSettings();
+    public abstract void ReleasePrinterSettings();
 
     public abstract bool DoPrint(Document doc, SheetModel model, string folder);
 

@@ -31,7 +31,7 @@ internal static class PrintSettingsManager
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "ResetPrinterSettings: {Message}", ex.Message);
+                    Log.Error(ex, "ReleasePrinterSettings: {Message}", ex.Message);
                 }
                 finally
                 {

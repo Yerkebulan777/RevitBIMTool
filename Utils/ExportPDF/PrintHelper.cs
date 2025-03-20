@@ -164,7 +164,7 @@ internal static class PrintHelper
             }
             finally
             {
-                printer?.ResetPrinterSettings();
+                printer?.ReleasePrinterSettings();
             }
         }
 

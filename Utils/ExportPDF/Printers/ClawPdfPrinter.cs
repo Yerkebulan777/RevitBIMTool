@@ -19,6 +19,8 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
         {
             Log.Debug("Initialize clawPDF printer");
 
+            PrinterStateManager.ReservePrinter(PrinterName);
+
             string autoSaveKey = Path.Combine(RegistryPath, "AutoSave");
             RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "Enabled", "True");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "OpenViewer", "False");
@@ -26,20 +28,18 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "SkipPrintDialog", "True");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<InputFilename>");
             RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", "<InputFilePath>");
-
-            PrinterStateManager.ReservePrinter(PrinterName);
         }
 
 
-        public override void ResetPrinterSettings()
+        public override void ReleasePrinterSettings()
         {
-            Log.Debug("Reset print settings");
+            Log.Debug("Release print settings");
+
+            PrinterStateManager.ReleasePrinter(PrinterName);
 
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "OpenViewer", "True");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowProgress", "True");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<Title>");
-
-            PrinterStateManager.ReleasePrinter(PrinterName);
         }
 
 

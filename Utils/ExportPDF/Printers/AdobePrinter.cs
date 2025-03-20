@@ -18,6 +18,8 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
         {
             Log.Debug("Initialize Adobe PDF printer");
 
+            PrinterStateManager.ReservePrinter(PrinterName);
+
             string autoSave = Path.Combine(RegistryPath, "AutoSave");
             string outputDirKey = Path.Combine(RegistryPath, "OutputDir");
             string promptUserKey = Path.Combine(RegistryPath, "PromptForAdobePDF");
@@ -28,19 +30,17 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<InputFilename>");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowAllNotifications", "False");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "SkipPrintDialog", "True");
-
-            PrinterStateManager.ReservePrinter(PrinterName);
         }
 
-        public override void ResetPrinterSettings()
+        public override void ReleasePrinterSettings()
         {
-            Log.Debug("Reset print settings");
+            Log.Debug("Release print settings");
+
+            PrinterStateManager.ReleasePrinter(PrinterName);
 
             string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "OutputDir", desktop);
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<Title>");
-
-            PrinterStateManager.ReleasePrinter(PrinterName);
         }
 
         public override bool DoPrint(Document doc, SheetModel model, string folder)

@@ -51,7 +51,7 @@ internal static class RegistryHelper
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"GetValue failed: {ex.Message}");
+            Log.Error(ex, "GetValue failed: {Message}", ex.Message);
         }
 
         return null;
@@ -106,7 +106,7 @@ internal static class RegistryHelper
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"Failed to set registry value: {name}, {ex.Message}");
+            Log.Error(ex, "Failed to set registry value: {Name}, {Message}", name, ex.Message);
         }
         finally
         {
@@ -149,7 +149,7 @@ internal static class RegistryHelper
             }
             catch (Exception ex)
             {
-                throw new Exception($"Failed to create registry parameter {path}: {ex.Message}");
+                throw new InvalidOperationException($"Failed to create registry parameter {path}: {ex.Message}");
             }
 
             return false;
