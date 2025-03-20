@@ -31,17 +31,16 @@ internal sealed class CutePdfPrinter : PrinterControl
 
         PrinterStateManager.ReleasePrinter(PrinterName);
 
-        RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "BypassSaveAs", "0");
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "OutputFile", string.Empty);
+        RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "BypassSaveAs", "0");
     }
 
 
     public override bool DoPrint(Document doc, SheetModel model, string folder)
     {
-        string outputFilePath = Path.Combine(folder, model.SheetName);
-        Log.Debug("Setting CutePDF output file: {FilePath}", outputFilePath);
+        string filePath = Path.Combine(folder,  $"{model.SheetName}.pdf").Replace("\\", "\\\\");
 
-        RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "OutputFile", outputFilePath);
+        RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "OutputFile", filePath);
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "BypassSaveAs", "1");
 
         return PrintHelper.ExecutePrint(doc, model, folder);
