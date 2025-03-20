@@ -13,7 +13,7 @@ internal static class PrintSettingsManager
         {
             PrintManager printManager = doc.PrintManager;
 
-            List<PrintSetting> printSettings = GetPrintSettings(doc);
+            List<PrintSetting> printSettings = CollectPrintSettings(doc);
 
             using Transaction trx = new(doc, "ResetPrintSetting");
 
@@ -116,9 +116,16 @@ internal static class PrintSettingsManager
         }
     }
 
-
-    public static List<PrintSetting> GetPrintSettings(Document doc)
+    public static List<PrintSetting> CollectPrintSettings(Document doc)
     {
-        return new FilteredElementCollector(doc).OfClass(typeof(PrintSetting)).Cast<PrintSetting>().ToList();
+        return [.. new FilteredElementCollector(doc).OfClass(typeof(PrintSetting)).Cast<PrintSetting>()];
     }
+
+    public static PrintSetting GetPrintSettingByName(Document doc, string formatName)
+    {
+        return CollectPrintSettings(doc).FirstOrDefault(ps => ps.Name.Equals(formatName));
+    }
+
+
+
 }

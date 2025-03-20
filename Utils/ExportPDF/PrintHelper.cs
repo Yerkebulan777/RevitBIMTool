@@ -102,7 +102,7 @@ internal static class PrintHelper
 
     public static List<SheetModel> PrintSheetData(Document doc, PrinterControl printer, Dictionary<string, List<SheetModel>> sheetData, string folder)
     {
-        List<PrintSetting> printAllSettings = PrintSettingsManager.GetPrintSettings(doc);
+        List<PrintSetting> printAllSettings = PrintSettingsManager.CollectPrintSettings(doc);
 
         List<SheetModel> successfulSheetModels = new(sheetData.Values.Count);
 
