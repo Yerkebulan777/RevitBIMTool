@@ -8,8 +8,8 @@ internal sealed class InternalPrinter : PrinterControl
 {
     public override string RegistryPath => "Undefined registry path";
     public override string PrinterName => "Internal Printer";
-    public override string RevitFilePath { get; set; }
     public override bool IsInternal => true;
+
 
     public override bool DoPrint(Document doc, SheetModel model, string folder)
     {
@@ -24,6 +24,7 @@ internal sealed class InternalPrinter : PrinterControl
         }
     }
 
+
     public override void InitializePrinter()
     {
         Log.Debug("Initialize PDFCreator printer");
@@ -31,10 +32,13 @@ internal sealed class InternalPrinter : PrinterControl
         PrinterStateManager.ReleasePrinter(PrinterName);
     }
 
+
     public override void ReleasePrinterSettings()
     {
         Log.Debug("Release print settings");
 
         PrinterStateManager.ReleasePrinter(PrinterName);
     }
+
+
 }

@@ -71,7 +71,7 @@ internal static class PrintHelper
 
                     if (model.IsValid)
                     {
-                        model.IsColorEnabled = isColorEnabled;
+                        model.IsColorEnabled = printer.IsColorEnabled;
 
                         string formatName = model.GetFormatNameWithSheetOrientation();
 

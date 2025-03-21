@@ -7,7 +7,10 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers;
 
 internal abstract class PrinterControl
 {
-    public abstract string RevitFilePath { get; set; }
+    public bool IsColorEnabled;
+
+    public string RevitFilePath;
+
     public abstract string RegistryPath { get; }
     public abstract string PrinterName { get; }
     public abstract bool IsInternal { get; }
