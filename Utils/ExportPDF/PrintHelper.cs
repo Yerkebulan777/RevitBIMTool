@@ -32,14 +32,12 @@ internal static class PrintHelper
     }
 
 
-    public static Dictionary<string, List<SheetModel>> GetData(Document doc, PrinterControl printer, bool isColorEnabled = true)
+    public static Dictionary<string, List<SheetModel>> GetData(Document doc, PrinterControl printer)
     {
         FilteredElementCollector collector = new(doc);
         collector = collector.OfCategory(BuiltInCategory.OST_TitleBlocks);
         collector = collector.OfClass(typeof(FamilyInstance));
         collector = collector.WhereElementIsNotElementType();
-
-        ColorDepthType colorType = isColorEnabled ? ColorDepthType.Color : ColorDepthType.BlackLine;
 
         Dictionary<string, List<SheetModel>> sheetPrintData = new(collector.GetElementCount());
 
@@ -79,7 +77,6 @@ internal static class PrintHelper
 
                         if (!sheetPrintData.TryGetValue(formatName, out List<SheetModel> sheetList))
                         {
-                            PrintSettingsManager.SetPrintSettings(doc, model, formatName, colorType);
                             sheetList = [model];
                         }
                         else
