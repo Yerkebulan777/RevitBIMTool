@@ -11,8 +11,8 @@ internal sealed class AdobePdfPrinter : PrinterControl
 {
     public override string RegistryPath => @"SOFTWARE\Adobe\Acrobat Distiller\Printer";
     public override string PrinterName => "Adobe PDF";
-    public override string RevitFilePath { get; set; }
     public override bool IsInternal => false;
+
 
     public override void InitializePrinter()
     {
@@ -32,6 +32,7 @@ internal sealed class AdobePdfPrinter : PrinterControl
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "SkipPrintDialog", "True");
     }
 
+
     public override void ReleasePrinterSettings()
     {
         Log.Debug("Release print settings");
@@ -42,6 +43,7 @@ internal sealed class AdobePdfPrinter : PrinterControl
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "OutputDir", desktop);
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<Title>");
     }
+
 
     public override bool DoPrint(Document doc, SheetModel model, string folder)
     {

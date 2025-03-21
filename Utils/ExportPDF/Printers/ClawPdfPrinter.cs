@@ -12,8 +12,8 @@ internal sealed class ClawPdfPrinter : PrinterControl
 {
     public override string RegistryPath => @"SOFTWARE\clawSoft\clawPDF\Settings\ConversionProfiles\0";
     public override string PrinterName => "clawPDF";
-    public override string RevitFilePath { get; set; }
     public override bool IsInternal => false;
+
 
     public override void InitializePrinter()
     {
@@ -50,4 +50,6 @@ internal sealed class ClawPdfPrinter : PrinterControl
         RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", directory);
         return PrintHelper.ExecutePrint(doc, model, folder);
     }
+
+
 }

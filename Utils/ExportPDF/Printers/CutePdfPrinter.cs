@@ -11,7 +11,6 @@ internal sealed class CutePdfPrinter : PrinterControl
 {
     public override string RegistryPath => @"Software\CutePDF Writer";
     public override string PrinterName => "CutePDF Writer";
-    public override string RevitFilePath { get; set; }
     public override bool IsInternal => false;
 
 
