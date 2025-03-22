@@ -1,149 +1,145 @@
 ﻿using Autodesk.Revit.DB;
+using RevitBIMTool.Models;
 using RevitBIMTool.Utils.Common;
 using RevitBIMTool.Utils.ExportPDF.Printers;
 using Serilog;
-using System.Diagnostics;
 using System.IO;
 using Document = Autodesk.Revit.DB.Document;
 using Element = Autodesk.Revit.DB.Element;
 using PaperSize = System.Drawing.Printing.PaperSize;
-
 using SheetModel = RevitBIMTool.Models.SheetModel;
 
 namespace RevitBIMTool.Utils.ExportPDF;
 
 internal static class PrintHelper
 {
-    private static Element GetViewSheetByNumber(Document document, string sheetNumber)
-    {
-        ParameterValueProvider pvp = new(new ElementId(BuiltInParameter.SHEET_NUMBER));
-
-#if R19 || R21
-        FilterStringRule filterRule = new(pvp, new FilterStringEquals(), sheetNumber, false);
-#else
-        FilterStringRule filterRule = new(pvp, new FilterStringEquals(), sheetNumber);
-#endif
-
-        FilteredElementCollector collector = new FilteredElementCollector(document).OfClass(typeof(ViewSheet));
-
-        collector = collector.WherePasses(new ElementParameterFilter(filterRule));
-
-        return collector.FirstElement();
-    }
-
-
-    public static Dictionary<string, List<SheetModel>> GetData(Document doc, PrinterControl printer)
+    /// <summary>
+    /// Получает и группирует данные листов для последующей печати
+    /// </summary>
+    public static List<SheetFormatGroup> GetData(Document doc, PrinterControl printer, bool isColorEnabled = true)
     {
         FilteredElementCollector collector = new(doc);
         collector = collector.OfCategory(BuiltInCategory.OST_TitleBlocks);
         collector = collector.OfClass(typeof(FamilyInstance));
         collector = collector.WhereElementIsNotElementType();
 
-        Dictionary<string, List<SheetModel>> sheetPrintData = new(collector.GetElementCount());
-
+        Dictionary<string, SheetFormatGroup> formatLookup = new(StringComparer.OrdinalIgnoreCase);
         string revitFileName = Path.GetFileNameWithoutExtension(printer.RevitFilePath);
 
         foreach (FamilyInstance titleBlock in collector.Cast<FamilyInstance>())
         {
             double sheetWidth = titleBlock.get_Parameter(BuiltInParameter.SHEET_WIDTH).AsDouble();
-            double sheetHeigh = titleBlock.get_Parameter(BuiltInParameter.SHEET_HEIGHT).AsDouble();
+            double sheetHeight = titleBlock.get_Parameter(BuiltInParameter.SHEET_HEIGHT).AsDouble();
             string sheetNumber = titleBlock.get_Parameter(BuiltInParameter.SHEET_NUMBER).AsString();
 
             double widthInMm = UnitManager.FootToMm(sheetWidth);
-            double heighInMm = UnitManager.FootToMm(sheetHeigh);
+            double heightInMm = UnitManager.FootToMm(sheetHeight);
 
             Element sheetElem = GetViewSheetByNumber(doc, sheetNumber);
 
             if (sheetElem is ViewSheet viewSheet && viewSheet.CanBePrinted)
             {
-                if (!PrinterApiUtility.GetPaperSize(widthInMm, heighInMm, out _) || !printer.IsInternal)
+                // Если формат не определен, создаем его
+                if (!PrinterApiUtility.GetPaperSize(widthInMm, heightInMm, out _) || !printer.IsInternal)
                 {
-                    Log.Debug(PrinterApiUtility.AddFormat(printer.PrinterName, widthInMm, heighInMm));
+                    Log.Debug(PrinterApiUtility.AddFormat(printer.PrinterName, widthInMm, heightInMm));
                 }
 
-                if (PrinterApiUtility.GetPaperSize(widthInMm, heighInMm, out PaperSize papeSize))
+                if (PrinterApiUtility.GetPaperSize(widthInMm, heightInMm, out PaperSize paperSize))
                 {
-                    PageOrientationType orientType = PrintSettingsManager.GetOrientation(widthInMm, heighInMm);
+                    PageOrientationType orientation = PrintSettingsManager.GetOrientation(widthInMm, heightInMm);
 
-                    SheetModel model = new(viewSheet, papeSize, orientType);
-
+                    SheetModel model = new(viewSheet, paperSize, orientation);
                     model.SetSheetName(doc, revitFileName, "pdf");
+                    model.IsColorEnabled = isColorEnabled;
 
                     if (model.IsValid)
                     {
-                        model.IsColorEnabled = printer.IsColorEnabled;
-
+                        // Используем существующий метод листа для получения имени формата
                         string formatName = model.GetFormatNameWithSheetOrientation();
 
-                        if (!sheetPrintData.TryGetValue(formatName, out List<SheetModel> sheetList))
+                        // Ищем существующую группу или создаем новую
+                        if (!formatLookup.TryGetValue(formatName, out SheetFormatGroup group))
                         {
-                            sheetList = [model];
-                        }
-                        else
-                        {
-                            sheetList.Add(model);
+                            group = new SheetFormatGroup
+                            {
+                                PaperSize = paperSize,
+                                FormatName = formatName,
+                                Orientation = orientation,
+                                IsColorEnabled = isColorEnabled
+                            };
+                            formatLookup[formatName] = group;
                         }
 
-                        sheetPrintData[formatName] = sheetList;
+                        // Добавляем лист в группу
+                        group.Sheets.Add(model);
+
+                        Log.Debug($"Added sheet {model.SheetName} to format group {formatName}");
                     }
-
                 }
-
+                else
+                {
+                    Log.Warning($"Failed to get paper size for sheet {sheetNumber}");
+                }
             }
-
         }
 
-        return sheetPrintData;
+        List<SheetFormatGroup> result = formatLookup.Values.ToList();
+        Log.Information($"Found {result.Count} format groups with {result.Sum(g => g.Sheets.Count)} total sheets");
+
+        return result;
+    }
+
+    /// <summary>
+    /// Получает ViewSheet по номеру листа
+    /// </summary>
+    private static Element GetViewSheetByNumber(Document document, string sheetNumber)
+    {
+        ParameterValueProvider pvp = new(new ElementId(BuiltInParameter.SHEET_NUMBER));
+
+#if R19 || R21
+    FilterStringRule filterRule = new(pvp, new FilterStringEquals(), sheetNumber, false);
+#else
+        FilterStringRule filterRule = new(pvp, new FilterStringEquals(), sheetNumber);
+#endif
+
+        FilteredElementCollector collector = new FilteredElementCollector(document).OfClass(typeof(ViewSheet));
+        collector = collector.WherePasses(new ElementParameterFilter(filterRule));
+
+        return collector.FirstElement();
     }
 
 
-    public static List<SheetModel> PrintSheetData(Document doc, PrinterControl printer, Dictionary<string, List<SheetModel>> sheetData, string folder)
+    /// <summary>
+    /// Выполняет печать листов по группам форматов
+    /// </summary>
+    public static List<SheetModel> PrintSheetData(Document doc, PrinterControl printer, List<SheetFormatGroup> formatGroups, string folder)
     {
-        List<PrintSetting> printAllSettings = PrintSettingsManager.CollectPrintSettings(doc);
-
-        List<SheetModel> successfulSheetModels = new(sheetData.Values.Count);
-
+        List<SheetModel> successfulSheets = [];
         List<string> existingFiles = [.. Directory.GetFiles(folder)];
 
         using Transaction trx = new(doc, "ExportToPDF");
-
-        string revitFilePath = printer.RevitFilePath;
-
         if (TransactionStatus.Started == trx.Start())
         {
             try
             {
-                foreach (string settingName in sheetData.Keys)
+                // Обрабатываем каждую группу форматов
+                foreach (SheetFormatGroup group in formatGroups)
                 {
-                    PrintManager printManager = doc.PrintManager;
-
-                    PrintSetting printSetting = printAllSettings.FirstOrDefault(set => set.Name == settingName);
-
-                    if (printSetting != null && sheetData.TryGetValue(settingName, out List<SheetModel> sheetModels))
+                    if (group.Sheets.Count == 0)
                     {
-                        printManager.PrintSetup.CurrentPrintSetting = printSetting;
+                        continue;
+                    }
 
-                        printManager.Apply(); // Set print settings
-
-                        for (int idx = 0; idx < sheetModels.Count; idx++)
+                    // Создаем и применяем настройку печати для группы
+                    if (SetupPrintSettingForGroup(doc, group))
+                    {
+                        // Печатаем все листы группы
+                        foreach (SheetModel model in group.Sheets)
                         {
-                            SheetModel model = sheetModels[idx];
-
-                            string filePath = Path.Combine(folder, model.SheetName);
-
-                            bool isPrinted = FileValidator.IsFileNewer(filePath, revitFilePath);
-
-                            if (isPrinted || printer.DoPrint(doc, model, folder))
+                            if (PrintSingleSheet(doc, printer, model, folder, existingFiles))
                             {
-                                Debug.WriteLine("Exported {SheetName}", model.SheetName);
-
-                                if (FileValidator.VerifyFile(ref existingFiles, filePath))
-                                {
-                                    Log.Debug("File exist!");
-                                    model.IsSuccessfully = true;
-                                    model.TempFilePath = filePath;
-                                    successfulSheetModels.Add(model);
-                                }
+                                successfulSheets.Add(model);
                             }
                         }
                     }
@@ -153,10 +149,10 @@ internal static class PrintHelper
             }
             catch (Exception ex)
             {
+                Log.Error(ex, "Error in print process: {Message}", ex.Message);
                 if (!trx.HasEnded())
                 {
                     _ = trx.RollBack();
-                    Log.Error(ex, ex.Message);
                 }
             }
             finally
@@ -165,7 +161,86 @@ internal static class PrintHelper
             }
         }
 
-        return successfulSheetModels;
+        return successfulSheets;
+    }
+
+    /// <summary>
+    /// Создает и применяет настройку печати для группы форматов
+    /// </summary>
+    private static bool SetupPrintSettingForGroup(Document doc, SheetFormatGroup group)
+    {
+        try
+        {
+            Log.Information("Setting up format: {FormatName}", group.FormatName);
+
+            // Удаляем существующую настройку, если есть
+            PrintSetting existingSetting = PrintSettingsManager.GetPrintSettingByName(doc, group.FormatName);
+            if (existingSetting != null)
+            {
+                _ = doc.Delete(existingSetting.Id);
+            }
+
+            // Создаем новую настройку
+            SheetModel referenceModel = group.Sheets[0];
+            ColorDepthType colorType = group.GetColorDepthType();
+
+            PrintSettingsManager.SetPrintSettings(doc, referenceModel, group.FormatName, colorType);
+
+            // Применяем настройку
+            PrintSetting newSetting = PrintSettingsManager.GetPrintSettingByName(doc, group.FormatName);
+            if (newSetting != null)
+            {
+                doc.PrintManager.PrintSetup.CurrentPrintSetting = newSetting;
+                doc.PrintManager.Apply();
+                return true;
+            }
+
+            Log.Error("Failed to create print setting: {FormatName}", group.FormatName);
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error setting up print format: {Message}", ex.Message);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Печатает один лист и проверяет результат
+    /// </summary>
+    private static bool PrintSingleSheet(Document doc, PrinterControl printer, SheetModel model, string folder, List<string> existingFiles)
+    {
+        string filePath = Path.Combine(folder, model.SheetName);
+        string revitFilePath = printer.RevitFilePath;
+
+        try
+        {
+            // Проверяем, есть ли уже файл
+            if (FileValidator.IsFileNewer(filePath, revitFilePath))
+            {
+                Log.Debug("Sheet already exists: {SheetName}", model.SheetName);
+                model.IsSuccessfully = true;
+                model.TempFilePath = filePath;
+                return true;
+            }
+
+            // Печатаем лист
+            if (printer.DoPrint(doc, model, folder) && FileValidator.VerifyFile(ref existingFiles, filePath))
+            {
+                Log.Information("Successfully printed: {SheetName}", model.SheetName);
+                model.IsSuccessfully = true;
+                model.TempFilePath = filePath;
+                return true;
+            }
+
+            Log.Warning("Failed to print sheet: {SheetName}", model.SheetName);
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error printing sheet {SheetName}: {Message}", model.SheetName, ex.Message);
+            return false;
+        }
     }
 
 
