@@ -13,7 +13,7 @@ public static class PrinterApiUtility
 
     public static string GetDefaultPrinter()
     {
-        System.Drawing.Printing.PrinterSettings settings = new();
+        PrinterSettings settings = new();
         string defaultPrinter = settings?.PrinterName;
         return defaultPrinter;
     }
@@ -23,7 +23,7 @@ public static class PrinterApiUtility
     {
         PrintDocument printDocument = new();
 
-        System.Drawing.Printing.PrinterSettings settings = printDocument.PrinterSettings;
+        PrinterSettings settings = printDocument.PrinterSettings;
 
         if (!settings.PrinterName.Equals(printerName))
         {
@@ -43,7 +43,7 @@ public static class PrinterApiUtility
         bool result = false;
 
         StringBuilder strBuilder = new();
-        System.Drawing.Printing.PrinterSettings prntSettings = new();
+        PrinterSettings prntSettings = new();
 
         double widthInch = PrinterUnitConvert.Convert(widthInMm, PrinterUnit.TenthsOfAMillimeter, PrinterUnit.ThousandthsOfAnInch);
         double heightInch = PrinterUnitConvert.Convert(heigthInMm, PrinterUnit.TenthsOfAMillimeter, PrinterUnit.ThousandthsOfAnInch);
