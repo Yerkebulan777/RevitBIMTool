@@ -27,13 +27,13 @@ internal static class ExportPdfProcessor
             RevitFileHelper.CloseRevitApplication();
         }
 
-        printer.IsColorEnabled = sectionName is not ("KJ" or "KR" or "KG");
+        bool isColorEnabled = sectionName is not ("KJ" or "KR" or "KG");
 
         PrintSettingsManager.ResetPrinterSettings(uidoc.Document, printer);
 
         Log.Information("Available printer: {PrinterName}", printer.PrinterName);
 
-        List<SheetFormatGroup> formatGroups = PrintHelper.GetData(uidoc.Document, printer);
+        List<SheetFormatGroup> formatGroups = PrintHelper.GetData(uidoc.Document, printer, isColorEnabled);
 
         if (formatGroups.Count > 0)
         {
