@@ -85,11 +85,9 @@ public class SheetModel : IDisposable
         SheetOrientation = orientation;
     }
 
-    public string GetFormatNameWithSheetOrientation()
+    public string GetFormatName()
     {
-        string orientationText = Enum.GetName(typeof(PageOrientationType), SheetOrientation);
-        string formatName = $"{PaperName} {orientationText}";
-        return formatName;
+        return $"{PaperName} {Enum.GetName(typeof(PageOrientationType), SheetOrientation)}";
     }
 
     /// <summary>

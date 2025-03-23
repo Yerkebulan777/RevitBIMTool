@@ -3,6 +3,7 @@ using RevitBIMTool.Models;
 using RevitBIMTool.Utils.Common;
 using RevitBIMTool.Utils.ExportPDF.Printers;
 using Serilog;
+using System.Diagnostics;
 using System.IO;
 using Document = Autodesk.Revit.DB.Document;
 using Element = Autodesk.Revit.DB.Element;
@@ -40,7 +41,7 @@ internal static class PrintHelper
             if (sheetElem is ViewSheet viewSheet && viewSheet.CanBePrinted)
             {
                 // Если формат не определен, создаем его
-                if (!PrinterApiUtility.GetPaperSize(widthInMm, heightInMm, out _) || !printer.IsInternal)
+                if (!printer.IsInternal && !PrinterApiUtility.GetPaperSize(widthInMm, heightInMm, out _))
                 {
                     Log.Debug(PrinterApiUtility.AddFormat(printer.PrinterName, widthInMm, heightInMm));
                 }
@@ -55,8 +56,9 @@ internal static class PrintHelper
 
                     if (model.IsValid)
                     {
-                        // Используем существующий метод листа для получения имени формата
-                        string formatName = model.GetFormatNameWithSheetOrientation();
+                        string formatName = model.GetFormatName();
+
+                        Debug.WriteLine($"Format name: {formatName}");
 
                         // Ищем существующую группу или создаем новую
                         if (!formatLookup.TryGetValue(formatName, out SheetFormatGroup group))
@@ -68,10 +70,10 @@ internal static class PrintHelper
                                 Orientation = orientation,
                                 IsColorEnabled = isColorEnabled
                             };
+
                             formatLookup[formatName] = group;
                         }
 
-                        // Добавляем лист в группу
                         group.Sheets.Add(model);
 
                         Log.Debug($"Added sheet {model.SheetName} to format group {formatName}");
