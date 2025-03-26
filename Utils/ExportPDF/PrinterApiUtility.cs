@@ -10,14 +10,12 @@ public static class PrinterApiUtility
 {
     private const int acсess = PrinterApiWrapper.PRINTER_ACCESS_ADMINISTER | PrinterApiWrapper.PRINTER_ACCESS_USE;
 
-
     public static string GetDefaultPrinter()
     {
         PrinterSettings settings = new();
         string defaultPrinter = settings?.PrinterName;
         return defaultPrinter;
     }
-
 
     public static void ResetDefaultPrinter(string printerName)
     {
@@ -36,78 +34,61 @@ public static class PrinterApiUtility
         }
     }
 
-
-    public static bool GetPaperSize(double widthInMm, double heigthInMm, out PaperSize resultSize)
+    public static bool GetPaperSize(double widthInMm, double heightInMm, out PaperSize resultSize, int threshold = 5)
     {
         resultSize = null;
-        bool result = false;
-
-        StringBuilder strBuilder = new();
         PrinterSettings prntSettings = new();
 
-        double widthInch = PrinterUnitConvert.Convert(widthInMm, PrinterUnit.TenthsOfAMillimeter, PrinterUnit.ThousandthsOfAnInch);
-        double heightInch = PrinterUnitConvert.Convert(heigthInMm, PrinterUnit.TenthsOfAMillimeter, PrinterUnit.ThousandthsOfAnInch);
+        PrinterUnit unitInMm = PrinterUnit.TenthsOfAMillimeter;
+        PrinterUnit unitInInch = PrinterUnit.ThousandthsOfAnInch;
 
-        int searсhMinSide = Convert.ToInt32(Math.Round(Math.Min(widthInch, heightInch)));
-        int searchMaxSide = Convert.ToInt32(Math.Round(Math.Max(widthInch, heightInch)));
+        double minSideInMm = Math.Round(Math.Min(widthInMm, heightInMm) / threshold) * threshold;
+        double maxSideInMm = Math.Round(Math.Max(widthInMm, heightInMm) / threshold) * threshold;
 
-        double average = Math.Round((searсhMinSide + searchMaxSide) * 0.5);
+        int toleranceInch = Convert.ToInt32(PrinterUnitConvert.Convert(threshold, unitInMm, unitInInch));
+        int searchMinSide = Convert.ToInt32(PrinterUnitConvert.Convert(minSideInMm, unitInMm, unitInInch));
+        int searchMaxSide = Convert.ToInt32(PrinterUnitConvert.Convert(maxSideInMm, unitInMm, unitInInch));
 
-        foreach (PaperSize currentSize in prntSettings.PaperSizes)
+        string formatName = $"Custom {minSideInMm} x {maxSideInMm}";
+        Log.Debug("Searching for paper format: {0}", formatName);
+
+        foreach (PaperSize size in prntSettings.PaperSizes)
         {
-            int currentWidth = currentSize.Width;
-            int currentHeigth = currentSize.Height;
-            string currentName = currentSize.PaperName;
+            int currentMinSide = Math.Min(size.Width, size.Height);
+            int currentMaxSide = Math.Max(size.Width, size.Height);
 
-            int currentMinSide = Math.Min(currentWidth, currentHeigth);
-            int currentMaxSide = Math.Max(currentWidth, currentHeigth);
+            int diffMinSide = Math.Abs(searchMinSide - currentMinSide);
+            int diffMaxSide = Math.Abs(searchMaxSide - currentMaxSide);
 
-            if (currentMinSide < average && average < currentMaxSide)
+            if (diffMinSide < toleranceInch && diffMaxSide < toleranceInch)
             {
-                strBuilder.AppendLine($"Search format ({searсhMinSide} x {searchMaxSide})");
-                strBuilder.AppendLine($"{currentName} ({currentMinSide} x {currentMaxSide})");
-
-                if (IsEquals(searсhMinSide, currentMinSide) && IsEquals(searchMaxSide, currentMaxSide))
-                {
-                    resultSize = currentSize;
-                    strBuilder.Clear();
-                    result = true;
-                    break;
-                }
+                resultSize = size;
+                return true;
             }
         }
 
-        Debug.Print(strBuilder.ToString());
-
-        return result;
+        return false;
     }
 
-
-    private static bool IsEquals(double val01, double val02, int tolerance = 5)
+    public static string AddFormat(string printerName, double widthInMm, double heightInMm, int threshold = 5)
     {
-        return Math.Abs(val01 - val02) < tolerance;
-    }
+        double minSideInMm = Math.Round(Math.Min(widthInMm, heightInMm) / threshold) * threshold;
+        double maxSideInMm = Math.Round(Math.Max(widthInMm, heightInMm) / threshold) * threshold;
 
-
-    public static string AddFormat(string printerName, double widthInMm, double heightInMm)
-    {
-        double widthSideInMm = Math.Round(Math.Min(widthInMm, heightInMm), 5);
-        double heighSideInMm = Math.Round(Math.Max(widthInMm, heightInMm), 5);
-
-        string formName = $"Custom {widthSideInMm} x {heighSideInMm}";
+        string formName = $"Custom {minSideInMm} x {maxSideInMm}";
 
         using (Mutex mutex = new(false, "Global\\{{{AddPrinterFormat}}}"))
         {
-            int width = (int)(widthSideInMm * 1000.0);
-            int height = (int)(heighSideInMm * 1000.0);
+            Log.Information("Adding format: {0}", formName);
 
             IntPtr hPrinter = IntPtr.Zero;
 
-            if (mutex.WaitOne(Timeout.Infinite))
+            if (mutex.WaitOne())
             {
                 try
                 {
-                    Log.Information($"Start add format: {formName}");
+                    int width = (int)(minSideInMm * 1000.0);
+                    int height = (int)(maxSideInMm * 1000.0);
 
                     PrinterApiWrapper.PrinterDefaults defaults = new()
                     {
@@ -119,6 +100,7 @@ public static class PrinterApiUtility
                     if (PrinterApiWrapper.OpenPrinter(printerName, out hPrinter, ref defaults))
                     {
                         bool deleted = PrinterApiWrapper.DeleteForm(hPrinter, formName);
+                        Log.Debug("Previous format deleted: {0}", deleted);
 
                         PrinterApiWrapper.FormInfo1 formInfo = new()
                         {
@@ -135,20 +117,23 @@ public static class PrinterApiUtility
 
                         if (!PrinterApiWrapper.AddForm(hPrinter, 1, ref formInfo))
                         {
-                            Log.Error($"Failed add printer form {formName} {deleted}!");
+                            int error = PrinterApiWrapper.GetLastError();
+                            Log.Error("Error code: {1}", error);
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, ex.ToString());
+                    Log.Error(ex, "Error adding format: {0}", ex.Message);
                 }
                 finally
                 {
                     mutex.ReleaseMutex();
+
                     if (PrinterApiWrapper.ClosePrinter(hPrinter))
                     {
-                        Thread.Sleep(1000);
+                        Log.Debug("Printer closed");
+                        Thread.Sleep(500);
                     }
                 }
             }
@@ -156,5 +141,6 @@ public static class PrinterApiUtility
 
         return formName;
     }
+
 
 }
