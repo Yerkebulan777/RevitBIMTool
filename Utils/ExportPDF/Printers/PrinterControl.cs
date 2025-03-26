@@ -11,12 +11,12 @@ internal abstract class PrinterControl
 
     public abstract string RegistryPath { get; }
     public abstract string PrinterName { get; }
-    public abstract bool IsInternal { get; }
+    public abstract bool IsInternalPrinter { get; }
 
 
     public virtual bool IsPrinterInstalled()
     {
-        return IsInternal
+        return IsInternalPrinter
         ? int.TryParse(RevitBimToolApp.Version, out int version) && version >= 2023
         : RegistryHelper.IsKeyExists(Registry.CurrentUser, RegistryPath);
     }

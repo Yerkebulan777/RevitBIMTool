@@ -9,7 +9,7 @@ internal static class PrintSettingsManager
 {
     public static void ResetPrinterSettings(Document doc, PrinterControl printer)
     {
-        if (printer is not null && !printer.IsInternal)
+        if (printer is not null && !printer.IsInternalPrinter)
         {
             PrintManager printManager = doc.PrintManager;
 

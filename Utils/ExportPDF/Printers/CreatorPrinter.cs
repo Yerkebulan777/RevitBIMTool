@@ -11,7 +11,7 @@ internal sealed class CreatorPrinter : PrinterControl
 {
     public override string RegistryPath => @"SOFTWARE\pdfforge\PDFCreator\Settings\ConversionProfiles\0";
     public override string PrinterName => "PDFCreator";
-    public override bool IsInternal => false;
+    public override bool IsInternalPrinter => false;
 
 
     public override void InitializePrinter()

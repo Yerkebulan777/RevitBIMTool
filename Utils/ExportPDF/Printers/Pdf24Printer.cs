@@ -10,7 +10,7 @@ internal sealed class Pdf24Printer : PrinterControl
 {
     public override string RegistryPath => @"SOFTWARE\PDF24\Services\PDF";
     public override string PrinterName => "PDF24";
-    public override bool IsInternal => false;
+    public override bool IsInternalPrinter => false;
 
 
     public override void InitializePrinter()

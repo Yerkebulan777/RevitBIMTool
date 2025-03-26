@@ -32,7 +32,7 @@ public static class PrinterApiUtility
         }
     }
 
-    public static bool GetPaperSize(double widthInMm, double heightInMm, out PaperSize resultSize, int threshold = 5)
+    public static bool ValidatePaperSize(double widthInMm, double heightInMm, out PaperSize resultSize, int threshold = 5)
     {
         resultSize = null;
         PrinterSettings prntSettings = new();

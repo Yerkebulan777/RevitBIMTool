@@ -11,7 +11,7 @@ internal sealed class CutePdfPrinter : PrinterControl
 {
     public override string RegistryPath => @"Software\CutePDF Writer";
     public override string PrinterName => "CutePDF Writer";
-    public override bool IsInternal => false;
+    public override bool IsInternalPrinter => false;
 
 
     public override void InitializePrinter()

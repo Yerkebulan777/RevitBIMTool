@@ -28,64 +28,65 @@ internal static class PrintHelper
 
         foreach (FamilyInstance titleBlock in collector.Cast<FamilyInstance>())
         {
-            double sheetWidth = titleBlock.get_Parameter(BuiltInParameter.SHEET_WIDTH).AsDouble();
-            double sheetHeight = titleBlock.get_Parameter(BuiltInParameter.SHEET_HEIGHT).AsDouble();
+            double widthInMm = UnitManager.FootToMm(titleBlock.get_Parameter(BuiltInParameter.SHEET_WIDTH).AsDouble());
+            double heightInMm = UnitManager.FootToMm(titleBlock.get_Parameter(BuiltInParameter.SHEET_HEIGHT).AsDouble());
+
+            PageOrientationType orientation = PrintSettingsManager.GetOrientation(widthInMm, heightInMm);
+
             string sheetNumber = titleBlock.get_Parameter(BuiltInParameter.SHEET_NUMBER).AsString();
 
-            double widthInMm = UnitManager.FootToMm(sheetWidth);
-            double heightInMm = UnitManager.FootToMm(sheetHeight);
+            Element sheetInstance = GetViewSheetByNumber(doc, sheetNumber);
 
-            Element sheetElem = GetViewSheetByNumber(doc, sheetNumber);
-
-            if (sheetElem is ViewSheet viewSheet && viewSheet.CanBePrinted)
+            if (sheetInstance is ViewSheet viewSheet && viewSheet.CanBePrinted)
             {
+                SheetModel model = null;
+                PaperSize paperSize = null;
                 string formatName = string.Empty;
 
-                if (!printer.IsInternal)
+                if (printer.IsInternalPrinter)
                 {
-                    // Проверяем существование формата и создаем при необходимости
-                    if (!PrinterApiUtility.GetPaperSize(widthInMm, heightInMm, out _))
+                    model = new(viewSheet);
+                    model.SetSheetName(doc, revitFileName, "pdf");
+                    model.IsColorEnabled = сolorEnabled;
+                    formatName = "InternalFormat";
+                }
+                else if (!printer.IsInternalPrinter)
+                {
+                    if (!PrinterApiUtility.ValidatePaperSize(widthInMm, heightInMm, out _))
                     {
                         formatName = PrinterApiUtility.AddFormat(printer.PrinterName, widthInMm, heightInMm);
                         Log.Debug("Adding format {0} for printer {1}", formatName, printer.PrinterName);
                     }
-                }
-
-                if (PrinterApiUtility.GetPaperSize(widthInMm, heightInMm, out PaperSize paperSize))
-                {
-                    PageOrientationType orientation = PrintSettingsManager.GetOrientation(widthInMm, heightInMm);
-
-                    SheetModel model = new(viewSheet, paperSize, orientation);
-                    model.SetSheetName(doc, revitFileName, "pdf");
-                    model.IsColorEnabled = сolorEnabled;
-
-                    if (model.IsValid)
+                    if (PrinterApiUtility.ValidatePaperSize(widthInMm, heightInMm, out paperSize))
                     {
+                        model = new(viewSheet, paperSize, orientation);
+                        model.SetSheetName(doc, revitFileName, "pdf");
+                        model.IsColorEnabled = сolorEnabled;
                         formatName = model.GetFormatName();
-
-                        if (!formatGroups.TryGetValue(formatName, out SheetFormatGroup group))
-                        {
-                            Log.Debug("Added sheet format group {0}", formatName);
-
-                            group = new SheetFormatGroup
-                            {
-                                PaperSize = paperSize,
-                                FormatName = formatName,
-                                Orientation = orientation,
-                                IsColorEnabled = сolorEnabled
-                            };
-
-                            formatGroups[formatName] = group;
-                        }
-
-                        group.Sheets.Add(model);
-
                     }
                 }
-                else
+
+                if (model is not null && model.IsValid)
                 {
-                    Log.Warning("Failed to get format: {0}!", formatName);
+                    if (!formatGroups.TryGetValue(formatName, out SheetFormatGroup group))
+                    {
+                        Log.Debug("Added sheet format group {0}", formatName);
+
+                        group = new SheetFormatGroup
+                        {
+                            PaperSize = paperSize,
+                            FormatName = formatName,
+                            Orientation = orientation,
+                            IsColorEnabled = сolorEnabled
+                        };
+
+                        formatGroups[formatName] = group;
+                    }
+
+                    group.Sheets.Add(model);
+
                 }
+
             }
         }
 

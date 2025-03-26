@@ -12,7 +12,7 @@ internal sealed class ClawPdfPrinter : PrinterControl
 {
     public override string RegistryPath => @"SOFTWARE\clawSoft\clawPDF\Settings\ConversionProfiles\0";
     public override string PrinterName => "clawPDF";
-    public override bool IsInternal => false;
+    public override bool IsInternalPrinter => false;
 
 
     public override void InitializePrinter()
