@@ -70,6 +70,7 @@ public static class PrinterApiUtility
         return false;
     }
 
+
     public static string AddFormat(string printerName, double widthInMm, double heightInMm, int threshold = 5)
     {
         double minSideInMm = Math.Round(Math.Min(widthInMm, heightInMm) / threshold) * threshold;
