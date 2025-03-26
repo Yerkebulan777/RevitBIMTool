@@ -96,10 +96,6 @@ internal static class PrintHelper
                         Log.Debug("Added sheet {SheetName} to format group {FormatName}", model.SheetName, formatName);
                     }
                 }
-                else
-                {
-                    Log.Warning("Failed to get paper size for sheet {SheetNumber}", sheetNumber);
-                }
             }
         }
 
