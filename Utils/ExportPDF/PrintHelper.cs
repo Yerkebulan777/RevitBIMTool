@@ -1,5 +1,4 @@
 ﻿using Autodesk.Revit.DB;
-using RevitBIMTool.Models;
 using RevitBIMTool.Utils.Common;
 using RevitBIMTool.Utils.ExportPDF.Printers;
 using Serilog;
@@ -19,10 +18,9 @@ internal static class PrintHelper
     /// </summary>
     public static List<SheetFormatGroup> GetData(Document doc, PrinterControl printer, bool isColorEnabled = true)
     {
-        FilteredElementCollector collector = new(doc);
-        collector = collector.OfCategory(BuiltInCategory.OST_TitleBlocks);
-        collector = collector.OfClass(typeof(FamilyInstance));
-        collector = collector.WhereElementIsNotElementType();
+        BuiltInCategory bic = BuiltInCategory.OST_TitleBlocks;
+        FilteredElementCollector collector = new FilteredElementCollector(doc).OfCategory(bic);
+        collector = collector.OfClass(typeof(FamilyInstance)).WhereElementIsNotElementType();
 
         Dictionary<string, SheetFormatGroup> formatLookup = new(StringComparer.OrdinalIgnoreCase);
         string revitFileName = Path.GetFileNameWithoutExtension(printer.RevitFilePath);
@@ -76,18 +74,19 @@ internal static class PrintHelper
 
                         group.Sheets.Add(model);
 
-                        Log.Debug($"Added sheet {model.SheetName} to format group {formatName}");
+                        Log.Debug("Added sheet {SheetName} to format group {FormatName}", model.SheetName, formatName);
                     }
                 }
                 else
                 {
-                    Log.Warning($"Failed to get paper size for sheet {sheetNumber}");
+                    Log.Warning("Failed to get paper size for sheet {SheetNumber}", sheetNumber);
                 }
             }
         }
 
         List<SheetFormatGroup> result = formatLookup.Values.ToList();
-        Log.Information($"Found {result.Count} format groups with {result.Sum(g => g.Sheets.Count)} total sheets");
+
+        Log.Information("Found {TotalSheetsCount} total sheets", result.Sum(g => g.Sheets.Count));
 
         return result;
     }
@@ -118,9 +117,11 @@ internal static class PrintHelper
     public static List<SheetModel> PrintSheetData(Document doc, PrinterControl printer, List<SheetFormatGroup> formatGroups, string folder)
     {
         List<SheetModel> successfulSheets = [];
+
         List<string> existingFiles = [.. Directory.GetFiles(folder)];
 
         using Transaction trx = new(doc, "ExportToPDF");
+
         if (TransactionStatus.Started == trx.Start())
         {
             try
@@ -128,17 +129,15 @@ internal static class PrintHelper
                 // Обрабатываем каждую группу форматов
                 foreach (SheetFormatGroup group in formatGroups)
                 {
-                    if (group.Sheets.Count == 0)
-                    {
-                        continue;
-                    }
+                    Debug.WriteLine($"Total sheet count {group.Sheets.Count}");
 
-                    // Создаем и применяем настройку печати для группы
                     if (SetupPrintSettingForGroup(doc, group))
                     {
                         // Печатаем все листы группы
                         foreach (SheetModel model in group.Sheets)
                         {
+                            Debug.WriteLine($"Printing sheet {model.SheetName}");
+
                             if (PrintSingleSheet(doc, printer, model, folder, existingFiles))
                             {
                                 successfulSheets.Add(model);
@@ -152,6 +151,7 @@ internal static class PrintHelper
             catch (Exception ex)
             {
                 Log.Error(ex, "Error in print process: {Message}", ex.Message);
+
                 if (!trx.HasEnded())
                 {
                     _ = trx.RollBack();
@@ -171,40 +171,26 @@ internal static class PrintHelper
     /// </summary>
     private static bool SetupPrintSettingForGroup(Document doc, SheetFormatGroup group)
     {
-        try
+        Log.Information("Setting up format: {FormatName}", group.FormatName);
+
+        // Создаем новую настройку
+        SheetModel referenceModel = group.Sheets[0];
+        ColorDepthType colorType = group.GetColorDepthType();
+
+        PrintSettingsManager.SetPrintSettings(doc, referenceModel, group.FormatName, colorType);
+
+        // Применяем настройку
+        PrintSetting newSetting = PrintSettingsManager.GetPrintSettingByName(doc, group.FormatName);
+        if (newSetting != null)
         {
-            Log.Information("Setting up format: {FormatName}", group.FormatName);
-
-            // Удаляем существующую настройку, если есть
-            PrintSetting existingSetting = PrintSettingsManager.GetPrintSettingByName(doc, group.FormatName);
-            if (existingSetting != null)
-            {
-                _ = doc.Delete(existingSetting.Id);
-            }
-
-            // Создаем новую настройку
-            SheetModel referenceModel = group.Sheets[0];
-            ColorDepthType colorType = group.GetColorDepthType();
-
-            PrintSettingsManager.SetPrintSettings(doc, referenceModel, group.FormatName, colorType);
-
-            // Применяем настройку
-            PrintSetting newSetting = PrintSettingsManager.GetPrintSettingByName(doc, group.FormatName);
-            if (newSetting != null)
-            {
-                doc.PrintManager.PrintSetup.CurrentPrintSetting = newSetting;
-                doc.PrintManager.Apply();
-                return true;
-            }
-
-            Log.Error("Failed to create print setting: {FormatName}", group.FormatName);
-            return false;
+            doc.PrintManager.PrintSetup.CurrentPrintSetting = newSetting;
+            doc.PrintManager.Apply();
+            return true;
         }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Error setting up print format: {Message}", ex.Message);
-            return false;
-        }
+
+        Log.Error("Failed to create print setting: {FormatName}", group.FormatName);
+        return false;
+
     }
 
     /// <summary>

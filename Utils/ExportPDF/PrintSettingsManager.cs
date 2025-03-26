@@ -56,6 +56,7 @@ internal static class PrintSettingsManager
         PrintManager printManager = doc.PrintManager;
         PrintSetup printSetup = printManager.PrintSetup;
         printSetup.CurrentPrintSetting = printSetup.InSession;
+
         IPrintSetting currentPrintSetting = printSetup.CurrentPrintSetting;
 
         currentPrintSetting.PrintParameters.ColorDepth = colorType;
@@ -71,8 +72,8 @@ internal static class PrintSettingsManager
         currentPrintSetting.PrintParameters.HideUnreferencedViewTags = true;
         currentPrintSetting.PrintParameters.HideCropBoundaries = true;
         currentPrintSetting.PrintParameters.HideScopeBoxes = true;
-        currentPrintSetting.PrintParameters.ReplaceHalftoneWithThinLines = false;
         currentPrintSetting.PrintParameters.MaskCoincidentLines = false;
+        currentPrintSetting.PrintParameters.ReplaceHalftoneWithThinLines = false;
 
         using Transaction trx = new(doc, "SavePrintSettings");
 
