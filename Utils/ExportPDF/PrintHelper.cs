@@ -24,7 +24,7 @@ internal static class PrintHelper
         FilteredElementCollector collector = new FilteredElementCollector(doc).OfCategory(bic);
         collector = collector.OfClass(typeof(FamilyInstance)).WhereElementIsNotElementType();
 
-        Dictionary<string, SheetFormatGroup> sheetFormatGroupMap = new(StringComparer.OrdinalIgnoreCase);
+        Dictionary<string, SheetFormatGroup> formatGroups = new(StringComparer.OrdinalIgnoreCase);
 
         foreach (FamilyInstance titleBlock in collector.Cast<FamilyInstance>())
         {
@@ -63,7 +63,7 @@ internal static class PrintHelper
                     {
                         formatName = model.GetFormatName();
 
-                        if (!sheetFormatGroupMap.TryGetValue(formatName, out SheetFormatGroup group))
+                        if (!formatGroups.TryGetValue(formatName, out SheetFormatGroup group))
                         {
                             Log.Debug("Added sheet format group {0}", formatName);
 
@@ -75,7 +75,7 @@ internal static class PrintHelper
                                 IsColorEnabled = сolorEnabled
                             };
 
-                            sheetFormatGroupMap[formatName] = group;
+                            formatGroups[formatName] = group;
                         }
 
                         group.Sheets.Add(model);
@@ -89,7 +89,7 @@ internal static class PrintHelper
             }
         }
 
-        List<SheetFormatGroup> result = sheetFormatGroupMap.Values.ToList();
+        List<SheetFormatGroup> result = formatGroups.Values.ToList();
         Log.Information("Found {0} sheet format groups", result.Count);
 
         return result;
