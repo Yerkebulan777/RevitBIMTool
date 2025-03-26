@@ -14,6 +14,25 @@ namespace RevitBIMTool.Utils.ExportPDF;
 internal static class PrintHelper
 {
     /// <summary>
+    /// Получает ViewSheet по номеру листа
+    /// </summary>
+    private static Element GetViewSheetByNumber(Document document, string sheetNumber)
+    {
+        ParameterValueProvider pvp = new(new ElementId(BuiltInParameter.SHEET_NUMBER));
+
+#if R19 || R21
+    FilterStringRule filterRule = new(pvp, new FilterStringEquals(), sheetNumber, false);
+#else
+        FilterStringRule filterRule = new(pvp, new FilterStringEquals(), sheetNumber);
+#endif
+
+        FilteredElementCollector collector = new FilteredElementCollector(document).OfClass(typeof(ViewSheet));
+        collector = collector.WherePasses(new ElementParameterFilter(filterRule));
+
+        return collector.FirstElement();
+    }
+
+    /// <summary>
     /// Получает и группирует данные листов для последующей печати
     /// </summary>
     public static List<SheetFormatGroup> GetData(Document doc, PrinterControl printer, bool isColorEnabled = true)
@@ -90,26 +109,6 @@ internal static class PrintHelper
 
         return result;
     }
-
-    /// <summary>
-    /// Получает ViewSheet по номеру листа
-    /// </summary>
-    private static Element GetViewSheetByNumber(Document document, string sheetNumber)
-    {
-        ParameterValueProvider pvp = new(new ElementId(BuiltInParameter.SHEET_NUMBER));
-
-#if R19 || R21
-    FilterStringRule filterRule = new(pvp, new FilterStringEquals(), sheetNumber, false);
-#else
-        FilterStringRule filterRule = new(pvp, new FilterStringEquals(), sheetNumber);
-#endif
-
-        FilteredElementCollector collector = new FilteredElementCollector(document).OfClass(typeof(ViewSheet));
-        collector = collector.WherePasses(new ElementParameterFilter(filterRule));
-
-        return collector.FirstElement();
-    }
-
 
     /// <summary>
     /// Выполняет печать листов по группам форматов
