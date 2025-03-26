@@ -5,50 +5,48 @@ namespace RevitBIMTool.Models;
 
 public class SheetModel : IDisposable
 {
-    /// <summary>
-    /// Получает ViewSheet Revit
-    /// </summary>
-    public ViewSheet ViewSheet { get; private set; }
+    public readonly ViewSheet ViewSheet;
 
-    /// <summary>
-    /// Получает размер бумаги листа
-    /// </summary>
-    public PaperSize SheetPapeSize { get; }
+    public readonly PaperSize SheetPapeSize;
 
-    /// <summary>
-    /// Получает ориентацию листа
-    /// </summary>
-    public PageOrientationType SheetOrientation { get; }
+    public readonly PageOrientationType SheetOrientation;
+
+
+    public SheetModel(ViewSheet sheet)
+    {
+        ViewSheet = sheet ?? throw new ArgumentNullException(nameof(sheet));
+    }
+
+    public SheetModel(ViewSheet sheet, PaperSize size, PageOrientationType orientation) : this(sheet)
+    {
+        SheetPapeSize = size ?? throw new ArgumentNullException(nameof(size));
+        SheetOrientation = orientation;
+    }
 
     /// <summary>
     /// Получает или устанавливает флаг валидности листа
     /// </summary>
-    public bool IsValid { get; private set; }
+    public bool IsValid { get; set; }
 
     /// <summary>
     /// Получает или устанавливает имя листа
     /// </summary>
-    public string SheetName { get; private set; }
+    public string SheetName { get; set; }
 
     /// <summary>
     /// Получает или устанавливает числовой номер листа
     /// </summary>
-    public double DigitNumber { get; private set; }
+    public double DigitNumber { get; set; }
 
     /// <summary>
     /// Получает или устанавливает строковый номер листа
     /// </summary>
-    public string StringNumber { get; private set; }
-
-    /// <summary>
-    /// Получает имя формата бумаги
-    /// </summary>
-    public string PaperName => SheetPapeSize?.PaperName;
+    public string StringNumber { get; set; }
 
     /// <summary>
     /// Получает или устанавливает имя организационной группы
     /// </summary>
-    public object OrganizationGroupName { get; private set; }
+    public string OrganizationGroupName { get; set; }
 
     /// <summary>
     /// Получает или устанавливает флаг включения цвета
@@ -64,25 +62,17 @@ public class SheetModel : IDisposable
     /// Получает или устанавливает путь к файлу
     /// </summary>
     public string TempFilePath { get; set; }
-    public string RevitFilePath { get; internal set; }
 
     /// <summary>
-    /// Инициализирует новый экземпляр класса SheetModel
+    /// Получает или устанавливает путь к файлу Revit
     /// </summary>
-    /// <param name="sheet">Лист Revit</param>
-    public SheetModel(ViewSheet sheet)
-    {
-        ViewSheet = sheet ?? throw new ArgumentNullException(nameof(sheet));
-    }
+    public string RevitFilePath { get; set; }
 
     /// <summary>
-    /// Инициализирует новый экземпляр класса SheetModel с указанным размером и ориентацией
+    /// Получает имя формата бумаги
     /// </summary>
-    public SheetModel(ViewSheet sheet, PaperSize size, PageOrientationType orientation) : this(sheet)
-    {
-        SheetPapeSize = size ?? throw new ArgumentNullException(nameof(size));
-        SheetOrientation = orientation;
-    }
+    public string PaperName => SheetPapeSize?.PaperName;
+
 
     /// <summary>
     /// Получает имя формата листа
@@ -97,7 +87,7 @@ public class SheetModel : IDisposable
     /// <summary>
     /// Устанавливает свойства листа на основе данных
     /// </summary>
-    internal void SetProperties(string sheetName, string stringNumber, double digitNumber, object groupName, bool isValid)
+    internal void SetProperties(string sheetName, string stringNumber, double digitNumber, string groupName, bool isValid)
     {
         OrganizationGroupName = groupName;
         StringNumber = stringNumber;
@@ -105,6 +95,7 @@ public class SheetModel : IDisposable
         SheetName = sheetName;
         IsValid = isValid;
     }
+
 
     /// <summary>
     /// Освобождает ресурсы, используемые объектом SheetModel
@@ -120,10 +111,9 @@ public class SheetModel : IDisposable
     /// </summary>
     protected virtual void Dispose(bool disposing)
     {
-        if (disposing && ViewSheet != null)
+        if (disposing)
         {
-            ViewSheet.Dispose();
-            ViewSheet = null;
+            ViewSheet?.Dispose();
         }
     }
 
@@ -134,4 +124,5 @@ public class SheetModel : IDisposable
     {
         Dispose(false);
     }
+
 }

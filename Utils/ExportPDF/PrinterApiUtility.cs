@@ -1,11 +1,9 @@
 ﻿using Serilog;
-using System.Diagnostics;
 using System.Drawing.Printing;
-using System.Text;
 using PaperSize = System.Drawing.Printing.PaperSize;
 
-
 namespace RevitBIMTool.Utils.ExportPDF;
+
 public static class PrinterApiUtility
 {
     private const int acсess = PrinterApiWrapper.PRINTER_ACCESS_ADMINISTER | PrinterApiWrapper.PRINTER_ACCESS_USE;

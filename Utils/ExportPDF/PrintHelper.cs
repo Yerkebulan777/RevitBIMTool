@@ -13,29 +13,11 @@ namespace RevitBIMTool.Utils.ExportPDF;
 
 internal static class PrintHelper
 {
-    /// <summary>
-    /// Получает ViewSheet по номеру листа
-    /// </summary>
-    private static Element GetViewSheetByNumber(Document document, string sheetNumber)
-    {
-        ParameterValueProvider pvp = new(new ElementId(BuiltInParameter.SHEET_NUMBER));
-
-#if R19 || R21
-        FilterStringRule filterRule = new(pvp, new FilterStringEquals(), sheetNumber, false);
-#else
-        FilterStringRule filterRule = new(pvp, new FilterStringEquals(), sheetNumber);
-#endif
-
-        FilteredElementCollector collector = new FilteredElementCollector(document).OfClass(typeof(ViewSheet));
-        collector = collector.WherePasses(new ElementParameterFilter(filterRule));
-
-        return collector.FirstElement();
-    }
 
     /// <summary>
     /// Получает и группирует данные листов для последующей печати
     /// </summary>
-    public static List<SheetFormatGroup> GetData(Document doc, PrinterControl printer, bool isColorEnabled = true)
+    public static List<SheetFormatGroup> GetData(Document doc, PrinterControl printer, bool сolorEnabled = true)
     {
         BuiltInCategory bic = BuiltInCategory.OST_TitleBlocks;
         string revitFileName = Path.GetFileNameWithoutExtension(printer.RevitFilePath);
@@ -43,7 +25,7 @@ internal static class PrintHelper
         collector = collector.OfClass(typeof(FamilyInstance)).WhereElementIsNotElementType();
 
         Dictionary<string, SheetFormatGroup> sheetFormatGroupMap = new(StringComparer.OrdinalIgnoreCase);
-        
+
         foreach (FamilyInstance titleBlock in collector.Cast<FamilyInstance>())
         {
             double sheetWidth = titleBlock.get_Parameter(BuiltInParameter.SHEET_WIDTH).AsDouble();
@@ -57,10 +39,16 @@ internal static class PrintHelper
 
             if (sheetElem is ViewSheet viewSheet && viewSheet.CanBePrinted)
             {
-                // Если формат не определен, создаем его
-                if (!printer.IsInternal && !PrinterApiUtility.GetPaperSize(widthInMm, heightInMm, out _))
+                string formatName = string.Empty;
+
+                if (!printer.IsInternal)
                 {
-                    Log.Debug(PrinterApiUtility.AddFormat(printer.PrinterName, widthInMm, heightInMm));
+                    // Проверяем существование формата и создаем при необходимости
+                    if (!PrinterApiUtility.GetPaperSize(widthInMm, heightInMm, out _))
+                    {
+                        formatName = PrinterApiUtility.AddFormat(printer.PrinterName, widthInMm, heightInMm);
+                        Log.Debug("Adding format {0} for printer {1}", formatName, printer.PrinterName);
+                    }
                 }
 
                 if (PrinterApiUtility.GetPaperSize(widthInMm, heightInMm, out PaperSize paperSize))
@@ -69,23 +57,22 @@ internal static class PrintHelper
 
                     SheetModel model = new(viewSheet, paperSize, orientation);
                     model.SetSheetName(doc, revitFileName, "pdf");
-                    model.IsColorEnabled = isColorEnabled;
+                    model.IsColorEnabled = сolorEnabled;
 
                     if (model.IsValid)
                     {
-                        string formatName = model.GetFormatName();
+                        formatName = model.GetFormatName();
 
-                        Debug.WriteLine($"Format name: {formatName}");
-
-                        // Ищем существующую группу или создаем новую
                         if (!sheetFormatGroupMap.TryGetValue(formatName, out SheetFormatGroup group))
                         {
+                            Log.Debug("Added sheet format group {0}", formatName);
+
                             group = new SheetFormatGroup
                             {
                                 PaperSize = paperSize,
                                 FormatName = formatName,
                                 Orientation = orientation,
-                                IsColorEnabled = isColorEnabled
+                                IsColorEnabled = сolorEnabled
                             };
 
                             sheetFormatGroupMap[formatName] = group;
@@ -93,15 +80,17 @@ internal static class PrintHelper
 
                         group.Sheets.Add(model);
 
-                        Log.Debug("Added sheet {SheetName} to format group {FormatName}", model.SheetName, formatName);
                     }
+                }
+                else
+                {
+                    Log.Warning("Failed to get format: {0}!", formatName);
                 }
             }
         }
 
         List<SheetFormatGroup> result = sheetFormatGroupMap.Values.ToList();
-
-        Log.Information("Found {TotalSheetsCount} total sheets", result.Sum(g => g.Sheets.Count));
+        Log.Information("Found {0} sheet format groups", result.Count);
 
         return result;
     }
@@ -226,6 +215,23 @@ internal static class PrintHelper
         }
     }
 
+    // Вспомогательный метод для получения ViewSheet по номеру
+    private static Element GetViewSheetByNumber(Document document, string sheetNumber)
+    {
+        ParameterValueProvider pvp = new(new ElementId(BuiltInParameter.SHEET_NUMBER));
+
+#if R19 || R21
+        FilterStringRule filterRule = new(pvp, new FilterStringEquals(), sheetNumber, false);
+#else
+        FilterStringRule filterRule = new(pvp, new FilterStringEquals(), sheetNumber);
+#endif
+
+        FilteredElementCollector collector = new FilteredElementCollector(document).OfClass(typeof(ViewSheet));
+        collector = collector.WherePasses(new ElementParameterFilter(filterRule));
+
+        return collector.FirstElement();
+    }
+
 
     public static bool ExportSheet(Document doc, SheetModel model, string folder)
     {
@@ -268,7 +274,6 @@ internal static class PrintHelper
 
         return printManager.SubmitPrint(model.ViewSheet);
     }
-
 
 
 }

@@ -4,19 +4,17 @@ using Serilog;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
-using PaperSize = System.Drawing.Printing.PaperSize;
 
 namespace RevitBIMTool.Utils.Common;
 
 internal static class SheetHelper
 {
+
     #region Форматирование имен и номеров листов
 
     /// <summary>
     /// Получает номер листа
     /// </summary>
-    /// <param name="sheet">Лист Revit</param>
-    /// <returns>Номер листа</returns>
     public static string GetSheetNumber(ViewSheet sheet)
     {
         if (sheet == null)
@@ -38,9 +36,6 @@ internal static class SheetHelper
     /// <summary>
     /// Получает имя организационной группы
     /// </summary>
-    /// <param name="doc">Документ Revit</param>
-    /// <param name="viewSheet">Лист Revit</param>
-    /// <returns>Имя организационной группы</returns>
     public static string GetOrganizationGroupName(Document doc, ViewSheet viewSheet)
     {
         Regex matchPrefix = new(@"^(\s*)");
@@ -111,6 +106,7 @@ internal static class SheetHelper
 
     #endregion
 
+
     #region Создание и инициализация моделей листов
 
     /// <summary>
@@ -136,7 +132,7 @@ internal static class SheetHelper
             }
         }
 
-        object organizationGroup = groupName;
+        string organizationGroup = groupName;
 
         if (string.IsNullOrWhiteSpace(groupName))
         {
@@ -146,26 +142,8 @@ internal static class SheetHelper
         model.SetProperties(sheetName, sheetNumber, digitNumber, organizationGroup, isValid);
     }
 
-    /// <summary>
-    /// Создает модель листа на основе ViewSheet, с установкой всех необходимых свойств
-    /// </summary>
-    public static SheetModel CreateSheetModel(Document doc, ViewSheet viewSheet, string projectName, PaperSize paperSize, PageOrientationType orientation, string extension = null)
-    {
-        SheetModel model = new(viewSheet, paperSize, orientation);
-
-        try
-        {
-            model.SetSheetName(doc, projectName, extension);
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Error creating a sheet model: {Message}", ex.Message);
-        }
-
-        return model;
-    }
-
     #endregion
+
 
     #region Операции с коллекциями листов
 
