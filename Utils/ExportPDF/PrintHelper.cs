@@ -38,12 +38,12 @@ internal static class PrintHelper
     public static List<SheetFormatGroup> GetData(Document doc, PrinterControl printer, bool isColorEnabled = true)
     {
         BuiltInCategory bic = BuiltInCategory.OST_TitleBlocks;
+        string revitFileName = Path.GetFileNameWithoutExtension(printer.RevitFilePath);
         FilteredElementCollector collector = new FilteredElementCollector(doc).OfCategory(bic);
         collector = collector.OfClass(typeof(FamilyInstance)).WhereElementIsNotElementType();
 
-        Dictionary<string, SheetFormatGroup> formatLookup = new(StringComparer.OrdinalIgnoreCase);
-        string revitFileName = Path.GetFileNameWithoutExtension(printer.RevitFilePath);
-
+        Dictionary<string, SheetFormatGroup> sheetFormatGroupMap = new(StringComparer.OrdinalIgnoreCase);
+        
         foreach (FamilyInstance titleBlock in collector.Cast<FamilyInstance>())
         {
             double sheetWidth = titleBlock.get_Parameter(BuiltInParameter.SHEET_WIDTH).AsDouble();
@@ -78,7 +78,7 @@ internal static class PrintHelper
                         Debug.WriteLine($"Format name: {formatName}");
 
                         // Ищем существующую группу или создаем новую
-                        if (!formatLookup.TryGetValue(formatName, out SheetFormatGroup group))
+                        if (!sheetFormatGroupMap.TryGetValue(formatName, out SheetFormatGroup group))
                         {
                             group = new SheetFormatGroup
                             {
@@ -88,7 +88,7 @@ internal static class PrintHelper
                                 IsColorEnabled = isColorEnabled
                             };
 
-                            formatLookup[formatName] = group;
+                            sheetFormatGroupMap[formatName] = group;
                         }
 
                         group.Sheets.Add(model);
@@ -103,7 +103,7 @@ internal static class PrintHelper
             }
         }
 
-        List<SheetFormatGroup> result = formatLookup.Values.ToList();
+        List<SheetFormatGroup> result = sheetFormatGroupMap.Values.ToList();
 
         Log.Information("Found {TotalSheetsCount} total sheets", result.Sum(g => g.Sheets.Count));
 

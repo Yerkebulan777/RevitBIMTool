@@ -5,8 +5,6 @@ namespace RevitBIMTool.Models;
 
 public class SheetModel : IDisposable
 {
-    internal bool IsColorEnabled;
-
     /// <summary>
     /// Получает ViewSheet Revit
     /// </summary>
@@ -53,6 +51,11 @@ public class SheetModel : IDisposable
     public object OrganizationGroupName { get; private set; }
 
     /// <summary>
+    /// Получает или устанавливает флаг включения цвета
+    /// </summary>
+    public bool IsColorEnabled { get; set; }
+
+    /// <summary>
     /// Получает или устанавливает флаг успешности операции
     /// </summary>
     public bool IsSuccessfully { get; set; }
@@ -61,11 +64,7 @@ public class SheetModel : IDisposable
     /// Получает или устанавливает путь к файлу
     /// </summary>
     public string TempFilePath { get; set; }
-
-    /// <summary>
-    /// Получает или устанавливает путь к файлу Revit
-    /// </summary>
-    public string RevitFilePath { get; set; }
+    public string RevitFilePath { get; internal set; }
 
     /// <summary>
     /// Инициализирует новый экземпляр класса SheetModel
@@ -85,9 +84,14 @@ public class SheetModel : IDisposable
         SheetOrientation = orientation;
     }
 
+    /// <summary>
+    /// Получает имя формата листа
+    /// </summary>
     public string GetFormatName()
     {
-        return $"{PaperName} {Enum.GetName(typeof(PageOrientationType), SheetOrientation)}";
+        string orientationText = Enum.GetName(typeof(PageOrientationType), SheetOrientation);
+        string formatName = $"{PaperName} {orientationText}";
+        return formatName;
     }
 
     /// <summary>
