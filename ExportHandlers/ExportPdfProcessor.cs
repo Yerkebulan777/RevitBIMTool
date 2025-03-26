@@ -33,9 +33,9 @@ internal static class ExportPdfProcessor
 
         Log.Information("Available printer: {PrinterName}", printer.PrinterName);
 
-        List<SheetFormatGroup> formatGroups = PrintHelper.GetData(uidoc.Document, printer, isColorEnabled);
+        List<SheetFormatGroup> sheetFormatGroups = PrintHelper.GetData(uidoc.Document, printer, isColorEnabled);
 
-        if (formatGroups.Count > 0)
+        if (sheetFormatGroups.Count > 0)
         {
             printer.InitializePrinter();
 
@@ -44,9 +44,9 @@ internal static class ExportPdfProcessor
             PathHelper.EnsureDirectory(tempDirectory);
             PathHelper.EnsureDirectory(exportDirectory);
 
-            Log.Information("Total sheets: {TotalSheets}", formatGroups.Sum(group => group.Sheets.Count));
+            Log.Information("Total sheets: {TotalSheets}", sheetFormatGroups.Sum(group => group.Sheets.Count));
 
-            List<SheetModel> sheetModels = PrintHelper.PrintSheetData(uidoc.Document, printer, formatGroups, tempDirectory);
+            List<SheetModel> sheetModels = PrintHelper.PrintSheetData(uidoc.Document, printer, sheetFormatGroups, tempDirectory);
 
             string exportPath = Path.Combine(exportDirectory, $"{revitFileName}.pdf");
 

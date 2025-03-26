@@ -1,7 +1,8 @@
 ﻿using Autodesk.Revit.DB;
+using RevitBIMTool.Models;
 using PaperSize = System.Drawing.Printing.PaperSize;
 
-namespace RevitBIMTool.Models;
+namespace RevitBIMTool.Utils.ExportPDF;
 
 public class SheetFormatGroup
 {
