@@ -90,7 +90,6 @@ internal static class PrintSettingsManager
                         currentPrintSetting.PrintParameters.Zoom = 100;
                         currentPrintSetting.PrintParameters.PaperSize = pSize;
                         currentPrintSetting.PrintParameters.MarginType = MarginType.PrinterLimit;
-
                         printManager.PrintSetup.CurrentPrintSetting = currentPrintSetting;
 
                         if (printSetup.SaveAs(formatName))
