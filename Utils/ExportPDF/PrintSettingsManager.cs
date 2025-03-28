@@ -51,6 +51,21 @@ internal static class PrintSettingsManager
     }
 
 
+    /// <summary>
+    /// Создает и применяет настройку печати для группы форматов
+    /// </summary>
+    public static bool SetupPrintSetting(Document doc, string formatName, PageOrientationType orientation, bool colorEnabled)
+    {
+        Log.Information("Setting up format: {FormatName}", formatName);
+
+        SetPrintSettings(doc, formatName, orientation, colorEnabled);
+
+        return GetPrintSettingByName(doc, formatName) != null;
+
+        throw new InvalidOperationException($"Failed to create print setting: {formatName}");
+    }
+
+
     public static void SetPrintSettings(Document doc, string formatName, PageOrientationType orientation, bool colorEnabled)
     {
         ColorDepthType colorType = colorEnabled ? ColorDepthType.Color : ColorDepthType.BlackLine;
