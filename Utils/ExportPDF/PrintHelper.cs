@@ -2,7 +2,6 @@
 using RevitBIMTool.Utils.Common;
 using RevitBIMTool.Utils.ExportPDF.Printers;
 using Serilog;
-using System.Diagnostics;
 using System.IO;
 using Document = Autodesk.Revit.DB.Document;
 using Element = Autodesk.Revit.DB.Element;
@@ -45,8 +44,10 @@ internal static class PrintHelper
 
                 if (printer.IsInternalPrinter)
                 {
-                    model = new(viewSheet);
-                    model.IsColorEnabled = сolorEnabled;
+                    model = new(viewSheet)
+                    {
+                        IsColorEnabled = сolorEnabled
+                    };
                     model.SetSheetName(doc, revitFileName, "pdf");
                 }
                 else if (PrinterApiUtility.GetOrCreatePaperSize(printer.PrinterName, widthInMm, heightInMm, out paperSize))
@@ -79,7 +80,7 @@ internal static class PrintHelper
             }
         }
 
-        List<SheetFormatGroup> result = formatGroups.Values.ToList();
+        List<SheetFormatGroup> result = [.. formatGroups.Values];
         Log.Information("Found {0} sheet format groups", result.Count);
 
         return result;
@@ -100,22 +101,15 @@ internal static class PrintHelper
         {
             try
             {
-                // Обрабатываем каждую группу форматов
-                foreach (SheetFormatGroup group in formatGroups)
+                foreach (SheetFormatGroup group in formatGroups.Where(grp => SetupPrintSettingForGroup(doc, grp)))
                 {
-                    Debug.WriteLine($"Total sheet count {group.Sheets.Count}");
-
-                    if (SetupPrintSettingForGroup(doc, group))
+                    foreach (SheetModel model in group.Sheets)
                     {
-                        // Печатаем все листы группы
-                        foreach (SheetModel model in group.Sheets)
-                        {
-                            Debug.WriteLine($"Printing sheet {model.SheetName}");
+                        Log.Verbose("Printing sheet {0}", model.SheetName);
 
-                            if (PrintSingleSheet(doc, printer, model, folder, existingFiles))
-                            {
-                                successfulSheets.Add(model);
-                            }
+                        if (PrintSingleSheet(doc, printer, model, folder, existingFiles))
+                        {
+                            successfulSheets.Add(model);
                         }
                     }
                 }
