@@ -36,30 +36,62 @@ public static class PrinterApiUtility
     /// <summary>
     /// Получает существующий формат бумаги или создает новый при необходимости
     /// </summary>
-    public static PaperSize GetOrCreatePaperSize(string printerName, double widthInMm, double heightInMm, int threshold = 5)
+    /// <returns>true, если формат был найден или успешно создан</returns>
+    public static bool GetOrCreatePaperSize(string printerName, double widthInMm, double heightInMm, out PaperSize paperSize, int threshold = 5)
     {
         (double minSide, double maxSide) = NormalizeDimensions(widthInMm, heightInMm, threshold);
 
-        PaperSize paperSize = FindMatchingPaperSize(minSide, maxSide, threshold);
+        paperSize = FindMatchingPaperSize(minSide, maxSide, threshold);
 
-        if (paperSize == null && !string.IsNullOrEmpty(printerName))
+        if (paperSize != null)
         {
-            string formatName = $"Custom {minSide} x {maxSide}";
+            return true;
+        }
 
-            Log.Information("Adding format: {0}", formatName);
+        string formatName = $"Custom {minSide} x {maxSide}";
 
-            if (CreatePaperFormat(printerName, formatName, minSide, maxSide))
+        if (CreatePaperFormat(printerName, formatName, minSide, maxSide))
+        {
+            paperSize = FindMatchingPaperSize(minSide, maxSide, threshold);
+            Log.Information("Added format: {0}", formatName);
+            return paperSize != null;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Ищет существующий формат бумаги, соответствующий заданным размерам
+    /// </summary>
+    public static PaperSize FindMatchingPaperSize(double minSideInMm, double maxSideInMm, int threshold = 5)
+    {
+        PrinterSettings prntSettings = new();
+
+        PrinterUnit unitInMm = PrinterUnit.TenthsOfAMillimeter;
+        PrinterUnit unitInInch = PrinterUnit.ThousandthsOfAnInch;
+
+        int toleranceInch = Convert.ToInt32(PrinterUnitConvert.Convert(threshold, unitInMm, unitInInch));
+        int searchMinSide = Convert.ToInt32(PrinterUnitConvert.Convert(minSideInMm, unitInMm, unitInInch));
+        int searchMaxSide = Convert.ToInt32(PrinterUnitConvert.Convert(maxSideInMm, unitInMm, unitInInch));
+
+        Log.Debug("Searching for paper size: min={0}mm, max={2}mm", minSideInMm, maxSideInMm);
+
+        foreach (PaperSize size in prntSettings.PaperSizes)
+        {
+            int currentMinSide = Math.Min(size.Width, size.Height);
+            int currentMaxSide = Math.Max(size.Width, size.Height);
+
+            int diffMinSide = Math.Abs(searchMinSide - currentMinSide);
+            int diffMaxSide = Math.Abs(searchMaxSide - currentMaxSide);
+
+            if (diffMinSide < toleranceInch && diffMaxSide < toleranceInch)
             {
-                paperSize = FindMatchingPaperSize(minSide, maxSide, threshold);
-
-                if (paperSize is null)
-                {
-                    throw new InvalidOperationException(formatName);
-                }
+                Log.Debug("Found matching paper size: {0}", size.PaperName);
+                return size;
             }
         }
 
-        return paperSize;
+        return null;
     }
 
     /// <summary>
@@ -133,41 +165,6 @@ public static class PrinterApiUtility
 
         return success;
     }
-
-    /// <summary>
-    /// Ищет существующий формат бумаги, соответствующий заданным размерам
-    /// </summary>
-    private static PaperSize FindMatchingPaperSize(double minSideInMm, double maxSideInMm, int threshold)
-    {
-        PrinterSettings prntSettings = new();
-
-        PrinterUnit unitInMm = PrinterUnit.TenthsOfAMillimeter;
-        PrinterUnit unitInInch = PrinterUnit.ThousandthsOfAnInch;
-
-        int toleranceInch = Convert.ToInt32(PrinterUnitConvert.Convert(threshold, unitInMm, unitInInch));
-        int searchMinSide = Convert.ToInt32(PrinterUnitConvert.Convert(minSideInMm, unitInMm, unitInInch));
-        int searchMaxSide = Convert.ToInt32(PrinterUnitConvert.Convert(maxSideInMm, unitInMm, unitInInch));
-
-        Log.Debug("Searching for paper size: min={0}mm, max={2}mm", minSideInMm, maxSideInMm);
-
-        foreach (PaperSize size in prntSettings.PaperSizes)
-        {
-            int currentMinSide = Math.Min(size.Width, size.Height);
-            int currentMaxSide = Math.Max(size.Width, size.Height);
-
-            int diffMinSide = Math.Abs(searchMinSide - currentMinSide);
-            int diffMaxSide = Math.Abs(searchMaxSide - currentMaxSide);
-
-            if (diffMinSide < toleranceInch && diffMaxSide < toleranceInch)
-            {
-                Log.Debug("Found matching paper size: {0}", size.PaperName);
-                return size;
-            }
-        }
-
-        return null;
-    }
-
 
 
 }

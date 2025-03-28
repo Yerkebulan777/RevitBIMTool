@@ -46,32 +46,21 @@ internal static class PrintHelper
                 if (printer.IsInternalPrinter)
                 {
                     model = new(viewSheet);
+                    model.IsColorEnabled = сolorEnabled;
+                    model.SetSheetName(doc, revitFileName, "pdf");
+                }
+                else if (PrinterApiUtility.GetOrCreatePaperSize(printer.PrinterName, widthInMm, heightInMm, out paperSize))
+                {
+                    model = new(viewSheet, paperSize, orientation);
                     model.SetSheetName(doc, revitFileName, "pdf");
                     model.IsColorEnabled = сolorEnabled;
-                    formatName = "InternalFormat";
-                }
-                else if (!printer.IsInternalPrinter)
-                {
-                    if (!PrinterApiUtility.FindMatchingPaperSize(widthInMm, heightInMm, out _))
-                    {
-                        formatName = PrinterApiUtility.AddFormat(printer.PrinterName, widthInMm, heightInMm);
-                        Log.Debug("Adding format {0} for printer {1}", formatName, printer.PrinterName);
-                    }
-                    if (PrinterApiUtility.FindMatchingPaperSize(widthInMm, heightInMm, out paperSize))
-                    {
-                        model = new(viewSheet, paperSize, orientation);
-                        model.SetSheetName(doc, revitFileName, "pdf");
-                        model.IsColorEnabled = сolorEnabled;
-                        formatName = model.GetFormatName();
-                    }
+                    formatName = model.GetFormatName();
                 }
 
                 if (model is not null && model.IsValid)
                 {
                     if (!formatGroups.TryGetValue(formatName, out SheetFormatGroup group))
                     {
-                        Log.Debug("Added sheet format group {0}", formatName);
-
                         group = new SheetFormatGroup
                         {
                             PaperSize = paperSize,
