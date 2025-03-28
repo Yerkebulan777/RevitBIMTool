@@ -16,7 +16,7 @@ internal static class PrintHelper
     /// <summary>
     /// Получает и группирует данные листов для последующей печати
     /// </summary>
-    public static List<SheetFormatGroup> GetData(Document doc, PrinterControl printer, bool сolorEnabled = true)
+    public static List<SheetFormatGroup> GetData(Document doc, PrinterControl printer, bool сolorEnabled)
     {
         BuiltInCategory bic = BuiltInCategory.OST_TitleBlocks;
         string revitFileName = Path.GetFileNameWithoutExtension(printer.RevitFilePath);
@@ -62,6 +62,8 @@ internal static class PrintHelper
                 {
                     if (!formatGroups.TryGetValue(formatName, out SheetFormatGroup group))
                     {
+                        PrintSettingsManager.SetPrintSettings(doc, formatName, orientation, сolorEnabled);
+
                         group = new SheetFormatGroup
                         {
                             PaperSize = paperSize,
@@ -70,10 +72,12 @@ internal static class PrintHelper
                             IsColorEnabled = сolorEnabled
                         };
 
+
+
                         formatGroups[formatName] = group;
                     }
 
-                    group.Sheets.Add(model);
+                    group.SheetList.Add(model);
 
                 }
 
@@ -101,9 +105,9 @@ internal static class PrintHelper
         {
             try
             {
-                foreach (SheetFormatGroup group in formatGroups.Where(grp => SetupPrintSettingForGroup(doc, grp)))
+                foreach (SheetFormatGroup group in formatGroups)
                 {
-                    foreach (SheetModel model in group.Sheets)
+                    foreach (SheetModel model in group.SheetList)
                     {
                         Log.Verbose("Printing sheet {0}", model.SheetName);
 
@@ -137,28 +141,15 @@ internal static class PrintHelper
     /// <summary>
     /// Создает и применяет настройку печати для группы форматов
     /// </summary>
-    private static bool SetupPrintSettingForGroup(Document doc, SheetFormatGroup group)
+    public static bool SetupPrintSetting(Document doc, SheetFormatGroup group, PageOrientationType orientation, bool colorEnabled)
     {
         Log.Information("Setting up format: {FormatName}", group.FormatName);
 
-        // Создаем новую настройку
-        SheetModel referenceModel = group.Sheets[0];
-        ColorDepthType colorType = group.GetColorDepthType();
+        PrintSettingsManager.SetPrintSettings(doc, group.FormatName, orientation, colorEnabled);
 
-        PrintSettingsManager.SetPrintSettings(doc, referenceModel, group.FormatName, colorType);
+        return PrintSettingsManager.GetPrintSettingByName(doc, group.FormatName) != null;
 
-        // Применяем настройку
-        PrintSetting newSetting = PrintSettingsManager.GetPrintSettingByName(doc, group.FormatName);
-        if (newSetting != null)
-        {
-            doc.PrintManager.PrintSetup.CurrentPrintSetting = newSetting;
-            doc.PrintManager.Apply();
-            return true;
-        }
-
-        Log.Error("Failed to create print setting: {FormatName}", group.FormatName);
-        return false;
-
+        throw new InvalidOperationException($"Failed to create print setting: {group.FormatName}");
     }
 
     /// <summary>

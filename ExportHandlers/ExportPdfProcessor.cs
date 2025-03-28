@@ -44,7 +44,7 @@ internal static class ExportPdfProcessor
             PathHelper.EnsureDirectory(tempDirectory);
             PathHelper.EnsureDirectory(exportDirectory);
 
-            Log.Information("Total sheets: {TotalSheets}", sheetFormatGroups.Sum(group => group.Sheets.Count));
+            Log.Information("Total sheets: {TotalSheets}", sheetFormatGroups.Sum(group => group.SheetList.Count));
 
             List<SheetModel> sheetModels = PrintHelper.PrintSheetData(uidoc.Document, printer, sheetFormatGroups, tempDirectory);
 

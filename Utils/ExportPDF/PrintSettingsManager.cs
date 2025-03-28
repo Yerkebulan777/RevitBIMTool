@@ -1,5 +1,4 @@
 ﻿using Autodesk.Revit.DB;
-using RevitBIMTool.Models;
 using RevitBIMTool.Utils.ExportPDF.Printers;
 using Serilog;
 
@@ -7,6 +6,7 @@ namespace RevitBIMTool.Utils.ExportPDF;
 
 internal static class PrintSettingsManager
 {
+
     public static void ResetPrinterSettings(Document doc, PrinterControl printer)
     {
         if (printer is not null && !printer.IsInternalPrinter)
@@ -27,7 +27,7 @@ internal static class PrintSettingsManager
                     printManager.PrintToFile = true;
                     printManager.Apply();
 
-                    trx.Commit();
+                    _ = trx.Commit();
                 }
                 catch (Exception ex)
                 {
@@ -37,7 +37,7 @@ internal static class PrintSettingsManager
                 {
                     if (!trx.HasEnded())
                     {
-                        trx.RollBack();
+                        _ = trx.RollBack();
                     }
                 }
             }
@@ -51,8 +51,10 @@ internal static class PrintSettingsManager
     }
 
 
-    public static void SetPrintSettings(Document doc, SheetModel sheetModel, string formatName, ColorDepthType colorType)
+    public static void SetPrintSettings(Document doc, string formatName, PageOrientationType orientation, bool colorEnabled)
     {
+        ColorDepthType colorType = colorEnabled ? ColorDepthType.Color : ColorDepthType.BlackLine;
+
         PrintManager printManager = doc.PrintManager;
         PrintSetup printSetup = printManager.PrintSetup;
         printSetup.CurrentPrintSetting = printSetup.InSession;
@@ -61,11 +63,10 @@ internal static class PrintSettingsManager
 
         currentPrintSetting.PrintParameters.ColorDepth = colorType;
         currentPrintSetting.PrintParameters.ZoomType = ZoomType.Zoom;
+        currentPrintSetting.PrintParameters.PageOrientation = orientation;
         currentPrintSetting.PrintParameters.RasterQuality = RasterQualityType.Medium;
         currentPrintSetting.PrintParameters.PaperPlacement = PaperPlacementType.Margins;
         currentPrintSetting.PrintParameters.HiddenLineViews = HiddenLineViewsType.VectorProcessing;
-
-        currentPrintSetting.PrintParameters.PageOrientation = sheetModel.SheetOrientation;
 
         currentPrintSetting.PrintParameters.ViewLinksinBlue = false;
         currentPrintSetting.PrintParameters.HideReforWorkPlanes = true;
@@ -75,17 +76,17 @@ internal static class PrintSettingsManager
         currentPrintSetting.PrintParameters.MaskCoincidentLines = false;
         currentPrintSetting.PrintParameters.ReplaceHalftoneWithThinLines = false;
 
-        using Transaction trx = new(doc, "SavePrintSettings");
-
-        if (TransactionStatus.Started == trx.Start())
+        try
         {
-            try
+            foreach (PaperSize pSize in printManager.PaperSizes)
             {
-                foreach (PaperSize pSize in printManager.PaperSizes)
-                {
-                    string paperSizeName = pSize.Name;
+                string paperSizeName = pSize.Name;
 
-                    if (paperSizeName.Equals(sheetModel.PaperName))
+                if (paperSizeName.Equals(formatName))
+                {
+                    using Transaction trx = new(doc, formatName);
+
+                    if (TransactionStatus.Started == trx.Start())
                     {
                         currentPrintSetting.PrintParameters.Zoom = 100;
                         currentPrintSetting.PrintParameters.PaperSize = pSize;
@@ -95,37 +96,32 @@ internal static class PrintSettingsManager
                         if (printSetup.SaveAs(formatName))
                         {
                             printManager.Apply();
+                            Thread.Sleep(100);
                             trx.Commit();
                             break;
                         }
                     }
                 }
             }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "{Message}", ex.Message);
-                throw new InvalidOperationException("Setting print settings error!", ex);
-            }
-            finally
-            {
-                if (!trx.HasEnded())
-                {
-                    trx.RollBack();
-                }
-            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "{Message}", ex.Message);
+            throw new InvalidOperationException("Setting print settings error!", ex);
         }
     }
+
 
     public static List<PrintSetting> CollectPrintSettings(Document doc)
     {
         return [.. new FilteredElementCollector(doc).OfClass(typeof(PrintSetting)).Cast<PrintSetting>()];
     }
 
+
     public static PrintSetting GetPrintSettingByName(Document doc, string formatName)
     {
         return CollectPrintSettings(doc).FirstOrDefault(ps => ps.Name.Equals(formatName));
     }
-
 
 
 }

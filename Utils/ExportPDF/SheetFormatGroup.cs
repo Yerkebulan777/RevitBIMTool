@@ -29,15 +29,6 @@ public class SheetFormatGroup
     /// <summary>
     /// Список листов в этой группе
     /// </summary>
-    public List<SheetModel> Sheets { get; } = [];
-
-    /// <summary>
-    /// Возвращает тип цвета для настройки печати
-    /// </summary>
-    public ColorDepthType GetColorDepthType()
-    {
-        return IsColorEnabled ? ColorDepthType.Color : ColorDepthType.BlackLine;
-    }
-
+    public List<SheetModel> SheetList { get; } = [];
 
 }
