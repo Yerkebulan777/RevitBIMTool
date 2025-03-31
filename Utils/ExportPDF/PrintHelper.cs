@@ -103,13 +103,20 @@ internal static class PrintHelper
             {
                 foreach (SheetFormatGroup group in formatGroups)
                 {
-                    foreach (SheetModel model in group.SheetList)
-                    {
-                        Log.Verbose("Printing sheet {0}", model.SheetName);
+                    var formatName = group.FormatName;
+                    var orientation = group.Orientation;
+                    var isColorEnabled = group.IsColorEnabled;
 
-                        if (PrintSingleSheet(doc, printer, model, folder, existingFiles))
+                    if (PrintSettingsManager.SetupPrintSetting(doc, formatName, orientation, isColorEnabled))
+                    {
+                        foreach (SheetModel model in group.SheetList)
                         {
-                            successfulSheets.Add(model);
+                            Log.Verbose("Printing sheet {0}", model.SheetName);
+
+                            if (PrintSingleSheet(doc, printer, model, folder, existingFiles))
+                            {
+                                successfulSheets.Add(model);
+                            }
                         }
                     }
                 }

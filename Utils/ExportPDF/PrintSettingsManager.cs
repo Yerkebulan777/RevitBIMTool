@@ -117,7 +117,7 @@ internal static class PrintSettingsManager
                         if (printSetup.SaveAs(formatName))
                         {
                             Thread.Sleep(500);
-                            trx.Commit();
+                            _ = trx.Commit();
                             break;
                         }
                     }
@@ -135,18 +135,21 @@ internal static class PrintSettingsManager
         }
     }
 
-
-    public static List<PrintSetting> CollectPrintSettings(Document doc)
+    /// <summary>
+    /// Собирает все настройки печати из документа
+    /// </summary>
+    private static List<PrintSetting> CollectPrintSettings(Document doc)
     {
         return [.. new FilteredElementCollector(doc).OfClass(typeof(PrintSetting)).Cast<PrintSetting>()];
     }
 
-
-    public static PrintSetting GetPrintSettingByName(Document doc, string formatName)
+    /// <summary>
+    ///  Получает настройку печати по имени
+    /// </summary>
+    private static PrintSetting GetPrintSettingByName(Document doc, string formatName)
     {
         return CollectPrintSettings(doc).FirstOrDefault(ps => ps.Name.Equals(formatName));
     }
-
 
 
 }
