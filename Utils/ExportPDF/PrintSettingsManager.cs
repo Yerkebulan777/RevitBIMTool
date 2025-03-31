@@ -116,8 +116,8 @@ internal static class PrintSettingsManager
 
                         if (printSetup.SaveAs(formatName))
                         {
-                            Thread.Sleep(100);
-                            _ = trx.Commit();
+                            Thread.Sleep(500);
+                            trx.Commit();
                             break;
                         }
                     }
