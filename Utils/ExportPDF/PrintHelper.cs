@@ -134,19 +134,6 @@ internal static class PrintHelper
         return successfulSheets;
     }
 
-    /// <summary>
-    /// Создает и применяет настройку печати для группы форматов
-    /// </summary>
-    public static bool SetupPrintSetting(Document doc, string formatName, PageOrientationType orientation, bool colorEnabled)
-    {
-        Log.Information("Setting up format: {FormatName}", formatName);
-
-        PrintSettingsManager.SetPrintSettings(doc, formatName, orientation, colorEnabled);
-
-        return PrintSettingsManager.GetPrintSettingByName(doc, formatName) != null;
-
-        throw new InvalidOperationException($"Failed to create print setting: {formatName}");
-    }
 
     /// <summary>
     /// Печатает один лист и проверяет результат

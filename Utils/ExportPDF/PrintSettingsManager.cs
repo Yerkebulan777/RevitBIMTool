@@ -50,7 +50,6 @@ internal static class PrintSettingsManager
         return width > height ? PageOrientationType.Landscape : PageOrientationType.Portrait;
     }
 
-
     /// <summary>
     /// Создает и применяет настройку печати для группы форматов
     /// </summary>
@@ -60,13 +59,19 @@ internal static class PrintSettingsManager
 
         SetPrintSettings(doc, formatName, orientation, colorEnabled);
 
-        return GetPrintSettingByName(doc, formatName) != null;
+        if (GetPrintSettingByName(doc, formatName) is null)
+        {
+            Log.Error("Failed to create print setting: {FormatName}", formatName);
+            throw new InvalidOperationException($"Failed to create print setting: {formatName}");
+        }
 
-        throw new InvalidOperationException($"Failed to create print setting: {formatName}");
+        return true;
     }
 
-
-    public static void SetPrintSettings(Document doc, string formatName, PageOrientationType orientation, bool colorEnabled)
+    /// <summary>
+    /// Устанавливает настройки печати для документа
+    /// </summary>
+    private static void SetPrintSettings(Document doc, string formatName, PageOrientationType orientation, bool colorEnabled)
     {
         ColorDepthType colorType = colorEnabled ? ColorDepthType.Color : ColorDepthType.BlackLine;
 
@@ -106,13 +111,13 @@ internal static class PrintSettingsManager
                         currentPrintSetting.PrintParameters.Zoom = 100;
                         currentPrintSetting.PrintParameters.PaperSize = pSize;
                         currentPrintSetting.PrintParameters.MarginType = MarginType.PrinterLimit;
+
                         printManager.PrintSetup.CurrentPrintSetting = currentPrintSetting;
 
                         if (printSetup.SaveAs(formatName))
                         {
-                            printManager.Apply();
                             Thread.Sleep(100);
-                            trx.Commit();
+                            _ = trx.Commit();
                             break;
                         }
                     }
@@ -123,6 +128,10 @@ internal static class PrintSettingsManager
         {
             Log.Error(ex, "{Message}", ex.Message);
             throw new InvalidOperationException("Setting print settings error!", ex);
+        }
+        finally
+        {
+            printManager.Apply();
         }
     }
 
@@ -137,6 +146,7 @@ internal static class PrintSettingsManager
     {
         return CollectPrintSettings(doc).FirstOrDefault(ps => ps.Name.Equals(formatName));
     }
+
 
 
 }
