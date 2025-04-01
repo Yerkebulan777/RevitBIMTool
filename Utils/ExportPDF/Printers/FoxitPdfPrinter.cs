@@ -10,7 +10,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers;
 internal sealed class FoxitPdfPrinter : PrinterControl
 {
     public override string RegistryPath => @"SOFTWARE\Foxit Software\Printer\Foxit Reader PDF Printer";
-    public override string PrinterName => "Foxit Reader PDF Printer";
+    public override string PrinterName => "Foxit PDF Editor Printer";
     public override bool IsInternalPrinter => false;
 
     public override void InitializePrinter()
