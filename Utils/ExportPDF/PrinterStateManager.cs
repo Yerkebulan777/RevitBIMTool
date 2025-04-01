@@ -97,7 +97,6 @@ internal static class PrinterStateManager
         availablePrinter = null;
 
         const int maxRetries = 1000;
-        const int retryDelay = 1000;
 
         List<PrinterControl> printerList = GetPrinters();
 
@@ -105,13 +104,13 @@ internal static class PrinterStateManager
         {
             retryCount++;
 
+            Thread.Sleep(1000);
+            Log.Debug("Wait 1 second..");
             Log.Debug("Searching for an available printer...");
 
             for (int idx = 0; idx < printerList.Count; idx++)
             {
                 PrinterControl printer = printerList[idx];
-                Log.Debug("Wait 1 second..");
-                Thread.Sleep(retryDelay);
 
                 if (IsPrinterAvailable(printer))
                 {
@@ -157,6 +156,7 @@ internal static class PrinterStateManager
                 PrinterStateData states = XmlHelper.LoadFromXml<PrinterStateData>(stateFilePath);
                 PrinterInfo printerInfo = EnsurePrinterExists(states, printer.PrinterName);
                 isAvailable = printerInfo.IsAvailable;
+                Thread.Sleep(100);
             }
             catch (Exception ex)
             {
@@ -221,10 +221,10 @@ internal static class PrinterStateManager
     {
         PrinterStateData state = XmlHelper.LoadFromXml<PrinterStateData>(stateFilePath);
 
-        // Создаем новое состояние, если существующее не найдено
-        if (state == null)
+        if (state is null)
         {
             Log.Information("Creating new printer registry");
+
             state = new PrinterStateData
             {
                 LastUpdate = DateTime.Now,
