@@ -9,6 +9,7 @@ internal static class RegistryHelper
     private const int maxRetries = 10;
     private static readonly uint WM_SETTINGCHANGE = 26;
     private static readonly IntPtr HWND_BROADCAST = new(0xFFFF);
+    private static readonly object lockObject = new();
 
 
     public static bool IsKeyExists(RegistryKey rootKey, string path)
@@ -60,7 +61,7 @@ internal static class RegistryHelper
 
     public static void SetValue(RegistryKey rootKey, string path, string name, object value)
     {
-        lock (rootKey)
+        lock (lockObject)
         {
             int retryCount = 0;
 
@@ -120,7 +121,7 @@ internal static class RegistryHelper
 
     public static bool CreateValue(RegistryKey rootKey, string path, string name, object value)
     {
-        lock (rootKey)
+        lock (lockObject)
         {
             try
             {
