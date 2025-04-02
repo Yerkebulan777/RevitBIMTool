@@ -104,8 +104,8 @@ internal static class PrinterStateManager
         {
             retryCount++;
 
-            Thread.Sleep(1000);
-            Log.Debug("Wait 1 second..");
+            Thread.Sleep(500);
+
             Log.Debug("Searching for an available printer...");
 
             for (int idx = 0; idx < printerList.Count; idx++)
@@ -137,7 +137,7 @@ internal static class PrinterStateManager
             //new Pdf24Printer(),
             //new CreatorPrinter(),
             //new ClawPdfPrinter(),
-            new CutePdfPrinter(),
+            new PDFillPrinter(),
             new InternalPrinter()
         ];
     }
