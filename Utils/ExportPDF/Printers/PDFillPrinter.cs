@@ -18,7 +18,7 @@ internal sealed class PDFillPrinter : PrinterControl
         PrinterStateManager.ReservePrinter(PrinterName);
 
         string outputOptionsPath = Path.Combine(RegistryPath, "OutputOption");
-        RegistryHelper.SetValue(Registry.CurrentUser, outputOptionsPath, "PDFORIIMAGE", 0);
+
         RegistryHelper.SetValue(Registry.CurrentUser, outputOptionsPath, "HIDE_DIALOG", 1);
         RegistryHelper.SetValue(Registry.CurrentUser, outputOptionsPath, "USE_DEFAULT_FOLDER", 1);
         RegistryHelper.SetValue(Registry.CurrentUser, outputOptionsPath, "USE_DEFAULT_FILENAME", 1);
