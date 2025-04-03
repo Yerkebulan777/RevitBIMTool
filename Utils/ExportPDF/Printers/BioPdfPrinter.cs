@@ -1,79 +1,77 @@
-﻿using System;
-using System.IO;
-using System.Runtime.InteropServices;
-using System.Drawing.Printing;
-using Microsoft.Win32;
+﻿using Autodesk.Revit.DB;
 using RevitBIMTool.Models;
-using RevitBIMTool.Utils.ExportPDF;
-using RevitBIMTool.Utils.SystemHelpers;
-using Serilog;
-using Autodesk.Revit.DB;
+using System.IO;
 
 namespace RevitBIMTool.Utils.ExportPDF.Printers;
 
 internal sealed class BioPdfPrinter : PrinterControl
 {
-    public override string RegistryPath => @"PDF Writer\PDF Writer - bioPDF";
+    public override string RegistryPath => @"SOFTWARE\bioPDF\PDF Writer - bioPDF";
     public override string PrinterName => "PDF Writer - bioPDF";
     public override bool IsInternalPrinter => false;
+
+    public string UserSettingsPath;
+    public string GlobalSettingsPath;
+
 
     public override void InitializePrinter()
     {
         PrinterStateManager.ReservePrinter(PrinterName);
 
-        string settingsPath = Path.Combine(RegistryPath, "settings.ini");
+        const string BioPdfPrinterPath = @"PDF Writer\PDF Writer - bioPDF";
 
-        // Основные настройки для автоматического создания PDF
-        RegistryHelper.SetValue(Registry.CurrentUser, settingsPath, "DisableOptionDialog", "yes");
-        RegistryHelper.SetValue(Registry.CurrentUser, settingsPath, "ShowSettings", "never");
-        RegistryHelper.SetValue(Registry.CurrentUser, settingsPath, "ShowSaveAS", "never");
-        RegistryHelper.SetValue(Registry.CurrentUser, settingsPath, "ShowProgress", "yes");
-        RegistryHelper.SetValue(Registry.CurrentUser, settingsPath, "ShowPDF", "never");
-        RegistryHelper.SetValue(Registry.CurrentUser, settingsPath, "ShowProgressFinished", "no");
-        RegistryHelper.SetValue(Registry.CurrentUser, settingsPath, "ConfirmOverwrite", "no");
+        UserSettingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), BioPdfPrinterPath);
 
-        // Настройки качества документа
-        RegistryHelper.SetValue(Registry.CurrentUser, settingsPath, "Target", "printer");
-
-        // Дополнительные метаданные
-        RegistryHelper.SetValue(Registry.CurrentUser, settingsPath, "Subject", "PDF Printer Export");
-        RegistryHelper.SetValue(Registry.CurrentUser, settingsPath, "Creator", "bioPDF Automation");
-
-        Log.Debug("bioPDF printer initialized with automatic PDF creation settings");
+        GlobalSettingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), BioPdfPrinterPath);
     }
+
 
     public override void ReleasePrinterSettings()
     {
-        string settingsPath = Path.Combine(RegistryPath, "settings.ini");
+        string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
 
-        // Возвращаем настройки по умолчанию
-        RegistryHelper.SetValue(Registry.CurrentUser, settingsPath, "DisableOptionDialog", "no");
-        RegistryHelper.SetValue(Registry.CurrentUser, settingsPath, "ShowSettings", "always");
-        RegistryHelper.SetValue(Registry.CurrentUser, settingsPath, "ShowSaveAS", "nofile");
-        RegistryHelper.SetValue(Registry.CurrentUser, settingsPath, "ShowPDF", "yes");
-        RegistryHelper.SetValue(Registry.CurrentUser, settingsPath, "ShowProgressFinished", "yes");
-        RegistryHelper.SetValue(Registry.CurrentUser, settingsPath, "ConfirmOverwrite", "yes");
+        string runonceFilePath = Path.Combine(UserSettingsPath, "runonce.ini");
+
+        CreateRunonceFile(desktopPath, string.Empty, runonceFilePath);
 
         PrinterStateManager.ReleasePrinter(PrinterName);
-        Log.Debug("bioPDF printer settings restored to interactive mode");
     }
 
 
     public override bool DoPrint(Document doc, SheetModel model, string folder)
     {
-        string settingsPath = Path.Combine(RegistryPath, "settings.ini");
+        string runonceFilePath = Path.Combine(UserSettingsPath, "runonce.ini");
 
-        // Устанавливаем путь и имя файла для сохранения
-        string outputPath = Path.Combine(folder, model.SheetName);
-        RegistryHelper.SetValue(Registry.CurrentUser, settingsPath, "Output", outputPath);
-
-        // Устанавливаем метаданные документа
-        RegistryHelper.SetValue(Registry.CurrentUser, settingsPath, "Title", model.SheetName);
-        RegistryHelper.SetValue(Registry.CurrentUser, settingsPath, "Author", Environment.UserName);
+        CreateRunonceFile(folder, model.SheetName, runonceFilePath);
 
         return PrintHelper.ExecutePrint(doc, model, folder);
     }
 
+
+    private static void CreateRunonceFile(string path, string title, string runonceFilePath)
+    {
+        if (File.Exists(runonceFilePath))
+        {
+            File.Delete(runonceFilePath);
+        }
+
+        string runonce =
+            "[PDF Printer]\r\n" +
+            "Output=" + path + "\r\n" +
+            "DisableOptionDialog=yes\r\n" +
+            "ShowSettings=never\r\n" +
+            "ShowSaveAS=never\r\n" +
+            "ShowProgress=yes\r\n" +
+            "ShowPDF=never\r\n" +
+            "Title=" + title + "\r\n" +
+            "Subject=Generated Document\r\n" +
+            "Creator=Application Name\r\n" +
+            "ShowProgressFinished=no\r\n" +
+            "ConfirmOverwrite=no\r\n" +
+            "Target=printer\r\n";
+
+        File.WriteAllText(runonceFilePath, runonce);
+    }
 
 
 }

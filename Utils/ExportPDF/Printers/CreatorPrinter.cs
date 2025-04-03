@@ -16,8 +16,6 @@ internal sealed class CreatorPrinter : PrinterControl
 
     public override void InitializePrinter()
     {
-        Log.Debug("Initialize PDFCreator printer");
-
         PrinterStateManager.ReservePrinter(PrinterName);
 
         string autoSave = Path.Combine(RegistryPath, "AutoSave");
@@ -39,12 +37,10 @@ internal sealed class CreatorPrinter : PrinterControl
 
     public override void ReleasePrinterSettings()
     {
-        Log.Debug("Release print settings");
-
-        PrinterStateManager.ReleasePrinter(PrinterName);
-
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "TargetDirectory", "<Desktop>");
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<Title>");
+
+        PrinterStateManager.ReleasePrinter(PrinterName);
     }
 
 

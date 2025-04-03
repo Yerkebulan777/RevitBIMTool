@@ -8,7 +8,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers;
 
 internal sealed class PDFillPrinter : PrinterControl
 {
-    public override string RegistryPath => @"Software\PlotSoft\Writer\";
+    public override string RegistryPath => @"SOFTWARE\PlotSoft\Writer\";
     public override string PrinterName => "PDFill PDF Writer";
     public override bool IsInternalPrinter => false;
 
@@ -39,8 +39,8 @@ internal sealed class PDFillPrinter : PrinterControl
     public override void ReleasePrinterSettings()
     {
         string outputOptionsPath = Path.Combine(RegistryPath, "OutputOption");
-        RegistryHelper.SetValue(Registry.CurrentUser, outputOptionsPath, "USE_DEFAULT_FOLDER", 0);
         RegistryHelper.SetValue(Registry.CurrentUser, outputOptionsPath, "DEFAULT_FILENAME", string.Empty);
+        RegistryHelper.SetValue(Registry.CurrentUser, outputOptionsPath, "USE_DEFAULT_FOLDER", 0);
         RegistryHelper.SetValue(Registry.CurrentUser, outputOptionsPath, "USE_DEFAULT_FILENAME", 0);
         RegistryHelper.SetValue(Registry.CurrentUser, outputOptionsPath, "USE_PRINT_JOBNAME", 1);
         RegistryHelper.SetValue(Registry.CurrentUser, outputOptionsPath, "HIDE_DIALOG", 0);

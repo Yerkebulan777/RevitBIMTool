@@ -17,8 +17,6 @@ internal sealed class ClawPdfPrinter : PrinterControl
 
     public override void InitializePrinter()
     {
-        Log.Debug("Initialize clawPDF printer");
-
         PrinterStateManager.ReservePrinter(PrinterName);
 
         string autoSaveKey = Path.Combine(RegistryPath, "AutoSave");
@@ -33,13 +31,11 @@ internal sealed class ClawPdfPrinter : PrinterControl
 
     public override void ReleasePrinterSettings()
     {
-        Log.Debug("Release print settings");
-
-        PrinterStateManager.ReleasePrinter(PrinterName);
-
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "OpenViewer", "True");
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowProgress", "True");
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<Title>");
+
+        PrinterStateManager.ReleasePrinter(PrinterName);
     }
 
 
