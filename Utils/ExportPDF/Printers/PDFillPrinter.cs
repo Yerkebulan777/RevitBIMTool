@@ -18,6 +18,7 @@ internal sealed class PDFillPrinter : PrinterControl
         PrinterStateManager.ReservePrinter(PrinterName);
 
         string outputOptionsPath = Path.Combine(RegistryPath, "OutputOption");
+        string pdfOptimizationPath = Path.Combine(RegistryPath, "PDF_Optimization");
 
         RegistryHelper.SetValue(Registry.CurrentUser, outputOptionsPath, "HIDE_DIALOG", 1);
         RegistryHelper.SetValue(Registry.CurrentUser, outputOptionsPath, "USE_DEFAULT_FOLDER", 1);
@@ -26,7 +27,6 @@ internal sealed class PDFillPrinter : PrinterControl
         RegistryHelper.SetValue(Registry.CurrentUser, outputOptionsPath, "TIME_STAMP", 0);
         RegistryHelper.SetValue(Registry.CurrentUser, outputOptionsPath, "VIEW_FILE", 0);
 
-        string pdfOptimizationPath = Path.Combine(RegistryPath, "PDF_Optimization");
         RegistryHelper.SetValue(Registry.CurrentUser, pdfOptimizationPath, "USEOPTIMIZATION", 1);
         RegistryHelper.SetValue(Registry.CurrentUser, pdfOptimizationPath, "Auto_Rotate_Page", 0);
         RegistryHelper.SetValue(Registry.CurrentUser, pdfOptimizationPath, "Resolution", 300);
@@ -39,13 +39,14 @@ internal sealed class PDFillPrinter : PrinterControl
     public override void ReleasePrinterSettings()
     {
         string outputOptionsPath = Path.Combine(RegistryPath, "OutputOption");
+        string pdfOptimizationPath = Path.Combine(RegistryPath, "PDF_Optimization");
+
         RegistryHelper.SetValue(Registry.CurrentUser, outputOptionsPath, "DEFAULT_FILENAME", string.Empty);
         RegistryHelper.SetValue(Registry.CurrentUser, outputOptionsPath, "USE_DEFAULT_FOLDER", 0);
         RegistryHelper.SetValue(Registry.CurrentUser, outputOptionsPath, "USE_DEFAULT_FILENAME", 0);
         RegistryHelper.SetValue(Registry.CurrentUser, outputOptionsPath, "USE_PRINT_JOBNAME", 1);
         RegistryHelper.SetValue(Registry.CurrentUser, outputOptionsPath, "HIDE_DIALOG", 0);
 
-        string pdfOptimizationPath = Path.Combine(RegistryPath, "PDF_Optimization");
         RegistryHelper.SetValue(Registry.CurrentUser, pdfOptimizationPath, "USEOPTIMIZATION", 0);
 
         PrinterStateManager.ReleasePrinter(PrinterName);
