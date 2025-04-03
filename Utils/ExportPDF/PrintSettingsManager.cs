@@ -78,6 +78,8 @@ internal static class PrintSettingsManager
     /// </summary>
     private static void SetPrintSettings(Document doc, string formatName, PageOrientationType orientation, bool color)
     {
+        bool isSettingSaved = false;
+
         PrintManager printManager = doc.PrintManager;
         PrintSetup printSetup = printManager.PrintSetup;
         printSetup.CurrentPrintSetting = printSetup.InSession;
@@ -120,6 +122,7 @@ internal static class PrintSettingsManager
 
                         if (printSetup.SaveAs(formatName))
                         {
+                            isSettingSaved = true;
                             Log.Debug(formatName);
                             break;
                         }
@@ -137,7 +140,11 @@ internal static class PrintSettingsManager
         finally
         {
             printManager.Apply();
-            Thread.Sleep(1000);
+
+            if (!isSettingSaved)
+            {
+                Log.Warning("Failed to apply print settings!");
+            }
         }
     }
 
