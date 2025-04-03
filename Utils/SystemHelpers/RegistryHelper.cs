@@ -126,7 +126,6 @@ internal static class RegistryHelper
             if (ApplyRegistryChanges(name))
             {
                 Thread.Sleep(100);
-                
             }
         }
     }
