@@ -105,6 +105,8 @@ internal static class PrintSettingsManager
 
             currentPrintSetting.PrintParameters.PageOrientation = orientation;
 
+            Log.Debug("Setting up print settings: {FormatName}", formatName);
+
             foreach (PaperSize pSize in printManager.PaperSizes)
             {
                 string paperSizeName = pSize.Name;
