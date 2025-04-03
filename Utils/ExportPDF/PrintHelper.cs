@@ -143,7 +143,6 @@ internal static class PrintHelper
         return successfulSheets;
     }
 
-
     /// <summary>
     /// Печатает один лист и проверяет результат
     /// </summary>
@@ -181,6 +180,7 @@ internal static class PrintHelper
             return false;
         }
     }
+
 
     // Вспомогательный метод для получения ViewSheet по номеру
     private static Element GetViewSheetByNumber(Document document, string sheetNumber)
