@@ -55,7 +55,7 @@ internal static class PrintHelper
                     model = new(viewSheet, paperSize, orientation);
                     model.SetSheetName(doc, revitFileName, "pdf");
                     model.IsColorEnabled = сolorEnabled;
-                    formatName = model.GetFormatName();
+                    formatName = paperSize.PaperName;
                 }
 
                 if (model is not null && model.IsValid)
@@ -74,7 +74,6 @@ internal static class PrintHelper
                     }
 
                     group.SheetList.Add(model);
-
                 }
 
             }
@@ -106,6 +105,8 @@ internal static class PrintHelper
                     var formatName = group.FormatName;
                     var orientation = group.Orientation;
                     var isColorEnabled = group.IsColorEnabled;
+
+                    Log.Debug("Processing format: {FormatName}", formatName);
 
                     if (PrintSettingsManager.SetupPrintSetting(doc, formatName, orientation, isColorEnabled))
                     {

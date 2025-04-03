@@ -1,4 +1,5 @@
 ﻿using Autodesk.Revit.DB;
+using Serilog;
 using PaperSize = System.Drawing.Printing.PaperSize;
 
 namespace RevitBIMTool.Models;
@@ -72,17 +73,6 @@ public class SheetModel : IDisposable
     /// Получает имя формата бумаги
     /// </summary>
     public string PaperName => SheetPapeSize?.PaperName;
-
-
-    /// <summary>
-    /// Получает имя формата листа
-    /// </summary>
-    public string GetFormatName()
-    {
-        string orientationText = Enum.GetName(typeof(PageOrientationType), SheetOrientation);
-        string formatName = $"{PaperName} {orientationText}";
-        return formatName;
-    }
 
     /// <summary>
     /// Устанавливает свойства листа на основе данных
