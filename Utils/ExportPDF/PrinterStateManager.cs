@@ -95,7 +95,6 @@ internal static class PrinterStateManager
     {
         int retryCount = 0;
         availablePrinter = null;
-
         const int maxRetries = 100;
 
         List<PrinterControl> printerList = GetPrinters();
