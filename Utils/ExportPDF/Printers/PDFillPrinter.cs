@@ -21,14 +21,12 @@ internal sealed class PDFillPrinter : PrinterControl
     // Дополнительные пути к важным ключам реестра
     private string OutputOptionsPath => Path.Combine(RegistryPath, "OutputOption");
     private string PdfOptimizationPath => Path.Combine(RegistryPath, "PDF_Optimization");
-    private string OutputFilePath => Path.Combine(RegistryPath, "OutputFile");
 
     /// <summary>
     /// Инициализирует принтер PDFill, устанавливая все необходимые параметры для работы без интерфейса
     /// </summary>
     public override void InitializePrinter()
     {
-        Log.Debug("Инициализация принтера {PrinterName}", PrinterName);
         PrinterStateManager.ReservePrinter(PrinterName);
 
         // Настройки вывода
@@ -41,9 +39,6 @@ internal sealed class PDFillPrinter : PrinterControl
         RegistryHelper.SetValue(Registry.CurrentUser, OutputOptionsPath, "USE_PRINT_JOBNAME", 0);
         RegistryHelper.SetValue(Registry.CurrentUser, OutputOptionsPath, "TIME_STAMP", 0);
         RegistryHelper.SetValue(Registry.CurrentUser, OutputOptionsPath, "VIEW_FILE", 0);
-
-        // Отключение подтверждения перезаписи
-        RegistryHelper.SetValue(Registry.CurrentUser, OutputFilePath, "CONFIRM_OVERWRITE", 0);
 
         // Настройки оптимизации PDF
         RegistryHelper.SetValue(Registry.CurrentUser, PdfOptimizationPath, "USEOPTIMIZATION", 0);
