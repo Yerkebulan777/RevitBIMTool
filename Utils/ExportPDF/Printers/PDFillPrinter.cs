@@ -32,7 +32,9 @@ internal sealed class PDFillPrinter : PrinterControl
         PrinterStateManager.ReservePrinter(PrinterName);
 
         // Настройки вывода
+        RegistryHelper.SetValue(Registry.CurrentUser, OutputOptionsPath, "EXIST_PDF", 1);
         RegistryHelper.SetValue(Registry.CurrentUser, OutputOptionsPath, "HIDE_DIALOG", 1);
+        RegistryHelper.SetValue(Registry.CurrentUser, OutputOptionsPath, "LAUNCH_OPTION", 1);
         RegistryHelper.SetValue(Registry.CurrentUser, OutputOptionsPath, "LASTPDFORIMAGE", 0);
         RegistryHelper.SetValue(Registry.CurrentUser, OutputOptionsPath, "USE_DEFAULT_FOLDER", 1);
         RegistryHelper.SetValue(Registry.CurrentUser, OutputOptionsPath, "USE_DEFAULT_FILENAME", 1);
