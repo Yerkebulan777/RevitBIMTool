@@ -96,15 +96,13 @@ internal static class PrinterStateManager
         int retryCount = 0;
         availablePrinter = null;
 
-        const int maxRetries = 1000;
+        const int maxRetries = 100;
 
         List<PrinterControl> printerList = GetPrinters();
 
         while (retryCount < maxRetries)
         {
-            retryCount++;
-
-            Thread.Sleep(100);
+            Thread.Sleep(maxRetries * retryCount++);
 
             Log.Debug("Searching for an available printer...");
 
