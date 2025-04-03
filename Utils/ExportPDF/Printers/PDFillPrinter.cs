@@ -9,7 +9,7 @@ namespace RevitBIMTool.Utils.ExportPDF.Printers;
 internal sealed class PDFillPrinter : PrinterControl
 {
     public override string RegistryPath => @"SOFTWARE\PlotSoft\Writer\";
-    public override string PrinterName => "PDFill PDF Writer";
+    public override string PrinterName => "PDFill PDF&Image Writer";
     public override bool IsInternalPrinter => false;
 
 
