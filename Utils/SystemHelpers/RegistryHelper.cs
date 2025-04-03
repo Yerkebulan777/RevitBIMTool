@@ -1,5 +1,6 @@
 ﻿using Microsoft.Win32;
 using Serilog;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 
@@ -55,6 +56,10 @@ internal static class RegistryHelper
         catch (Exception ex)
         {
             Log.Error(ex, "GetValue failed: {Message}", ex.Message);
+        }
+        finally
+        {
+            Debug.WriteLine($"GetValue: {path}, {name}");
         }
 
         return null;
@@ -118,60 +123,25 @@ internal static class RegistryHelper
         }
         finally
         {
-            if (ApplyRegistryChanges())
+            if (ApplyRegistryChanges(name))
             {
                 Thread.Sleep(100);
+                
             }
         }
     }
 
 
-    public static bool CreateValue(RegistryKey rootKey, string path, string name, object value)
+    private static bool ApplyRegistryChanges(string name)
     {
-        lock (lockObject)
-        {
-            try
-            {
-                using RegistryKey regKey = rootKey.CreateSubKey(path);
-
-                if (regKey is not null)
-                {
-                    object currentValue = regKey.GetValue(name);
-
-                    if (currentValue is null)
-                    {
-                        if (value is int intValue)
-                        {
-                            regKey.SetValue(name, intValue, RegistryValueKind.DWord);
-                        }
-                        else if (value is string strValue)
-                        {
-                            regKey.SetValue(name, strValue, RegistryValueKind.String);
-                        }
-                    }
-
-                    regKey.Flush();
-
-                    return ApplyRegistryChanges();
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException($"Failed to create registry parameter {path}: {ex.Message}");
-            }
-
-            return false;
-        }
+        Debug.WriteLine($"Registry value set: {name}");
+        return SendNotifyMessageA(HWND_BROADCAST, WM_SETTINGCHANGE, 0, 0);
     }
 
 
     [DllImport("user32.DLL")]
-    public static extern bool SendNotifyMessageA(IntPtr hWnd, uint msg, int wParam, int lParam);
+    private static extern bool SendNotifyMessageA(IntPtr hWnd, uint msg, int wParam, int lParam);
 
 
-    private static bool ApplyRegistryChanges()
-    {
-        return SendNotifyMessageA(HWND_BROADCAST, WM_SETTINGCHANGE, 0, 0);
-    }
 
 }

@@ -107,14 +107,11 @@ internal static class PrintHelper
                 {
                     if (TransactionStatus.Started == setupTransaction.Start())
                     {
-                        bool formatSetupSuccess = PrintSettingsManager.SetupPrintSetting(doc, formatName, orientation, isColorEnabled);
-                        setupTransaction.Commit();
-
-                        if (!formatSetupSuccess)
+                        if (!PrintSettingsManager.SetupPrintSetting(doc, formatName, orientation, isColorEnabled))
                         {
                             Log.Warning("Failed: {0}", formatName);
-                            continue;
                         }
+                        setupTransaction.Commit();
                     }
                 }
 
