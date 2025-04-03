@@ -20,8 +20,8 @@ internal static class PrintSettingsManager
             {
                 try
                 {
-                    printManager.SelectNewPrintDriver(printer.PrinterName);
                     printSettings.ForEach(set => doc.Delete(set.Id));
+                    printManager.SelectNewPrintDriver(printer.PrinterName);
                     printManager.PrintRange = PrintRange.Current;
                     printManager.PrintToFile = true;
                     printManager.Apply();
@@ -30,7 +30,8 @@ internal static class PrintSettingsManager
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "ReleasePrinterSettings: {Message}", ex.Message);
+                    Log.Error(ex, "ResetPrinterSettings error!: {Message}", ex.Message);
+                    throw new InvalidOperationException("ResetPrinterSettings error!", ex);
                 }
                 finally
                 {
