@@ -118,16 +118,14 @@ internal static class PrintSettingsManager
                         currentPrintSetting.PrintParameters.MarginType = MarginType.PrinterLimit;
                         printManager.PrintSetup.CurrentPrintSetting = currentPrintSetting;
 
-                        Log.Debug("Print setting created: {FormatName}", formatName);
-
                         if (printSetup.SaveAs(formatName))
                         {
-                            Thread.Sleep(100);
+                            Log.Debug(formatName);
                             break;
                         }
-                    }
 
-                    trx.Commit();
+                        trx.Commit();
+                    }
                 }
             }
         }
@@ -139,6 +137,7 @@ internal static class PrintSettingsManager
         finally
         {
             printManager.Apply();
+            Thread.Sleep(1000);
         }
     }
 
