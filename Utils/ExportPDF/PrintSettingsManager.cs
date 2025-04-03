@@ -6,7 +6,6 @@ namespace RevitBIMTool.Utils.ExportPDF;
 
 internal static class PrintSettingsManager
 {
-
     public static void ResetPrinterSettings(Document doc, PrinterControl printer)
     {
         if (printer is not null && !printer.IsInternalPrinter)
