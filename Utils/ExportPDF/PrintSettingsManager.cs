@@ -116,22 +116,24 @@ internal static class PrintSettingsManager
                         currentPrintSetting.PrintParameters.Zoom = 100;
                         currentPrintSetting.PrintParameters.PaperSize = pSize;
                         currentPrintSetting.PrintParameters.MarginType = MarginType.PrinterLimit;
-
                         printManager.PrintSetup.CurrentPrintSetting = currentPrintSetting;
+
+                        Log.Debug("Print setting created: {FormatName}", formatName);
 
                         if (printSetup.SaveAs(formatName))
                         {
                             Thread.Sleep(100);
-                            _ = trx.Commit();
                             break;
                         }
                     }
+
+                    trx.Commit();
                 }
             }
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "{Message}", ex.Message);
+            Log.Error(ex, "Setting print settings error: {0}!", ex.Message);
             throw new InvalidOperationException("Setting print settings error!", ex);
         }
         finally
