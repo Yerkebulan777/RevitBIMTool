@@ -18,6 +18,7 @@ internal static class RegistryHelper
 
         if (registryKey is null)
         {
+            Log.Error("Registry key does not exist: {Path}!", path);
             return false;
         }
 
@@ -32,6 +33,7 @@ internal static class RegistryHelper
 
         if (value is null)
         {
+            Log.Error("Registry value does not exist: {Path}, {Name}!", path, name);
             return false;
         }
 
@@ -67,9 +69,14 @@ internal static class RegistryHelper
 
             while (retryCount < maxRetries)
             {
-                Thread.Sleep(100); retryCount++;
+                retryCount++;
+                Thread.Sleep(100);
 
-                if (IsValueExists(rootKey, path, name))
+                if (!IsKeyExists(rootKey, path))
+                {
+                    throw new InvalidOperationException();
+                }
+                else if (IsValueExists(rootKey, path, name))
                 {
                     using RegistryKey regKey = rootKey.OpenSubKey(path, true);
 
@@ -88,17 +95,17 @@ internal static class RegistryHelper
     }
 
 
-    private static void SetRegistryValue(RegistryKey regKey, string name, object value)
+    private static void SetRegistryValue(RegistryKey registryKey, string name, object value)
     {
         try
         {
             if (value is int intValue)
             {
-                regKey.SetValue(name, intValue, RegistryValueKind.DWord);
+                registryKey.SetValue(name, intValue, RegistryValueKind.DWord);
             }
             else if (value is string strValue)
             {
-                regKey.SetValue(name, strValue, RegistryValueKind.String);
+                registryKey.SetValue(name, strValue, RegistryValueKind.String);
             }
             else
             {
