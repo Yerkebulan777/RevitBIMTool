@@ -104,7 +104,7 @@ internal static class PrinterStateManager
         {
             retryCount++;
 
-            Thread.Sleep(500);
+            Thread.Sleep(100);
 
             Log.Debug("Searching for an available printer...");
 
@@ -121,8 +121,6 @@ internal static class PrinterStateManager
                 }
             }
         }
-
-        Log.Error("No available printer found!");
 
         return false;
     }
