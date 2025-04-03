@@ -79,7 +79,8 @@ internal static class RegistryHelper
 
                 if (!IsKeyExists(rootKey, path))
                 {
-                    throw new InvalidOperationException();
+                    Log.Error("Registry value: {0}!", value);
+                    throw new InvalidOperationException("");
                 }
                 else if (IsValueExists(rootKey, path, name))
                 {
@@ -119,7 +120,7 @@ internal static class RegistryHelper
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to set registry value: {Name}, {Message}", name, ex.Message);
+            Log.Error(ex, "Failed to set registry value: {0}, {1}", name, ex.Message);
         }
         finally
         {
