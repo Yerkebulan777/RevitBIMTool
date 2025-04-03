@@ -40,7 +40,7 @@ internal static class PrintSettingsManager
                 {
                     if (!trx.HasEnded())
                     {
-                        _ = trx.RollBack();
+                        trx.RollBack();
                     }
                 }
             }

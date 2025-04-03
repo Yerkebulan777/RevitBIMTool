@@ -2,6 +2,7 @@
 using RevitBIMTool.Utils.Common;
 using RevitBIMTool.Utils.ExportPDF.Printers;
 using Serilog;
+using System.Diagnostics;
 using System.IO;
 using Document = Autodesk.Revit.DB.Document;
 using Element = Autodesk.Revit.DB.Element;
@@ -12,7 +13,6 @@ namespace RevitBIMTool.Utils.ExportPDF;
 
 internal static class PrintHelper
 {
-
     /// <summary>
     /// Получает и группирует данные листов для последующей печати
     /// </summary>
@@ -91,52 +91,53 @@ internal static class PrintHelper
     public static List<SheetModel> PrintSheetData(Document doc, PrinterControl printer, List<SheetFormatGroup> formatGroups, string folder)
     {
         List<SheetModel> successfulSheets = [];
-
         List<string> existingFiles = [.. Directory.GetFiles(folder)];
 
-        using Transaction trx = new(doc, "ExportToPDF");
-
-        if (TransactionStatus.Started == trx.Start())
+        try
         {
-            try
+            foreach (SheetFormatGroup group in formatGroups)
             {
-                foreach (SheetFormatGroup group in formatGroups)
+                var formatName = group.FormatName;
+                var orientation = group.Orientation;
+                var isColorEnabled = group.IsColorEnabled;
+
+                Log.Debug("Processing format: {FormatName}", formatName);
+
+                using (Transaction setupTransaction = new(doc, $"Setup Format {formatName}"))
                 {
-                    var formatName = group.FormatName;
-                    var orientation = group.Orientation;
-                    var isColorEnabled = group.IsColorEnabled;
-
-                    Log.Debug("Processing format: {FormatName}", formatName);
-
-                    if (PrintSettingsManager.SetupPrintSetting(doc, formatName, orientation, isColorEnabled))
+                    if (TransactionStatus.Started == setupTransaction.Start())
                     {
-                        foreach (SheetModel model in group.SheetList)
-                        {
-                            Log.Verbose("Printing sheet {0}", model.SheetName);
+                        bool formatSetupSuccess = PrintSettingsManager.SetupPrintSetting(doc, formatName, orientation, isColorEnabled);
+                        setupTransaction.Commit();
 
-                            if (PrintSingleSheet(doc, printer, model, folder, existingFiles))
-                            {
-                                successfulSheets.Add(model);
-                            }
+                        if (!formatSetupSuccess)
+                        {
+                            Log.Warning("Failed: {0}", formatName);
+                            continue;
                         }
                     }
                 }
 
-                _ = trx.Commit();
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Error in print process: {Message}", ex.Message);
+                Log.Debug("Printing sheets for format: {FormatName}", formatName);
 
-                if (!trx.HasEnded())
+                foreach (SheetModel model in group.SheetList)
                 {
-                    _ = trx.RollBack();
+                    Debug.WriteLine("Printing sheet {0}", model.SheetName);
+
+                    if (PrintSingleSheet(doc, printer, model, folder, existingFiles))
+                    {
+                        successfulSheets.Add(model);
+                    }
                 }
             }
-            finally
-            {
-                printer?.ReleasePrinterSettings();
-            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error in print process: {Message}", ex.Message);
+        }
+        finally
+        {
+            printer?.ReleasePrinterSettings();
         }
 
         return successfulSheets;
