@@ -62,19 +62,20 @@ internal static class PrintSettingsManager
     {
         Log.Information("Setting up format: {FormatName}", formatName);
 
+        // Обратите внимание, что теперь метод не создает транзакцию
         SetPrintSettings(doc, formatName, orientation, colorEnabled);
 
         if (GetPrintSettingByName(doc, formatName) is null)
         {
             Log.Warning("Failed to create print setting by name: {FormatName}. Trying fallback method.", formatName);
-            throw new InvalidOperationException($"Failed to create print setting: {formatName}");
+            return false;
         }
 
         return true;
     }
 
     /// <summary>
-    /// Устанавливает настройки печати для документа
+    /// Устанавливает настройки печати для документа без создания новой транзакции
     /// </summary>
     private static void SetPrintSettings(Document doc, string formatName, PageOrientationType orientation, bool color)
     {
@@ -88,6 +89,7 @@ internal static class PrintSettingsManager
 
         try
         {
+            // Настройка параметров печати
             currentPrintSetting.PrintParameters.ViewLinksinBlue = false;
             currentPrintSetting.PrintParameters.HideReforWorkPlanes = true;
             currentPrintSetting.PrintParameters.HideUnreferencedViewTags = true;
@@ -113,24 +115,19 @@ internal static class PrintSettingsManager
 
                 if (paperSizeName.Equals(formatName))
                 {
-                    using Transaction trx = new(doc, formatName);
+                    // Настройка параметров бумаги
+                    currentPrintSetting.PrintParameters.Zoom = 100;
+                    currentPrintSetting.PrintParameters.PaperSize = pSize;
+                    currentPrintSetting.PrintParameters.MarginType = MarginType.PrinterLimit;
 
-                    if (TransactionStatus.Started == trx.Start())
+                    printManager.PrintSetup.CurrentPrintSetting = currentPrintSetting;
+
+                    // Сохранение настроек печати
+                    if (printSetup.SaveAs(formatName))
                     {
-                        currentPrintSetting.PrintParameters.Zoom = 100;
-                        currentPrintSetting.PrintParameters.PaperSize = pSize;
-                        currentPrintSetting.PrintParameters.MarginType = MarginType.PrinterLimit;
-
-                        printManager.PrintSetup.CurrentPrintSetting = currentPrintSetting;
-
-                        if (printSetup.SaveAs(formatName))
-                        {
-                            isSettingSaved = true;
-                            Log.Debug(formatName);
-                            break;
-                        }
-
-                        trx.Commit();
+                        Log.Debug("Saved: {0}", formatName);
+                        isSettingSaved = true;
+                        break;
                     }
                 }
             }
@@ -166,7 +163,4 @@ internal static class PrintSettingsManager
     {
         return CollectPrintSettings(doc).FirstOrDefault(ps => ps.Name.Equals(formatName));
     }
-
-
-
 }
