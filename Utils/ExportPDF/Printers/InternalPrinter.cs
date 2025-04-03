@@ -27,16 +27,12 @@ internal sealed class InternalPrinter : PrinterControl
 
     public override void InitializePrinter()
     {
-        Log.Debug("Initialize PDFCreator printer");
-
         PrinterStateManager.ReleasePrinter(PrinterName);
     }
 
 
     public override void ReleasePrinterSettings()
     {
-        Log.Debug("Release print settings");
-
         PrinterStateManager.ReleasePrinter(PrinterName);
     }
 
