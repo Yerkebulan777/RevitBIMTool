@@ -6,6 +6,9 @@ namespace RevitBIMTool.Utils.ExportPDF;
 
 internal static class PrintSettingsManager
 {
+    /// <summary>
+    /// Сбрасывает настройки принтера 
+    /// </summary>
     public static void ResetPrinterSettings(Document doc, PrinterControl printer)
     {
         if (printer is not null && !printer.IsInternalPrinter)
@@ -44,7 +47,9 @@ internal static class PrintSettingsManager
         }
     }
 
-
+    /// <summary>
+    /// Определяет ориентацию страницы по ширине и высоте
+    /// </summary>
     public static PageOrientationType GetOrientation(double width, double height)
     {
         return width > height ? PageOrientationType.Landscape : PageOrientationType.Portrait;
@@ -61,7 +66,7 @@ internal static class PrintSettingsManager
 
         if (GetPrintSettingByName(doc, formatName) is null)
         {
-            Log.Error("Failed to create print setting: {FormatName}", formatName);
+            Log.Warning("Failed to create print setting by name: {FormatName}. Trying fallback method.", formatName);
             throw new InvalidOperationException($"Failed to create print setting: {formatName}");
         }
 
@@ -71,33 +76,33 @@ internal static class PrintSettingsManager
     /// <summary>
     /// Устанавливает настройки печати для документа
     /// </summary>
-    private static void SetPrintSettings(Document doc, string formatName, PageOrientationType orientation, bool colorEnabled)
+    private static void SetPrintSettings(Document doc, string formatName, PageOrientationType orientation, bool color)
     {
-        ColorDepthType colorType = colorEnabled ? ColorDepthType.Color : ColorDepthType.BlackLine;
-
         PrintManager printManager = doc.PrintManager;
         PrintSetup printSetup = printManager.PrintSetup;
         printSetup.CurrentPrintSetting = printSetup.InSession;
 
         IPrintSetting currentPrintSetting = printSetup.CurrentPrintSetting;
 
-        currentPrintSetting.PrintParameters.ColorDepth = colorType;
-        currentPrintSetting.PrintParameters.ZoomType = ZoomType.Zoom;
-        currentPrintSetting.PrintParameters.PageOrientation = orientation;
-        currentPrintSetting.PrintParameters.RasterQuality = RasterQualityType.Medium;
-        currentPrintSetting.PrintParameters.PaperPlacement = PaperPlacementType.Margins;
-        currentPrintSetting.PrintParameters.HiddenLineViews = HiddenLineViewsType.VectorProcessing;
-
-        currentPrintSetting.PrintParameters.ViewLinksinBlue = false;
-        currentPrintSetting.PrintParameters.HideReforWorkPlanes = true;
-        currentPrintSetting.PrintParameters.HideUnreferencedViewTags = true;
-        currentPrintSetting.PrintParameters.HideCropBoundaries = true;
-        currentPrintSetting.PrintParameters.HideScopeBoxes = true;
-        currentPrintSetting.PrintParameters.MaskCoincidentLines = false;
-        currentPrintSetting.PrintParameters.ReplaceHalftoneWithThinLines = false;
-
         try
         {
+            currentPrintSetting.PrintParameters.ViewLinksinBlue = false;
+            currentPrintSetting.PrintParameters.HideReforWorkPlanes = true;
+            currentPrintSetting.PrintParameters.HideUnreferencedViewTags = true;
+            currentPrintSetting.PrintParameters.HideCropBoundaries = true;
+            currentPrintSetting.PrintParameters.HideScopeBoxes = true;
+
+            currentPrintSetting.PrintParameters.MaskCoincidentLines = false;
+            currentPrintSetting.PrintParameters.ReplaceHalftoneWithThinLines = false;
+
+            currentPrintSetting.PrintParameters.ZoomType = ZoomType.Zoom;
+            currentPrintSetting.PrintParameters.RasterQuality = RasterQualityType.Medium;
+            currentPrintSetting.PrintParameters.PaperPlacement = PaperPlacementType.Margins;
+            currentPrintSetting.PrintParameters.HiddenLineViews = HiddenLineViewsType.VectorProcessing;
+            currentPrintSetting.PrintParameters.ColorDepth = color ? ColorDepthType.Color : ColorDepthType.BlackLine;
+
+            currentPrintSetting.PrintParameters.PageOrientation = orientation;
+
             foreach (PaperSize pSize in printManager.PaperSizes)
             {
                 string paperSizeName = pSize.Name;
@@ -116,7 +121,7 @@ internal static class PrintSettingsManager
 
                         if (printSetup.SaveAs(formatName))
                         {
-                            Thread.Sleep(500);
+                            Thread.Sleep(100);
                             _ = trx.Commit();
                             break;
                         }
@@ -150,6 +155,7 @@ internal static class PrintSettingsManager
     {
         return CollectPrintSettings(doc).FirstOrDefault(ps => ps.Name.Equals(formatName));
     }
+
 
 
 }
