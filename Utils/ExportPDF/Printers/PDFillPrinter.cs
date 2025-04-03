@@ -42,11 +42,6 @@ internal sealed class PDFillPrinter : PrinterControl
 
         // Настройки оптимизации PDF
         RegistryHelper.SetValue(Registry.CurrentUser, PdfOptimizationPath, "USEOPTIMIZATION", 0);
-        //RegistryHelper.SetValue(Registry.CurrentUser, PdfOptimizationPath, "Auto_Rotate_Page", 2);
-        //RegistryHelper.SetValue(Registry.CurrentUser, PdfOptimizationPath, "Resolution", 300);
-        //RegistryHelper.SetValue(Registry.CurrentUser, PdfOptimizationPath, "Color_Model", 1); 
-        //RegistryHelper.SetValue(Registry.CurrentUser, PdfOptimizationPath, "CompressFont", 1);
-        //RegistryHelper.SetValue(Registry.CurrentUser, PdfOptimizationPath, "Settings", 2);
     }
 
     /// <summary>
