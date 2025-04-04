@@ -129,10 +129,9 @@ internal static class PrinterStateManager
     {
         return
         [
-            //new Pdf24Printer(),
+            new Pdf24Printer(),
             //new CreatorPrinter(),
             //new ClawPdfPrinter(),
-            new PDFillPrinter(),
             new InternalPrinter()
         ];
     }
