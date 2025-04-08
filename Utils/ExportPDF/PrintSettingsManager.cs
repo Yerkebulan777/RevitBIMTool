@@ -163,4 +163,5 @@ internal static class PrintSettingsManager
     {
         return CollectPrintSettings(doc).FirstOrDefault(ps => ps.Name.Equals(formatName));
     }
+
 }
