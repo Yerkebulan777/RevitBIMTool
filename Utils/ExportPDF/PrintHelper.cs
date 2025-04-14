@@ -178,7 +178,6 @@ internal static class PrintHelper
         }
     }
 
-
     // Вспомогательный метод для получения ViewSheet по номеру
     private static Element GetViewSheetByNumber(Document document, string sheetNumber)
     {
