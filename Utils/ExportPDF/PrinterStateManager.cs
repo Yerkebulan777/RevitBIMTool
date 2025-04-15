@@ -52,8 +52,8 @@ public class PrinterInfo
 
 internal static class PrinterStateManager
 {
-    private static readonly string userDocsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-    private static readonly string appDataFolder = Path.Combine(userDocsPath, "RevitBIMTool");
+    private static readonly string docsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+    private static readonly string appDataFolder = Path.Combine(docsPath, "RevitBIMTool");
     private static readonly string stateFilePath = Path.Combine(appDataFolder, "PrinterState.xml");
 
     static PrinterStateManager()
@@ -130,6 +130,7 @@ internal static class PrinterStateManager
         return
         [
             new Pdf24Printer(),
+            new BioPdfPrinter(),
             //new CreatorPrinter(),
             //new ClawPdfPrinter(),
             new InternalPrinter()
