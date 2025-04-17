@@ -4,14 +4,12 @@ using RevitBIMTool.Models;
 using RevitBIMTool.Utils.SystemHelpers;
 using Serilog;
 using System.IO;
-using System.Diagnostics;
 
 namespace RevitBIMTool.Utils.ExportPDF.Printers;
 
 internal sealed class AdobePdfPrinter : PrinterControl
 {
     public override string RegistryPath => @"SOFTWARE\Adobe\Acrobat Distiller\PrinterJobControl";
-    private string RevitExePath => $@"C:\Program Files\Autodesk\Revit {RevitBimToolApp.Version}\Revit.exe";
     public override string PrinterName => "Adobe PDF";
     public override bool IsInternalPrinter => false;
 
@@ -23,12 +21,12 @@ internal sealed class AdobePdfPrinter : PrinterControl
         if (!RegistryHelper.IsKeyExists(Registry.CurrentUser, RegistryPath))
         {
             Log.Warning("PrinterJobControl not found");
+            throw new InvalidOperationException("PrinterJobControl not found");
         }
     }
 
     public override void ReleasePrinterSettings()
     {
-        Log.Debug("Release printer");
         PrinterStateManager.ReleasePrinter(PrinterName);
     }
 
@@ -42,8 +40,10 @@ internal sealed class AdobePdfPrinter : PrinterControl
     }
 
 
-    private void SetPDFSettings(string destFileName, string dirName)
+    private void SetPDFSettings(string destFileName, string folder)
     {
+        string RevitExePath = $@"C:\Program Files\Autodesk\Revit {RevitBimToolApp.Version}\Revit.exe";
+
         if (!RegistryHelper.IsKeyExists(Registry.CurrentUser, RegistryPath))
         {
             Log.Warning("PrinterJobControl missing");
@@ -54,9 +54,7 @@ internal sealed class AdobePdfPrinter : PrinterControl
         {
             // Значение полного пути для ключа Revit.exe
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, RevitExePath, destFileName);
-
-            // Значение директории для ключа LastPdfPortFolder
-            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "LastPdfPortFolder - Revit.exe", dirName);
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "LastPdfPortFolder - Revit.exe", folder);
 
             Log.Debug("PDF settings applied");
         }
@@ -65,7 +63,9 @@ internal sealed class AdobePdfPrinter : PrinterControl
             Log.Error(ex, "Registry access error");
             throw new InvalidOperationException("PDF registry settings failed", ex);
         }
+
     }
+
 
 
 }
