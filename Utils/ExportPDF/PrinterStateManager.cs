@@ -130,6 +130,7 @@ internal static class PrinterStateManager
         return
         [
             new BioPdfPrinter(),
+            new AdobePdfPrinter(),
             //new CreatorPrinter(),
             //new ClawPdfPrinter(),
             new InternalPrinter(),
