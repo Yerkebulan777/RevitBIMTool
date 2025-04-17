@@ -44,26 +44,21 @@ internal sealed class AdobePdfPrinter : PrinterControl
     {
         string RevitExePath = $@"C:\Program Files\Autodesk\Revit {RevitBimToolApp.Version}\Revit.exe";
 
-        if (!RegistryHelper.IsKeyExists(Registry.CurrentUser, RegistryPath))
+        if (RegistryHelper.IsKeyExists(Registry.CurrentUser, RegistryPath))
         {
-            Log.Warning("PrinterJobControl missing");
-            return;
-        }
+            try
+            {
+                RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, RevitExePath, destFileName);
+                RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "LastPdfPortFolder - Revit.exe", folder);
 
-        try
-        {
-            // Значение полного пути для ключа Revit.exe
-            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, RevitExePath, destFileName);
-            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "LastPdfPortFolder - Revit.exe", folder);
-
-            Log.Debug("PDF settings applied");
+                Log.Debug("PDF settings applied");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Registry access error");
+                throw new InvalidOperationException("PDF registry settings failed", ex);
+            }
         }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Registry access error");
-            throw new InvalidOperationException("PDF registry settings failed", ex);
-        }
-
     }
 
 
