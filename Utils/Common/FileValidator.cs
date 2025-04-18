@@ -109,10 +109,13 @@ namespace RevitBIMTool.Utils.Common
         {
             bool combinedPredicate(string file)
             {
-                string fileName = Path.GetFileName(expectedFilePath);
-                bool isFileNameEquals = Path.GetFileName(file) == fileName;
-                bool isFileRecent = IsFileRecent(file, TimeSpan.FromMinutes(30));
-                return (isFileNameEquals || isFileRecent) && IsFileValid(file);
+                if (IsFileValid(file))
+                {
+                    string fileName = Path.GetFileName(expectedFilePath);
+                    bool isFileNameEquals = Path.GetFileName(file) == fileName;
+                    return isFileNameEquals || IsFileRecent(file, TimeSpan.FromMinutes(30));
+                }
+                return false;
             }
 
             return VerifyFile(ref existingFiles, expectedFilePath, combinedPredicate, 300);
@@ -125,7 +128,7 @@ namespace RevitBIMTool.Utils.Common
         {
             // Ожидание - 15 минут (900 секунд)
             const int maxWaitTimeSeconds = 900;
-            Stopwatch stopwatch = new Stopwatch();
+            Stopwatch stopwatch = new();
             stopwatch.Start();
 
             string folderPath = Path.GetDirectoryName(expectedFilePath);
