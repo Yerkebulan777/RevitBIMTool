@@ -132,6 +132,30 @@ internal static class RegistryHelper
     }
 
 
+    public static bool DeleteRegistryValues(RegistryKey rootKey, string path)
+    {
+        using RegistryKey regKey = rootKey?.OpenSubKey(path, true);
+
+        if (regKey is not null)
+        {
+            foreach (string valueName in regKey.GetValueNames())
+            {
+                try
+                {
+                    regKey.DeleteValue(valueName, false);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Error when deleting {0}", valueName);
+                }
+            }
+            return true;
+        }
+
+        return false;
+    }
+
+
     private static bool ApplyRegistryChanges(string name)
     {
         Debug.WriteLine($"Registry value set: {name}");
