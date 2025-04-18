@@ -1,4 +1,5 @@
 ﻿using Serilog;
+using System.Diagnostics;
 using System.IO;
 
 namespace RevitBIMTool.Utils.Common
@@ -48,7 +49,7 @@ namespace RevitBIMTool.Utils.Common
                     return false;
                 }
 
-                File.GetAttributes(filePath);
+                _ = File.GetAttributes(filePath);
                 return true;
             }
             catch (Exception ex)
@@ -122,29 +123,35 @@ namespace RevitBIMTool.Utils.Common
         /// </summary>
         public static bool VerifyFile(ref List<string> existingFiles, string expectedFilePath, Func<string, bool> matchPredicate, int timeout)
         {
+            // Ожидание - 15 минут (900 секунд)
+            const int maxWaitTimeSeconds = 900;
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+
             string folderPath = Path.GetDirectoryName(expectedFilePath);
 
-            int attempt = 0;
-
-            while (attempt < 1000)
+            while (stopwatch.Elapsed.TotalSeconds < maxWaitTimeSeconds)
             {
                 try
                 {
-                    attempt++;
+                    Thread.Sleep(timeout);
 
                     string matchedFile = FindMatch(folderPath, existingFiles, matchPredicate);
 
                     if (!string.IsNullOrEmpty(matchedFile))
                     {
                         string resultPath = RenameFile(matchedFile, expectedFilePath);
-                        Log.Information("Match: {File}", Path.GetFileName(resultPath));
-                        existingFiles.Add(resultPath);
-                        return true;
+
+                        if (!existingFiles.Contains(resultPath))
+                        {
+                            existingFiles.Add(resultPath);
+                            return true;
+                        }
                     }
                 }
-                finally
+                catch (Exception ex)
                 {
-                    Thread.Sleep(timeout);
+                    Log.Debug("Error while verifying file: {0}", ex.Message);
                 }
             }
 
