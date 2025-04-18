@@ -131,9 +131,9 @@ internal static class PrinterStateManager
         [
             new Pdf24Printer(),
             new BioPdfPrinter(),
-            new AdobePdfPrinter(),
             new CreatorPrinter(),
             new ClawPdfPrinter(),
+            new AdobePdfPrinter(),
             new InternalPrinter(),
         ];
     }
