@@ -134,10 +134,10 @@ internal static class RegistryHelper
 
     public static bool DeleteRegistryValues(RegistryKey rootKey, string path)
     {
-        using RegistryKey regKey = rootKey?.OpenSubKey(path, true);
-
-        if (regKey is not null)
+        if (IsKeyExists(rootKey, path))
         {
+            using RegistryKey regKey = rootKey?.OpenSubKey(path, true);
+
             foreach (string valueName in regKey.GetValueNames())
             {
                 try
@@ -149,6 +149,7 @@ internal static class RegistryHelper
                     Log.Error(ex, "Error when deleting {0}", valueName);
                 }
             }
+
             return true;
         }
 

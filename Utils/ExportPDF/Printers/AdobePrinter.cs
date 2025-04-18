@@ -28,6 +28,8 @@ internal sealed class AdobePdfPrinter : PrinterControl
     public override void ReleasePrinterSettings()
     {
         PrinterStateManager.ReleasePrinter(PrinterName);
+
+        RegistryHelper.DeleteRegistryValues(Registry.CurrentUser, RegistryPath);
     }
 
 
