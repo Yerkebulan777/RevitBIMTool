@@ -21,7 +21,6 @@ internal sealed class AdobePdfPrinter : PrinterControl
         if (!RegistryHelper.IsKeyExists(Registry.CurrentUser, RegistryPath))
         {
             Log.Warning("PrinterJobControl not found");
-            throw new InvalidOperationException("PrinterJobControl not found");
         }
     }
 
