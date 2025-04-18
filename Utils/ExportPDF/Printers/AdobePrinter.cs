@@ -24,10 +24,12 @@ internal sealed class AdobePdfPrinter : PrinterControl
         }
     }
 
+
     public override void ReleasePrinterSettings()
     {
         PrinterStateManager.ReleasePrinter(PrinterName);
     }
+
 
     public override bool DoPrint(Document doc, SheetModel model, string folder)
     {
