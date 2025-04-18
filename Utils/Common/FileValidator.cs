@@ -109,13 +109,7 @@ namespace RevitBIMTool.Utils.Common
         {
             bool combinedPredicate(string file)
             {
-                if (IsFileValid(file))
-                {
-                    string fileName = Path.GetFileName(expectedFilePath);
-                    bool isFileNameEquals = Path.GetFileName(file) == fileName;
-                    return isFileNameEquals || IsFileRecent(file, TimeSpan.FromMinutes(30));
-                }
-                return false;
+                return IsFileValid(file) && IsFileRecent(file, TimeSpan.FromMinutes(30));
             }
 
             return VerifyFile(ref existingFiles, expectedFilePath, combinedPredicate, 300);
