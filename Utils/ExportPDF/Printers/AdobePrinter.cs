@@ -29,7 +29,7 @@ internal sealed class AdobePdfPrinter : PrinterControl
     {
         PrinterStateManager.ReleasePrinter(PrinterName);
 
-        RegistryHelper.DeleteRegistryValues(Registry.CurrentUser, RegistryPath);
+        _ = RegistryHelper.DeleteRegistryValues(Registry.CurrentUser, RegistryPath);
     }
 
 
@@ -51,8 +51,9 @@ internal sealed class AdobePdfPrinter : PrinterControl
         {
             try
             {
+                var RevitPdfPortFolder = "LastPdfPortFolder - Revit.exe";
                 RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, RevitExePath, destFileName);
-                RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "LastPdfPortFolder - Revit.exe", folder);
+                RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, RevitPdfPortFolder, folder);
 
                 Log.Debug("PDF settings applied");
             }
@@ -63,6 +64,7 @@ internal sealed class AdobePdfPrinter : PrinterControl
             }
         }
     }
+
 
 
 }
