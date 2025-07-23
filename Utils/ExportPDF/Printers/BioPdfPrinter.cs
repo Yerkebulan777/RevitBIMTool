@@ -70,6 +70,7 @@ internal sealed class BioPdfPrinter : PrinterControl
         WriteIniSettings(GlobalIniPath, "PDF Printer", config);
     }
 
+
     private void CreateBioPdfRunonce(string title, string outputPath, string statusPath)
     {
         Dictionary<string, string> settings = new()
@@ -93,6 +94,7 @@ internal sealed class BioPdfPrinter : PrinterControl
 
         WriteIniSettings(RunonceIniPath, "PDF Printer", settings);
     }
+
 
     private static void WriteIniSettings(string filePath, string section, Dictionary<string, string> settings)
     {
