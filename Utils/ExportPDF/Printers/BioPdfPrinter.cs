@@ -99,9 +99,8 @@ internal sealed class BioPdfPrinter : PrinterControl
     private static void WriteIniSettings(string filePath, string section, Dictionary<string, string> settings)
     {
         string directory = Path.GetDirectoryName(filePath);
-
-        PathHelper.EnsureDirectory(directory);
         PathHelper.DeleteExistsFile(filePath);
+        PathHelper.EnsureDirectory(directory);
 
         try
         {
