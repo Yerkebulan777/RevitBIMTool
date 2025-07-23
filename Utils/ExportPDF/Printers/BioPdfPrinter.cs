@@ -16,6 +16,7 @@ internal sealed class BioPdfPrinter : PrinterControl
     private string RunonceIniPath { get; set; }
     private string GlobalIniPath { get; set; }
 
+
     public override void InitializePrinter()
     {
         PrinterStateManager.ReservePrinter(PrinterName);
@@ -34,10 +35,12 @@ internal sealed class BioPdfPrinter : PrinterControl
         ConfigureGhostscriptOptimization();
     }
 
+
     public override void ReleasePrinterSettings()
     {
         PrinterStateManager.ReleasePrinter(PrinterName);
     }
+
 
     public override bool DoPrint(Document doc, SheetModel model, string folder)
     {
@@ -49,6 +52,7 @@ internal sealed class BioPdfPrinter : PrinterControl
 
         return PrintHelper.ExecutePrint(doc, model, folder);
     }
+
 
     private void ConfigureGhostscriptOptimization()
     {
@@ -62,6 +66,7 @@ internal sealed class BioPdfPrinter : PrinterControl
 
         WriteIniSettings(GlobalIniPath, "PDF Printer", config);
     }
+
 
     private void CreateBioPdfRunonce(string title, string outputPath, string statusPath)
     {
@@ -117,4 +122,7 @@ internal sealed class BioPdfPrinter : PrinterControl
 
 
     }
+
+
+
 }
