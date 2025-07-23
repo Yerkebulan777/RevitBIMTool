@@ -63,7 +63,6 @@ internal sealed class BioPdfPrinter : PrinterControl
         WriteIniSettings(GlobalIniPath, "PDF Printer", config);
     }
 
-
     private void CreateBioPdfRunonce(string title, string outputPath, string statusPath)
     {
         Dictionary<string, string> settings = new()
