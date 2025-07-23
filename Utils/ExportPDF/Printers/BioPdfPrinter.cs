@@ -1,6 +1,7 @@
 ﻿using Autodesk.Revit.DB;
 using RevitBIMTool.Models;
 using System.IO;
+using System.Windows.Documents;
 
 namespace RevitBIMTool.Utils.ExportPDF.Printers;
 
@@ -10,7 +11,7 @@ internal sealed class BioPdfPrinter : PrinterControl
     public override string PrinterName => "PDF Writer - bioPDF";
     public override bool IsInternalPrinter => false;
 
-    public string UserSettingsPath;
+    public string LocalSettingsDirectory;
     public string GlobalSettingsPath;
 
     public override void InitializePrinter()
@@ -19,9 +20,11 @@ internal sealed class BioPdfPrinter : PrinterControl
 
         const string BioPdfPrinterPath = @"PDF Writer\PDF Writer - bioPDF";
 
-        UserSettingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), BioPdfPrinterPath);
+        string localAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        string programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
 
-        GlobalSettingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), BioPdfPrinterPath);
+        LocalSettingsDirectory = Path.Combine(localAppDataPath, BioPdfPrinterPath);
+        GlobalSettingsPath = Path.Combine(programDataPath, BioPdfPrinterPath);
     }
 
 
@@ -29,9 +32,7 @@ internal sealed class BioPdfPrinter : PrinterControl
     {
         string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
 
-        string runonceFilePath = Path.Combine(UserSettingsPath, "runonce.ini");
-
-        CreateRunonceFile(desktopPath, string.Empty, runonceFilePath);
+        CreateRunonceFile(desktopPath, string.Empty);
 
         PrinterStateManager.ReleasePrinter(PrinterName);
     }
@@ -39,16 +40,16 @@ internal sealed class BioPdfPrinter : PrinterControl
 
     public override bool DoPrint(Document doc, SheetModel model, string folder)
     {
-        string runonceFilePath = Path.Combine(UserSettingsPath, "runonce.ini");
-
-        CreateRunonceFile(folder, model.SheetName, runonceFilePath);
+        CreateRunonceFile(folder, model.SheetName);
 
         return PrintHelper.ExecutePrint(doc, model, folder);
     }
 
 
-    private static void CreateRunonceFile(string path, string title, string runonceFilePath)
+    public void CreateRunonceFile(string outputPath, string title)
     {
+        string runonceFilePath = GenerateUniqueRunonceFile(title);
+
         if (File.Exists(runonceFilePath))
         {
             File.Delete(runonceFilePath);
@@ -56,7 +57,7 @@ internal sealed class BioPdfPrinter : PrinterControl
 
         string runonce =
             "[PDF Printer]\r\n" +
-            "Output=" + path + "\r\n" +
+            "Output=" + outputPath + "\r\n" +
             "DisableOptionDialog=yes\r\n" +
             "ShowSettings=never\r\n" +
             "ShowSaveAS=never\r\n" +
@@ -71,6 +72,22 @@ internal sealed class BioPdfPrinter : PrinterControl
 
         File.WriteAllText(runonceFilePath, runonce);
     }
+
+
+    public string GenerateUniqueRunonceFile(string documentName)
+    {
+        if (string.IsNullOrEmpty(documentName))
+        {
+            throw new ArgumentException(nameof(documentName));
+        }
+
+        string encodedName = Uri.EscapeDataString(documentName);
+        string fileName = $"runonce_{encodedName}_{Guid.NewGuid()}.ini";
+        string runoncePath = Path.Combine(LocalSettingsDirectory, fileName);
+
+        return runoncePath;
+    }
+
 
 
 }
