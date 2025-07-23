@@ -32,7 +32,7 @@ internal sealed class ExportPdfCommand : IExternalCommand, IExternalCommandAvail
         }
         catch (Exception ex)
         {
-            TaskDialog.Show("Exception", "Exception: \n" + ex);
+            TaskDialog.Show("Exception", ex.Message);
             Clipboard.SetText(ex.ToString());
             return Result.Failed;
         }
