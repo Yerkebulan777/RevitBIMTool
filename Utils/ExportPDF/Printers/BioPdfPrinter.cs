@@ -114,7 +114,7 @@ internal sealed class BioPdfPrinter : PrinterControl
                 content.AppendLine($"{kvp.Key}={kvp.Value ?? string.Empty}");
             }
 
-            File.WriteAllText(filePath, content.ToString(), Encoding.UTF8);
+            File.WriteAllText(filePath, content.ToString(), Encoding.Default);
             Log.Debug("Created bioPDF ini settings: {FilePath}", filePath);
         }
         catch (Exception ex)
@@ -126,4 +126,7 @@ internal sealed class BioPdfPrinter : PrinterControl
 
 
     }
+
+
+
 }
