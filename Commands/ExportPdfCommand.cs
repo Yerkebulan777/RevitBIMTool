@@ -27,8 +27,8 @@ internal sealed class ExportPdfCommand : IExternalCommand, IExternalCommandAvail
             LoggerHelper.SetupLogger(doc.Title);
             RevitLinkHelper.CheckAndRemoveUnloadedLinks(doc);
             string revitFilePath = PathHelper.GetRevitFilePath(doc);
-            string exportDirectory = CommonExportManager.SetDirectory(revitFilePath, "03_PDF", true);
-            ExportPdfProcessor.Execute(uidoc, revitFilePath, exportDirectory);
+            string outputDirectory = CommonExportManager.SetDirectory(revitFilePath, "03_PDF", true);
+            ExportPdfProcessor.Execute(uidoc, revitFilePath, outputDirectory);
         }
         catch (Exception ex)
         {
@@ -39,6 +39,7 @@ internal sealed class ExportPdfCommand : IExternalCommand, IExternalCommandAvail
 
         return Result.Succeeded;
     }
+
 
     public bool IsCommandAvailable(UIApplication applicationData, CategorySet selectedCategories)
     {
