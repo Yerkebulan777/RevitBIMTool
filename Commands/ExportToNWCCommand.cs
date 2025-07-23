@@ -45,7 +45,6 @@ internal sealed class ExportToNWCCommand : IExternalCommand, IExternalCommandAva
 
     public bool IsCommandAvailable(UIApplication applicationData, CategorySet selectedCategories)
     {
-        UIDocument uidoc = applicationData?.ActiveUIDocument;
-        return uidoc != null && uidoc.Document.IsDetached.Equals(false);
+        return applicationData?.ActiveUIDocument.IsValidObject == true;
     }
 }

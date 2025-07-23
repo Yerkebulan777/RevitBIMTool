@@ -22,9 +22,9 @@ internal sealed class ExportToPdfCommand : IExternalCommand, IExternalCommandAva
         UIDocument uidoc = uiapp.ActiveUIDocument;
         Document doc = uidoc.Document;
 
-        if (commandData.Application is null) 
-        { 
-            return Result.Cancelled; 
+        if (commandData.Application is null)
+        {
+            return Result.Cancelled;
         }
 
         try
@@ -37,7 +37,7 @@ internal sealed class ExportToPdfCommand : IExternalCommand, IExternalCommandAva
         }
         catch (Exception ex)
         {
-            TaskDialog.Show("Exception", "Exception: \n" + ex);
+            _ = TaskDialog.Show("Exception", "Exception: \n" + ex);
             Clipboard.SetText(ex.ToString());
             return Result.Failed;
         }
@@ -47,7 +47,6 @@ internal sealed class ExportToPdfCommand : IExternalCommand, IExternalCommandAva
 
     public bool IsCommandAvailable(UIApplication applicationData, CategorySet selectedCategories)
     {
-        UIDocument uidoc = applicationData?.ActiveUIDocument;
-        return uidoc != null && uidoc.Document.IsDetached.Equals(false);
+        return applicationData?.ActiveUIDocument.IsValidObject == true;
     }
 }
