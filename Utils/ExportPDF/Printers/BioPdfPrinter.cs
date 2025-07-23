@@ -43,8 +43,7 @@ internal sealed class BioPdfPrinter : PrinterControl
     {
         string outputPath = Path.Combine(folder, model.SheetName);
         string revitFileName = Path.GetFileNameWithoutExtension(model.RevitFilePath);
-        string statusFileName = $"{Uri.EscapeDataString(model.SheetName)}_{Guid.NewGuid()}.ini";
-        string statusFilePath = Path.Combine(Path.GetTempPath(), statusFileName);
+        string statusFilePath = Path.Combine(Path.GetTempPath(), $"{model.GetHashCode()}.ini");
 
         CreateBioPdfRunonce(revitFileName, outputPath, statusFilePath);
 
