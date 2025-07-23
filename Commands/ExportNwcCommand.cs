@@ -13,7 +13,7 @@ namespace RevitBIMTool.Commands;
 
 [Transaction(TransactionMode.Manual)]
 [Regeneration(RegenerationOption.Manual)]
-internal sealed class ExportToNWCCommand : IExternalCommand, IExternalCommandAvailability
+internal sealed class ExportNwcCommand : IExternalCommand, IExternalCommandAvailability
 {
     public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
     {

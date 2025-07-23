@@ -30,25 +30,25 @@ public static class SetupUIPanel
 
         if (ribbonPanel != null)
         {
-            if (ribbonPanel.CreatePushButton(typeof(ExportToPdfCommand), "ExportToNWC to PDF") is PushButton button01)
+            if (ribbonPanel.CreatePushButton(typeof(ExportPdfCommand), "ExportToNWC to PDF") is PushButton button01)
             {
-                button01.AvailabilityClassName = typeof(ExportToPdfCommand).FullName;
+                button01.AvailabilityClassName = typeof(ExportPdfCommand).FullName;
                 button01.SetImage("/RevitBIMTool;component/Resources/Icons/RibbonIcon16.png");
                 button01.SetLargeImage("/RevitBIMTool;component/Resources/Icons/RibbonIcon32.png");
                 ribbonPanel.AddSeparator();
             }
 
-            if (ribbonPanel.CreatePushButton(typeof(ExportToDWGCommand), "ExportToNWC to DWG") is PushButton button02)
+            if (ribbonPanel.CreatePushButton(typeof(ExportDwgCommand), "ExportToNWC to DWG") is PushButton button02)
             {
-                button02.AvailabilityClassName = typeof(ExportToDWGCommand).FullName;
+                button02.AvailabilityClassName = typeof(ExportDwgCommand).FullName;
                 button02.SetImage("/RevitBIMTool;component/Resources/Icons/RibbonIcon16.png");
                 button02.SetLargeImage("/RevitBIMTool;component/Resources/Icons/RibbonIcon32.png");
                 ribbonPanel.AddSeparator();
             }
 
-            if (ribbonPanel.CreatePushButton(typeof(ExportToNWCCommand), "ExportToNWC to NWC") is PushButton button03)
+            if (ribbonPanel.CreatePushButton(typeof(ExportNwcCommand), "ExportToNWC to NWC") is PushButton button03)
             {
-                button03.AvailabilityClassName = typeof(ExportToNWCCommand).FullName;
+                button03.AvailabilityClassName = typeof(ExportNwcCommand).FullName;
                 button03.SetImage("/RevitBIMTool;component/Resources/Icons/RibbonIcon16.png");
                 button03.SetLargeImage("/RevitBIMTool;component/Resources/Icons/RibbonIcon32.png");
                 ribbonPanel.AddSeparator();
