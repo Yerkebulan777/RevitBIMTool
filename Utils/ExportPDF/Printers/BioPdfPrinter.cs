@@ -1,7 +1,8 @@
 ﻿using Autodesk.Revit.DB;
 using RevitBIMTool.Models;
+using Serilog;
 using System.IO;
-using System.Windows.Documents;
+using System.Text;
 
 namespace RevitBIMTool.Utils.ExportPDF.Printers;
 
@@ -11,20 +12,19 @@ internal sealed class BioPdfPrinter : PrinterControl
     public override string PrinterName => "PDF Writer - bioPDF";
     public override bool IsInternalPrinter => false;
 
-    public string LocalSettingsDirectory;
-    public string GlobalSettingsPath;
+    public string LocalSettingsDir;
+    public string GlobalSettingsDir;
 
     public override void InitializePrinter()
     {
         PrinterStateManager.ReservePrinter(PrinterName);
 
         const string BioPdfPrinterPath = @"PDF Writer\PDF Writer - bioPDF";
-
         string localAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         string programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
 
-        LocalSettingsDirectory = Path.Combine(localAppDataPath, BioPdfPrinterPath);
-        GlobalSettingsPath = Path.Combine(programDataPath, BioPdfPrinterPath);
+        LocalSettingsDir = Path.Combine(localAppDataPath, BioPdfPrinterPath);
+        GlobalSettingsDir = Path.Combine(programDataPath, BioPdfPrinterPath);
     }
 
 
@@ -46,46 +46,82 @@ internal sealed class BioPdfPrinter : PrinterControl
     }
 
 
-    public void CreateRunonceFile(string outputPath, string title)
+    public void ConfigureGhostscriptOptimization()
     {
-        string runonceFilePath = GenerateUniqueRunonceFile(title);
+        string globalIniPath = Path.Combine(GlobalSettingsDir, "global.ini");
 
-        if (File.Exists(runonceFilePath))
+        Dictionary<string, string> config = new()
         {
-            File.Delete(runonceFilePath);
-        }
+            ["GhostscriptTimeout"] = "7200",
+            ["GSGarbageCollection"] = "no",
+            ["MaxMemory"] = "1073741824",
+            ["Quality"] = "screen"
+        };
 
-        string runonce =
-            "[PDF Printer]\r\n" +
-            "Output=" + outputPath + "\r\n" +
-            "DisableOptionDialog=yes\r\n" +
-            "ShowSettings=never\r\n" +
-            "ShowSaveAS=never\r\n" +
-            "ShowProgress=yes\r\n" +
-            "ShowPDF=never\r\n" +
-            "Title=" + title + "\r\n" +
-            "Subject=Generated Document\r\n" +
-            "Creator=Application Name\r\n" +
-            "ShowProgressFinished=no\r\n" +
-            "ConfirmOverwrite=no\r\n" +
-            "Target=printer\r\n";
-
-        File.WriteAllText(runonceFilePath, runonce);
+        WriteIniSettings(globalIniPath, "PDF Printer", config);
     }
 
 
-    public string GenerateUniqueRunonceFile(string documentName)
+    public void CreateBioPdfRunonce(string title, string outputPath, string statusPath)
     {
-        if (string.IsNullOrEmpty(documentName))
+        string runoncePath = Path.Combine(LocalSettingsDir, "runonce.ini");
+
+        if (File.Exists(runoncePath))
         {
-            throw new ArgumentException(nameof(documentName));
+            File.Delete(runoncePath);
         }
 
-        string encodedName = Uri.EscapeDataString(documentName);
-        string runonceFileName = $"runonce_{encodedName}_{Guid.NewGuid()}.ini";
-        string runoncePath = Path.Combine(LocalSettingsDirectory, runonceFileName);
+        Dictionary<string, string> settings = new()
+        {
+            ["Title"] = title,
+            ["Subject"] = "Exported Document",
+            ["Creator"] = "Revit BIM Tool",
+            ["DisableOptionDialog"] = "yes",
+            ["ShowProgressFinished"] = "no",
+            ["ConfirmOverwrite"] = "yes",
+            ["Output"] = outputPath,
+            ["StatusFile"] = statusPath,
+            ["ShowSettings"] = "never",
+            ["ShowSaveAS"] = "never",
+            ["ShowProgress"] = "no",
+            ["ShowPDF"] = "no",
+            ["Target"] = "printer",
+            ["Quality"] = "printer",
+            ["ColorModel"] = "rgb",
+        };
 
-        return runoncePath;
+        WriteIniSettings(runoncePath, "PDF Printer", settings);
+    }
+
+
+    private static void WriteIniSettings(string filePath, string section, Dictionary<string, string> settings)
+    {
+        string directory = Path.GetDirectoryName(filePath);
+
+        if (!Directory.Exists(directory))
+        {
+            throw new DirectoryNotFoundException($"Directory does not exist: {directory}");
+        }
+
+        try
+        {
+            StringBuilder content = new(settings.Count * 50);
+
+            _ = content.AppendLine($"[{section}]");
+
+            foreach (KeyValuePair<string, string> kvp in settings.Where(kvp => !string.IsNullOrEmpty(kvp.Key)))
+            {
+                _ = content.AppendLine($"{kvp.Key}={kvp.Value ?? string.Empty}");
+            }
+
+            File.WriteAllText(filePath, content.ToString(), Encoding.UTF8);
+            Log.Debug("Created bioPDF ini settings: {FilePath}", filePath);
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Failed to write INI settings to {FilePath}: {ErrorMessage}", filePath, ex.Message);
+            throw new InvalidOperationException($"Cannot write INI file: {Path.GetFileName(filePath)}", ex);
+        }
     }
 
 
