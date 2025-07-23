@@ -82,8 +82,8 @@ internal sealed class BioPdfPrinter : PrinterControl
         }
 
         string encodedName = Uri.EscapeDataString(documentName);
-        string fileName = $"runonce_{encodedName}_{Guid.NewGuid()}.ini";
-        string runoncePath = Path.Combine(LocalSettingsDirectory, fileName);
+        string runonceFileName = $"runonce_{encodedName}_{Guid.NewGuid()}.ini";
+        string runoncePath = Path.Combine(LocalSettingsDirectory, runonceFileName);
 
         return runoncePath;
     }
