@@ -104,6 +104,7 @@ public static class PathHelper
             ModelPath modelPath = document.GetWorksharingCentralModelPath();
             return ModelPathUtils.ConvertModelPathToUserVisiblePath(modelPath);
         }
+
         return document.PathName;
     }
 

@@ -8,7 +8,6 @@ using RevitBIMTool.Utils.Common;
 using System.Globalization;
 using System.Windows;
 
-
 namespace RevitBIMTool.Commands;
 
 [Transaction(TransactionMode.Manual)]

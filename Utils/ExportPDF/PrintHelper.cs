@@ -53,8 +53,10 @@ internal static class PrintHelper
 
                 else if (PrinterApiUtility.GetOrCreatePaperSize(printer.PrinterName, widthInMm, heightInMm, out paperSize))
                 {
+
                     model = new(viewSheet, paperSize, orientation);
                     model.SetSheetName(doc, revitFileName, "pdf");
+                    model.RevitFilePath = printer.RevitFilePath;
                     model.IsColorEnabled = сolorEnabled;
                     formatName = paperSize.PaperName;
                 }

@@ -41,12 +41,6 @@ internal sealed class BioPdfPrinter : PrinterControl
 
     public override bool DoPrint(Document doc, SheetModel model, string folder)
     {
-        if (string.IsNullOrEmpty(model?.RevitFilePath))
-        {
-            Log.Error("RevitFilePath is null or empty");
-            return false;
-        }
-
         string outputPath = Path.Combine(folder, model.SheetName);
         string revitFileName = Path.GetFileNameWithoutExtension(model.RevitFilePath);
         string statusFileName = $"{Uri.EscapeDataString(model.SheetName)}_{Guid.NewGuid()}.ini";

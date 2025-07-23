@@ -17,6 +17,7 @@ internal static class ExportPdfProcessor
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
         string tempDirectory = Path.Combine(tempBase.FullName, $"{revitFileName}");
         string sectionName = PathHelper.GetSectionName(revitFilePath);
+        bool isColorEnabled = sectionName is not ("KJ" or "KR" or "KG");
 
         Log.Information("Temp directory path: {TempDirectory}", tempDirectory);
         Log.Information("Export folder path: {ExportDirectory}", exportDirectory);
@@ -26,8 +27,6 @@ internal static class ExportPdfProcessor
             Log.Fatal("No available printer found!");
             RevitFileHelper.CloseRevitApplication();
         }
-
-        bool isColorEnabled = sectionName is not ("KJ" or "KR" or "KG");
 
         PrintSettingsManager.ResetPrinterSettings(uidoc.Document, printer);
 
@@ -39,7 +38,7 @@ internal static class ExportPdfProcessor
         {
             printer.InitializePrinter();
 
-            Log.Information("Start export to PDF...");
+            Log.Information("Start export PDF...");
 
             PathHelper.EnsureDirectory(tempDirectory);
             PathHelper.EnsureDirectory(exportDirectory);
