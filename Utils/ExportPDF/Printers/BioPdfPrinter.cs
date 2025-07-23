@@ -30,17 +30,17 @@ internal sealed class BioPdfPrinter : PrinterControl
 
     public override void ReleasePrinterSettings()
     {
-        string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-
-        CreateRunonceFile(desktopPath, string.Empty);
-
         PrinterStateManager.ReleasePrinter(PrinterName);
     }
 
 
     public override bool DoPrint(Document doc, SheetModel model, string folder)
     {
-        CreateRunonceFile(folder, model.SheetName);
+        string revitFileName = Path.GetFileNameWithoutExtension(model.RevitFilePath);
+        string statusFileName = $"{Uri.EscapeDataString(model.SheetName)}_{Guid.NewGuid()}.ini";
+        string statusFilePath = Path.Combine(Path.GetTempPath(), statusFileName);
+
+        CreateBioPdfRunonce(revitFileName, model.SheetName, statusFilePath);
 
         return PrintHelper.ExecutePrint(doc, model, folder);
     }
