@@ -41,7 +41,6 @@ internal sealed class BioPdfPrinter : PrinterControl
 
     public override void ReleasePrinterSettings()
     {
-        // Очищаем runonce файл
         string runoncePath = Path.Combine(LocalSettingsDir, "runonce.ini");
 
         PathHelper.DeleteExistsFile(runoncePath);
