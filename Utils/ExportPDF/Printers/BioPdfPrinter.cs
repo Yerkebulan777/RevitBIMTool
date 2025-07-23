@@ -13,7 +13,6 @@ internal sealed class BioPdfPrinter : PrinterControl
     public string UserSettingsPath;
     public string GlobalSettingsPath;
 
-
     public override void InitializePrinter()
     {
         PrinterStateManager.ReservePrinter(PrinterName);
