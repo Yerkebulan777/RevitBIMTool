@@ -1,5 +1,6 @@
 ﻿using Autodesk.Revit.DB;
 using RevitBIMTool.Models;
+using RevitBIMTool.Utils.Common;
 using Serilog;
 using System.IO;
 using System.Text;
@@ -25,22 +26,38 @@ internal sealed class BioPdfPrinter : PrinterControl
 
         LocalSettingsDir = Path.Combine(localAppDataPath, BioPdfPrinterPath);
         GlobalSettingsDir = Path.Combine(programDataPath, BioPdfPrinterPath);
+
+        if (!Directory.Exists(LocalSettingsDir))
+        {
+            throw new DirectoryNotFoundException(localAppDataPath + "Please install bioPDF printer.");
+        }
+
+        if (!Directory.Exists(GlobalSettingsDir))
+        {
+            throw new DirectoryNotFoundException(programDataPath + "Please install bioPDF printer.");
+        }
     }
 
 
     public override void ReleasePrinterSettings()
     {
+        // Очищаем runonce файл
+        string runoncePath = Path.Combine(LocalSettingsDir, "runonce.ini");
+
+        PathHelper.DeleteExistsFile(runoncePath);
+
         PrinterStateManager.ReleasePrinter(PrinterName);
     }
 
 
     public override bool DoPrint(Document doc, SheetModel model, string folder)
     {
+        string outputPath = Path.Combine(folder, $"{model.SheetName}.pdf");
         string revitFileName = Path.GetFileNameWithoutExtension(model.RevitFilePath);
         string statusFileName = $"{Uri.EscapeDataString(model.SheetName)}_{Guid.NewGuid()}.ini";
         string statusFilePath = Path.Combine(Path.GetTempPath(), statusFileName);
 
-        CreateBioPdfRunonce(revitFileName, model.SheetName, statusFilePath);
+        CreateBioPdfRunonce(revitFileName, outputPath, statusFilePath);
 
         return PrintHelper.ExecutePrint(doc, model, folder);
     }
@@ -55,7 +72,7 @@ internal sealed class BioPdfPrinter : PrinterControl
             ["GhostscriptTimeout"] = "7200",
             ["GSGarbageCollection"] = "no",
             ["MaxMemory"] = "1073741824",
-            ["Quality"] = "screen"
+            ["Quality"] = "printer"
         };
 
         WriteIniSettings(globalIniPath, "PDF Printer", config);
@@ -114,8 +131,8 @@ internal sealed class BioPdfPrinter : PrinterControl
                 _ = content.AppendLine($"{kvp.Key}={kvp.Value ?? string.Empty}");
             }
 
-            File.WriteAllText(filePath, content.ToString(), Encoding.UTF8);
-            Log.Debug("Created bioPDF ini settings: {FilePath}", filePath);
+            File.WriteAllText(filePath, content.ToString(), Encoding.Default);
+            Log.Debug("BioPDF ini settings written: {FilePath}", filePath);
         }
         catch (Exception ex)
         {
@@ -123,7 +140,6 @@ internal sealed class BioPdfPrinter : PrinterControl
             throw new InvalidOperationException($"Cannot write INI file: {Path.GetFileName(filePath)}", ex);
         }
     }
-
 
 
 }
