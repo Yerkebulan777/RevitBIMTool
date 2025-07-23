@@ -60,10 +60,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\AutomationService\ServiceLibrary\ServiceLibrary.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
       <Reference Include="ServiceLibrary">
         <HintPath>..\AutomationService\ServiceLibrary\bin\Debug\ServiceLibrary.dll</HintPath>
       </Reference>
