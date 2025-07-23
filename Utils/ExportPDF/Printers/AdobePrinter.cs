@@ -51,7 +51,7 @@ internal sealed class AdobePdfPrinter : PrinterControl
         {
             try
             {
-                var RevitPdfPortFolder = "LastPdfPortFolder - Revit.exe";
+                string RevitPdfPortFolder = "LastPdfPortFolder - Revit.exe";
                 RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, RevitExePath, destFileName);
                 RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, RevitPdfPortFolder, folder);
 
