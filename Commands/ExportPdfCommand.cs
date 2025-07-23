@@ -22,11 +22,6 @@ internal sealed class ExportPdfCommand : IExternalCommand, IExternalCommandAvail
         UIDocument uidoc = uiapp.ActiveUIDocument;
         Document doc = uidoc.Document;
 
-        if (commandData.Application is null)
-        {
-            return Result.Cancelled;
-        }
-
         try
         {
             LoggerHelper.SetupLogger(doc.Title);
