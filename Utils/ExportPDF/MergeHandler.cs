@@ -19,17 +19,15 @@ internal static class MergeHandler
         if (validSheets is null || !validSheets.Any())
         {
             Log.Warning("No valid sheets to merge");
-            throw new Exception("No valid sheets to merge");
         }
 
         using Document outputDocument = new();
         using FileStream stream = new(outputFullName, FileMode.Create);
         using PdfCopy copy = new(outputDocument, stream);
-
         outputDocument.Open();
         int totalPages = 0;
 
-        Log.Information($"Merging {validSheets?.Count ?? 0} sheets");
+        Log.Information("Merging {SheetCount} sheets", validSheets?.Count ?? 0);
 
         foreach (SheetModel model in SheetHelper.SortSheetModels(validSheets))
         {
@@ -80,17 +78,14 @@ internal static class MergeHandler
 
         }
 
-        Log.Information($"Merged {totalPages} pages");
+        Log.Information("Merged {TotalPages} pages", totalPages);
 
-        if (totalPages == 0)
+        if (totalPages == 0 && File.Exists(outputFullName))
         {
-            if (File.Exists(outputFullName))
-            {
-                File.Delete(outputFullName);
-            }
+            File.Delete(outputFullName);
         }
+
+
+
     }
-
-
-
 }
