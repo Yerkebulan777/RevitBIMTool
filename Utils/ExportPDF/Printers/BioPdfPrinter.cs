@@ -13,45 +13,41 @@ internal sealed class BioPdfPrinter : PrinterControl
     public override string PrinterName => "PDF Writer - bioPDF";
     public override bool IsInternalPrinter => false;
 
-    public string LocalSettingsDir;
-    public string GlobalSettingsDir;
+    private string RunonceIniPath { get; set; }
+    private string GlobalIniPath { get; set; }
 
     public override void InitializePrinter()
     {
         PrinterStateManager.ReservePrinter(PrinterName);
 
         const string BioPdfPrinterPath = @"PDF Writer\PDF Writer - bioPDF";
+
         string localAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         string programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
 
-        LocalSettingsDir = Path.Combine(localAppDataPath, BioPdfPrinterPath);
-        GlobalSettingsDir = Path.Combine(programDataPath, BioPdfPrinterPath);
+        string localSettingsDir = Path.Combine(localAppDataPath, BioPdfPrinterPath);
+        string globalSettingsDir = Path.Combine(programDataPath, BioPdfPrinterPath);
 
-        if (!Directory.Exists(LocalSettingsDir))
-        {
-            throw new DirectoryNotFoundException(localAppDataPath + "Please install bioPDF printer.");
-        }
+        RunonceIniPath = Path.Combine(localSettingsDir, "runonce.ini");
+        GlobalIniPath = Path.Combine(globalSettingsDir, "global.ini");
 
-        if (!Directory.Exists(GlobalSettingsDir))
-        {
-            throw new DirectoryNotFoundException(programDataPath + "Please install bioPDF printer.");
-        }
+        ConfigureGhostscriptOptimization();
     }
-
 
     public override void ReleasePrinterSettings()
     {
-        string runoncePath = Path.Combine(LocalSettingsDir, "runonce.ini");
-
-        PathHelper.DeleteExistsFile(runoncePath);
-
         PrinterStateManager.ReleasePrinter(PrinterName);
     }
 
-
     public override bool DoPrint(Document doc, SheetModel model, string folder)
     {
-        string outputPath = Path.Combine(folder, $"{model.SheetName}.pdf");
+        if (string.IsNullOrEmpty(model?.RevitFilePath))
+        {
+            Log.Error("RevitFilePath is null or empty");
+            return false;
+        }
+
+        string outputPath = Path.Combine(folder, model.SheetName);
         string revitFileName = Path.GetFileNameWithoutExtension(model.RevitFilePath);
         string statusFileName = $"{Uri.EscapeDataString(model.SheetName)}_{Guid.NewGuid()}.ini";
         string statusFilePath = Path.Combine(Path.GetTempPath(), statusFileName);
@@ -61,11 +57,8 @@ internal sealed class BioPdfPrinter : PrinterControl
         return PrintHelper.ExecutePrint(doc, model, folder);
     }
 
-
-    public void ConfigureGhostscriptOptimization()
+    private void ConfigureGhostscriptOptimization()
     {
-        string globalIniPath = Path.Combine(GlobalSettingsDir, "global.ini");
-
         Dictionary<string, string> config = new()
         {
             ["GhostscriptTimeout"] = "7200",
@@ -74,29 +67,21 @@ internal sealed class BioPdfPrinter : PrinterControl
             ["Quality"] = "printer"
         };
 
-        WriteIniSettings(globalIniPath, "PDF Printer", config);
+        WriteIniSettings(GlobalIniPath, "PDF Printer", config);
     }
 
-
-    public void CreateBioPdfRunonce(string title, string outputPath, string statusPath)
+    private void CreateBioPdfRunonce(string title, string outputPath, string statusPath)
     {
-        string runoncePath = Path.Combine(LocalSettingsDir, "runonce.ini");
-
-        if (File.Exists(runoncePath))
-        {
-            File.Delete(runoncePath);
-        }
-
         Dictionary<string, string> settings = new()
         {
             ["Title"] = title,
+            ["Output"] = outputPath,
+            ["StatusFile"] = statusPath,
             ["Subject"] = "Exported Document",
             ["Creator"] = "Revit BIM Tool",
             ["DisableOptionDialog"] = "yes",
             ["ShowProgressFinished"] = "no",
             ["ConfirmOverwrite"] = "yes",
-            ["Output"] = outputPath,
-            ["StatusFile"] = statusPath,
             ["ShowSettings"] = "never",
             ["ShowSaveAS"] = "never",
             ["ShowProgress"] = "no",
@@ -106,39 +91,40 @@ internal sealed class BioPdfPrinter : PrinterControl
             ["ColorModel"] = "rgb",
         };
 
-        WriteIniSettings(runoncePath, "PDF Printer", settings);
+        WriteIniSettings(RunonceIniPath, "PDF Printer", settings);
     }
-
 
     private static void WriteIniSettings(string filePath, string section, Dictionary<string, string> settings)
     {
         string directory = Path.GetDirectoryName(filePath);
 
-        if (!Directory.Exists(directory))
-        {
-            throw new DirectoryNotFoundException($"Directory does not exist: {directory}");
-        }
+        PathHelper.EnsureDirectory(directory);
+        PathHelper.DeleteExistsFile(filePath);
 
         try
         {
             StringBuilder content = new(settings.Count * 50);
 
-            _ = content.AppendLine($"[{section}]");
+            content.AppendLine($"[{section}]");
 
             foreach (KeyValuePair<string, string> kvp in settings.Where(kvp => !string.IsNullOrEmpty(kvp.Key)))
             {
-                _ = content.AppendLine($"{kvp.Key}={kvp.Value ?? string.Empty}");
+                content.AppendLine($"{kvp.Key}={kvp.Value ?? string.Empty}");
             }
 
-            File.WriteAllText(filePath, content.ToString(), Encoding.Default);
-            Log.Debug("BioPDF ini settings written: {FilePath}", filePath);
+            File.WriteAllText(filePath, content.ToString(), Encoding.UTF8);
+            Log.Debug("Created bioPDF ini settings: {FilePath}", filePath);
         }
         catch (Exception ex)
         {
             Log.Error("Failed to write INI settings to {FilePath}: {ErrorMessage}", filePath, ex.Message);
             throw new InvalidOperationException($"Cannot write INI file: {Path.GetFileName(filePath)}", ex);
         }
+
+
+
     }
+
 
 
 }
