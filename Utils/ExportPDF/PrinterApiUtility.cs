@@ -36,7 +36,6 @@ public static class PrinterApiUtility
     /// <summary>
     /// Получает существующий формат бумаги или создает новый при необходимости
     /// </summary>
-    /// <returns>true, если формат был найден или успешно создан</returns>
     public static bool GetOrCreatePaperSize(string printerName, double widthInMm, double heightInMm, out PaperSize paperSize, int threshold = 5)
     {
         (double minSide, double maxSide) = NormalizeDimensions(widthInMm, heightInMm, threshold);

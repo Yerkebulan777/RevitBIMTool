@@ -50,6 +50,7 @@ internal static class PrintHelper
                     };
                     model.SetSheetName(doc, revitFileName, "pdf");
                 }
+
                 else if (PrinterApiUtility.GetOrCreatePaperSize(printer.PrinterName, widthInMm, heightInMm, out paperSize))
                 {
                     model = new(viewSheet, paperSize, orientation);
