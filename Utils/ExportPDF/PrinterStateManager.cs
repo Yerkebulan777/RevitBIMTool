@@ -91,7 +91,7 @@ internal static class PrinterStateManager
     /// <summary>
     /// Попытка получить доступный принтер для печати
     /// </summary>
-    public static bool TryRetrievePrinter(string revitFilePath, out PrinterControl availablePrinter)
+    public static bool TryGetPrinter(string revitFilePath, out PrinterControl availablePrinter)
     {
         int retryCount = 0;
         availablePrinter = null;
