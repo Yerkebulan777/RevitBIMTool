@@ -42,5 +42,6 @@ namespace Database.Repositories
         /// Инициализировать принтеры в базе данных
         /// </summary>
         void InitializePrinters(IEnumerable<string> printerNames, IDbTransaction transaction = null);
+
     }
 }
