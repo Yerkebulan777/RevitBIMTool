@@ -2,6 +2,7 @@
 using RevitBIMTool.Utils.ExportPDF.Printers;
 using RevitBIMTool.Utils.SystemHelpers;
 using Serilog;
+using System.IO;
 using System.Xml.Serialization;
 
 namespace RevitBIMTool.Utils.ExportPDF;

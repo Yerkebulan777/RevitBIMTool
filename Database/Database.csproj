@@ -6,11 +6,11 @@
 		<PlatformTarget>x64</PlatformTarget>
 		<TargetFramework>netstandard2.0</TargetFramework>
 
-		<Configurations>Debug R19; Debug R21;Debug R23</Configurations>
-		<Configurations>$(Configurations); Release R19; Release R21; Release R23</Configurations>
+		<Configurations>Debug R19; Debug R21;Debug R23;Release R19; Release R21; Release R23</Configurations>
 		<Platforms>AnyCPU</Platforms>
 
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 
