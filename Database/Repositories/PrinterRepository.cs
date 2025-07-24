@@ -344,8 +344,10 @@ namespace Database.Repositories
             return 0; // Заглушка
         }
 
-        private void InitializePrintersInDatabase(IEnumerable<string> printerNames, IDbTransaction transaction)
+        private static void InitializePrintersInDatabase(IEnumerable<string> printerNames, IDbTransaction transaction)
         {
+            Debug.Assert(printerNames != null, "Printer names must not be null");
+            Debug.Assert(transaction != null, "Transaction must not be null");
             // Аналогично другим методам
         }
 
@@ -379,26 +381,14 @@ namespace Database.Repositories
 
         private static DateTime? ParseDateTime(object value)
         {
-            if (value == null || value == DBNull.Value)
-            {
-                return null;
-            }
-
             if (value is DateTime dateTime)
             {
                 return dateTime;
             }
 
-            if (value is string dateString)
+            if (value is string dateString && DateTime.TryParse(dateString, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsed))
             {
-                if (DateTime.TryParse(dateString, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsed))
-                {
-                    return parsed;
-                }
-                else
-                {
-                    return null;
-                }
+                return parsed;
             }
 
             return null;
