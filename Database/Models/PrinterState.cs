@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace RevitBIMTool.Database.Models
@@ -8,7 +9,6 @@ namespace RevitBIMTool.Database.Models
     /// Использует оптимистичное блокирование через RowVersion
     /// </summary>
     [Table("printer_states")]
-
     public class PrinterState
     {
         [Key]

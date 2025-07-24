@@ -1,16 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-
-		<Nullable>enable</Nullable>
-		<TargetFramework>netstandard2.0</TargetFramework>
+		<LangVersion>7.3</LangVersion>
+		<TargetFramework>net48</TargetFramework>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-		<!-- Мягкая обработка предупреждений на этапе разработки -->
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 		<NoWarn>$(NoWarn);CS1591;CS1572;CS1573</NoWarn>
 
-		<!-- Информация о проекте -->
 		<AssemblyTitle>RevitBIMTool Database Layer</AssemblyTitle>
 		<AssemblyDescription>Database layer for printer management with PostgreSQL support</AssemblyDescription>
 		<AssemblyVersion>1.0.0.0</AssemblyVersion>
@@ -27,7 +25,7 @@
 		<DebugSymbols>true</DebugSymbols>
 		<DefineConstants>$(DefineConstants);DEBUG</DefineConstants>
 	</PropertyGroup>
-	
+
 	<PropertyGroup Condition="$(Configuration.Contains('Release'))">
 		<Optimize>true</Optimize>
 		<DebugType>portable</DebugType>
@@ -36,32 +34,22 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<!-- Ядро Entity Framework Core -->
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.32" />
-
-		<!-- Провайдер для PostgreSQL -->
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="3.1.18" />
+		<PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
 
-		<!-- Data Annotations для .NET Standard 2.0 -->
-		<PackageReference Include="System.ComponentModel.Annotations" Version="4.7.0" />
-
-		<!-- Инструменты для миграций -->
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="3.1.32">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
 
-		<!-- Design-time поддержка -->
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="3.1.32">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
-		
 	</ItemGroup>
 
-
 	<ItemGroup>
-		<!-- Microsoft Extensions - совместимые версии для .NET Standard 2.0 -->
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.1.32" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="3.1.32" />
 		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="3.1.32" />
@@ -69,28 +57,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<!-- Дополнительные утилиты -->
-		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>analyzers</IncludeAssets>
-		</PackageReference>
-	</ItemGroup>
-
-	<ItemGroup>
-		<!-- SQL скрипты миграций как embedded resources -->
 		<EmbeddedResource Include="Migrations\*.sql" />
-		<!-- Конфигурационные файлы -->
 		<None Include="appsettings.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-	</ItemGroup>
-
-	<ItemGroup>
-		<!-- Настройки анализаторов кода -->
-		<Analyzer Include="Microsoft.CodeAnalysis.CSharp.CodeStyle">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>analyzers</IncludeAssets>
-		</Analyzer>
 	</ItemGroup>
 
 	<ItemGroup>
