@@ -10,12 +10,13 @@
 
         <Configurations>Debug R19; Debug R21;Debug R23</Configurations>
 		<Configurations>$(Configurations); Release R19; Release R21; Release R23</Configurations>
+		<Version>$(RevitVersion)</Version>
 		<Platforms>AnyCPU</Platforms>
 
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-		
+
     </PropertyGroup>
 
 	<PropertyGroup Condition="$(Configuration.Contains('Debug'))">
@@ -43,13 +44,6 @@
     <PropertyGroup Condition="$(Configuration.Contains('R23'))">
         <RevitVersion>2023</RevitVersion>
         <DefineConstants>$(DefineConstants);R23</DefineConstants>
-    </PropertyGroup>
-
-    <PropertyGroup>
-        <Version>$(RevitVersion)</Version>
-        <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
-        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     </PropertyGroup>
 
     <PropertyGroup>
