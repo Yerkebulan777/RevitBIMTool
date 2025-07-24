@@ -386,12 +386,9 @@ namespace Database.Repositories
                 return dateTime;
             }
 
-            if (value is string dateString && DateTime.TryParse(dateString, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsed))
-            {
-                return parsed;
-            }
-
-            return null;
+            return value is string dateString && DateTime.TryParse(dateString, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsed)
+                ? parsed
+                : (DateTime?)null;
         }
 
         private static string FormatDateTime(DateTime dateTime)
