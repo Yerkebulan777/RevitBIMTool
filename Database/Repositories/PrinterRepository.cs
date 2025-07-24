@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
+using System.Globalization;
 
 namespace Database.Repositories
 {
@@ -35,49 +36,35 @@ namespace Database.Repositories
 
         public IEnumerable<PrinterState> GetAvailablePrinters(IDbTransaction transaction = null)
         {
-            if (_config.Provider is InMemoryProvider inMemoryProvider)
-            {
-                return inMemoryProvider.GetAvailablePrinters();
-            }
-
-            return GetAvailablePrintersFromDatabase(transaction);
+            return _config.Provider is InMemoryProvider inMemoryProvider
+                ? inMemoryProvider.GetAvailablePrinters()
+                : GetAvailablePrintersFromDatabase(transaction);
         }
 
         public bool TryReservePrinter(string printerName, string reservedBy, IDbTransaction transaction = null)
         {
-            if (_config.Provider is InMemoryProvider inMemoryProvider)
-            {
-                return inMemoryProvider.TryReservePrinter(printerName, reservedBy);
-            }
-
-            return TryReservePrinterInDatabase(printerName, reservedBy, transaction);
+            return _config.Provider is InMemoryProvider inMemoryProvider
+                ? inMemoryProvider.TryReservePrinter(printerName, reservedBy)
+                : TryReservePrinterInDatabase(printerName, reservedBy, transaction);
         }
 
         public bool ReleasePrinter(string printerName, IDbTransaction transaction = null)
         {
-            if (_config.Provider is InMemoryProvider inMemoryProvider)
-            {
-                return inMemoryProvider.ReleasePrinter(printerName);
-            }
-
-            return ReleasePrinterInDatabase(printerName, transaction);
+            return _config.Provider is InMemoryProvider inMemoryProvider
+                ? inMemoryProvider.ReleasePrinter(printerName)
+                : ReleasePrinterInDatabase(printerName, transaction);
         }
 
         public bool UpsertPrinter(PrinterState printerState, IDbTransaction transaction = null)
         {
             // Для in-memory провайдера эта операция не имеет смысла
             // Принтеры создаются при инициализации
-            if (_config.Provider is InMemoryProvider)
-            {
-                return true;
-            }
-
-            return UpsertPrinterInDatabase(printerState, transaction);
+            return _config.Provider is InMemoryProvider || UpsertPrinterInDatabase(printerState, transaction);
         }
 
         public int CleanupExpiredReservations(TimeSpan expiredAfter, IDbTransaction transaction = null)
         {
-            if (_config.Provider is InMemoryProvider inMemoryProvider)
+            if (_config.Provider is InMemoryProvider)
             {
                 // Для демонстрации можно добавить логику очистки in-memory данных
                 return 0;
@@ -111,37 +98,35 @@ namespace Database.Repositories
                 FROM printer_states 
                 WHERE printer_name = @printerName";
 
-            using (var connection = transaction?.Connection ?? _config.Provider.CreateConnection(_config.ConnectionString))
+            using IDbConnection connection = transaction?.Connection ?? _config.Provider.CreateConnection(_config.ConnectionString);
+            bool shouldCloseConnection = transaction == null;
+
+            try
             {
-                bool shouldCloseConnection = transaction == null;
-
-                try
+                if (connection.State != ConnectionState.Open)
                 {
-                    if (connection.State != ConnectionState.Open)
-                        connection.Open();
-
-                    using (var command = connection.CreateCommand())
-                    {
-                        command.Transaction = transaction;
-                        command.CommandText = sql;
-                        command.CommandTimeout = _config.CommandTimeout;
-
-                        var parameter = CreateParameter(command, "@printerName", printerName);
-                        command.Parameters.Add(parameter);
-
-                        using (var reader = command.ExecuteReader())
-                        {
-                            if (reader.Read())
-                            {
-                                return MapFromReader(reader);
-                            }
-                        }
-                    }
+                    connection.Open();
                 }
-                finally
+
+                using IDbCommand command = connection.CreateCommand();
+                command.Transaction = transaction;
+                command.CommandText = sql;
+                command.CommandTimeout = _config.CommandTimeout;
+
+                IDbDataParameter parameter = CreateParameter(command, "@printerName", printerName);
+                _ = command.Parameters.Add(parameter);
+
+                using IDataReader reader = command.ExecuteReader();
+                if (reader.Read())
                 {
-                    if (shouldCloseConnection && connection.State == ConnectionState.Open)
-                        connection.Close();
+                    return MapFromReader(reader);
+                }
+            }
+            finally
+            {
+                if (shouldCloseConnection && connection.State == ConnectionState.Open)
+                {
+                    connection.Close();
                 }
             }
 
@@ -157,36 +142,36 @@ namespace Database.Repositories
                 WHERE is_available = 1 
                 ORDER BY printer_name";
 
-            var results = new List<PrinterState>();
+            List<PrinterState> results = [];
 
-            using (var connection = transaction?.Connection ?? _config.Provider.CreateConnection(_config.ConnectionString))
+            using (IDbConnection connection = transaction?.Connection ?? _config.Provider.CreateConnection(_config.ConnectionString))
             {
                 bool shouldCloseConnection = transaction == null;
 
                 try
                 {
                     if (connection.State != ConnectionState.Open)
-                        connection.Open();
-
-                    using (var command = connection.CreateCommand())
                     {
-                        command.Transaction = transaction;
-                        command.CommandText = sql;
-                        command.CommandTimeout = _config.CommandTimeout;
+                        connection.Open();
+                    }
 
-                        using (var reader = command.ExecuteReader())
-                        {
-                            while (reader.Read())
-                            {
-                                results.Add(MapFromReader(reader));
-                            }
-                        }
+                    using IDbCommand command = connection.CreateCommand();
+                    command.Transaction = transaction;
+                    command.CommandText = sql;
+                    command.CommandTimeout = _config.CommandTimeout;
+
+                    using IDataReader reader = command.ExecuteReader();
+                    while (reader.Read())
+                    {
+                        results.Add(MapFromReader(reader));
                     }
                 }
                 finally
                 {
                     if (shouldCloseConnection && connection.State == ConnectionState.Open)
+                    {
                         connection.Close();
+                    }
                 }
             }
 
@@ -195,52 +180,51 @@ namespace Database.Repositories
 
         private bool TryReservePrinterInDatabase(string printerName, string reservedBy, IDbTransaction transaction)
         {
-            using (var connection = transaction?.Connection ?? _config.Provider.CreateConnection(_config.ConnectionString))
+            using IDbConnection connection = transaction?.Connection ?? _config.Provider.CreateConnection(_config.ConnectionString);
+            bool shouldCloseConnection = transaction == null;
+            IDbTransaction localTransaction = transaction;
+
+            try
             {
-                bool shouldCloseConnection = transaction == null;
-                IDbTransaction localTransaction = transaction;
-
-                try
+                if (connection.State != ConnectionState.Open)
                 {
-                    if (connection.State != ConnectionState.Open)
-                        connection.Open();
+                    connection.Open();
+                }
 
-                    if (localTransaction == null)
+                localTransaction ??= connection.BeginTransaction();
+
+                // Используем SQL, специфичный для данного провайдера
+                string selectSql = _config.Provider.GetReservePrinterScript();
+                bool isAvailable = false;
+
+                using (IDbCommand selectCommand = connection.CreateCommand())
+                {
+                    selectCommand.Transaction = localTransaction;
+                    selectCommand.CommandText = selectSql;
+                    selectCommand.CommandTimeout = _config.CommandTimeout;
+
+                    IDbDataParameter parameter = CreateParameter(selectCommand, "@printerName", printerName);
+                    _ = selectCommand.Parameters.Add(parameter);
+
+                    using IDataReader reader = selectCommand.ExecuteReader();
+                    if (reader.Read())
                     {
-                        localTransaction = connection.BeginTransaction();
+                        object availableValue = reader["is_available"];
+                        isAvailable = Convert.ToBoolean(availableValue);
+                    }
+                }
+
+                if (!isAvailable)
+                {
+                    if (transaction == null)
+                    {
+                        localTransaction.Rollback();
                     }
 
-                    // Используем SQL, специфичный для данного провайдера
-                    var selectSql = _config.Provider.GetReservePrinterScript();
-                    bool isAvailable = false;
+                    return false;
+                }
 
-                    using (var selectCommand = connection.CreateCommand())
-                    {
-                        selectCommand.Transaction = localTransaction;
-                        selectCommand.CommandText = selectSql;
-                        selectCommand.CommandTimeout = _config.CommandTimeout;
-
-                        var parameter = CreateParameter(selectCommand, "@printerName", printerName);
-                        selectCommand.Parameters.Add(parameter);
-
-                        using (var reader = selectCommand.ExecuteReader())
-                        {
-                            if (reader.Read())
-                            {
-                                var availableValue = reader["is_available"];
-                                isAvailable = Convert.ToBoolean(availableValue);
-                            }
-                        }
-                    }
-
-                    if (!isAvailable)
-                    {
-                        if (transaction == null)
-                            localTransaction.Rollback();
-                        return false;
-                    }
-
-                    const string updateSql = @"
+                const string updateSql = @"
                         UPDATE printer_states 
                         SET is_available = 0,
                             reserved_by = @reservedBy,
@@ -252,42 +236,47 @@ namespace Database.Repositories
                         WHERE printer_name = @printerName 
                           AND is_available = 1";
 
-                    using (var updateCommand = connection.CreateCommand())
-                    {
-                        updateCommand.Transaction = localTransaction;
-                        updateCommand.CommandText = updateSql;
-                        updateCommand.CommandTimeout = _config.CommandTimeout;
+                using IDbCommand updateCommand = connection.CreateCommand();
+                updateCommand.Transaction = localTransaction;
+                updateCommand.CommandText = updateSql;
+                updateCommand.CommandTimeout = _config.CommandTimeout;
 
-                        AddReservationParameters(updateCommand, printerName, reservedBy);
+                AddReservationParameters(updateCommand, printerName, reservedBy);
 
-                        int rowsAffected = updateCommand.ExecuteNonQuery();
+                int rowsAffected = updateCommand.ExecuteNonQuery();
 
-                        if (rowsAffected > 0)
-                        {
-                            if (transaction == null)
-                                localTransaction.Commit();
-                            return true;
-                        }
-                        else
-                        {
-                            if (transaction == null)
-                                localTransaction.Rollback();
-                            return false;
-                        }
-                    }
-                }
-                catch (Exception)
+                if (rowsAffected > 0)
                 {
-                    if (transaction == null && localTransaction != null)
+                    if (transaction == null)
                     {
-                        try { localTransaction.Rollback(); } catch { }
+                        localTransaction.Commit();
                     }
-                    throw;
+
+                    return true;
                 }
-                finally
+                else
                 {
-                    if (shouldCloseConnection && connection.State == ConnectionState.Open)
-                        connection.Close();
+                    if (transaction == null)
+                    {
+                        localTransaction.Rollback();
+                    }
+
+                    return false;
+                }
+            }
+            catch (Exception)
+            {
+                if (transaction == null && localTransaction != null)
+                {
+                    localTransaction.Rollback();
+                }
+                throw;
+            }
+            finally
+            {
+                if (shouldCloseConnection && connection.State == ConnectionState.Open)
+                {
+                    connection.Close();
                 }
             }
         }
@@ -305,48 +294,52 @@ namespace Database.Repositories
                     version = version + 1
                 WHERE printer_name = @printerName";
 
-            using (var connection = transaction?.Connection ?? _config.Provider.CreateConnection(_config.ConnectionString))
+            using IDbConnection connection = transaction?.Connection ?? _config.Provider.CreateConnection(_config.ConnectionString);
+            bool shouldCloseConnection = transaction == null;
+
+            try
             {
-                bool shouldCloseConnection = transaction == null;
-
-                try
+                if (connection.State != ConnectionState.Open)
                 {
-                    if (connection.State != ConnectionState.Open)
-                        connection.Open();
-
-                    using (var command = connection.CreateCommand())
-                    {
-                        command.Transaction = transaction;
-                        command.CommandText = sql;
-                        command.CommandTimeout = _config.CommandTimeout;
-
-                        var printerParam = CreateParameter(command, "@printerName", printerName);
-                        command.Parameters.Add(printerParam);
-
-                        var timeParam = CreateParameter(command, "@lastUpdated", FormatDateTime(DateTime.UtcNow));
-                        command.Parameters.Add(timeParam);
-
-                        int rowsAffected = command.ExecuteNonQuery();
-                        return rowsAffected > 0;
-                    }
+                    connection.Open();
                 }
-                finally
+
+                using IDbCommand command = connection.CreateCommand();
+                command.Transaction = transaction;
+                command.CommandText = sql;
+                command.CommandTimeout = _config.CommandTimeout;
+
+                IDbDataParameter printerParam = CreateParameter(command, "@printerName", printerName);
+                _ = command.Parameters.Add(printerParam);
+
+                IDbDataParameter timeParam = CreateParameter(command, "@lastUpdated", FormatDateTime(DateTime.UtcNow));
+                _ = command.Parameters.Add(timeParam);
+
+                int rowsAffected = command.ExecuteNonQuery();
+                return rowsAffected > 0;
+            }
+            finally
+            {
+                if (shouldCloseConnection && connection.State == ConnectionState.Open)
                 {
-                    if (shouldCloseConnection && connection.State == ConnectionState.Open)
-                        connection.Close();
+                    connection.Close();
                 }
             }
         }
 
-        private bool UpsertPrinterInDatabase(PrinterState printerState, IDbTransaction transaction)
+        private static bool UpsertPrinterInDatabase(PrinterState printerState, IDbTransaction transaction)
         {
+            Debug.Assert(printerState != null, "Printer state must not be null");
+            Debug.Assert(transaction != null, "Transaction must not be null");
             // Упрощенная реализация: сначала UPDATE, потом INSERT если нужно
             // Можно расширить для конкретных СУБД
             return true; // Заглушка для демонстрации
         }
 
-        private int CleanupExpiredReservationsInDatabase(TimeSpan expiredAfter, IDbTransaction transaction)
+        private static int CleanupExpiredReservationsInDatabase(TimeSpan expiredAfter, IDbTransaction transaction)
         {
+            Debug.Assert(expiredAfter.TotalSeconds > 0, "Expired time must be greater than zero");
+            Debug.Assert(transaction != null, "Transaction must not be null");
             // Аналогично другим методам
             return 0; // Заглушка
         }
@@ -360,9 +353,9 @@ namespace Database.Repositories
 
         #region Helper methods
 
-        private IDbDataParameter CreateParameter(IDbCommand command, string name, object value)
+        private static IDbDataParameter CreateParameter(IDbCommand command, string name, object value)
         {
-            var parameter = command.CreateParameter();
+            IDbDataParameter parameter = command.CreateParameter();
             parameter.ParameterName = name;
             parameter.Value = value ?? DBNull.Value;
             return parameter;
@@ -384,36 +377,49 @@ namespace Database.Repositories
             };
         }
 
-        private DateTime? ParseDateTime(object value)
+        private static DateTime? ParseDateTime(object value)
         {
             if (value == null || value == DBNull.Value)
+            {
                 return null;
+            }
 
             if (value is DateTime dateTime)
+            {
                 return dateTime;
+            }
 
-            if (value is string dateString && DateTime.TryParse(dateString, out DateTime parsed))
-                return parsed;
+            if (value is string dateString)
+            {
+                if (DateTime.TryParse(dateString, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsed))
+                {
+                    return parsed;
+                }
+                else
+                {
+                    return null;
+                }
+            }
 
             return null;
         }
 
-        private string FormatDateTime(DateTime dateTime)
+        private static string FormatDateTime(DateTime dateTime)
         {
             return dateTime.ToString("yyyy-MM-dd HH:mm:ss");
         }
 
-        private void AddReservationParameters(IDbCommand command, string printerName, string reservedBy)
+        private static void AddReservationParameters(IDbCommand command, string printerName, string reservedBy)
         {
-            var currentProcess = Process.GetCurrentProcess();
-            var now = DateTime.UtcNow;
+            Process currentProcess = Process.GetCurrentProcess();
+            DateTime now = DateTime.UtcNow;
 
-            command.Parameters.Add(CreateParameter(command, "@printerName", printerName));
-            command.Parameters.Add(CreateParameter(command, "@reservedBy", reservedBy));
-            command.Parameters.Add(CreateParameter(command, "@reservedAt", FormatDateTime(now)));
-            command.Parameters.Add(CreateParameter(command, "@lastUpdated", FormatDateTime(now)));
-            command.Parameters.Add(CreateParameter(command, "@processId", currentProcess.Id));
-            command.Parameters.Add(CreateParameter(command, "@machineName", Environment.MachineName));
+            _ = command.Parameters.Add(CreateParameter(command, "@printerName", printerName));
+            _ = command.Parameters.Add(CreateParameter(command, "@reservedBy", reservedBy));
+            _ = command.Parameters.Add(CreateParameter(command, "@reservedAt", FormatDateTime(now)));
+            _ = command.Parameters.Add(CreateParameter(command, "@lastUpdated", FormatDateTime(now)));
+            _ = command.Parameters.Add(CreateParameter(command, "@processId", currentProcess.Id));
+            _ = command.Parameters.Add(CreateParameter(command, "@machineName", Environment.MachineName));
         }
 
         #endregion
