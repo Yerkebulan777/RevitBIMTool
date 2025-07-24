@@ -20,10 +20,10 @@ namespace Database.Extensions
             DatabaseConfig.Instance.Initialize(connectionString);
 
             // Создаем сервис
-            var service = new PrinterStateService();
+            PrinterStateService service = new PrinterStateService();
 
             // Инициализируем стандартные принтеры из вашего кода
-            var defaultPrinters = new[]
+            string[] defaultPrinters = new[]
             {
                 "PDF Writer - bioPDF",
                 "PDF24",
@@ -42,7 +42,7 @@ namespace Database.Extensions
         /// </summary>
         public static string CreateReservationId()
         {
-            var process = Process.GetCurrentProcess();
+            Process process = Process.GetCurrentProcess();
             return $"{Environment.MachineName}_{process.Id}_{DateTime.UtcNow:yyyyMMdd_HHmmss}";
         }
 
@@ -59,16 +59,15 @@ namespace Database.Extensions
             {
                 reservedPrinter = service.TryReserveAnyAvailablePrinter(reservationId, preferredPrinters);
 
-                if (string.IsNullOrEmpty(reservedPrinter))
-                    throw new InvalidOperationException("No available printers found");
-
-                return operation(reservedPrinter);
+                return string.IsNullOrEmpty(reservedPrinter)
+                    ? throw new InvalidOperationException("No available printers found")
+                    : operation(reservedPrinter);
             }
             finally
             {
                 if (!string.IsNullOrEmpty(reservedPrinter))
                 {
-                    service.ReleasePrinter(reservedPrinter);
+                    _ = service.ReleasePrinter(reservedPrinter);
                 }
             }
         }

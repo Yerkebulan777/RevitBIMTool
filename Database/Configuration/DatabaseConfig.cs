@@ -1,6 +1,4 @@
-﻿// Database/Configuration/DatabaseConfig.cs
-using Database.Providers;
-using Database.Providers;
+﻿using Database.Providers;
 using System;
 using System.IO;
 
@@ -34,14 +32,9 @@ namespace Database.Configuration
             ConnectionString = GetConnectionString(connectionString);
 
             // Определяем провайдер базы данных
-            if (!string.IsNullOrEmpty(providerName))
-            {
-                Provider = DatabaseProviderFactory.CreateProvider(providerName);
-            }
-            else
-            {
-                Provider = DatabaseProviderFactory.CreateProviderFromConnectionString(ConnectionString);
-            }
+            Provider = !string.IsNullOrEmpty(providerName)
+                ? DatabaseProviderFactory.CreateProvider(providerName)
+                : DatabaseProviderFactory.CreateProviderFromConnectionString(ConnectionString);
 
             // Убеждаемся, что база данных инициализирована
             EnsureDatabaseExists();
@@ -55,25 +48,33 @@ namespace Database.Configuration
         {
             // Приоритет 1: Явно переданная строка
             if (!string.IsNullOrEmpty(connectionString))
+            {
                 return connectionString;
+            }
 
             // Приоритет 2: Переменная окружения
-            var envConnectionString = Environment.GetEnvironmentVariable("DATABASE_CONNECTION_STRING");
+            string envConnectionString = Environment.GetEnvironmentVariable("DATABASE_CONNECTION_STRING");
             if (!string.IsNullOrEmpty(envConnectionString))
+            {
                 return envConnectionString;
+            }
 
             // Приоритет 3: Файл конфигурации
-            var configConnectionString = LoadConnectionStringFromFile();
+            string configConnectionString = LoadConnectionStringFromFile();
             if (!string.IsNullOrEmpty(configConnectionString))
+            {
                 return configConnectionString;
+            }
 
             // Приоритет 4: SQLite по умолчанию (самый надежный вариант)
-            var documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            var dbPath = Path.Combine(documentsPath, "RevitBIMTool", "printers.db");
-            var dbDirectory = Path.GetDirectoryName(dbPath);
+            string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            string dbPath = Path.Combine(documentsPath, "RevitBIMTool", "printers.db");
+            string dbDirectory = Path.GetDirectoryName(dbPath);
 
             if (!Directory.Exists(dbDirectory))
-                Directory.CreateDirectory(dbDirectory);
+            {
+                _ = Directory.CreateDirectory(dbDirectory);
+            }
 
             return $"Data Source={dbPath};Version=3;";
         }
@@ -81,21 +82,25 @@ namespace Database.Configuration
         /// <summary>
         /// Загрузка строки подключения из файла конфигурации
         /// </summary>
-        private string LoadConnectionStringFromFile()
+        private static string LoadConnectionStringFromFile()
         {
             try
             {
-                var configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "database.config");
+                string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "database.config");
 
                 if (!File.Exists(configPath))
+                {
                     return null;
+                }
 
-                var lines = File.ReadAllLines(configPath);
+                string[] lines = File.ReadAllLines(configPath);
 
-                foreach (var line in lines)
+                foreach (string line in lines)
                 {
                     if (string.IsNullOrWhiteSpace(line) || line.StartsWith("#"))
+                    {
                         continue;
+                    }
 
                     if (line.StartsWith("ConnectionString=", StringComparison.OrdinalIgnoreCase))
                     {
@@ -119,15 +124,15 @@ namespace Database.Configuration
         {
             try
             {
-                using (var connection = Provider.CreateConnection(ConnectionString))
+                using (System.Data.IDbConnection connection = Provider.CreateConnection(ConnectionString))
                 {
                     connection.Open();
 
-                    using (var command = connection.CreateCommand())
+                    using (System.Data.IDbCommand command = connection.CreateCommand())
                     {
                         command.CommandText = Provider.GetCreateTableScript();
                         command.CommandTimeout = CommandTimeout;
-                        command.ExecuteNonQuery();
+                        _ = command.ExecuteNonQuery();
                     }
                 }
             }

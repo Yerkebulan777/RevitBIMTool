@@ -334,7 +334,14 @@ namespace Database.Repositories
                     // При любой ошибке откатываем транзакцию
                     if (transaction == null && localTransaction != null)
                     {
-                        try { localTransaction.Rollback(); } catch { }
+                        try 
+                        { 
+                            localTransaction.Rollback(); 
+                        } 
+                        catch (Exception ex)
+                        { 
+                            Debug.Fail(ex.Message); 
+                        }
                     }
                     throw;
                 }
