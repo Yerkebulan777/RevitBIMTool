@@ -18,8 +18,7 @@ namespace Database.Providers
         public bool SupportsRowLevelLocking => true;
 
         // Потокобезопасное хранилище данных в памяти
-        private static readonly ConcurrentDictionary<string, PrinterState> _printers =
-            new();
+        private static readonly ConcurrentDictionary<string, PrinterState> _printers = new();
 
         // Счетчик для генерации уникальных ID
         private static int _nextId = 1;

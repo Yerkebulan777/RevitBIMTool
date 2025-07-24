@@ -299,6 +299,19 @@ namespace Database.Repositories
             _ = command.Parameters.Add(CreateParameter(command, "@expectedVersion", expectedVersion));
         }
 
+        private static void AddReservationParameters(IDbCommand command, string printerName, string reservedBy)
+        {
+            Process currentProcess = Process.GetCurrentProcess();
+            DateTime now = DateTime.UtcNow;
+
+            _ = command.Parameters.Add(CreateParameter(command, "@printerName", printerName));
+            _ = command.Parameters.Add(CreateParameter(command, "@reservedBy", reservedBy));
+            _ = command.Parameters.Add(CreateParameter(command, "@reservedAt", FormatDateTime(now)));
+            _ = command.Parameters.Add(CreateParameter(command, "@lastUpdated", FormatDateTime(now)));
+            _ = command.Parameters.Add(CreateParameter(command, "@processId", currentProcess.Id));
+            _ = command.Parameters.Add(CreateParameter(command, "@machineName", Environment.MachineName));
+        }
+
         private bool ReleasePrinterInDatabase(string printerName, IDbTransaction transaction)
         {
             const string sql = @"
@@ -375,29 +388,25 @@ namespace Database.Repositories
 
         private static DateTime? ParseDateTime(object value)
         {
-            return value is DateTime dateTime
-                ? dateTime
-                : value is string dateString && DateTime.TryParse(dateString, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsed)
-                ? parsed
-                : (DateTime?)null;
+            if (value is DateTime dateTime)
+            {
+                // Если значение уже DateTime, просто возвращаем его
+                return dateTime;
+            }
+            if (value is string dateString)
+            {
+                Debug.Assert(!string.IsNullOrEmpty(dateString), "Date string should not be null or empty");
+                if (DateTime.TryParse(dateString, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsed))
+                {
+                    return parsed;
+                }
+            }
+            return null;
         }
 
         private static string FormatDateTime(DateTime dateTime)
         {
             return dateTime.ToString("yyyy-MM-dd HH:mm:ss");
-        }
-
-        private static void AddReservationParameters(IDbCommand command, string printerName, string reservedBy)
-        {
-            Process currentProcess = Process.GetCurrentProcess();
-            DateTime now = DateTime.UtcNow;
-
-            _ = command.Parameters.Add(CreateParameter(command, "@printerName", printerName));
-            _ = command.Parameters.Add(CreateParameter(command, "@reservedBy", reservedBy));
-            _ = command.Parameters.Add(CreateParameter(command, "@reservedAt", FormatDateTime(now)));
-            _ = command.Parameters.Add(CreateParameter(command, "@lastUpdated", FormatDateTime(now)));
-            _ = command.Parameters.Add(CreateParameter(command, "@processId", currentProcess.Id));
-            _ = command.Parameters.Add(CreateParameter(command, "@machineName", Environment.MachineName));
         }
 
         #endregion
