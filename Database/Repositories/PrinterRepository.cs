@@ -71,7 +71,7 @@ namespace Database.Repositories
             if (_config.Provider is InMemoryProvider)
             {
                 // In-memory провайдер инициализируется сам
-                
+
             }
         }
 
@@ -169,7 +169,8 @@ namespace Database.Repositories
             return results;
         }
 
-        private bool TryReservePrinterInDatabase(string printerName, string reservedBy, IDbTransaction transaction)
+
+        public bool TryReservePrinterInDatabase(string printerName, string reservedBy, IDbTransaction transaction)
         {
             using IDbConnection connection = transaction?.Connection ?? _config.Provider.CreateConnection(_config.ConnectionString);
             bool shouldCloseConnection = transaction == null;
@@ -182,12 +183,13 @@ namespace Database.Repositories
                     connection.Open();
                 }
 
+                // Если транзакция не передана извне, создаем локальную
                 localTransaction ??= connection.BeginTransaction();
 
-                // Используем SQL, специфичный для данного провайдера
+                // Этап 1: Блокируем строку для обновления (PostgreSQL FOR UPDATE)
                 string selectSql = _config.Provider.GetReservePrinterScript();
-
-                bool isAvailable = false;
+                long currentVersion = 0;
+                bool printerFound = false;
 
                 using (IDbCommand selectCommand = connection.CreateCommand())
                 {
@@ -201,63 +203,57 @@ namespace Database.Repositories
                     using IDataReader reader = selectCommand.ExecuteReader();
                     if (reader.Read())
                     {
-                        object availableValue = reader["is_available"];
-                        isAvailable = Convert.ToBoolean(availableValue);
+                        printerFound = true;
+                        currentVersion = Convert.ToInt64(reader["version"]);
                     }
                 }
 
-                if (!isAvailable)
+                if (!printerFound)
                 {
+                    // Принтер недоступен или не существует
                     if (transaction == null)
                     {
                         localTransaction.Rollback();
                     }
-
                     return false;
                 }
 
-                const string updateSql = @"
-                        UPDATE printer_states 
-                        SET is_available = 0,
-                            reserved_by = @reservedBy,
-                            reserved_at = @reservedAt,
-                            last_updated = @lastUpdated,
-                            process_id = @processId,
-                            machine_name = @machineName,
-                            version = version + 1
-                        WHERE printer_name = @printerName 
-                          AND is_available = 1";
+                // Этап 2: Атомарно обновляем с проверкой версии
+                string updateSql = _config.Provider is PostgreSqlProvider postgresProvider
+                    ? postgresProvider.GetUpdateReservationScript()
+                    : GetDefaultUpdateScript();
 
                 using IDbCommand updateCommand = connection.CreateCommand();
                 updateCommand.Transaction = localTransaction;
                 updateCommand.CommandText = updateSql;
                 updateCommand.CommandTimeout = _config.CommandTimeout;
 
-                AddReservationParameters(updateCommand, printerName, reservedBy);
+                AddReservationParameters(updateCommand, printerName, reservedBy, currentVersion);
 
                 int rowsAffected = updateCommand.ExecuteNonQuery();
 
                 if (rowsAffected > 0)
                 {
+                    // Успешно зарезервировали
                     if (transaction == null)
                     {
                         localTransaction.Commit();
                     }
-
                     return true;
                 }
                 else
                 {
+                    // Кто-то другой изменил строку между SELECT и UPDATE
                     if (transaction == null)
                     {
                         localTransaction.Rollback();
                     }
-
                     return false;
                 }
             }
             catch (Exception)
             {
+                // При любой ошибке откатываем транзакцию
                 if (transaction == null && localTransaction != null)
                 {
                     localTransaction.Rollback();
@@ -271,6 +267,36 @@ namespace Database.Repositories
                     connection.Close();
                 }
             }
+        }
+
+        private static string GetDefaultUpdateScript()
+        {
+            return @"
+                UPDATE printer_states 
+                SET is_available = 0,
+                    reserved_by = @reservedBy,
+                    reserved_at = @reservedAt,
+                    last_updated = @lastUpdated,
+                    process_id = @processId,
+                    machine_name = @machineName,
+                    version = version + 1
+                WHERE printer_name = @printerName 
+                  AND is_available = 1
+                  AND version = @expectedVersion";
+        }
+
+        private static void AddReservationParameters(IDbCommand command, string printerName, string reservedBy, long expectedVersion)
+        {
+            Process currentProcess = Process.GetCurrentProcess();
+            DateTime now = DateTime.UtcNow;
+
+            _ = command.Parameters.Add(CreateParameter(command, "@printerName", printerName));
+            _ = command.Parameters.Add(CreateParameter(command, "@reservedBy", reservedBy));
+            _ = command.Parameters.Add(CreateParameter(command, "@reservedAt", now));
+            _ = command.Parameters.Add(CreateParameter(command, "@lastUpdated", now));
+            _ = command.Parameters.Add(CreateParameter(command, "@processId", currentProcess.Id));
+            _ = command.Parameters.Add(CreateParameter(command, "@machineName", Environment.MachineName));
+            _ = command.Parameters.Add(CreateParameter(command, "@expectedVersion", expectedVersion));
         }
 
         private bool ReleasePrinterInDatabase(string printerName, IDbTransaction transaction)
@@ -349,12 +375,9 @@ namespace Database.Repositories
 
         private static DateTime? ParseDateTime(object value)
         {
-            if (value is DateTime dateTime)
-            {
-                return dateTime;
-            }
-
-            return value is string dateString && DateTime.TryParse(dateString, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsed)
+            return value is DateTime dateTime
+                ? dateTime
+                : value is string dateString && DateTime.TryParse(dateString, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsed)
                 ? parsed
                 : (DateTime?)null;
         }
@@ -378,5 +401,6 @@ namespace Database.Repositories
         }
 
         #endregion
+
     }
 }
