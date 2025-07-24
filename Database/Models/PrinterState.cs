@@ -2,9 +2,6 @@
 
 namespace Database.Models
 {
-    /// <summary>
-    /// Модель состояния принтера с оптимистичным блокированием
-    /// </summary>
     public class PrinterState
     {
         public int Id { get; set; }
