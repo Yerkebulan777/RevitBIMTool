@@ -1,6 +1,5 @@
-﻿using System;
-using System.IO;
-using Database.Providers;
+﻿using Database.Providers;
+using System;
 
 namespace Database.Configuration
 {
@@ -10,8 +9,7 @@ namespace Database.Configuration
     /// </summary>
     public sealed class DatabaseConfig
     {
-        private static readonly Lazy<DatabaseConfig> _instance =
-            new Lazy<DatabaseConfig>(() => new DatabaseConfig());
+        private static readonly Lazy<DatabaseConfig> _instance = new(() => new DatabaseConfig());
 
         public static DatabaseConfig Instance => _instance.Value;
 
@@ -35,17 +33,15 @@ namespace Database.Configuration
             Provider.Initialize(ConnectionString);
         }
 
-        private string GetConnectionString(string connectionString)
+        private static string GetConnectionString(string connectionString)
         {
             if (!string.IsNullOrEmpty(connectionString))
+            {
                 return connectionString;
+            }
 
-            var envConnectionString = Environment.GetEnvironmentVariable("DATABASE_CONNECTION_STRING");
-            if (!string.IsNullOrEmpty(envConnectionString))
-                return envConnectionString;
-
-            // Для InMemoryProvider строка подключения не важна
-            return "InMemory";
+            string envConnectionString = Environment.GetEnvironmentVariable("DATABASE_CONNECTION_STRING");
+            return !string.IsNullOrEmpty(envConnectionString) ? envConnectionString : "InMemory";
         }
     }
 }

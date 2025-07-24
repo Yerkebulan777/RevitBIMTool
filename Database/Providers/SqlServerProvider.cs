@@ -1,33 +1,26 @@
 ﻿using System;
 using System.Data;
-using System.Data.SqlClient;
 
 namespace Database.Providers
 {
     /// <summary>
-    /// Провайдер для Microsoft SQL Server
-    /// Подходит для корпоративных сред, где уже есть SQL Server
-    /// Поддерживает все современные возможности блокировок и транзакций
+    /// Абстрактный SQL Server провайдер для демонстрации принципов
+    /// Показывает, как должен работать провайдер для корпоративной СУБД
     /// </summary>
     public class SqlServerProvider : IDatabaseProvider
     {
         public string ProviderName => "SQL Server";
-
-        /// <summary>
-        /// SQL Server отлично поддерживает строковые блокировки
-        /// Это позволяет нам использовать оптимальные стратегии блокировки
-        /// </summary>
         public bool SupportsRowLevelLocking => true;
 
-        public IDbConnection CreateConnection(string connectionString)
+        /// <summary>
+        /// В реальной реализации здесь будет: new SqlConnection(connectionString)
+        /// </summary>
+        public virtual IDbConnection CreateConnection(string connectionString)
         {
-            return new SqlConnection(connectionString);
+            throw new NotImplementedException(
+                "SqlServerProvider is abstract. Override CreateConnection in your main project with real SqlConnection.");
         }
 
-        /// <summary>
-        /// SQL-скрипт для создания таблицы в SQL Server
-        /// Используем современный синтаксис T-SQL с оптимизациями
-        /// </summary>
         public string GetCreateTableScript()
         {
             return @"
@@ -46,25 +39,28 @@ namespace Database.Providers
                     );
                     
                     CREATE NONCLUSTERED INDEX idx_printer_states_available 
-                        ON printer_states (is_available) 
-                        WHERE is_available = 1;
-                        
-                    CREATE NONCLUSTERED INDEX idx_printer_states_reserved_at 
-                        ON printer_states (reserved_at) 
-                        WHERE reserved_at IS NOT NULL;
+                        ON printer_states (is_available) WHERE is_available = 1;
                 END";
         }
 
-        /// <summary>
-        /// SQL Server поддерживает различные уровни блокировок
-        /// UPDLOCK + ROWLOCK обеспечивают точечную блокировку нужной строки
-        /// </summary>
         public string GetReservePrinterScript()
         {
             return @"
                 SELECT id, printer_name, is_available, version
                 FROM printer_states WITH (UPDLOCK, ROWLOCK)
                 WHERE printer_name = @printerName AND is_available = 1";
+        }
+
+        /// <summary>
+        /// Инициализация SQL Server провайдера
+        /// Обычно включает проверку подключения и создание схемы
+        /// </summary>
+        public virtual void Initialize(string connectionString)
+        {
+            // В реальной реализации здесь будет:
+            // 1. Проверка подключения к SQL Server
+            // 2. Создание базы данных если не существует  
+            // 3. Выполнение CREATE TABLE скрипта
         }
     }
 }
