@@ -1,29 +1,28 @@
-﻿using System;
-using System.Diagnostics;
-using Database.Configuration;
+﻿using Database.Configuration;
 using Database.Services;
+using System;
+using System.Diagnostics;
 
 namespace Database.Extensions
 {
     /// <summary>
     /// Методы расширения для упрощения интеграции с основным приложением
-    /// Предоставляет удобные фасады для типичных операций
     /// </summary>
     public static class DatabaseExtensions
     {
         /// <summary>
         /// Инициализация системы управления принтерами
-        /// Настраивает подключение и создает необходимые структуры
+        /// Этот метод - главная точка входа для использования в вашем RevitBIMTool
         /// </summary>
         public static IPrinterStateService InitializePrinterSystem(string connectionString = null)
         {
-            // Инициализируем конфигурацию
+            // Инициализируем конфигурацию - она автоматически определит тип СУБД
             DatabaseConfig.Instance.Initialize(connectionString);
 
             // Создаем сервис
             var service = new PrinterStateService();
 
-            // Инициализируем стандартные принтеры
+            // Инициализируем стандартные принтеры из вашего кода
             var defaultPrinters = new[]
             {
                 "PDF Writer - bioPDF",
@@ -39,8 +38,7 @@ namespace Database.Extensions
         }
 
         /// <summary>
-        /// Создание идентификатора резервирования на основе текущего процесса
-        /// Обеспечивает уникальность резервирований
+        /// Создание уникального идентификатора резервирования
         /// </summary>
         public static string CreateReservationId()
         {
@@ -50,11 +48,9 @@ namespace Database.Extensions
 
         /// <summary>
         /// Безопасное выполнение операции с принтером
-        /// Автоматически освобождает принтер при ошибке
+        /// Паттерн "использование ресурса" - автоматически освобождает принтер
         /// </summary>
-        public static T WithPrinter<T>(this IPrinterStateService service,
-            string[] preferredPrinters,
-            Func<string, T> operation)
+        public static T WithPrinter<T>(this IPrinterStateService service, string[] preferredPrinters, Func<string, T> operation)
         {
             string reservedPrinter = null;
             string reservationId = CreateReservationId();
