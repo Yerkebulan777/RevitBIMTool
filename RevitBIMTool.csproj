@@ -18,16 +18,19 @@
 		
     </PropertyGroup>
 
-    <PropertyGroup Condition="$(Configuration.Contains('Debug'))">
-        <DebugType>full</DebugType>
-        <DebugSymbols>true</DebugSymbols>
-        <DefineConstants>$(DefineConstants);DEBUG</DefineConstants>
-    </PropertyGroup>
-    <PropertyGroup Condition="$(Configuration.Contains('Release'))">
-        <Optimize>True</Optimize>
-        <DebugType>none</DebugType>
-        <DefineConstants>$(DefineConstants);RELEASE</DefineConstants>
-    </PropertyGroup>
+	<PropertyGroup Condition="$(Configuration.Contains('Debug'))">
+		<Optimize>false</Optimize>
+		<DebugType>full</DebugType>
+		<DebugSymbols>true</DebugSymbols>
+		<DefineConstants>$(DefineConstants);DEBUG</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="$(Configuration.Contains('Release'))">
+		<Optimize>true</Optimize>
+		<DebugType>portable</DebugType>
+		<DebugSymbols>true</DebugSymbols>
+		<DefineConstants>$(DefineConstants);RELEASE</DefineConstants>
+	</PropertyGroup>
 	
     <PropertyGroup Condition="$(Configuration.Contains('R19'))">
         <RevitVersion>2019</RevitVersion>
