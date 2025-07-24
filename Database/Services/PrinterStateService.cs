@@ -1,17 +1,17 @@
-﻿// Database/Services/PrinterStateService.cs
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
 using Database.Configuration;
 using Database.Models;
 using Database.Repositories;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Database.Services
 {
     /// <summary>
-    /// Основной сервис управления состоянием принтеров
-    /// Реализует паттерн Unit of Work для управления транзакциями
-    /// Обеспечивает retry-логику для обработки временных сбоев
+    /// Сервис управления состоянием принтеров
+    /// Полностью независим от конкретной СУБД, работает через абстракции ADO.NET
+    /// Реализует паттерн Unit of Work для правильного управления транзакциями
     /// </summary>
     public class PrinterStateService : IPrinterStateService
     {
@@ -26,14 +26,16 @@ namespace Database.Services
 
         /// <summary>
         /// Алгоритм поиска и резервирования доступного принтера
-        /// Использует приоритетный список принтеров для оптимального распределения
-        /// Весь процесс выполняется в одной транзакции для консистентности
+        /// Ключевая особенность: весь процесс выполняется в одной транзакции
+        /// Это гарантирует, что либо резервирование произойдет полностью,
+        /// либо не произойдет вовсе (принцип атомарности)
         /// </summary>
         public string TryReserveAnyAvailablePrinter(string reservedBy, IEnumerable<string> preferredPrinters = null)
         {
             return ExecuteWithRetry(() =>
             {
-                using (var connection = new NpgsqlConnection(_config.ConnectionString))
+                // Создаем подключение через провайдер - он знает, какую СУБД использовать
+                using (var connection = _config.Provider.CreateConnection(_config.ConnectionString))
                 {
                     connection.Open();
 
@@ -41,30 +43,34 @@ namespace Database.Services
                     {
                         try
                         {
-                            // Получаем список доступных принтеров
+                            // Этап 1: Получаем список всех доступных принтеров
                             var availablePrinters = _repository.GetAvailablePrinters(transaction).ToList();
 
                             if (!availablePrinters.Any())
-                                return null;
+                                return null; // Нет доступных принтеров
 
-                            // Упорядочиваем принтеры по приоритету
+                            // Этап 2: Упорядочиваем принтеры по приоритету
+                            // Предпочтительные принтеры пробуем резервировать первыми
                             var orderedPrinters = OrderPrintersByPriority(availablePrinters, preferredPrinters);
 
-                            // Пытаемся зарезервировать первый доступный
+                            // Этап 3: Пытаемся зарезервировать первый доступный принтер
                             foreach (var printer in orderedPrinters)
                             {
                                 if (_repository.TryReservePrinter(printer.PrinterName, reservedBy, transaction))
                                 {
+                                    // Успешно зарезервировали - коммитим транзакцию
                                     transaction.Commit();
                                     return printer.PrinterName;
                                 }
                             }
 
+                            // Не удалось зарезервировать ни один принтер - откатываем
                             transaction.Rollback();
                             return null;
                         }
                         catch
                         {
+                            // При любой ошибке откатываем транзакцию
                             transaction.Rollback();
                             throw;
                         }
@@ -74,14 +80,14 @@ namespace Database.Services
         }
 
         /// <summary>
-        /// Резервирование конкретного принтера с retry-логикой
-        /// Обрабатывает временные сбои базы данных
+        /// Резервирование конкретного принтера
+        /// Более простая операция - работаем только с одним принтером
         /// </summary>
         public bool TryReserveSpecificPrinter(string printerName, string reservedBy)
         {
             return ExecuteWithRetry(() =>
             {
-                using (var connection = new NpgsqlConnection(_config.ConnectionString))
+                using (var connection = _config.Provider.CreateConnection(_config.ConnectionString))
                 {
                     connection.Open();
 
@@ -109,8 +115,8 @@ namespace Database.Services
         }
 
         /// <summary>
-        /// Освобождение принтера - простая операция без retry
-        /// Ошибки освобождения не критичны для системы
+        /// Освобождение принтера
+        /// Простая операция - не требует retry логики, так как ошибки освобождения не критичны
         /// </summary>
         public bool ReleasePrinter(string printerName)
         {
@@ -120,17 +126,19 @@ namespace Database.Services
             }
             catch (Exception)
             {
-                // Логируем ошибку, но не пробрасываем - освобождение некритично
+                // Логируем ошибку, но не пробрасываем - освобождение некритично для работы системы
+                // В реальном приложении здесь был бы вызов logger.LogError(ex, ...)
                 return false;
             }
         }
 
         /// <summary>
         /// Получение полного состояния системы принтеров
+        /// Используется для мониторинга и диагностики
         /// </summary>
         public IEnumerable<PrinterState> GetAllPrinters()
         {
-            using (var connection = new NpgsqlConnection(_config.ConnectionString))
+            using (var connection = _config.Provider.CreateConnection(_config.ConnectionString))
             {
                 connection.Open();
 
@@ -142,8 +150,9 @@ namespace Database.Services
 
                 var results = new List<PrinterState>();
 
-                using (var command = new NpgsqlCommand(sql, connection))
+                using (var command = connection.CreateCommand())
                 {
+                    command.CommandText = sql;
                     command.CommandTimeout = _config.CommandTimeout;
 
                     using (var reader = command.ExecuteReader())
@@ -152,15 +161,15 @@ namespace Database.Services
                         {
                             results.Add(new PrinterState
                             {
-                                Id = reader.GetInt32("id"),
-                                PrinterName = reader.GetString("printer_name"),
-                                IsAvailable = reader.GetBoolean("is_available"),
-                                ReservedBy = reader.IsDBNull("reserved_by") ? null : reader.GetString("reserved_by"),
-                                ReservedAt = reader.IsDBNull("reserved_at") ? (DateTime?)null : reader.GetDateTime("reserved_at"),
-                                LastUpdated = reader.GetDateTime("last_updated"),
-                                ProcessId = reader.IsDBNull("process_id") ? (int?)null : reader.GetInt32("process_id"),
-                                MachineName = reader.IsDBNull("machine_name") ? null : reader.GetString("machine_name"),
-                                Version = reader.GetInt64("version")
+                                Id = Convert.ToInt32(reader["id"]),
+                                PrinterName = reader["printer_name"].ToString(),
+                                IsAvailable = Convert.ToBoolean(reader["is_available"]),
+                                ReservedBy = reader["reserved_by"] as string,
+                                ReservedAt = ParseDateTime(reader["reserved_at"]),
+                                LastUpdated = ParseDateTime(reader["last_updated"]) ?? DateTime.UtcNow,
+                                ProcessId = reader["process_id"] as int?,
+                                MachineName = reader["machine_name"] as string,
+                                Version = Convert.ToInt64(reader["version"])
                             });
                         }
                     }
@@ -172,7 +181,6 @@ namespace Database.Services
 
         /// <summary>
         /// Инициализация системы принтеров при первом запуске
-        /// Создает базовые записи для всех известных принтеров
         /// </summary>
         public void InitializeSystem(IEnumerable<string> printerNames)
         {
@@ -185,7 +193,7 @@ namespace Database.Services
 
         /// <summary>
         /// Периодическая очистка зависших резервирований
-        /// Должна вызываться по расписанию для поддержания системы в рабочем состоянии
+        /// Важная функция для поддержания системы в рабочем состоянии
         /// </summary>
         public int CleanupExpiredReservations(TimeSpan maxAge)
         {
@@ -201,9 +209,12 @@ namespace Database.Services
             return printer?.IsAvailable == true;
         }
 
+        #region Вспомогательные методы
+
         /// <summary>
         /// Алгоритм упорядочивания принтеров по приоритету
         /// Предпочтительные принтеры идут первыми, остальные - по алфавиту
+        /// Это помогает равномерно распределять нагрузку между принтерами
         /// </summary>
         private IEnumerable<PrinterState> OrderPrintersByPriority(
             IEnumerable<PrinterState> availablePrinters,
@@ -215,14 +226,14 @@ namespace Database.Services
             var preferredSet = new HashSet<string>(preferredPrinters, StringComparer.OrdinalIgnoreCase);
 
             return availablePrinters
-                .OrderBy(p => preferredSet.Contains(p.PrinterName) ? 0 : 1)
-                .ThenBy(p => p.PrinterName);
+                .OrderBy(p => preferredSet.Contains(p.PrinterName) ? 0 : 1) // Предпочтительные первыми
+                .ThenBy(p => p.PrinterName); // Затем по алфавиту
         }
 
         /// <summary>
         /// Универсальная retry-логика для обработки временных сбоев
+        /// Обрабатывает блокировки, таймауты подключения и другие временные проблемы
         /// Использует экспоненциальную задержку между попытками
-        /// Обрабатывает специфичные для PostgreSQL исключения
         /// </summary>
         private T ExecuteWithRetry<T>(Func<T> operation)
         {
@@ -234,7 +245,7 @@ namespace Database.Services
                 {
                     return operation();
                 }
-                catch (NpgsqlException ex) when (IsTransientError(ex))
+                catch (Exception ex) when (IsTransientError(ex))
                 {
                     lastException = ex;
 
@@ -256,21 +267,39 @@ namespace Database.Services
                 $"Operation failed after {_config.MaxRetryAttempts} attempts", lastException);
         }
 
-
-        private bool IsTransientError(NpgsqlException ex)
+        /// <summary>
+        /// Определение временных ошибок, которые стоит повторить
+        /// Разные СУБД возвращают разные типы исключений для временных проблем
+        /// </summary>
+        private bool IsTransientError(Exception ex)
         {
-            switch (ex.SqlState)
-            {
-                case "40001": // serialization_failure
-                case "40P01": // deadlock_detected  
-                case "53300": // too_many_connections
-                case "08000": // connection_exception
-                case "08003": // connection_does_not_exist
-                case "08006": // connection_failure
-                    return true;
-                default:
-                    return false;
-            }
+            // Общие признаки временных ошибок для всех СУБД
+            var message = ex.Message.ToLowerInvariant();
+
+            return message.Contains("timeout") ||
+                   message.Contains("deadlock") ||
+                   message.Contains("connection") ||
+                   message.Contains("network") ||
+                   message.Contains("busy");
         }
+
+        /// <summary>
+        /// Вспомогательный метод для парсинга дат
+        /// </summary>
+        private DateTime? ParseDateTime(object value)
+        {
+            if (value == null || value == DBNull.Value)
+                return null;
+
+            if (value is DateTime dateTime)
+                return dateTime;
+
+            if (value is string dateString && DateTime.TryParse(dateString, out DateTime parsed))
+                return parsed;
+
+            return null;
+        }
+
+        #endregion
     }
 }
