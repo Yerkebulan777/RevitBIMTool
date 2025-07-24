@@ -1,51 +1,55 @@
 ﻿using System;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
-namespace RevitBIMTool.Database.Models
+namespace Database.Models
 {
     /// <summary>
-    /// Модель состояния принтера в базе данных
-    /// Использует оптимистичное блокирование через RowVersion
+    /// Модель состояния принтера с оптимистичным блокированием
     /// </summary>
-    [Table("printer_states")]
     public class PrinterState
     {
-        [Key]
-        [Column("id")]
         public int Id { get; set; }
 
-        [Required]
-        [MaxLength(100)]
-        [Column("printer_name")]
+        /// <summary>
+        /// Уникальное имя принтера (первичный ключ для бизнес-логики)
+        /// </summary>
         public string PrinterName { get; set; }
 
-        [Column("is_available")]
+        /// <summary>
+        /// Доступен ли принтер для резервирования
+        /// </summary>
         public bool IsAvailable { get; set; }
 
-        [Column("reserved_by")]
-        [MaxLength(100)]
+        /// <summary>
+        /// Кто зарезервировал принтер (процесс или пользователь)
+        /// </summary>
         public string ReservedBy { get; set; }
 
-        [Column("reserved_at")]
+        /// <summary>
+        /// Когда был зарезервирован (для автоматического освобождения)
+        /// </summary>
         public DateTime? ReservedAt { get; set; }
 
-        [Column("last_updated")]
+        /// <summary>
+        /// Последнее обновление записи
+        /// </summary>
         public DateTime LastUpdated { get; set; }
 
-        [Column("process_id")]
+        /// <summary>
+        /// ID процесса, который зарезервировал принтер
+        /// </summary>
         public int? ProcessId { get; set; }
 
-        [Column("machine_name")]
-        [MaxLength(50)]
+        /// <summary>
+        /// Имя машины для распределенной работы
+        /// </summary>
         public string MachineName { get; set; }
 
         /// <summary>
         /// Версия строки для оптимистичного блокирования
-        /// Предотвращает конфликты при одновременном доступе
+        /// Предотвращает потерю обновлений при конкурентном доступе
         /// </summary>
-        [Timestamp]
-        [Column("row_version")]
-        public byte[] RowVersion { get; set; }
+        public long Version { get; set; }
     }
+
+
 }
