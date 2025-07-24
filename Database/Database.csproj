@@ -3,17 +3,21 @@
 	<PropertyGroup>
 
 		<Nullable>enable</Nullable>
-		<LangVersion>latest</LangVersion>
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<!-- Мягкая обработка предупреждений на этапе разработки -->
+		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+		<NoWarn>$(NoWarn);CS1591;CS1572;CS1573</NoWarn>
 
 		<!-- Информация о проекте -->
 		<AssemblyTitle>RevitBIMTool Database Layer</AssemblyTitle>
 		<AssemblyDescription>Database layer for printer management with PostgreSQL support</AssemblyDescription>
 		<AssemblyVersion>1.0.0.0</AssemblyVersion>
 		<FileVersion>1.0.0.0</FileVersion>
+
+		<Configurations>Debug R19; Debug R21;Debug R23; Release R19; Release R21; Release R23</Configurations>
+		<Configurations>$(Configurations); Release R19; Release R21; Release R23</Configurations>
 
 	</PropertyGroup>
 
@@ -32,18 +36,25 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<!-- Основные пакеты Entity Framework Core -->
+		<!-- Ядро Entity Framework Core -->
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.32" />
+
+		<!-- Провайдер для PostgreSQL -->
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="3.1.18" />
+
+		<!-- Data Annotations для .NET Standard 2.0 -->
+		<PackageReference Include="System.ComponentModel.Annotations" Version="4.7.0" />
+
+		<!-- Инструменты для миграций -->
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="3.1.32">
 			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
 
-		<!-- Дизайн-тайм сервисы для миграций -->
+		<!-- Design-time поддержка -->
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="3.1.32">
 			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
 		
 	</ItemGroup>
@@ -59,7 +70,6 @@
 
 	<ItemGroup>
 		<!-- Дополнительные утилиты -->
-		<PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
 		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>analyzers</IncludeAssets>
