@@ -1,52 +1,93 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <LangVersion>latest</LangVersion>
-        <PlatformTarget>x64</PlatformTarget>
-        <ImplicitUsings>true</ImplicitUsings>
-        <Configurations>Debug R20;Debug R21;Debug R22;Debug R23;Debug R24;Debug R25</Configurations>
-        <Configurations>$(Configurations);Release R20;Release R21;Release R22;Release R23;Release R24;Release R25</Configurations>
-    </PropertyGroup>
+	<PropertyGroup>
 
-    <PropertyGroup Condition="$(Configuration.Contains('R20'))">
-        <RevitVersion>2020</RevitVersion>
-        <TargetFramework>net48</TargetFramework>
-    </PropertyGroup>
-    <PropertyGroup Condition="$(Configuration.Contains('R21'))">
-        <RevitVersion>2021</RevitVersion>
-        <TargetFramework>net48</TargetFramework>
-    </PropertyGroup>
-    <PropertyGroup Condition="$(Configuration.Contains('R22'))">
-        <RevitVersion>2022</RevitVersion>
-        <TargetFramework>net48</TargetFramework>
-    </PropertyGroup>
-    <PropertyGroup Condition="$(Configuration.Contains('R23'))">
-        <RevitVersion>2023</RevitVersion>
-        <TargetFramework>net48</TargetFramework>
-    </PropertyGroup>
-    <PropertyGroup Condition="$(Configuration.Contains('R24'))">
-        <RevitVersion>2024</RevitVersion>
-        <TargetFramework>net48</TargetFramework>
-    </PropertyGroup>
-    <PropertyGroup Condition="$(Configuration.Contains('R25'))">
-        <RevitVersion>2025</RevitVersion>
-        <TargetFramework>net8.0-windows</TargetFramework>
-    </PropertyGroup>
+		<Nullable>enable</Nullable>
+		<LangVersion>latest</LangVersion>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 
-    <ItemGroup>
-        <PackageReference Include="Nice3point.Revit.Build.Tasks" Version="2.*" />
-        <PackageReference Include="Nice3point.Revit.Toolkit" Version="$(RevitVersion).*" />
-        <PackageReference Include="Nice3point.Revit.Extensions" Version="$(RevitVersion).*" />
-        <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="$(RevitVersion).*" />
-        <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(RevitVersion).*" />
-    </ItemGroup>
+		<!-- Информация о проекте -->
+		<AssemblyTitle>RevitBIMTool Database Layer</AssemblyTitle>
+		<AssemblyDescription>Database layer for printer management with PostgreSQL support</AssemblyDescription>
+		<AssemblyVersion>1.0.0.0</AssemblyVersion>
+		<FileVersion>1.0.0.0</FileVersion>
 
-    <ItemGroup>
-      <Folder Include="Repositories\" />
-      <Folder Include="Services\" />
-      <Folder Include="Migrations\" />
-      <Folder Include="Configuration\" />
-      <Folder Include="Extensions\" />
-    </ItemGroup>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="$(Configuration.Contains('Debug'))">
+		<Optimize>false</Optimize>
+		<DebugType>full</DebugType>
+		<DebugSymbols>true</DebugSymbols>
+		<DefineConstants>$(DefineConstants);DEBUG</DefineConstants>
+	</PropertyGroup>
+	
+	<PropertyGroup Condition="$(Configuration.Contains('Release'))">
+		<Optimize>true</Optimize>
+		<DebugType>portable</DebugType>
+		<DebugSymbols>true</DebugSymbols>
+		<DefineConstants>$(DefineConstants);RELEASE</DefineConstants>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- Основные пакеты Entity Framework Core -->
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.32" />
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="3.1.18" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="3.1.32">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+
+		<!-- Дизайн-тайм сервисы для миграций -->
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="3.1.32">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Microsoft Extensions для DI -->
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.1.32" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="3.1.32" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="3.1.32" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.32" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Дополнительные утилиты -->
+		<PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>analyzers</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- SQL скрипты миграций как embedded resources -->
+		<EmbeddedResource Include="Migrations\*.sql" />
+		<!-- Конфигурационные файлы -->
+		<None Include="appsettings.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Настройки анализаторов кода -->
+		<Analyzer Include="Microsoft.CodeAnalysis.CSharp.CodeStyle">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>analyzers</IncludeAssets>
+		</Analyzer>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="Services\" />
+		<Folder Include="Migrations\" />
+		<Folder Include="Configuration\" />
+		<Folder Include="Repositories\" />
+		<Folder Include="Extensions\" />
+	</ItemGroup>
 
 </Project>
