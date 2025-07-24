@@ -23,11 +23,6 @@ namespace Database.Repositories
         IEnumerable<PrinterState> GetAvailablePrinters(IDbTransaction transaction = null);
 
         /// <summary>
-        /// Создать или обновить состояние принтера
-        /// </summary>
-        bool UpsertPrinter(PrinterState printerState, IDbTransaction transaction = null);
-
-        /// <summary>
         /// Атомарно зарезервировать принтер
         /// Использует SELECT FOR UPDATE для предотвращения race conditions
         /// </summary>

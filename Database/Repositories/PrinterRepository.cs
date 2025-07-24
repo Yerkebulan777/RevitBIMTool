@@ -55,13 +55,6 @@ namespace Database.Repositories
                 : ReleasePrinterInDatabase(printerName, transaction);
         }
 
-        public bool UpsertPrinter(PrinterState printerState, IDbTransaction transaction = null)
-        {
-            // Для in-memory провайдера эта операция не имеет смысла
-            // Принтеры создаются при инициализации
-            return _config.Provider is InMemoryProvider || UpsertPrinterInDatabase(printerState, transaction);
-        }
-
         public int CleanupExpiredReservations(TimeSpan expiredAfter, IDbTransaction transaction = null)
         {
             if (_config.Provider is InMemoryProvider)
@@ -70,7 +63,7 @@ namespace Database.Repositories
                 return 0;
             }
 
-            return CleanupExpiredReservationsInDatabase(expiredAfter, transaction);
+            return 0;
         }
 
         public void InitializePrinters(IEnumerable<string> printerNames, IDbTransaction transaction = null)
@@ -78,10 +71,8 @@ namespace Database.Repositories
             if (_config.Provider is InMemoryProvider)
             {
                 // In-memory провайдер инициализируется сам
-                return;
+                
             }
-
-            InitializePrintersInDatabase(printerNames, transaction);
         }
 
         #region SQL-based implementations
@@ -195,6 +186,7 @@ namespace Database.Repositories
 
                 // Используем SQL, специфичный для данного провайдера
                 string selectSql = _config.Provider.GetReservePrinterScript();
+
                 bool isAvailable = false;
 
                 using (IDbCommand selectCommand = connection.CreateCommand())
@@ -325,30 +317,6 @@ namespace Database.Repositories
                     connection.Close();
                 }
             }
-        }
-
-        private static bool UpsertPrinterInDatabase(PrinterState printerState, IDbTransaction transaction)
-        {
-            Debug.Assert(printerState != null, "Printer state must not be null");
-            Debug.Assert(transaction != null, "Transaction must not be null");
-            // Упрощенная реализация: сначала UPDATE, потом INSERT если нужно
-            // Можно расширить для конкретных СУБД
-            return true; // Заглушка для демонстрации
-        }
-
-        private static int CleanupExpiredReservationsInDatabase(TimeSpan expiredAfter, IDbTransaction transaction)
-        {
-            Debug.Assert(expiredAfter.TotalSeconds > 0, "Expired time must be greater than zero");
-            Debug.Assert(transaction != null, "Transaction must not be null");
-            // Аналогично другим методам
-            return 0; // Заглушка
-        }
-
-        private static void InitializePrintersInDatabase(IEnumerable<string> printerNames, IDbTransaction transaction)
-        {
-            Debug.Assert(printerNames != null, "Printer names must not be null");
-            Debug.Assert(transaction != null, "Transaction must not be null");
-            // Аналогично другим методам
         }
 
         #endregion
