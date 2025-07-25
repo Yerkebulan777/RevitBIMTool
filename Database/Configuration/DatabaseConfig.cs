@@ -10,7 +10,6 @@ namespace Database.Configuration
     public sealed class DatabaseConfig
     {
         private static readonly Lazy<DatabaseConfig> _instance = new(() => new DatabaseConfig());
-
         public static DatabaseConfig Instance => _instance.Value;
 
         private DatabaseConfig() { }
