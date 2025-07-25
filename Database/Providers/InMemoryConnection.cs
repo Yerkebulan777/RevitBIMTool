@@ -53,16 +53,15 @@ namespace Database.Providers
         {
             get
             {
-                if (index < 0 || index >= _parameters.Count)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(index), $"Parameter index {index} is out of range");
-                }
-                else
+                if (index >= 0 && index < _parameters.Count)
                 {
                     return _parameters[index].Value;
                 }
+                else
+                {
+                    throw new ArgumentOutOfRangeException(nameof(index), $"Parameter index {index} is out of range");
+                }
             }
-
             set
             {
                 if (index < 0 || index >= _parameters.Count)
