@@ -33,17 +33,19 @@ namespace RevitBIMTool.Commands
                 if (provider.Equals("PostgreSQL", StringComparison.OrdinalIgnoreCase))
                 {
                     // Регистрируем PostgreSQL провайдер
-                    DatabaseProviderFactory.RegisterProvider("postgresql", () => new ConcretePostgreSqlProvider());
+                    ProviderFactory.RegisterProvider("postgresql", () => new ConcretePostgreSqlProvider());
 
                     _ = report.AppendLine("✓ PostgreSQL provider registered");
                 }
 
                 // Инициализируем систему принтеров
                 IPrinterStateService printerService = DatabaseExtensions.InitializePrinterSystem(connectionString);
+
                 _ = report.AppendLine("✓ Printer service initialized");
 
                 // Тестируем получение принтеров
                 IEnumerable<PrinterState> printers = printerService.GetAllPrinters();
+
                 _ = report.AppendLine($"✓ Found {Enumerable.Count(printers)} printers");
 
                 foreach (PrinterState printer in printers)

@@ -3,10 +3,10 @@ using System.Collections.Generic;
 
 namespace Database.Providers
 {
-    public static class DatabaseProviderFactory
+    public static class ProviderFactory
     {
         private static readonly Dictionary<string, Func<IDatabaseProvider>> _providers =
-            new Dictionary<string, Func<IDatabaseProvider>>(StringComparer.OrdinalIgnoreCase)
+            new(StringComparer.OrdinalIgnoreCase)
             {
                 { "inmemory", () => new InMemoryProvider() },
                 { "memory", () => new InMemoryProvider() }
@@ -17,6 +17,7 @@ namespace Database.Providers
         /// </summary>
         public static IDatabaseProvider CreateProvider(string providerName)
         {
+            string trimmedName = providerName.Trim();
             if (string.IsNullOrWhiteSpace(providerName))
             {
                 throw new ArgumentException("Provider name cannot be null or empty", nameof(providerName));
@@ -45,21 +46,15 @@ namespace Database.Providers
         /// </summary>
         public static void RegisterProvider(string name, Func<IDatabaseProvider> factory)
         {
-            if (string.IsNullOrWhiteSpace(name))
+            string trimmedName = name.Trim();
+            if (string.IsNullOrEmpty(trimmedName))
             {
                 throw new ArgumentException("Provider name cannot be null or empty", nameof(name));
             }
-
-            _providers[name.Trim().ToLowerInvariant()] = factory ??
-                throw new ArgumentNullException(nameof(factory));
+            _providers[trimmedName.ToLowerInvariant()] = factory ?? throw new ArgumentNullException(nameof(factory));
         }
 
-        /// <summary>
-        /// Получить список доступных провайдеров
-        /// </summary>
-        public static string[] GetAvailableProviders()
-        {
-            return new string[] { "inmemory", "memory" };
-        }
+
+
     }
 }
