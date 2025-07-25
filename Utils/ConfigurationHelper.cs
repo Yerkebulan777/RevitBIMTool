@@ -16,6 +16,7 @@ namespace RevitBIMTool.Utils
         {
             // Сначала проверяем environment variable (для production)
             string envConnectionString = Environment.GetEnvironmentVariable("REVIT_PRINTER_DB_CONNECTION");
+
             if (!string.IsNullOrEmpty(envConnectionString))
             {
                 return envConnectionString;
