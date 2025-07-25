@@ -1,28 +1,26 @@
 ﻿using Database.Configuration;
 using Database.Services;
 using System;
-using System.Diagnostics;
 
 namespace Database.Extensions
 {
     /// <summary>
-    /// Методы расширения для упрощения интеграции с основным приложением
+    /// Упрощенные методы расширения для интеграции
     /// </summary>
     public static class DatabaseExtensions
     {
         /// <summary>
-        /// Инициализация системы управления принтерами
-        /// Этот метод - главная точка входа для использования в вашем RevitBIMTool
+        /// Главная точка входа для инициализации системы принтеров
         /// </summary>
         public static IPrinterStateService InitializePrinterSystem(string connectionString = null)
         {
-            // Инициализируем конфигурацию - она автоматически определит тип СУБД
+            // Инициализируем конфигурацию
             DatabaseConfig.Instance.Initialize(connectionString);
 
             // Создаем сервис
-            PrinterStateService service = new();
+            PrinterStateService service = new PrinterStateService();
 
-            // Инициализируем стандартные принтеры из вашего кода
+            // Инициализируем стандартные принтеры
             string[] defaultPrinters = new[]
             {
                 "PDF Writer - bioPDF",
@@ -33,41 +31,34 @@ namespace Database.Extensions
             };
 
             service.InitializeSystem(defaultPrinters);
-
             return service;
         }
 
         /// <summary>
-        /// Создание уникального идентификатора резервирования
-        /// </summary>
-        public static string CreateReservationId()
-        {
-            Process process = Process.GetCurrentProcess();
-            return $"{Environment.MachineName}_{process.Id}_{DateTime.UtcNow:yyyyMMdd_HHmmss}";
-        }
-
-        /// <summary>
         /// Безопасное выполнение операции с принтером
-        /// Паттерн "использование ресурса" - автоматически освобождает принтер
         /// </summary>
-        public static T WithPrinter<T>(this IPrinterStateService service, string[] preferredPrinters, Func<string, T> operation)
+        public static T WithPrinter<T>(this IPrinterStateService service,
+            string[] preferredPrinters, Func<string, T> operation)
         {
             string reservedPrinter = null;
-            string reservationId = CreateReservationId();
+            string reservationId = $"{Environment.MachineName}_{DateTime.UtcNow:yyyyMMdd_HHmmss}";
 
             try
             {
                 reservedPrinter = service.TryReserveAnyAvailablePrinter(reservationId, preferredPrinters);
 
-                return string.IsNullOrEmpty(reservedPrinter)
-                    ? throw new InvalidOperationException("No available printers found")
-                    : operation(reservedPrinter);
+                if (string.IsNullOrEmpty(reservedPrinter))
+                {
+                    throw new InvalidOperationException("No available printers found");
+                }
+
+                return operation(reservedPrinter);
             }
             finally
             {
                 if (!string.IsNullOrEmpty(reservedPrinter))
                 {
-                    _ = service.ReleasePrinter(reservedPrinter);
+                    service.ReleasePrinter(reservedPrinter);
                 }
             }
         }
