@@ -1,11 +1,6 @@
 ﻿using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using Database.Extensions;
-using Database.Models;
-using Database.Providers;
-using Database.Services;
-using RevitBIMTool.Utils.Database;
 using System.Globalization;
 using System.Text;
 using System.Windows;
@@ -23,54 +18,6 @@ namespace RevitBIMTool.Commands
 
             try
             {
-                // Регистрируем PostgreSQL провайдер для основного проекта
-                string connectionString = ConfigurationHelper.GetPrinterConnectionString();
-                string provider = ConfigurationHelper.GetDatabaseProvider();
-
-                _ = report.AppendLine($"Provider: {provider}");
-                _ = report.AppendLine($"Connection: {connectionString}");
-
-                if (provider.Equals("PostgreSQL", StringComparison.OrdinalIgnoreCase))
-                {
-                    // Регистрируем PostgreSQL провайдер
-                    ProviderFactory.RegisterProvider("postgresql", () => new ConcretePostgreSqlProvider());
-
-                    _ = report.AppendLine("✓ PostgreSQL provider registered");
-                }
-
-                // Инициализируем систему принтеров
-                IPrinterStateService printerService = DatabaseExtensions.InitializePrinterSystem(connectionString);
-
-                _ = report.AppendLine("✓ Printer service initialized");
-
-                // Тестируем получение принтеров
-                IEnumerable<PrinterState> printers = printerService.GetAllPrinters();
-
-                _ = report.AppendLine($"✓ Found {Enumerable.Count(printers)} printers");
-
-                foreach (PrinterState printer in printers)
-                {
-                    string status = printer.IsAvailable ? "Available" : $"Reserved by {printer.ReservedBy}";
-                    _ = report.AppendLine($"  - {printer.PrinterName}: {status}");
-                }
-
-                // Тестируем резервирование
-                string[] preferredPrinters = { "PDF Writer - bioPDF", "PDF24" };
-                string reservedPrinter = printerService.TryReserveAnyAvailablePrinter("TestUser", preferredPrinters);
-
-                if (!string.IsNullOrEmpty(reservedPrinter))
-                {
-                    _ = report.AppendLine($"✓ Reserved printer: {reservedPrinter}");
-                    bool released = printerService.ReleasePrinter(reservedPrinter);
-                    _ = report.AppendLine($"✓ Released printer: {released}");
-                }
-                else
-                {
-                    _ = report.AppendLine("⚠ No printers available for reservation");
-                }
-
-                _ = TaskDialog.Show("Database Test Results", report.ToString());
-
                 return Result.Succeeded;
             }
             catch (Exception ex)
