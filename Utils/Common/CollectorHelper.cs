@@ -7,42 +7,32 @@ namespace RevitBIMTool.Utils.Common;
 
 public static class CollectorHelper
 {
-
-    #region FilteredByFamilylName
-
-    public static FilteredElementCollector GetInstancesByFamilyName(Document doc, BuiltInCategory bic, string nameStart)
+    public static FilteredElementCollector GetInstancesByFamilyName(Document doc, BuiltInCategory bic, string familyName)
     {
-        IList<ElementFilter> filters = [];
+        List<ElementFilter> filters = [];
 
         filters.Add(new Autodesk.Revit.DB.Architecture.RoomFilter());
 
         FilteredElementCollector collector = new FilteredElementCollector(doc).OfClass(typeof(Family));
 
-        FilteredElementCollector instanceCollector = new(doc);
-
-        foreach (Family family in collector.OfType<Family>())
+        foreach (Family family in collector.OfType<Family>().Where(family => family.Name.Contains(familyName)))
         {
-            if (family.Name.StartsWith(nameStart, StringComparison.OrdinalIgnoreCase))
+            foreach (ElementId symbolId in family.GetFamilySymbolIds())
             {
-                foreach (ElementId symbolId in family.GetFamilySymbolIds())
-                {
-                    filters.Add(new FamilyInstanceFilter(doc, symbolId));
-                }
+                filters.Add(new FamilyInstanceFilter(doc, symbolId));
             }
         }
 
         LogicalOrFilter orFilter = new(filters);
+        FilteredElementCollector instanceCollector = new(doc);
         instanceCollector = instanceCollector.OfCategory(bic);
         instanceCollector = instanceCollector.WherePasses(orFilter);
         instanceCollector = instanceCollector.WhereElementIsViewIndependent();
 
-        Log.Debug($"Total elems by {nameStart} {instanceCollector.GetElementCount()} count");
+        Log.Debug("Total elems by {Count} count", instanceCollector.GetElementCount());
 
         return instanceCollector;
     }
-
-    #endregion
-
 
     #region FilteredBySymbolName
 

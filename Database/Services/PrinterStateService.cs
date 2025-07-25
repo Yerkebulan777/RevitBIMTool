@@ -36,6 +36,7 @@ namespace Database.Services
             {
                 // Создаем подключение через провайдер - он знает, какую СУБД использовать
                 using IDbConnection connection = _config.Provider.CreateConnection(_config.ConnectionString);
+
                 connection.Open();
 
                 using IDbTransaction transaction = connection.BeginTransaction();

@@ -2,6 +2,7 @@
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using RevitBIMTool.Utils;
+using RevitBIMTool.Utils.Common;
 using System.Globalization;
 
 
@@ -24,7 +25,7 @@ namespace RevitBIMTool.Commands
 
             IList<Element> elems = CollectorHelper.GetInstancesByFamilyName(doc, mechCat, "Задание на отверстие").ToElements();
 
-            uidoc.Selection.SetElementIds(elems.Select(elem => elem.Id).ToList());
+            uidoc.Selection.SetElementIds([.. elems.Select(elem => elem.Id)]);
 
             string output = $"\n Total elements count: {elems.Count()}";
 
