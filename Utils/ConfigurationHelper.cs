@@ -1,5 +1,6 @@
 ﻿using Autodesk.Revit.UI;
 using System.Configuration;
+using System.Text;
 
 namespace RevitBIMTool.Utils
 {
@@ -90,20 +91,20 @@ namespace RevitBIMTool.Utils
         {
             try
             {
-                string connectionString = ConfigurationHelper.GetPrinterConnectionString();
-                string provider = ConfigurationHelper.GetDatabaseProvider();
-                TimeSpan timeout = ConfigurationHelper.GetPrinterLockTimeout();
+                StringBuilder sb = new();
+                sb.AppendLine($"Provider: {GetDatabaseProvider()}");
+                sb.AppendLine($"Timeout: {GetPrinterLockTimeout()}");
+                sb.AppendLine($"Connection: {GetPrinterConnectionString()}");
 
-                System.Diagnostics.Debug.WriteLine($"Provider: {provider}");
-                System.Diagnostics.Debug.WriteLine($"Connection: {connectionString}");
-                System.Diagnostics.Debug.WriteLine($"Timeout: {timeout}");
-
-                TaskDialog.Show("Configuration Test", $"Provider: {provider}\nConnection: {connectionString}\nTimeout: {timeout}");
+                TaskDialog.Show("Configuration Test", sb.ToString());
             }
             catch (Exception ex)
             {
-                TaskDialog.Show("Configuration Error", ex.Message);
+                _ = TaskDialog.Show("Configuration Error", ex.Message);
             }
         }
+
+
+
     }
 }
