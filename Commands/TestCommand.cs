@@ -29,7 +29,6 @@ namespace RevitBIMTool.Commands
 
                 _ = report.AppendLine($"Provider: {provider}");
                 _ = report.AppendLine($"Connection: {connectionString}");
-                _ = report.AppendLine();
 
                 if (provider.Equals("PostgreSQL", StringComparison.OrdinalIgnoreCase))
                 {
@@ -45,7 +44,7 @@ namespace RevitBIMTool.Commands
 
                 // Тестируем получение принтеров
                 IEnumerable<PrinterState> printers = printerService.GetAllPrinters();
-                _ = report.AppendLine($"✓ Found {System.Linq.Enumerable.Count(printers)} printers");
+                _ = report.AppendLine($"✓ Found {Enumerable.Count(printers)} printers");
 
                 foreach (PrinterState printer in printers)
                 {
@@ -74,17 +73,20 @@ namespace RevitBIMTool.Commands
             }
             catch (Exception ex)
             {
-                _ = report.AppendLine($"✗ Error: {ex.Message}");
-
                 if (ex.InnerException != null)
                 {
                     _ = report.AppendLine($"Inner: {ex.InnerException.Message}");
                 }
 
-                Clipboard.SetText(report.ToString());
+                _ = report.AppendLine($"✗ Error: {ex.Message}");
+
                 _ = TaskDialog.Show("Database Test Failed", report.ToString());
 
                 return Result.Failed;
+            }
+            finally
+            {
+                Clipboard.SetText(report.ToString());
             }
         }
 
@@ -92,5 +94,8 @@ namespace RevitBIMTool.Commands
         {
             return applicationData?.ActiveUIDocument != null;
         }
+
+
+
     }
 }
