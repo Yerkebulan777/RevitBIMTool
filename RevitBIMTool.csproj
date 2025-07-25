@@ -57,6 +57,7 @@
 		<PackageReference Include="Revit_All_Main_Versions_API_x64" Version="$(RevitVersion).*-*" />
 		<PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
         <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+		<PackageReference Include="Dapper" Version="2.0.151" />
     </ItemGroup>
 
     <ItemGroup>

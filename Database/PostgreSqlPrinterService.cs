@@ -1,11 +1,11 @@
-﻿using Database.Models;
+﻿using Dapper;
+using Database.Models;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Odbc;
 using System.Diagnostics;
 using System.Linq;
-using Dapper;
 
 namespace Database
 {
@@ -17,6 +17,7 @@ namespace Database
     {
         private readonly string _connectionString;
         private readonly int _commandTimeout;
+        private bool _disposed = false;
 
         // SQL скрипты вынесены в константы для лучшей читаемости
         private const string CreateTableSql = @"
@@ -74,11 +75,11 @@ namespace Database
         /// </summary>
         private void InitializeDatabase()
         {
-            using var connection = new OdbcConnection(_connectionString);
+            using OdbcConnection connection = new OdbcConnection(_connectionString);
             connection.Open();
 
             // Dapper делает всю работу за нас - никаких команд и параметров
-            connection.Execute(CreateTableSql, commandTimeout: _commandTimeout);
+            _ = connection.Execute(CreateTableSql, commandTimeout: _commandTimeout);
         }
 
         /// <summary>
@@ -88,9 +89,11 @@ namespace Database
         public void InitializePrinters(params string[] printerNames)
         {
             if (printerNames == null || printerNames.Length == 0)
+            {
                 return;
+            }
 
-            using var connection = new OdbcConnection(_connectionString);
+            using OdbcConnection connection = new OdbcConnection(_connectionString);
             connection.Open();
 
             const string insertSql = @"
@@ -100,7 +103,7 @@ namespace Database
 
             // Dapper автоматически обрабатывает массив параметров
             var parameters = printerNames.Select(name => new { printerName = name });
-            connection.Execute(insertSql, parameters, commandTimeout: _commandTimeout);
+            _ = connection.Execute(insertSql, parameters, commandTimeout: _commandTimeout);
         }
 
         /// <summary>
@@ -110,30 +113,28 @@ namespace Database
         public string TryReserveAnyAvailablePrinter(string reservedBy, params string[] preferredPrinters)
         {
             if (string.IsNullOrEmpty(reservedBy))
+            {
                 throw new ArgumentException("ReservedBy cannot be null or empty", nameof(reservedBy));
+            }
 
-            using var connection = new OdbcConnection(_connectionString);
+            using OdbcConnection connection = new OdbcConnection(_connectionString);
             connection.Open();
 
             // Получаем список доступных принтеров
-            var availablePrinters = GetAvailablePrinters(connection);
+            IEnumerable<PrinterState> availablePrinters = GetAvailablePrinters(connection);
 
             if (!availablePrinters.Any())
-                return null;
-
-            // Упорядочиваем по приоритету: сначала предпочтительные, потом все остальные
-            var orderedPrinters = OrderByPreference(availablePrinters, preferredPrinters);
-
-            // Пытаемся зарезервировать первый доступный
-            foreach (var printer in orderedPrinters)
             {
-                if (TryReserveSpecificPrinter(connection, printer.PrinterName, reservedBy))
-                {
-                    return printer.PrinterName;
-                }
+                return null;
             }
 
-            return null;
+            // Упорядочиваем по приоритету: сначала предпочтительные, потом все остальные
+            IEnumerable<PrinterState> orderedPrinters = OrderByPreference(availablePrinters, preferredPrinters);
+
+            // Пытаемся зарезервировать первый доступный
+            PrinterState reservedPrinter = orderedPrinters.FirstOrDefault(printer => TryReserveSpecificPrinter(connection, printer.PrinterName, reservedBy));
+
+            return reservedPrinter?.PrinterName;
         }
 
         /// <summary>
@@ -143,11 +144,16 @@ namespace Database
         public bool TryReserveSpecificPrinter(string printerName, string reservedBy)
         {
             if (string.IsNullOrEmpty(printerName))
+            {
                 throw new ArgumentException("PrinterName cannot be null or empty", nameof(printerName));
-            if (string.IsNullOrEmpty(reservedBy))
-                throw new ArgumentException("ReservedBy cannot be null or empty", nameof(reservedBy));
+            }
 
-            using var connection = new OdbcConnection(_connectionString);
+            if (string.IsNullOrEmpty(reservedBy))
+            {
+                throw new ArgumentException("ReservedBy cannot be null or empty", nameof(reservedBy));
+            }
+
+            using OdbcConnection connection = new OdbcConnection(_connectionString);
             connection.Open();
 
             return TryReserveSpecificPrinter(connection, printerName, reservedBy);
@@ -159,19 +165,19 @@ namespace Database
         /// </summary>
         private bool TryReserveSpecificPrinter(IDbConnection connection, string printerName, string reservedBy)
         {
-            using var transaction = connection.BeginTransaction();
+            using IDbTransaction transaction = connection.BeginTransaction();
             try
             {
                 // Шаг 1: Блокируем строку для чтения (пессимистичная блокировка)
                 // SELECT FOR UPDATE гарантирует, что никто другой не сможет изменить эту строку
-                var printerInfo = connection.QuerySingleOrDefault<(long version, bool isAvailable)>(
+                (long version, bool isAvailable) = connection.QuerySingleOrDefault<(long version, bool isAvailable)>(
                     SelectForUpdateSql,
                     new { printerName },
                     transaction,
                     _commandTimeout);
 
                 // Проверяем, найден ли принтер и доступен ли он
-                if (printerInfo.version == 0 || !printerInfo.isAvailable)
+                if (version == 0 || !isAvailable)
                 {
                     transaction.Rollback();
                     return false;
@@ -179,8 +185,8 @@ namespace Database
 
                 // Шаг 2: Обновляем состояние принтера (оптимистичная блокировка)
                 // Проверяем version чтобы убедиться, что никто не изменил запись между SELECT и UPDATE
-                var currentProcess = Process.GetCurrentProcess();
-                var affectedRows = connection.Execute(
+                Process currentProcess = Process.GetCurrentProcess();
+                int affectedRows = connection.Execute(
                     ReservePrinterSql,
                     new
                     {
@@ -188,7 +194,7 @@ namespace Database
                         reservedBy,
                         reservedAt = DateTime.UtcNow,
                         processId = currentProcess.Id,
-                        expectedVersion = printerInfo.version
+                        expectedVersion = version
                     },
                     transaction,
                     _commandTimeout);
@@ -219,12 +225,14 @@ namespace Database
         public bool ReleasePrinter(string printerName)
         {
             if (string.IsNullOrEmpty(printerName))
+            {
                 throw new ArgumentException("PrinterName cannot be null or empty", nameof(printerName));
+            }
 
-            using var connection = new OdbcConnection(_connectionString);
+            using OdbcConnection connection = new OdbcConnection(_connectionString);
             connection.Open();
 
-            var affectedRows = connection.Execute(
+            int affectedRows = connection.Execute(
                 ReleasePrinterSql,
                 new { printerName },
                 commandTimeout: _commandTimeout);
@@ -238,7 +246,7 @@ namespace Database
         /// </summary>
         public IEnumerable<PrinterState> GetAvailablePrinters()
         {
-            using var connection = new OdbcConnection(_connectionString);
+            using OdbcConnection connection = new OdbcConnection(_connectionString);
             connection.Open();
 
             return GetAvailablePrinters(connection);
@@ -262,7 +270,7 @@ namespace Database
         /// </summary>
         public IEnumerable<PrinterState> GetAllPrinters()
         {
-            using var connection = new OdbcConnection(_connectionString);
+            using OdbcConnection connection = new OdbcConnection(_connectionString);
             connection.Open();
 
             const string sql = @"
@@ -279,10 +287,10 @@ namespace Database
         /// </summary>
         public int CleanupExpiredReservations(TimeSpan maxAge)
         {
-            using var connection = new OdbcConnection(_connectionString);
+            using OdbcConnection connection = new OdbcConnection(_connectionString);
             connection.Open();
 
-            var cutoffTime = DateTime.UtcNow.Subtract(maxAge);
+            DateTime cutoffTime = DateTime.UtcNow.Subtract(maxAge);
 
             const string sql = @"
                 UPDATE printer_states 
@@ -306,20 +314,32 @@ namespace Database
             string[] preferredPrinters)
         {
             if (preferredPrinters == null || preferredPrinters.Length == 0)
+            {
                 return printers.OrderBy(p => p.PrinterName);
+            }
 
-            var preferredSet = new HashSet<string>(preferredPrinters, StringComparer.OrdinalIgnoreCase);
+            HashSet<string> preferredSet = new HashSet<string>(preferredPrinters, StringComparer.OrdinalIgnoreCase);
 
             return printers
                 .OrderBy(p => preferredSet.Contains(p.PrinterName) ? 0 : 1)
                 .ThenBy(p => p.PrinterName);
         }
 
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                // Если появятся управляемые ресурсы, их освобождение здесь
+                // Сейчас освобождать нечего, но шаблон соблюдён
+
+                _disposed = true;
+            }
+        }
+
         public void Dispose()
         {
-            // В данной реализации соединения создаются и закрываются в каждом методе
-            // Поэтому в Dispose нет необходимости закрывать соединения
-            // Но метод нужен для соответствия паттерну и возможного расширения в будущем
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
     }
 }
