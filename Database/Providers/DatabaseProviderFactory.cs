@@ -35,7 +35,7 @@ namespace Database.Providers
         /// - Нет проблем с потокобезопасностью из-за общих состояний
         /// </summary>
         private static readonly Dictionary<string, Func<IDatabaseProvider>> _providers =
-            new Dictionary<string, Func<IDatabaseProvider>>(StringComparer.OrdinalIgnoreCase)
+            new(StringComparer.OrdinalIgnoreCase)
             {
                 // InMemory - отлично для разработки, тестирования и демонстрации
                 // Не требует никаких внешних зависимостей, работает сразу "из коробки"
@@ -53,9 +53,9 @@ namespace Database.Providers
                 
                 // PostgreSQL - мощная open-source СУБД
                 // Отличная альтернатива SQL Server с расширенными возможностями
-                { "postgresql", () => CreatePostgreSqlProvider() },
-                { "postgres", () => CreatePostgreSqlProvider() },
-                { "pgsql", () => CreatePostgreSqlProvider() },
+                { "postgresql", CreatePostgreSqlProvider },
+                { "postgres", CreatePostgreSqlProvider },
+                { "pgsql", CreatePostgreSqlProvider },
                 
                 // Здесь легко добавить поддержку других БД:
                 // { "mysql", () => new MySqlProvider() },
@@ -81,12 +81,14 @@ namespace Database.Providers
             // Проверяем входные данные - принцип "Fail Fast"
             // Лучше упасть сразу с понятной ошибкой, чем потом в неожиданном месте
             if (string.IsNullOrWhiteSpace(providerName))
+            {
                 throw new ArgumentException(
                     "Provider name cannot be null, empty or whitespace",
                     nameof(providerName));
+            }
 
             // Пытаемся найти фабричный метод в нашем реестре
-            if (_providers.TryGetValue(providerName.Trim(), out var factory))
+            if (_providers.TryGetValue(providerName.Trim(), out Func<IDatabaseProvider> factory))
             {
                 try
                 {
@@ -104,7 +106,7 @@ namespace Database.Providers
             }
 
             // Провайдер не найден - даем пользователю понятную ошибку
-            var availableProviders = string.Join(", ", _providers.Keys);
+            string availableProviders = string.Join(", ", _providers.Keys);
             throw new NotSupportedException(
                 $"Database provider '{providerName}' is not supported. " +
                 $"Available providers: {availableProviders}");
@@ -129,12 +131,14 @@ namespace Database.Providers
         public static IDatabaseProvider CreateProviderFromConnectionString(string connectionString)
         {
             if (string.IsNullOrWhiteSpace(connectionString))
+            {
                 throw new ArgumentException(
                     "Connection string cannot be null, empty or whitespace",
                     nameof(connectionString));
+            }
 
             // Приводим к нижнему регистру для удобства сравнения
-            var lowerConnectionString = connectionString.ToLowerInvariant();
+            string lowerConnectionString = connectionString.ToLowerInvariant();
 
             // PostgreSQL имеет характерные ключевые слова
             // Host= - стандартный параметр PostgreSQL
@@ -217,17 +221,16 @@ namespace Database.Providers
         public static void RegisterProvider(string name, Func<IDatabaseProvider> factory)
         {
             if (string.IsNullOrWhiteSpace(name))
+            {
                 throw new ArgumentException(
                     "Provider name cannot be null, empty or whitespace",
                     nameof(name));
-
-            if (factory == null)
-                throw new ArgumentNullException(nameof(factory),
-                    "Provider factory cannot be null");
+            }
 
             // Перезаписываем существующий провайдер, если он есть
             // Это позволяет переопределять стандартные провайдеры
-            _providers[name.Trim().ToLowerInvariant()] = factory;
+            _providers[name.Trim().ToLowerInvariant()] = factory ?? throw new ArgumentNullException(nameof(factory),
+                    "Provider factory cannot be null");
         }
 
         /// <summary>
@@ -241,10 +244,7 @@ namespace Database.Providers
         /// </summary>
         public static bool IsProviderRegistered(string providerName)
         {
-            if (string.IsNullOrWhiteSpace(providerName))
-                return false;
-
-            return _providers.ContainsKey(providerName.Trim().ToLowerInvariant());
+            return !string.IsNullOrWhiteSpace(providerName) && _providers.ContainsKey(providerName.Trim().ToLowerInvariant());
         }
 
         #region Методы анализа строки подключения
@@ -269,13 +269,12 @@ namespace Database.Providers
 
             // Если есть host= - это почти наверняка PostgreSQL
             if (hasHost)
+            {
                 return true;
+            }
 
             // Если есть комбинация port= + database= + user id= - это PostgreSQL
-            if (hasPort && hasDatabase && hasUserId)
-                return true;
-
-            return false;
+            return hasPort && hasDatabase && hasUserId;
         }
 
         /// <summary>

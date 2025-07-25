@@ -107,7 +107,7 @@ namespace RevitBIMTool.Utils.Common
         /// </summary>
         public static bool VerifyFile(ref List<string> existingFiles, string expectedFilePath)
         {
-            bool combinedPredicate(string file)
+            static bool combinedPredicate(string file)
             {
                 return IsFileValid(file) && IsFileRecent(file, TimeSpan.FromMinutes(30));
             }

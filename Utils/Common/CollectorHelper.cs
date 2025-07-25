@@ -3,7 +3,7 @@ using Serilog;
 using Document = Autodesk.Revit.DB.Document;
 using Level = Autodesk.Revit.DB.Level;
 
-namespace RevitBIMTool.Utils;
+namespace RevitBIMTool.Utils.Common;
 
 public static class CollectorHelper
 {

@@ -18,7 +18,7 @@ public class AutomationCommand : IExternalCommand, IExternalCommandAvailability
 
         UIApplication uiapp = commandData.Application;
         UIDocument uidoc = uiapp.ActiveUIDocument;
-        Document doc = uidoc.Document;
+        _ = uidoc.Document;
 
         return Result.Succeeded;
     }

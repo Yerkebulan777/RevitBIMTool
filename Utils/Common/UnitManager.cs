@@ -1,7 +1,7 @@
 ﻿using Autodesk.Revit.DB;
 
 
-namespace RevitBIMTool.Utils;
+namespace RevitBIMTool.Utils.Common;
 public sealed class UnitManager
 {
     public const double Epsilon = 0.003;

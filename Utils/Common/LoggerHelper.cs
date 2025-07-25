@@ -1,9 +1,8 @@
-﻿using RevitBIMTool.Utils.Common;
-using Serilog;
+﻿using Serilog;
 using System.IO;
 
 
-namespace RevitBIMTool.Utils
+namespace RevitBIMTool.Utils.Common
 {
     internal static class LoggerHelper
     {

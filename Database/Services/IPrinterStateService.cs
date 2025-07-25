@@ -1,6 +1,6 @@
-﻿using System;
+﻿using Database.Models;
+using System;
 using System.Collections.Generic;
-using Database.Models;
 
 namespace Database.Services
 {

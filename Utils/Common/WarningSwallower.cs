@@ -2,11 +2,11 @@
 using System.Text;
 
 
-namespace RevitBIMTool.Utils;
+namespace RevitBIMTool.Utils.Common;
 public sealed class WarningSwallower : IFailuresPreprocessor
 {
     private IList<FailureResolutionType> resolutionList;
-    private readonly StringBuilder warningText = new StringBuilder();
+    private readonly StringBuilder warningText = new();
     public FailureProcessingResult PreprocessFailures(FailuresAccessor failuresAccessor)
     {
         foreach (FailureMessageAccessor failure in failuresAccessor.GetFailureMessages())
@@ -15,13 +15,13 @@ public sealed class WarningSwallower : IFailuresPreprocessor
             resolutionList = failuresAccessor.GetAttemptedResolutionTypes(failure);
             if (resolutionList.Count > 1)
             {
-                warningText.AppendLine("Cannot resolve failures");
+                _ = warningText.AppendLine("Cannot resolve failures");
                 return FailureProcessingResult.ProceedWithRollBack;
             }
             else
             {
                 FailureResolutionType resolution = resolutionList.FirstOrDefault();
-                warningText.AppendLine($"Fail: {failure.GetDescriptionText()} {resolution}");
+                _ = warningText.AppendLine($"Fail: {failure.GetDescriptionText()} {resolution}");
                 if (resolution == FailureResolutionType.Invalid)
                 {
                     return FailureProcessingResult.ProceedWithRollBack;

@@ -1,7 +1,6 @@
 ﻿using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using RevitBIMTool.Core;
 using RevitBIMTool.ExportHandlers;
 using RevitBIMTool.Utils;
 using RevitBIMTool.Utils.Common;
@@ -33,7 +32,7 @@ internal sealed class ExportNwcCommand : IExternalCommand, IExternalCommandAvail
         }
         catch (Exception ex)
         {
-            TaskDialog.Show("Exception", "Exception: \n" + ex);
+            _ = TaskDialog.Show("Exception", "Exception: \n" + ex);
             Clipboard.SetText(ex.ToString());
             return Result.Failed;
         }

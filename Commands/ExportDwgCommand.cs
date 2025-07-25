@@ -32,7 +32,7 @@ internal sealed class ExportDwgCommand : IExternalCommand, IExternalCommandAvail
         }
         catch (Exception ex)
         {
-            TaskDialog.Show("Exception", "Exception: \n" + ex);
+            _ = TaskDialog.Show("Exception", "Exception: \n" + ex);
             Clipboard.SetText(ex.ToString());
             return Result.Failed;
         }

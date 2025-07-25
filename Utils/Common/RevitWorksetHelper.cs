@@ -41,7 +41,7 @@ internal static class RevitWorksetHelper
                         }
                     }
 
-                    trx.Commit();
+                    _ = trx.Commit();
                 }
             }
             catch (Exception ex)
@@ -54,7 +54,7 @@ internal static class RevitWorksetHelper
 
                 if (!trx.HasEnded())
                 {
-                    trx.RollBack();
+                    _ = trx.RollBack();
                 }
             }
         }
@@ -73,7 +73,7 @@ internal static class RevitWorksetHelper
 
             TransactionStatus status = trans.Start($"HideWorkset{pattern}");
 
-            builder.AppendLine($"Start hide worksets by {pattern}");
+            _ = builder.AppendLine($"Start hide worksets by {pattern}");
 
             if (status == TransactionStatus.Started)
             {
@@ -83,29 +83,29 @@ internal static class RevitWorksetHelper
 
                     try
                     {
-                        subTrans.Start();
+                        _ = subTrans.Start();
 
                         WorksetId wid = new(workset.Id.IntegerValue);
 
-                        builder.AppendLine("PrinterName: " + workset.Name);
-                        builder.AppendLine("Kind: " + workset.Kind);
-                        builder.AppendLine("Is open: " + workset.IsOpen);
-                        builder.AppendLine("UniqueId: " + workset.UniqueId);
-                        builder.AppendLine("Is editable: " + workset.IsEditable);
-                        builder.AppendLine("Is default: " + workset.IsDefaultWorkset);
-                        builder.AppendLine("Is visible: " + workset.IsVisibleByDefault);
+                        _ = builder.AppendLine("PrinterName: " + workset.Name);
+                        _ = builder.AppendLine("Kind: " + workset.Kind);
+                        _ = builder.AppendLine("Is open: " + workset.IsOpen);
+                        _ = builder.AppendLine("UniqueId: " + workset.UniqueId);
+                        _ = builder.AppendLine("Is editable: " + workset.IsEditable);
+                        _ = builder.AppendLine("Is default: " + workset.IsDefaultWorkset);
+                        _ = builder.AppendLine("Is visible: " + workset.IsVisibleByDefault);
 
                         if (view.GetWorksetVisibility(wid) == WorksetVisibility.Visible)
                         {
                             view.SetWorksetVisibility(wid, WorksetVisibility.Hidden);
                         }
 
-                        subTrans.Commit();
+                        _ = subTrans.Commit();
                     }
                     catch (Exception ex)
                     {
-                        builder.AppendLine(ex.Message);
-                        subTrans.RollBack();
+                        _ = builder.AppendLine(ex.Message);
+                        _ = subTrans.RollBack();
                     }
                     finally
                     {
@@ -113,7 +113,7 @@ internal static class RevitWorksetHelper
                     }
                 }
 
-                trans.Commit();
+                _ = trans.Commit();
             }
         }
     }

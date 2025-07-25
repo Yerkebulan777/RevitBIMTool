@@ -3,7 +3,7 @@ using Serilog;
 using System.Diagnostics;
 
 
-namespace RevitBIMTool.Utils
+namespace RevitBIMTool.Utils.Common
 {
     internal static class RevitLinkHelper
     {
@@ -69,7 +69,7 @@ namespace RevitBIMTool.Utils
         {
             try
             {
-                linkType.Reload();
+                _ = linkType.Reload();
             }
             catch (Exception ex)
             {
@@ -82,7 +82,7 @@ namespace RevitBIMTool.Utils
         {
             try
             {
-                doc.Delete(id);
+                _ = doc.Delete(id);
             }
             catch (Exception ex)
             {

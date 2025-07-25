@@ -7,7 +7,7 @@ using Level = Autodesk.Revit.DB.Level;
 using View = Autodesk.Revit.DB.View;
 
 
-namespace RevitBIMTool.Utils;
+namespace RevitBIMTool.Utils.Common;
 internal sealed class RevitViewHelper
 {
 
@@ -128,7 +128,7 @@ internal sealed class RevitViewHelper
                     view3D.DisplayStyle = style;
                     view3D.DetailLevel = detail;
 
-                    trans.Commit();
+                    _ = trans.Commit();
                 }
             }
             finally
@@ -136,7 +136,8 @@ internal sealed class RevitViewHelper
                 Log.Debug("Set View settings");
             }
 
-        };
+        }
+        ;
     }
 
     #endregion
@@ -213,7 +214,7 @@ internal sealed class RevitViewHelper
                     }
                 }
 
-                trx.Commit();
+                _ = trx.Commit();
             }
         }
         finally
@@ -222,7 +223,7 @@ internal sealed class RevitViewHelper
 
             if (!trx.HasEnded())
             {
-                trx.RollBack();
+                _ = trx.RollBack();
             }
         }
 
@@ -481,7 +482,7 @@ internal sealed class RevitViewHelper
                 if (hideIds.Count > 0)
                 {
                     activeView.HideElements(hideIds);
-                    trx.Commit();
+                    _ = trx.Commit();
                 }
             }
         }
@@ -491,7 +492,7 @@ internal sealed class RevitViewHelper
 
             if (!trx.HasEnded())
             {
-                trx.RollBack();
+                _ = trx.RollBack();
             }
         }
 

@@ -3,7 +3,7 @@ using Autodesk.Revit.UI.Events;
 using System.Text;
 
 
-namespace RevitBIMTool.Utils;
+namespace RevitBIMTool.Utils.Common;
 public static class RevitDialogHanding
 {
     public const int IDOK = 1;
@@ -16,7 +16,7 @@ public static class RevitDialogHanding
     public static string HandleDialogShowingEvent(object sender, DialogBoxShowingEventArgs args)
     {
         int dialogResult = IDOK;
-        StringBuilder msg = new StringBuilder();
+        StringBuilder msg = new();
         try
         {
             string dialogId = args.DialogId;
@@ -58,14 +58,14 @@ public static class RevitDialogHanding
     {
         string result = default;
 
-        EventHandler<DialogBoxShowingEventArgs> DialogShowingEventHandler = (sender, e) =>
+        void DialogShowingEventHandler(object sender, DialogBoxShowingEventArgs e)
         {
             string output = HandleDialogShowingEvent(sender, e);
             if (!string.IsNullOrWhiteSpace(output))
             {
                 result += "\n DialogEventHandler: " + output;
             }
-        };
+        }
 
         uiapp.DialogBoxShowing += DialogShowingEventHandler;
         try

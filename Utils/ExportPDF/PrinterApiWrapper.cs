@@ -1,15 +1,14 @@
 ﻿using System.Runtime.InteropServices;
 using System.Security;
 
-
-namespace RevitBIMTool.Utils.ExportPDF;
-
 using static System.Runtime.InteropServices.CallingConvention;
 using static System.Runtime.InteropServices.CharSet;
 
+
+namespace RevitBIMTool.Utils.ExportPDF;
 public static class PrinterApiWrapper
 {
-    const string winspool = "winspool.Drv";
+    private const string winspool = "winspool.Drv";
     public const int PRINTER_ACCESS_USE = 0x00000008; // позволить выполнять базовые  задачи
     public const int PRINTER_ACCESS_ADMINISTER = 0x00000004; // позволить выполнять задачи на уровне администратора, такие как SetPrinter
 

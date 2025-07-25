@@ -52,22 +52,22 @@ internal sealed class RevitActionHandler
         {
             StringBuilder sb = new();
             Stopwatch stopwatch = new();
-            
+
             try
             {
                 stopwatch.Start();
-                sb.AppendLine(revitAction());
+                _ = sb.AppendLine(revitAction());
             }
             catch (Exception ex)
             {
-                sb.AppendLine(ex.ToString());
+                _ = sb.AppendLine(ex.ToString());
             }
             finally
             {
                 stopwatch.Stop();
             }
 
-            sb.AppendLine($"Time elapsed: {stopwatch.Elapsed:h\\:mm\\:ss}");
+            _ = sb.AppendLine($"Time elapsed: {stopwatch.Elapsed:h\\:mm\\:ss}");
 
             return sb.ToString();
         }

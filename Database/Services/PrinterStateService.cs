@@ -1,10 +1,10 @@
-﻿using System;
+﻿using Database.Configuration;
+using Database.Models;
+using Database.Repositories;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using Database.Configuration;
-using Database.Models;
-using Database.Repositories;
 
 namespace Database.Services
 {
@@ -35,46 +35,44 @@ namespace Database.Services
             return ExecuteWithRetry(() =>
             {
                 // Создаем подключение через провайдер - он знает, какую СУБД использовать
-                using (var connection = _config.Provider.CreateConnection(_config.ConnectionString))
+                using IDbConnection connection = _config.Provider.CreateConnection(_config.ConnectionString);
+                connection.Open();
+
+                using IDbTransaction transaction = connection.BeginTransaction();
+                try
                 {
-                    connection.Open();
+                    // Этап 1: Получаем список всех доступных принтеров
+                    List<PrinterState> availablePrinters = _repository.GetAvailablePrinters(transaction).ToList();
 
-                    using (var transaction = connection.BeginTransaction())
+                    if (!availablePrinters.Any())
                     {
-                        try
+                        return null; // Нет доступных принтеров
+                    }
+
+                    // Этап 2: Упорядочиваем принтеры по приоритету
+                    // Предпочтительные принтеры пробуем резервировать первыми
+                    IEnumerable<PrinterState> orderedPrinters = OrderPrintersByPriority(availablePrinters, preferredPrinters);
+
+                    // Этап 3: Пытаемся зарезервировать первый доступный принтер
+                    foreach (PrinterState printer in orderedPrinters)
+                    {
+                        if (_repository.TryReservePrinter(printer.PrinterName, reservedBy, transaction))
                         {
-                            // Этап 1: Получаем список всех доступных принтеров
-                            var availablePrinters = _repository.GetAvailablePrinters(transaction).ToList();
-
-                            if (!availablePrinters.Any())
-                                return null; // Нет доступных принтеров
-
-                            // Этап 2: Упорядочиваем принтеры по приоритету
-                            // Предпочтительные принтеры пробуем резервировать первыми
-                            var orderedPrinters = OrderPrintersByPriority(availablePrinters, preferredPrinters);
-
-                            // Этап 3: Пытаемся зарезервировать первый доступный принтер
-                            foreach (var printer in orderedPrinters)
-                            {
-                                if (_repository.TryReservePrinter(printer.PrinterName, reservedBy, transaction))
-                                {
-                                    // Успешно зарезервировали - коммитим транзакцию
-                                    transaction.Commit();
-                                    return printer.PrinterName;
-                                }
-                            }
-
-                            // Не удалось зарезервировать ни один принтер - откатываем
-                            transaction.Rollback();
-                            return null;
-                        }
-                        catch
-                        {
-                            // При любой ошибке откатываем транзакцию
-                            transaction.Rollback();
-                            throw;
+                            // Успешно зарезервировали - коммитим транзакцию
+                            transaction.Commit();
+                            return printer.PrinterName;
                         }
                     }
+
+                    // Не удалось зарезервировать ни один принтер - откатываем
+                    transaction.Rollback();
+                    return null;
+                }
+                catch
+                {
+                    // При любой ошибке откатываем транзакцию
+                    transaction.Rollback();
+                    throw;
                 }
             });
         }
@@ -87,29 +85,29 @@ namespace Database.Services
         {
             return ExecuteWithRetry(() =>
             {
-                using (var connection = _config.Provider.CreateConnection(_config.ConnectionString))
+                using IDbConnection connection = _config.Provider.CreateConnection(_config.ConnectionString);
+                connection.Open();
+
+                using IDbTransaction transaction = connection.BeginTransaction();
+                try
                 {
-                    connection.Open();
+                    bool success = _repository.TryReservePrinter(printerName, reservedBy, transaction);
 
-                    using (var transaction = connection.BeginTransaction())
+                    if (success)
                     {
-                        try
-                        {
-                            bool success = _repository.TryReservePrinter(printerName, reservedBy, transaction);
-
-                            if (success)
-                                transaction.Commit();
-                            else
-                                transaction.Rollback();
-
-                            return success;
-                        }
-                        catch
-                        {
-                            transaction.Rollback();
-                            throw;
-                        }
+                        transaction.Commit();
                     }
+                    else
+                    {
+                        transaction.Rollback();
+                    }
+
+                    return success;
+                }
+                catch
+                {
+                    transaction.Rollback();
+                    throw;
                 }
             });
         }
@@ -138,45 +136,41 @@ namespace Database.Services
         /// </summary>
         public IEnumerable<PrinterState> GetAllPrinters()
         {
-            using (var connection = _config.Provider.CreateConnection(_config.ConnectionString))
-            {
-                connection.Open();
+            using IDbConnection connection = _config.Provider.CreateConnection(_config.ConnectionString);
+            connection.Open();
 
-                const string sql = @"
+            const string sql = @"
                     SELECT id, printer_name, is_available, reserved_by, reserved_at, 
                            last_updated, process_id, machine_name, version
                     FROM printer_states 
                     ORDER BY printer_name";
 
-                var results = new List<PrinterState>();
+            List<PrinterState> results = new();
 
-                using (var command = connection.CreateCommand())
+            using (IDbCommand command = connection.CreateCommand())
+            {
+                command.CommandText = sql;
+                command.CommandTimeout = _config.CommandTimeout;
+
+                using IDataReader reader = command.ExecuteReader();
+                while (reader.Read())
                 {
-                    command.CommandText = sql;
-                    command.CommandTimeout = _config.CommandTimeout;
-
-                    using (var reader = command.ExecuteReader())
+                    results.Add(new PrinterState
                     {
-                        while (reader.Read())
-                        {
-                            results.Add(new PrinterState
-                            {
-                                Id = Convert.ToInt32(reader["id"]),
-                                PrinterName = reader["printer_name"].ToString(),
-                                IsAvailable = Convert.ToBoolean(reader["is_available"]),
-                                ReservedBy = reader["reserved_by"] as string,
-                                ReservedAt = ParseDateTime(reader["reserved_at"]),
-                                LastUpdated = ParseDateTime(reader["last_updated"]) ?? DateTime.UtcNow,
-                                ProcessId = reader["process_id"] as int?,
-                                MachineName = reader["machine_name"] as string,
-                                Version = Convert.ToInt64(reader["version"])
-                            });
-                        }
-                    }
+                        Id = Convert.ToInt32(reader["id"]),
+                        PrinterName = reader["printer_name"].ToString(),
+                        IsAvailable = Convert.ToBoolean(reader["is_available"]),
+                        ReservedBy = reader["reserved_by"] as string,
+                        ReservedAt = ParseDateTime(reader["reserved_at"]),
+                        LastUpdated = ParseDateTime(reader["last_updated"]) ?? DateTime.UtcNow,
+                        ProcessId = reader["process_id"] as int?,
+                        MachineName = reader["machine_name"] as string,
+                        Version = Convert.ToInt64(reader["version"])
+                    });
                 }
-
-                return results;
             }
+
+            return results;
         }
 
         /// <summary>
@@ -184,7 +178,7 @@ namespace Database.Services
         /// </summary>
         public void InitializeSystem(IEnumerable<string> printerNames)
         {
-            ExecuteWithRetry(() =>
+            _ = ExecuteWithRetry(() =>
             {
                 _repository.InitializePrinters(printerNames);
                 return true;
@@ -205,7 +199,7 @@ namespace Database.Services
         /// </summary>
         public bool IsPrinterAvailable(string printerName)
         {
-            var printer = _repository.GetByName(printerName);
+            PrinterState printer = _repository.GetByName(printerName);
             return printer?.IsAvailable == true;
         }
 
@@ -221,9 +215,11 @@ namespace Database.Services
             IEnumerable<string> preferredPrinters)
         {
             if (preferredPrinters == null)
+            {
                 return availablePrinters.OrderBy(p => p.PrinterName);
+            }
 
-            var preferredSet = new HashSet<string>(preferredPrinters, StringComparer.OrdinalIgnoreCase);
+            HashSet<string> preferredSet = new(preferredPrinters, StringComparer.OrdinalIgnoreCase);
 
             return availablePrinters
                 .OrderBy(p => preferredSet.Contains(p.PrinterName) ? 0 : 1) // Предпочтительные первыми
@@ -252,7 +248,7 @@ namespace Database.Services
                     if (attempt < _config.MaxRetryAttempts - 1)
                     {
                         // Экспоненциальная задержка: 100ms, 400ms, 1600ms
-                        var delay = TimeSpan.FromMilliseconds(100 * Math.Pow(4, attempt));
+                        TimeSpan delay = TimeSpan.FromMilliseconds(100 * Math.Pow(4, attempt));
                         System.Threading.Thread.Sleep(delay);
                     }
                 }
@@ -274,7 +270,7 @@ namespace Database.Services
         private bool IsTransientError(Exception ex)
         {
             // Общие признаки временных ошибок для всех СУБД
-            var message = ex.Message.ToLowerInvariant();
+            string message = ex.Message.ToLowerInvariant();
 
             return message.Contains("timeout") ||
                    message.Contains("deadlock") ||
@@ -289,15 +285,16 @@ namespace Database.Services
         private DateTime? ParseDateTime(object value)
         {
             if (value == null || value == DBNull.Value)
+            {
                 return null;
+            }
 
             if (value is DateTime dateTime)
+            {
                 return dateTime;
+            }
 
-            if (value is string dateString && DateTime.TryParse(dateString, out DateTime parsed))
-                return parsed;
-
-            return null;
+            return value is string dateString && DateTime.TryParse(dateString, out DateTime parsed) ? parsed : (DateTime?)null;
         }
 
         #endregion

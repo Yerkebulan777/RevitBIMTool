@@ -2,7 +2,7 @@
 using System.Diagnostics;
 
 
-namespace RevitBIMTool.Utils
+namespace RevitBIMTool.Utils.Common
 {
     public static class FileUnlockHelper
     {

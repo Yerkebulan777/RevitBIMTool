@@ -51,17 +51,9 @@ namespace Database.Providers
         /// </summary>
         public object this[int index]
         {
-            get
-            {
-                if (index >= 0 && index < _parameters.Count)
-                {
-                    return _parameters[index].Value;
-                }
-                else
-                {
-                    throw new ArgumentOutOfRangeException(nameof(index), $"Parameter index {index} is out of range");
-                }
-            }
+            get => index >= 0 && index < _parameters.Count
+                    ? _parameters[index].Value
+                    : throw new ArgumentOutOfRangeException(nameof(index), $"Parameter index {index} is out of range");
             set
             {
                 if (index < 0 || index >= _parameters.Count)

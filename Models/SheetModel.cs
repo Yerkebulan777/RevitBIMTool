@@ -1,5 +1,4 @@
 ﻿using Autodesk.Revit.DB;
-using Serilog;
 using PaperSize = System.Drawing.Printing.PaperSize;
 
 namespace RevitBIMTool.Models;

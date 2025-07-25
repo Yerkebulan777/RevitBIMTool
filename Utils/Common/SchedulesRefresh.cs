@@ -1,7 +1,7 @@
 ﻿using Autodesk.Revit.DB;
 
 
-namespace RevitBIMTool.Utils
+namespace RevitBIMTool.Utils.Common
 {
     public static class SchedulesRefresh
     {
@@ -34,28 +34,26 @@ namespace RevitBIMTool.Utils
 
                         MoveScheduleOrGroup(doc, ssi, 0.1);
                     }
-                    trx1.Commit();
+                    _ = trx1.Commit();
                 }
             }
 
             groupIds.Clear();
 
-            using (Transaction trx2 = new(doc, "SchedulesRefresh2"))
+            using Transaction trx2 = new(doc, "SchedulesRefresh2");
+            if (TransactionStatus.Started == trx2.Start())
             {
-                if (TransactionStatus.Started == trx2.Start())
+                foreach (ScheduleSheetInstance ssi in instances)
                 {
-                    foreach (ScheduleSheetInstance ssi in instances)
-                    {
-                        MoveScheduleOrGroup(doc, ssi, -0.1);
-                    }
-
-                    foreach (ScheduleSheetInstance ssi in pinnedSchedules)
-                    {
-                        ssi.Pinned = true;
-                    }
-
-                    trx2.Commit();
+                    MoveScheduleOrGroup(doc, ssi, -0.1);
                 }
+
+                foreach (ScheduleSheetInstance ssi in pinnedSchedules)
+                {
+                    ssi.Pinned = true;
+                }
+
+                _ = trx2.Commit();
             }
         }
 

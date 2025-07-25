@@ -20,7 +20,7 @@ namespace Database.Extensions
             DatabaseConfig.Instance.Initialize(connectionString);
 
             // Создаем сервис
-            PrinterStateService service = new PrinterStateService();
+            PrinterStateService service = new();
 
             // Инициализируем стандартные принтеры из вашего кода
             string[] defaultPrinters = new[]

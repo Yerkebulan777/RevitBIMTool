@@ -4,8 +4,8 @@ using RevitBIMTool.Utils.ExportPDF.Printers;
 using Serilog;
 using System.Diagnostics;
 using System.IO;
-using Element = Autodesk.Revit.DB.Element;
 using Document = Autodesk.Revit.DB.Document;
+using Element = Autodesk.Revit.DB.Element;
 using PaperSize = System.Drawing.Printing.PaperSize;
 using SheetModel = RevitBIMTool.Models.SheetModel;
 
@@ -100,9 +100,9 @@ internal static class PrintHelper
         {
             foreach (SheetFormatGroup group in formatGroups)
             {
-                var formatName = group.FormatName;
-                var orientation = group.Orientation;
-                var isColorEnabled = group.IsColorEnabled;
+                string formatName = group.FormatName;
+                PageOrientationType orientation = group.Orientation;
+                bool isColorEnabled = group.IsColorEnabled;
 
                 Log.Debug("Processing format: {FormatName}", formatName);
 
@@ -114,7 +114,7 @@ internal static class PrintHelper
                         {
                             Log.Warning("Failed: {0}", formatName);
                         }
-                        setupTransaction.Commit();
+                        _ = setupTransaction.Commit();
                     }
                 }
 

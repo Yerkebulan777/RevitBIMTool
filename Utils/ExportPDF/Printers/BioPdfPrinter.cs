@@ -103,11 +103,11 @@ internal sealed class BioPdfPrinter : PrinterControl
         {
             StringBuilder content = new(settings.Count * 50);
 
-            content.AppendLine($"[{section}]");
+            _ = content.AppendLine($"[{section}]");
 
             foreach (KeyValuePair<string, string> kvp in settings.Where(kvp => !string.IsNullOrEmpty(kvp.Key)))
             {
-                content.AppendLine($"{kvp.Key}={kvp.Value ?? string.Empty}");
+                _ = content.AppendLine($"{kvp.Key}={kvp.Value ?? string.Empty}");
             }
 
             File.WriteAllText(filePath, content.ToString(), Encoding.Default);

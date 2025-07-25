@@ -5,7 +5,7 @@ using Serilog;
 using System.IO;
 using Document = iTextSharp.text.Document;
 
-namespace RevitBIMTool.Utils.ExportPdfUtil;
+namespace RevitBIMTool.Utils.ExportPDF;
 
 internal static class MergeHandlerOLD
 {

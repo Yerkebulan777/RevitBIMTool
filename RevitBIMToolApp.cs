@@ -31,7 +31,7 @@ internal sealed class RevitBimToolApp : IExternalApplication
         {
             if (TaskRequestContainer.Instance.ValidateData(Version, out _))
             {
-                var externalEventHandler = new RevitExternalEventHandler(Version);
+                RevitExternalEventHandler externalEventHandler = new(Version);
 
                 if (ExternalEventRequest.Denied != externalEventHandler.Raise())
                 {

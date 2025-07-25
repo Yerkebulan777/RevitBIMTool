@@ -12,7 +12,7 @@ public class AppInfoCommand : IExternalCommand
 {
     public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
     {
-        TaskDialog.Show("RevitBIMTool", "DEMO");
+        _ = TaskDialog.Show("RevitBIMTool", "DEMO");
         return Result.Succeeded;
     }
 }

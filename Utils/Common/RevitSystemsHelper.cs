@@ -4,7 +4,7 @@ using Autodesk.Revit.DB.Plumbing;
 using Serilog;
 
 
-namespace RevitBIMTool.Utils
+namespace RevitBIMTool.Utils.Common
 {
     internal static class RevitSystemsHelper
     {
@@ -95,8 +95,7 @@ namespace RevitBIMTool.Utils
             for (int idx = 0; idx < elements.Count; idx++)
             {
                 Element elem = elements[idx];
-
-                var catName =  elem.Category.Name;
+                _ = elem.Category.Name;
 
                 Parameter paramCalcSize = elem.get_Parameter(bipCalcSize);
                 Parameter paramDiameter = elem.get_Parameter(bipDiameter);
@@ -155,7 +154,7 @@ namespace RevitBIMTool.Utils
                     {
                         foreach (MEPSize size in segment.GetSizes())
                         {
-                            sizes.Add(size.NominalDiameter);
+                            _ = sizes.Add(size.NominalDiameter);
                         }
                     }
                 }

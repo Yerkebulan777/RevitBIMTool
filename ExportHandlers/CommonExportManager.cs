@@ -63,7 +63,7 @@ internal static class CommonExportManager
             {
                 try
                 {
-                    archive.CreateEntryFromFile(info.FullName, info.Name);
+                    _ = archive.CreateEntryFromFile(info.FullName, info.Name);
                 }
                 catch (Exception ex)
                 {

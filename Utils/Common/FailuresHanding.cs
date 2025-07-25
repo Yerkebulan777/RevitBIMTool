@@ -4,7 +4,7 @@ using Serilog;
 using System.Text;
 
 
-namespace RevitBIMTool.Utils;
+namespace RevitBIMTool.Utils.Common;
 internal sealed class FailuresPreprocessor : IFailuresPreprocessor
 {
     public string Output;
@@ -28,13 +28,13 @@ public static class FailuresHanding
 
     public static string ReportFailureWarning(FailureMessageAccessor failure, FailureDefinitionRegistry failureReg)
     {
-        StringBuilder builder = new StringBuilder();
+        StringBuilder builder = new();
         FailureSeverity failureSeverity = failure.GetSeverity();
         builder = builder.AppendLine(failure.GetDescriptionText());
 
         FailureDefinitionAccessor failureDefinition = failureReg.FindFailureDefinition(failure.GetFailureDefinitionId());
 
-        if (failureSeverity == FailureSeverity.Error || failureSeverity == FailureSeverity.Warning)
+        if (failureSeverity is FailureSeverity.Error or FailureSeverity.Warning)
         {
             ICollection<ElementId> failingElementIds = failure.GetFailingElementIds();
             if (failingElementIds.Count > 0)
