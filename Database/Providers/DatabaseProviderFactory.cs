@@ -3,14 +3,10 @@ using System.Collections.Generic;
 
 namespace Database.Providers
 {
-    /// <summary>
-    /// Упрощенная фабрика провайдеров для .NET Standard 2.0
-    /// Поддерживает только InMemory провайдер из коробки
-    /// </summary>
     public static class DatabaseProviderFactory
     {
         private static readonly Dictionary<string, Func<IDatabaseProvider>> _providers =
-            new(StringComparer.OrdinalIgnoreCase)
+            new Dictionary<string, Func<IDatabaseProvider>>(StringComparer.OrdinalIgnoreCase)
             {
                 { "inmemory", () => new InMemoryProvider() },
                 { "memory", () => new InMemoryProvider() }

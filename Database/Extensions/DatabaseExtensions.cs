@@ -4,9 +4,6 @@ using System;
 
 namespace Database.Extensions
 {
-    /// <summary>
-    /// Упрощенные методы расширения для интеграции
-    /// </summary>
     public static class DatabaseExtensions
     {
         /// <summary>

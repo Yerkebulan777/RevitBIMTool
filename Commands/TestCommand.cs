@@ -1,10 +1,14 @@
 ﻿using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using RevitBIMTool.Utils;
-using RevitBIMTool.Utils.Common;
+using Database.Extensions;
+using Database.Models;
+using Database.Providers;
+using Database.Services;
+using RevitBIMTool.Utils.Database;
 using System.Globalization;
-
+using System.Text;
+using System.Windows;
 
 namespace RevitBIMTool.Commands
 {
@@ -13,33 +17,80 @@ namespace RevitBIMTool.Commands
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
-            if (commandData.Application == null) { return Result.Cancelled; }
-
             Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
 
-            UIApplication uiapp = commandData.Application;
-            UIDocument uidoc = uiapp.ActiveUIDocument;
-            Document doc = uidoc.Document;
+            StringBuilder report = new();
 
-            const BuiltInCategory mechCat = BuiltInCategory.OST_MechanicalEquipment;
+            try
+            {
+                // Регистрируем PostgreSQL провайдер для основного проекта
+                string connectionString = ConfigurationHelper.GetPrinterConnectionString();
+                string provider = ConfigurationHelper.GetDatabaseProvider();
 
-            IList<Element> elems = CollectorHelper.GetInstancesByFamilyName(doc, mechCat, "Задание на отверстие").ToElements();
+                _ = report.AppendLine($"Provider: {provider}");
+                _ = report.AppendLine($"Connection: {connectionString}");
+                _ = report.AppendLine();
 
-            uidoc.Selection.SetElementIds([.. elems.Select(elem => elem.Id)]);
+                if (provider.Equals("PostgreSQL", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Регистрируем PostgreSQL провайдер
+                    DatabaseProviderFactory.RegisterProvider("postgresql", () => new ConcretePostgreSqlProvider());
 
-            string output = $"\n Total elements count: {elems.Count()}";
+                    _ = report.AppendLine("✓ PostgreSQL provider registered");
+                }
 
-            TaskDialogResult dialog = TaskDialog.Show("RevitBIMTool", output);
+                // Инициализируем систему принтеров
+                IPrinterStateService printerService = DatabaseExtensions.InitializePrinterSystem(connectionString);
+                _ = report.AppendLine("✓ Printer service initialized");
 
-            return Result.Succeeded;
+                // Тестируем получение принтеров
+                IEnumerable<PrinterState> printers = printerService.GetAllPrinters();
+                _ = report.AppendLine($"✓ Found {System.Linq.Enumerable.Count(printers)} printers");
+
+                foreach (PrinterState printer in printers)
+                {
+                    string status = printer.IsAvailable ? "Available" : $"Reserved by {printer.ReservedBy}";
+                    _ = report.AppendLine($"  - {printer.PrinterName}: {status}");
+                }
+
+                // Тестируем резервирование
+                string[] preferredPrinters = { "PDF Writer - bioPDF", "PDF24" };
+                string reservedPrinter = printerService.TryReserveAnyAvailablePrinter("TestUser", preferredPrinters);
+
+                if (!string.IsNullOrEmpty(reservedPrinter))
+                {
+                    _ = report.AppendLine($"✓ Reserved printer: {reservedPrinter}");
+                    bool released = printerService.ReleasePrinter(reservedPrinter);
+                    _ = report.AppendLine($"✓ Released printer: {released}");
+                }
+                else
+                {
+                    _ = report.AppendLine("⚠ No printers available for reservation");
+                }
+
+                _ = TaskDialog.Show("Database Test Results", report.ToString());
+
+                return Result.Succeeded;
+            }
+            catch (Exception ex)
+            {
+                _ = report.AppendLine($"✗ Error: {ex.Message}");
+
+                if (ex.InnerException != null)
+                {
+                    _ = report.AppendLine($"Inner: {ex.InnerException.Message}");
+                }
+
+                Clipboard.SetText(report.ToString());
+                _ = TaskDialog.Show("Database Test Failed", report.ToString());
+
+                return Result.Failed;
+            }
         }
-
 
         public bool IsCommandAvailable(UIApplication applicationData, CategorySet selectedCategories)
         {
-            UIDocument uidoc = applicationData?.ActiveUIDocument;
-            return uidoc != null && uidoc.Document.IsDetached.Equals(false);
+            return applicationData?.ActiveUIDocument != null;
         }
-
     }
 }

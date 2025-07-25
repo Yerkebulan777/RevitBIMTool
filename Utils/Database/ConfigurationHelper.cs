@@ -2,7 +2,7 @@
 using System.Configuration;
 using System.Text;
 
-namespace RevitBIMTool.Utils
+namespace RevitBIMTool.Utils.Database
 {
     /// <summary>
     /// Помощник для работы с конфигурацией приложения
