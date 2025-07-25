@@ -1,8 +1,6 @@
 ﻿using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using RevitBIMTool.Utils;
-using RevitBIMTool.Utils.Common;
 using System.Globalization;
 using System.Text;
 using System.Windows;
