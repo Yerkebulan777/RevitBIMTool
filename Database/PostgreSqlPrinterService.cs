@@ -64,8 +64,7 @@ namespace Database
         {
             _connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
             _commandTimeout = commandTimeout;
-
-            // Инициализируем БД при создании сервиса
+            // Инициализируем БД
             InitializeDatabase();
         }
 
@@ -252,6 +251,9 @@ namespace Database
             return GetAvailablePrinters(connection);
         }
 
+        /// <summary>
+        /// Внутренняя реализация получения доступных принтеров
+        /// </summary>
         private IEnumerable<PrinterState> GetAvailablePrinters(IDbConnection connection)
         {
             const string sql = @"
@@ -309,20 +311,16 @@ namespace Database
         /// Упорядочивает принтеры по предпочтениям
         /// Предпочтительные принтеры идут первыми
         /// </summary>
-        private static IEnumerable<PrinterState> OrderByPreference(
-            IEnumerable<PrinterState> printers,
-            string[] preferredPrinters)
+        private static IEnumerable<PrinterState> OrderByPreference(IEnumerable<PrinterState> printers, string[] preferredPrinters)
         {
-            if (preferredPrinters == null || preferredPrinters.Length == 0)
+            if (preferredPrinters is null || preferredPrinters.Length == 0)
             {
                 return printers.OrderBy(p => p.PrinterName);
             }
 
             HashSet<string> preferredSet = new HashSet<string>(preferredPrinters, StringComparer.OrdinalIgnoreCase);
 
-            return printers
-                .OrderBy(p => preferredSet.Contains(p.PrinterName) ? 0 : 1)
-                .ThenBy(p => p.PrinterName);
+            return printers.OrderBy(p => preferredSet.Contains(p.PrinterName) ? 0 : 1).ThenBy(p => p.PrinterName);
         }
 
         protected virtual void Dispose(bool disposing)
@@ -341,5 +339,8 @@ namespace Database
             Dispose(true);
             GC.SuppressFinalize(this);
         }
+
+
+
     }
 }
