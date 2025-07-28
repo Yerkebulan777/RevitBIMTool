@@ -117,6 +117,7 @@ namespace Database
             }
 
             using OdbcConnection connection = new OdbcConnection(_connectionString);
+
             connection.Open();
 
             // Получаем список доступных принтеров
