@@ -19,7 +19,6 @@ namespace Database
         private readonly int _commandTimeout;
         private bool _disposed = false;
 
-        // SQL скрипты вынесены в константы для лучшей читаемости
         private const string CreateTableSql = @"
             CREATE TABLE IF NOT EXISTS printer_states (
                 id SERIAL PRIMARY KEY,
@@ -59,6 +58,7 @@ namespace Database
                 process_id = NULL,
                 version = version + 1
             WHERE printer_name = @printerName";
+
 
         public PostgreSqlPrinterService(string connectionString, int commandTimeout = 30)
         {
