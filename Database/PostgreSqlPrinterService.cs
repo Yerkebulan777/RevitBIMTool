@@ -66,9 +66,25 @@ namespace Database
         /// </summary>
         private void InitializeDatabase()
         {
+            Debug.WriteLine("Initializing database...");
+
             using OdbcConnection connection = new OdbcConnection(_connectionString);
-            connection.Open();
-            _ = connection.Execute(CreateTableSql, commandTimeout: _commandTimeout);
+
+            if (connection.State != ConnectionState.Open)
+            {
+                connection.Open();
+
+                int result = connection.Execute(CreateTableSql, commandTimeout: _commandTimeout);
+
+                if (result == 0)
+                {
+                    Debug.WriteLine("No changes made, table already exists.");
+                }
+                else
+                {
+                    Debug.WriteLine($"Table created or modified, affected rows: {result}");
+                }
+            }
         }
 
         /// <summary>
