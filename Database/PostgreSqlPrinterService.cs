@@ -297,6 +297,7 @@ namespace Database
             return printers.OrderBy(p => preferredSet.Contains(p.PrinterName) ? 0 : 1);
         }
 
+
         #region Dispose methode
 
         protected virtual void Dispose(bool disposing)
@@ -314,6 +315,7 @@ namespace Database
         }
 
         #endregion
+
 
     }
 }
