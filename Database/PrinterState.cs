@@ -2,16 +2,15 @@
 
 namespace Database.Models
 {
-    /// <summary>
-    /// Простая модель состояния принтера без лишних украшений
-    /// Dapper автоматически маппит поля из PostgreSQL
-    /// </summary>
-    public class PrinterState
+    public sealed class PrinterState
     {
+        /// <summary>
+        /// Уникальный идентификатор
+        /// </summary>
         public int Id { get; set; }
 
         /// <summary>
-        /// Имя принтера - основной ключ для бизнес-логики
+        /// Имя принтера
         /// </summary>
         public string PrinterName { get; set; }
 
@@ -26,14 +25,9 @@ namespace Database.Models
         public string ReservedBy { get; set; }
 
         /// <summary>
-        /// Когда был зарезервирован (для автоматического освобождения)
+        /// Когда был зарезервирован
         /// </summary>
         public DateTime? ReservedAt { get; set; }
-
-        /// <summary>
-        /// Последнее обновление записи
-        /// </summary>
-        public DateTime LastUpdated { get; set; }
 
         /// <summary>
         /// ID процесса для отслеживания зависших блокировок
@@ -41,14 +35,12 @@ namespace Database.Models
         public int? ProcessId { get; set; }
 
         /// <summary>
-        /// Имя машины для распределенной работы
-        /// </summary>
-        public string MachineName { get; set; }
-
-        /// <summary>
         /// Версия для оптимистичного блокирования
         /// Ключевое поле для предотвращения race conditions
         /// </summary>
         public long Version { get; set; }
     }
+
+
+
 }

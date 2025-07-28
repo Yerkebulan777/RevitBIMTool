@@ -20,24 +20,20 @@ namespace Database
         private bool _disposed = false;
 
         private const string CreateTableSql = @"
-            CREATE TABLE IF NOT EXISTS printer_states (
-                id SERIAL PRIMARY KEY,
-                printer_name VARCHAR(100) NOT NULL UNIQUE,
-                is_available BOOLEAN NOT NULL DEFAULT true,
-                reserved_by VARCHAR(100) NULL,
-                reserved_at TIMESTAMP WITH TIME ZONE NULL,
-                version BIGINT NOT NULL DEFAULT 1,
-                process_id INTEGER NULL
-            );
-            
-            CREATE INDEX IF NOT EXISTS idx_printer_states_available 
-                ON printer_states (is_available) WHERE is_available = true;";
+        CREATE TABLE IF NOT EXISTS printer_states (
+            id SERIAL PRIMARY KEY,
+            printer_name VARCHAR(100) NOT NULL UNIQUE,
+            is_available BOOLEAN NOT NULL DEFAULT true,
+            reserved_by VARCHAR(100) NULL,
+            reserved_at TIMESTAMP WITH TIME ZONE NULL,
+            version BIGINT NOT NULL DEFAULT 1,
+            process_id INTEGER NULL
+        );";
 
         private const string SelectForUpdateSql = @"
-            SELECT id, printer_name, is_available, version
+        SELECT id, printer_name, is_available, version
             FROM printer_states 
-            WHERE printer_name = @printerName AND is_available = true
-            FOR UPDATE";
+            WHERE is_available = true;";
 
         private const string ReservePrinterSql = @"
             UPDATE printer_states 
@@ -327,9 +323,6 @@ namespace Database
         {
             if (!_disposed)
             {
-                // Если появятся управляемые ресурсы, их освобождение здесь
-                // Сейчас освобождать нечего, но шаблон соблюдён
-
                 _disposed = true;
             }
         }
