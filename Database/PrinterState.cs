@@ -35,10 +35,9 @@ namespace Database.Models
         public int? ProcessId { get; set; }
 
         /// <summary>
-        /// Версия для оптимистичного блокирования
-        /// Ключевое поле для предотвращения race conditions
+        /// Токен для оптимистичной блокировки
         /// </summary>
-        public long Version { get; set; }
+        public Guid ChangeToken { get; set; }
     }
 
 
