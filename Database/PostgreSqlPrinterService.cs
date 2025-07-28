@@ -151,13 +151,13 @@ namespace Database
             try
             {
                 // Читаем текущий токен
-                var result = connection.QuerySingleOrDefault<(Guid changeToken, bool isAvailable)>(
+                (Guid changeToken, bool isAvailable) = connection.QuerySingleOrDefault<(Guid changeToken, bool isAvailable)>(
                     SelectForReadSql,
                     new { printerName },
                     transaction,
                     _commandTimeout);
 
-                if (result.changeToken == Guid.Empty || !result.isAvailable)
+                if (changeToken == Guid.Empty || !isAvailable)
                 {
                     transaction.Rollback();
                     return false;
@@ -176,7 +176,7 @@ namespace Database
                         reservedAt = DateTime.UtcNow,
                         processId = currentProcess.Id,
                         newToken,
-                        expectedToken = result.changeToken
+                        expectedToken = changeToken
                     },
                     transaction,
                     _commandTimeout);
@@ -265,6 +265,7 @@ namespace Database
         public int CleanupExpiredReservations(TimeSpan maxAge)
         {
             using OdbcConnection connection = new OdbcConnection(_connectionString);
+
             connection.Open();
 
             DateTime cutoffTime = DateTime.UtcNow.Subtract(maxAge);
