@@ -11,7 +11,6 @@ namespace Database
 {
     /// <summary>
     /// Прямая работа с PostgreSQL через ODBC и Dapper
-    /// Никаких абстракций - только реальная бизнес-логика
     /// </summary>
     public class PostgreSqlPrinterService : IDisposable
     {
@@ -26,14 +25,15 @@ namespace Database
             is_available BOOLEAN NOT NULL DEFAULT true,
             reserved_by VARCHAR(100) NULL,
             reserved_at TIMESTAMP WITH TIME ZONE NULL,
-            version BIGINT NOT NULL DEFAULT 1,
-            process_id INTEGER NULL
+            process_id INTEGER NULL,
+            change_token UUID NOT NULL DEFAULT gen_random_uuid()
         );";
 
-        private const string SelectForUpdateSql = @"
-        SELECT id, printer_name, is_available, version
-            FROM printer_states 
-            WHERE is_available = true;";
+        private const string SelectForReadSql = @"
+        SELECT change_token, is_available
+        FROM printer_states 
+        WHERE printer_name = @printerName 
+          AND is_available = true";
 
         private const string ReservePrinterSql = @"
             UPDATE printer_states 
@@ -41,10 +41,9 @@ namespace Database
                 reserved_by = @reservedBy,
                 reserved_at = @reservedAt,
                 process_id = @processId,
-                version = version + 1
+                change_token = @newToken
             WHERE printer_name = @printerName 
-              AND is_available = true 
-              AND version = @expectedVersion";
+              AND change_token = @expectedToken";
 
         private const string ReleasePrinterSql = @"
             UPDATE printer_states 
@@ -52,34 +51,28 @@ namespace Database
                 reserved_by = NULL,
                 reserved_at = NULL,
                 process_id = NULL,
-                version = version + 1
+                change_token = gen_random_uuid()
             WHERE printer_name = @printerName";
-
 
         public PostgreSqlPrinterService(string connectionString, int commandTimeout = 30)
         {
             _connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
             _commandTimeout = commandTimeout;
-            // Инициализируем БД
             InitializeDatabase();
         }
 
         /// <summary>
-        /// Создает таблицы и индексы если их нет
-        /// Выполняется один раз при инициализации
+        /// Создает таблицы если их нет
         /// </summary>
         private void InitializeDatabase()
         {
             using OdbcConnection connection = new OdbcConnection(_connectionString);
             connection.Open();
-
-            // Dapper делает всю работу за нас - никаких команд и параметров
             _ = connection.Execute(CreateTableSql, commandTimeout: _commandTimeout);
         }
 
         /// <summary>
         /// Инициализирует список принтеров в системе
-        /// Добавляет принтеры, которых еще нет в БД
         /// </summary>
         public void InitializePrinters(params string[] printerNames)
         {
@@ -92,18 +85,16 @@ namespace Database
             connection.Open();
 
             const string insertSql = @"
-                INSERT INTO printer_states (printer_name, is_available, version)
-                VALUES (@printerName, true, 1)
+                INSERT INTO printer_states (printer_name, is_available, change_token)
+                VALUES (@printerName, true, gen_random_uuid())
                 ON CONFLICT (printer_name) DO NOTHING";
 
-            // Dapper автоматически обрабатывает массив параметров
             var parameters = printerNames.Select(name => new { printerName = name });
             _ = connection.Execute(insertSql, parameters, commandTimeout: _commandTimeout);
         }
 
         /// <summary>
         /// Пытается зарезервировать любой доступный принтер
-        /// Возвращает имя зарезервированного принтера или null
         /// </summary>
         public string TryReserveAnyAvailablePrinter(string reservedBy, params string[] preferredPrinters)
         {
@@ -113,10 +104,8 @@ namespace Database
             }
 
             using OdbcConnection connection = new OdbcConnection(_connectionString);
-
             connection.Open();
 
-            // Получаем список доступных принтеров
             IEnumerable<PrinterState> availablePrinters = GetAvailablePrinters(connection);
 
             if (!availablePrinters.Any())
@@ -124,17 +113,16 @@ namespace Database
                 return null;
             }
 
-            // Упорядочиваем по приоритету: сначала предпочтительные, потом все остальные
             IEnumerable<PrinterState> orderedPrinters = OrderByPreference(availablePrinters, preferredPrinters);
 
-            PrinterState reservedPrinter = orderedPrinters.FirstOrDefault(printer => TryReserveSpecificPrinter(connection, printer.PrinterName, reservedBy));
+            PrinterState reservedPrinter = orderedPrinters.FirstOrDefault(printer =>
+                TryReserveSpecificPrinter(connection, printer.PrinterName, reservedBy));
 
             return reservedPrinter?.PrinterName;
         }
 
         /// <summary>
         /// Резервирует конкретный принтер
-        /// Использует оптимистичную блокировку для предотвращения race conditions
         /// </summary>
         public bool TryReserveSpecificPrinter(string printerName, string reservedBy)
         {
@@ -155,32 +143,30 @@ namespace Database
         }
 
         /// <summary>
-        /// Внутренняя реализация резервирования с использованием существующего соединения
-        /// Показывает реальную работу с транзакциями и блокировками
+        /// Внутренняя реализация резервирования
         /// </summary>
         private bool TryReserveSpecificPrinter(IDbConnection connection, string printerName, string reservedBy)
         {
             using IDbTransaction transaction = connection.BeginTransaction();
             try
             {
-                // Шаг 1: Блокируем строку для чтения (пессимистичная блокировка)
-                // SELECT FOR UPDATE гарантирует, что никто другой не сможет изменить эту строку
-                (long version, bool isAvailable) = connection.QuerySingleOrDefault<(long version, bool isAvailable)>(
-                    SelectForUpdateSql,
+                // Читаем текущий токен
+                var result = connection.QuerySingleOrDefault<(Guid changeToken, bool isAvailable)>(
+                    SelectForReadSql,
                     new { printerName },
                     transaction,
                     _commandTimeout);
 
-                // Проверяем, найден ли принтер и доступен ли он
-                if (version == 0 || !isAvailable)
+                if (result.changeToken == Guid.Empty || !result.isAvailable)
                 {
                     transaction.Rollback();
                     return false;
                 }
 
-                // Шаг 2: Обновляем состояние принтера (оптимистичная блокировка)
-                // Проверяем version чтобы убедиться, что никто не изменил запись между SELECT и UPDATE
+                // Обновляем с новым токеном
+                Guid newToken = Guid.NewGuid();
                 Process currentProcess = Process.GetCurrentProcess();
+
                 int affectedRows = connection.Execute(
                     ReservePrinterSql,
                     new
@@ -189,7 +175,8 @@ namespace Database
                         reservedBy,
                         reservedAt = DateTime.UtcNow,
                         processId = currentProcess.Id,
-                        expectedVersion = version
+                        newToken,
+                        expectedToken = result.changeToken
                     },
                     transaction,
                     _commandTimeout);
@@ -201,7 +188,6 @@ namespace Database
                 }
                 else
                 {
-                    // Кто-то успел изменить принтер между нашим SELECT и UPDATE
                     transaction.Rollback();
                     return false;
                 }
@@ -215,7 +201,6 @@ namespace Database
 
         /// <summary>
         /// Освобождает зарезервированный принтер
-        /// Простая операция без сложной логики блокировок
         /// </summary>
         public bool ReleasePrinter(string printerName)
         {
@@ -237,7 +222,6 @@ namespace Database
 
         /// <summary>
         /// Получает список всех доступных принтеров
-        /// Простой SELECT без блокировок
         /// </summary>
         public IEnumerable<PrinterState> GetAvailablePrinters()
         {
@@ -253,18 +237,15 @@ namespace Database
         private IEnumerable<PrinterState> GetAvailablePrinters(IDbConnection connection)
         {
             const string sql = @"
-                SELECT id, printer_name, is_available, reserved_by, reserved_at, version, process_id
+                SELECT id, printer_name, is_available, reserved_by, reserved_at, process_id, change_token
                 FROM printer_states 
-                WHERE is_available = true 
-                ORDER BY printer_name";
+                WHERE is_available = true";
 
-            // Dapper автоматически маппит результат на PrinterState
             return connection.Query<PrinterState>(sql, commandTimeout: _commandTimeout);
         }
 
         /// <summary>
         /// Получает полную информацию о всех принтерах
-        /// Для мониторинга и диагностики
         /// </summary>
         public IEnumerable<PrinterState> GetAllPrinters()
         {
@@ -272,16 +253,14 @@ namespace Database
             connection.Open();
 
             const string sql = @"
-                SELECT id, printer_name, is_available, reserved_by, reserved_at, version, process_id
-                FROM printer_states 
-                ORDER BY printer_name";
+                SELECT id, printer_name, is_available, reserved_by, reserved_at, process_id, change_token
+                FROM printer_states";
 
             return connection.Query<PrinterState>(sql, commandTimeout: _commandTimeout);
         }
 
         /// <summary>
         /// Очищает зависшие резервирования
-        /// Важная функция для поддержания системы в рабочем состоянии
         /// </summary>
         public int CleanupExpiredReservations(TimeSpan maxAge)
         {
@@ -296,7 +275,7 @@ namespace Database
                     reserved_by = NULL,
                     reserved_at = NULL,
                     process_id = NULL,
-                    version = version + 1
+                    change_token = gen_random_uuid()
                 WHERE is_available = false 
                   AND reserved_at < @cutoffTime";
 
@@ -305,19 +284,20 @@ namespace Database
 
         /// <summary>
         /// Упорядочивает принтеры по предпочтениям
-        /// Предпочтительные принтеры идут первыми
         /// </summary>
         private static IEnumerable<PrinterState> OrderByPreference(IEnumerable<PrinterState> printers, string[] preferredPrinters)
         {
             if (preferredPrinters is null || preferredPrinters.Length == 0)
             {
-                return printers.OrderBy(p => p.PrinterName);
+                return printers;
             }
 
             HashSet<string> preferredSet = new HashSet<string>(preferredPrinters, StringComparer.OrdinalIgnoreCase);
 
-            return printers.OrderBy(p => preferredSet.Contains(p.PrinterName) ? 0 : 1).ThenBy(p => p.PrinterName);
+            return printers.OrderBy(p => preferredSet.Contains(p.PrinterName) ? 0 : 1);
         }
+
+        #region Dispose methode
 
         protected virtual void Dispose(bool disposing)
         {
@@ -333,7 +313,7 @@ namespace Database
             GC.SuppressFinalize(this);
         }
 
-
+        #endregion
 
     }
 }

@@ -35,11 +35,8 @@ namespace Database.Models
         public int? ProcessId { get; set; }
 
         /// <summary>
-        /// Токен для оптимистичной блокировки
+        /// Токен для оптимистичного блокирования
         /// </summary>
         public Guid ChangeToken { get; set; }
     }
-
-
-
 }
