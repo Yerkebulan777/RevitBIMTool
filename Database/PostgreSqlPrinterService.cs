@@ -131,7 +131,6 @@ namespace Database
             // Упорядочиваем по приоритету: сначала предпочтительные, потом все остальные
             IEnumerable<PrinterState> orderedPrinters = OrderByPreference(availablePrinters, preferredPrinters);
 
-            // Пытаемся зарезервировать первый доступный
             PrinterState reservedPrinter = orderedPrinters.FirstOrDefault(printer => TryReserveSpecificPrinter(connection, printer.PrinterName, reservedBy));
 
             return reservedPrinter?.PrinterName;
