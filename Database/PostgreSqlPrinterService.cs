@@ -98,6 +98,7 @@ namespace Database
             }
 
             using OdbcConnection connection = new OdbcConnection(_connectionString);
+
             connection.Open();
 
             const string insertSql = @"
