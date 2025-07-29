@@ -198,10 +198,10 @@ namespace RevitBIMTool.Utils.ExportPDF
                 try
                 {
                     SafePostgreSqlPrinterService dbService = GetDatabaseService();
+
                     if (dbService != null)
                     {
-                        string userName = $"{Environment.UserName}@{Environment.MachineName}";
-                        bool success = dbService.TryReserveSpecificPrinter(printerName, userName);
+                        bool success = dbService.TryReserveSpecificPrinter(printerName, Environment.UserName);
 
                         if (success)
                         {
