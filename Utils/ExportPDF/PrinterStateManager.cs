@@ -199,7 +199,7 @@ namespace RevitBIMTool.Utils.ExportPDF
 
                         if (dbService != null)
                         {
-                            bool success = dbService.TryReserveSpecificPrinter(printerName, Environment.UserName);
+                            bool success = dbService.TryReserveSpecificPrinter(printerName, Environment.MachineName);
 
                             if (success)
                             {
