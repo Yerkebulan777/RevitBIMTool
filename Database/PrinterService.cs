@@ -111,9 +111,9 @@ namespace Database
             // Получаем сложный DDL запрос из embedded ресурса
             string createTableSql = SqlResourceManager.CreatePrinterStatesTable;
 
-            _ = ExecuteWithSerializableRetry(connection =>
+            _ = ExecuteWithSerializableRetry(conn =>
             {
-                return connection.Execute(createTableSql, commandTimeout: _commandTimeout);
+                return conn.Execute(createTableSql, commandTimeout: _commandTimeout);
             });
         }
 
@@ -139,9 +139,9 @@ namespace Database
                 return;
             }
 
-            _ = ExecuteWithSerializableRetry(connection =>
+            _ = ExecuteWithSerializableRetry(conn =>
             {
-                return connection.Execute(InsertPrinter, validPrinters, commandTimeout: _commandTimeout);
+                return conn.Execute(InsertPrinter, validPrinters, commandTimeout: _commandTimeout);
             });
         }
 
@@ -158,15 +158,15 @@ namespace Database
 
             string revitFileName = Path.GetFileName(revitFilePath);
 
-            return ExecuteWithSerializableRetry(connection =>
+            return ExecuteWithSerializableRetry(conn =>
             {
-                using IDbTransaction transaction = connection.BeginTransaction(IsolationLevel.Serializable);
+                using IDbTransaction transaction = conn.BeginTransaction(IsolationLevel.Serializable);
                 try
                 {
                     // Используем embedded SQL для сложной операции получения принтеров с блокировкой
                     string getAvailablePrintersQuery = SqlResourceManager.GetAvailablePrintersWithLock;
 
-                    List<PrinterState> availablePrinters = connection.Query<PrinterState>(
+                    List<PrinterState> availablePrinters = conn.Query<PrinterState>(
                         getAvailablePrintersQuery,
                         transaction: transaction,
                         commandTimeout: _commandTimeout).ToList();
@@ -180,7 +180,7 @@ namespace Database
 
                     foreach (PrinterState printer in orderedPrinters)
                     {
-                        if (ReservePrinterInternal(connection, transaction, printer.PrinterName, revitFileName))
+                        if (ReservePrinterInternal(conn, transaction, printer.PrinterName, revitFileName))
                         {
                             transaction.Commit();
                             return printer.PrinterName;
@@ -216,12 +216,12 @@ namespace Database
 
             string revitFileName = Path.GetFileName(revitFilePath);
 
-            return ExecuteWithSerializableRetry(connection =>
+            return ExecuteWithSerializableRetry(conn =>
             {
-                using IDbTransaction transaction = connection.BeginTransaction(IsolationLevel.Serializable);
+                using IDbTransaction transaction = conn.BeginTransaction(IsolationLevel.Serializable);
                 try
                 {
-                    bool success = ReservePrinterInternal(connection, transaction, printerName, revitFileName);
+                    bool success = ReservePrinterInternal(conn, transaction, printerName, revitFileName);
 
                     if (success)
                     {
@@ -250,30 +250,30 @@ namespace Database
         {
             return string.IsNullOrWhiteSpace(printerName)
                 ? throw new ArgumentException("Имя принтера не может быть пустым", nameof(printerName))
-                : ExecuteWithSerializableRetry(connection =>
-            {
-                if (!string.IsNullOrWhiteSpace(revitFilePath))
+                : ExecuteWithSerializableRetry(conn =>
                 {
-                    // Освобождение с проверкой прав доступа
-                    string revitFileName = Path.GetFileName(revitFilePath);
-                    int affectedRows = connection.Execute(
-                        ReleasePrinterWithPermissionCheck,
-                        new { printerName = printerName.Trim(), revitFileName },
-                        commandTimeout: _commandTimeout);
+                    if (!string.IsNullOrWhiteSpace(revitFilePath))
+                    {
+                        // Освобождение с проверкой прав доступа
+                        string revitFileName = Path.GetFileName(revitFilePath);
+                        int affectedRows = conn.Execute(
+                            ReleasePrinterWithPermissionCheck,
+                            new { printerName = printerName.Trim(), revitFileName },
+                            commandTimeout: _commandTimeout);
 
-                    return affectedRows > 0;
-                }
-                else
-                {
-                    // Административное освобождение без проверки прав
-                    int affectedRows = connection.Execute(
-                        ReleasePrinterSimple,
-                        new { printerName = printerName.Trim() },
-                        commandTimeout: _commandTimeout);
+                        return affectedRows > 0;
+                    }
+                    else
+                    {
+                        // Административное освобождение без проверки прав
+                        int affectedRows = conn.Execute(
+                            ReleasePrinterSimple,
+                            new { printerName = printerName.Trim() },
+                            commandTimeout: _commandTimeout);
 
-                    return affectedRows > 0;
-                }
-            });
+                        return affectedRows > 0;
+                    }
+                });
         }
 
         /// <summary>
@@ -282,9 +282,9 @@ namespace Database
         /// </summary>
         public IEnumerable<PrinterState> GetAvailablePrinters()
         {
-            return ExecuteWithSerializableRetry(connection =>
+            return ExecuteWithSerializableRetry(conn =>
             {
-                return connection.Query<PrinterState>(SelectAvailablePrinters, commandTimeout: _commandTimeout).ToList();
+                return conn.Query<PrinterState>(SelectAvailablePrinters, commandTimeout: _commandTimeout).ToList();
             });
         }
 
@@ -300,9 +300,9 @@ namespace Database
             // Получаем SQL из embedded ресурса
             string cleanupQuery = SqlResourceManager.CleanupExpiredReservations;
 
-            return ExecuteWithSerializableRetry(connection =>
+            return ExecuteWithSerializableRetry(conn =>
             {
-                return connection.Execute(cleanupQuery, new { cutoffTime }, commandTimeout: _commandTimeout);
+                return conn.Execute(cleanupQuery, new { cutoffTime }, commandTimeout: _commandTimeout);
             });
         }
 
@@ -320,13 +320,13 @@ namespace Database
         /// для чтения текущего состояния и оптимистичного обновления.
         /// </summary>
         private bool ReservePrinterInternal(
-            IDbConnection connection,
+            IDbConnection conn,
             IDbTransaction transaction,
             string printerName,
             string revitFileName)
         {
             // Читаем текущее состояние принтера с блокировкой
-            (Guid changeToken, bool isAvailable) = connection.QuerySingleOrDefault<(Guid changeToken, bool isAvailable)>(
+            (Guid changeToken, bool isAvailable) = conn.QuerySingleOrDefault<(Guid changeToken, bool isAvailable)>(
                 ReadPrinterStateForUpdate,
                 new { printerName = printerName.Trim() },
                 transaction,
@@ -339,7 +339,7 @@ namespace Database
 
             // Обновляем состояние принтера с оптимистичным блокированием
             Process currentProcess = Process.GetCurrentProcess();
-            int affectedRows = connection.Execute(
+            int affectedRows = conn.Execute(
                 UpdatePrinterWithOptimisticLock,
                 new
                 {
@@ -373,7 +373,7 @@ namespace Database
                     .ThenBy(p => p.PrinterName);
             }
 
-            return printers.OrderBy(p => alendar.PrinterName);
+            return printers.OrderBy(p => p.PrinterName);
         }
 
         private T ExecuteWithSerializableRetry<T>(Func<OdbcConnection, T> operation)
@@ -414,5 +414,8 @@ namespace Database
                 _disposed = true;
             }
         }
+
+
+
     }
 }
