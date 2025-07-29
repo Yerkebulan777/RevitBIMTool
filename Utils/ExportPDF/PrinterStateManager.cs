@@ -189,35 +189,34 @@ namespace RevitBIMTool.Utils.ExportPDF
         /// </summary>
         public static void ReservePrinter(string printerName)
         {
-            if (string.IsNullOrWhiteSpace(printerName))
-                return;
-
-            // Пробуем БД
-            if (_useDatabaseProvider)
+            if (!string.IsNullOrEmpty(printerName))
             {
-                try
+                if (_useDatabaseProvider)
                 {
-                    SafePostgreSqlPrinterService dbService = GetDatabaseService();
-
-                    if (dbService != null)
+                    try
                     {
-                        bool success = dbService.TryReserveSpecificPrinter(printerName, Environment.UserName);
+                        SafePostgreSqlPrinterService dbService = GetDatabaseService();
 
-                        if (success)
+                        if (dbService != null)
                         {
-                            Log.Information("Database: Reserved printer {PrinterName}", printerName);
-                            return;
+                            bool success = dbService.TryReserveSpecificPrinter(printerName, Environment.UserName);
+
+                            if (success)
+                            {
+                                Log.Information("Database: Reserved printer {PrinterName}", printerName);
+                                return;
+                            }
                         }
                     }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, "Database reserve failed for {PrinterName}: {Message}", printerName, ex.Message);
+                    }
                 }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, "Database reserve failed for {PrinterName}: {Message}", printerName, ex.Message);
-                }
-            }
 
-            // Fallback на XML
-            ReservePrinterInXml(printerName);
+                // Fallback на XML
+                ReservePrinterInXml(printerName);
+            }
         }
 
         /// <summary>
@@ -225,35 +224,34 @@ namespace RevitBIMTool.Utils.ExportPDF
         /// </summary>
         public static void ReleasePrinter(string printerName)
         {
-            if (string.IsNullOrWhiteSpace(printerName))
-                return;
-
-            // Пробуем БД
-            if (_useDatabaseProvider)
+            if (!string.IsNullOrEmpty(printerName))
             {
-                try
+                if (_useDatabaseProvider)
                 {
-                    SafePostgreSqlPrinterService dbService = GetDatabaseService();
-                    if (dbService != null)
+                    try
                     {
-                        string userName = $"{Environment.UserName}@{Environment.MachineName}";
-                        bool success = dbService.ReleasePrinter(printerName, userName);
+                        SafePostgreSqlPrinterService dbService = GetDatabaseService();
 
-                        if (success)
+                        if (dbService != null)
                         {
-                            Log.Information("Database: Released printer {PrinterName}", printerName);
-                            return;
+                            bool success = dbService.ReleasePrinter(printerName, Environment.UserName);
+
+                            if (success)
+                            {
+                                Log.Information("Database: Released printer {PrinterName}", printerName);
+                                return;
+                            }
                         }
                     }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, "Database release failed for {PrinterName}: {Message}", printerName, ex.Message);
+                    }
                 }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, "Database release failed for {PrinterName}: {Message}", printerName, ex.Message);
-                }
-            }
 
-            // Fallback на XML
-            ReleasePrinterInXml(printerName);
+                // Fallback на XML
+                ReleasePrinterInXml(printerName);
+            }
         }
 
         /// <summary>
