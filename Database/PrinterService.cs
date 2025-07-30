@@ -94,9 +94,9 @@ namespace Database
             int baseRetryDelayMs = 50)
         {
             _connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
-            _commandTimeout = commandTimeout;
             _maxRetryAttempts = maxRetryAttempts;
             _baseRetryDelayMs = baseRetryDelayMs;
+            _commandTimeout = commandTimeout;
 
             InitializeDatabase();
         }
