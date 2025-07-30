@@ -31,9 +31,9 @@ namespace RevitBIMTool.Commands
                 using DatabaseMonitor healthChecker = new(connectionString);
                 string healthReport = healthChecker.CheckDatabaseHealth();
 
-                // Дополнительная проверка схемы через SchemaManager
                 try
                 {
+                    // Дополнительная проверка схемы через SchemaManager
                     using SchemaManager schemaManager = new(connectionString);
                     bool isSchemaValid = schemaManager.ValidateSchema();
 
@@ -93,5 +93,8 @@ namespace RevitBIMTool.Commands
         {
             return true; // Команда всегда доступна для административных целей
         }
+
+
+
     }
 }
