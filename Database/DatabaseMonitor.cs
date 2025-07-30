@@ -245,7 +245,7 @@ namespace Database
             _logger.Debug("Measuring database response time");
 
             System.Diagnostics.Stopwatch stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            _ = connection.QuerySingle<int>(PrinterSqlStore.TestConnection);
+            connection.QuerySingle<int>(PrinterSqlStore.TestConnection);
             stopwatch.Stop();
 
             double responseTime = stopwatch.Elapsed.TotalMilliseconds;
@@ -254,7 +254,6 @@ namespace Database
             return responseTime;
         }
 
-        // Вспомогательные методы без dynamic
         private ConnectionInfo GetConnectionInfo(OdbcConnection connection)
         {
             try
