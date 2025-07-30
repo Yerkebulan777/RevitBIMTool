@@ -1,6 +1,5 @@
 ﻿using Dapper;
 using Database.Models;
-using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Data;

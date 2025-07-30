@@ -37,6 +37,7 @@ namespace Database
         public void CreatePrinterManagementSchema()
         {
             using OdbcConnection connection = new OdbcConnection(_connectionString);
+
             connection.Open();
 
             using OdbcTransaction transaction = connection.BeginTransaction();
@@ -121,41 +122,6 @@ namespace Database
             {
                 _ = connection.Execute(constraint, transaction: transaction, commandTimeout: _commandTimeout);
             }
-        }
-
-        /// <summary>
-        /// Создает индексы для оптимизации производительности запросов.
-        /// Эти индексы специально настроены под паттерны доступа нашего приложения.
-        /// </summary>
-        private void CreatePerformanceIndexes(OdbcConnection connection, OdbcTransaction transaction)
-        {
-            string[] indexes = {
-                // Индекс для быстрого поиска доступных принтеров
-                "CREATE INDEX idx_printer_states_available ON printer_states (is_available) WHERE is_available = true;",
-                
-                // Индекс для очистки зависших резервирований
-                "CREATE INDEX idx_printer_states_reserved_at ON printer_states (reserved_at) WHERE is_available = false;",
-                
-                // Индекс для поиска по процессам (для диагностики)
-                "CREATE INDEX idx_printer_states_process_id ON printer_states (process_id) WHERE process_id IS NOT NULL;"
-            };
-
-            foreach (string index in indexes)
-            {
-                _ = connection.Execute(index, transaction: transaction, commandTimeout: _commandTimeout);
-            }
-        }
-
-        /// <summary>
-        /// Настраивает права доступа к таблице (расширяемый метод).
-        /// В базовой реализации не требует особых настроек, но готов для расширения.
-        /// </summary>
-        private void ConfigureTablePermissions(OdbcConnection connection, OdbcTransaction transaction)
-        {
-            // В базовой реализации используем права по умолчанию
-            // При необходимости здесь можно добавить специфичные настройки доступа
-
-            // Пример: GRANT SELECT, INSERT, UPDATE, DELETE ON printer_states TO revit_app_user;
         }
 
         /// <summary>
