@@ -1,75 +1,56 @@
-﻿using RevitBIMTool.Utils.Common;
+﻿using Database;
 using RevitBIMTool.Utils.ExportPDF.Printers;
-using RevitBIMTool.Utils.SystemHelpers;
 using Serilog;
 using System.Configuration;
-using System.IO;
 
 namespace RevitBIMTool.Utils.ExportPDF
 {
+    /// <summary>
+    /// Упрощенный менеджер состояния принтеров.
+    /// Использует только базу данных без XML fallback согласно требованиям.
+    /// </summary>
     internal static class PrinterStateManager
     {
-        private static readonly object _lockObject = new();
-        private static SafePostgreSqlPrinterService _printerService;
-        private static readonly string _connectionString;
+        private static PrinterService _printerService;
         private static readonly int _lockTimeoutMinutes;
-        private static readonly bool _useDatabaseProvider;
+        private static readonly string _connectionString;
+        private static readonly object _lockObject = new();
 
         static PrinterStateManager()
         {
-            // Проверяем настройки для использования БД
-            _useDatabaseProvider = string.Equals(
-                ConfigurationManager.AppSettings["DefaultDatabaseProvider"],
-                "PostgreSQL",
-                StringComparison.OrdinalIgnoreCase);
+            _connectionString = ConfigurationManager.ConnectionStrings["PrinterDatabase"]?.ConnectionString;
+            _lockTimeoutMinutes = int.TryParse(ConfigurationManager.AppSettings["PrinterLockTimeoutMinutes"], out int timeout) ? timeout : 10;
 
-            if (_useDatabaseProvider)
+            if (string.IsNullOrEmpty(_connectionString))
             {
-                _connectionString = ConfigurationManager.ConnectionStrings["PrinterDatabase"]?.ConnectionString;
-                _lockTimeoutMinutes = int.TryParse(
-                    ConfigurationManager.AppSettings["PrinterLockTimeoutMinutes"],
-                    out int timeout) ? timeout : 10;
-
-                if (string.IsNullOrEmpty(_connectionString))
-                {
-                    Log.Warning("PrinterDatabase connection string not found, falling back to XML storage");
-                    _useDatabaseProvider = false;
-                }
+                Log.Error("PrinterDatabase connection string is not configured");
             }
         }
 
         /// <summary>
-        /// Получает безопасный сервис БД (thread-safe singleton)
+        /// Thread-safe получение сервиса принтеров (singleton pattern).
         /// </summary>
-        private static SafePostgreSqlPrinterService GetDatabaseService()
+        private static PrinterService GetPrinterService()
         {
-            if (!_useDatabaseProvider)
-            {
-                return null;
-            }
-
-            if (_printerService == null)
+            if (_printerService is null)
             {
                 lock (_lockObject)
                 {
                     if (_printerService == null)
                     {
-                        try
-                        {
-                            _printerService = new SafePostgreSqlPrinterService(_connectionString);
+                        _printerService = new PrinterService(
+                            _connectionString,
+                            commandTimeout: 30,
+                            maxRetryAttempts: 3,
+                            baseRetryDelayMs: 100,
+                            lockTimeoutMinutes: _lockTimeoutMinutes);
 
-                            // Инициализируем известные принтеры
-                            List<PrinterControl> availablePrinters = GetPrinters();
-                            string[] printerNames = availablePrinters.Select(p => p.PrinterName).ToArray();
-                            _printerService.InitializePrinters(printerNames);
+                        // Инициализируем известные принтеры
+                        List<PrinterControl> availablePrinters = GetAvailablePrinterControls();
+                        string[] printerNames = [.. availablePrinters.Select(p => p.PrinterName)];
+                        _printerService.InitializePrinters(printerNames);
 
-                            Log.Information("Database printer service initialized with {Count} printers", printerNames.Length);
-                        }
-                        catch (Exception ex)
-                        {
-                            Log.Error(ex, "Failed to initialize database service, falling back to XML: {Message}", ex.Message);
-                            _printerService = null;
-                        }
+                        Log.Information("PrinterStateManager initialized with {Count} printers", printerNames.Length);
                     }
                 }
             }
@@ -77,40 +58,15 @@ namespace RevitBIMTool.Utils.ExportPDF
         }
 
         /// <summary>
-        /// Попытка получить доступный принтер (гибридный подход)
+        /// Пытается получить доступный принтер для использования.
         /// </summary>
         public static bool TryGetPrinter(string revitFilePath, out PrinterControl availablePrinter)
-        {
-
-            // Сначала пробуем БД, если настроена
-            if (_useDatabaseProvider && TryGetPrinterFromDatabase(revitFilePath, out availablePrinter))
-            {
-                return true;
-            }
-
-            // Fallback на XML если БД недоступна
-            return TryGetPrinterFromXml(revitFilePath, out availablePrinter);
-        }
-
-        /// <summary>
-        /// Получение принтера через безопасную БД
-        /// </summary>
-        private static bool TryGetPrinterFromDatabase(string revitFilePath, out PrinterControl availablePrinter)
         {
             availablePrinter = null;
 
             try
             {
-                SafePostgreSqlPrinterService dbService = GetDatabaseService();
-                if (dbService == null)
-                {
-                    return false;
-                }
-
-                // Очищаем зависшие блокировки
-                CleanupExpiredReservationsInDatabase(dbService);
-
-                List<PrinterControl> printerControls = GetPrinters();
+                List<PrinterControl> printerControls = GetAvailablePrinterControls();
                 string[] preferredPrinters = printerControls
                     .Where(p => p.IsPrinterInstalled())
                     .Select(p => p.PrinterName)
@@ -118,12 +74,12 @@ namespace RevitBIMTool.Utils.ExportPDF
 
                 if (preferredPrinters.Length == 0)
                 {
-                    Log.Warning("No installed printers found");
+                    Log.Warning("No installed printers found on this machine");
                     return false;
                 }
 
-                string userName = $"{Environment.UserName}@{Environment.MachineName}";
-                string reservedPrinterName = dbService.TryReserveAnyAvailablePrinter(userName, preferredPrinters);
+                string reservedPrinterName = GetPrinterService()
+                    .TryReserveAnyAvailablePrinter(revitFilePath, preferredPrinters);
 
                 if (!string.IsNullOrEmpty(reservedPrinterName))
                 {
@@ -133,129 +89,110 @@ namespace RevitBIMTool.Utils.ExportPDF
                     if (availablePrinter != null)
                     {
                         availablePrinter.RevitFilePath = revitFilePath;
-                        Log.Information("Database: Reserved printer {PrinterName} for {UserName}",
-                            reservedPrinterName, userName);
+                        Log.Information("Reserved printer {PrinterName} for file {FileName}",
+                            reservedPrinterName, System.IO.Path.GetFileName(revitFilePath));
                         return true;
                     }
                 }
 
-                Log.Debug("Database: No available printers to reserve");
+                Log.Warning("No available printers to reserve for file {FileName}",
+                    System.IO.Path.GetFileName(revitFilePath));
                 return false;
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Database printer reservation failed: {Message}", ex.Message);
+                Log.Error(ex, "Error while trying to get printer: {Message}", ex.Message);
                 return false;
             }
         }
 
         /// <summary>
-        /// Fallback получение принтера через XML (старый метод)
-        /// </summary>
-        private static bool TryGetPrinterFromXml(string revitFilePath, out PrinterControl availablePrinter)
-        {
-            int retryCount = 0;
-            availablePrinter = null;
-            const int maxRetries = 100;
-
-            List<PrinterControl> printerList = GetPrinters();
-
-            while (retryCount < maxRetries)
-            {
-                System.Threading.Thread.Sleep(maxRetries * retryCount++);
-
-                Log.Debug("XML: Searching for an available printer (attempt {Attempt})", retryCount);
-
-                foreach (PrinterControl printer in printerList)
-                {
-                    if (IsPrinterAvailable(printer))
-                    {
-                        Log.Debug("XML: Printer {PrinterName} is available", printer.PrinterName);
-                        printer.RevitFilePath = revitFilePath;
-                        availablePrinter = printer;
-                        return true;
-                    }
-                }
-            }
-
-            Log.Warning("XML: No available printer found after {MaxRetries} attempts", maxRetries);
-            return false;
-        }
-
-        /// <summary>
-        /// Резервирует принтер (гибридный подход)
+        /// Резервирует конкретный принтер.
         /// </summary>
         public static void ReservePrinter(string printerName)
         {
-            if (!string.IsNullOrEmpty(printerName))
+            if (string.IsNullOrWhiteSpace(printerName))
             {
-                if (_useDatabaseProvider)
+                throw new ArgumentException("Printer name cannot be empty", nameof(printerName));
+            }
+
+            try
+            {
+                string dummyFilePath = $"Manual_Reservation_{Environment.UserName}_{DateTime.Now:yyyyMMdd_HHmmss}.rvt";
+                bool success = GetPrinterService().TryReserveSpecificPrinter(printerName, dummyFilePath);
+
+                if (success)
                 {
-                    try
-                    {
-                        SafePostgreSqlPrinterService dbService = GetDatabaseService();
-
-                        if (dbService != null)
-                        {
-                            bool success = dbService.TryReserveSpecificPrinter(printerName, Environment.MachineName);
-
-                            if (success)
-                            {
-                                Log.Information("Database: Reserved printer {PrinterName}", printerName);
-                                return;
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error(ex, "Database reserve failed for {PrinterName}: {Message}", printerName, ex.Message);
-                    }
+                    Log.Information("Successfully reserved printer {PrinterName} manually", printerName);
                 }
-
-                // Fallback на XML
-                ReservePrinterInXml(printerName);
+                else
+                {
+                    Log.Warning("Failed to reserve printer {PrinterName} (may be already in use)", printerName);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error reserving printer {PrinterName}: {Message}", printerName, ex.Message);
+                throw;
             }
         }
 
         /// <summary>
-        /// Освобождает принтер (гибридный подход)
+        /// Освобождает принтер.
         /// </summary>
         public static void ReleasePrinter(string printerName)
         {
-            if (!string.IsNullOrEmpty(printerName))
+            if (string.IsNullOrWhiteSpace(printerName))
             {
-                if (_useDatabaseProvider)
+                return;
+            }
+
+            try
+            {
+                bool success = GetPrinterService().ReleasePrinter(printerName);
+
+                if (success)
                 {
-                    try
-                    {
-                        SafePostgreSqlPrinterService dbService = GetDatabaseService();
-
-                        if (dbService != null)
-                        {
-                            bool success = dbService.ReleasePrinter(printerName, Environment.UserName);
-
-                            if (success)
-                            {
-                                Log.Information("Database: Released printer {PrinterName}", printerName);
-                                return;
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error(ex, "Database release failed for {PrinterName}: {Message}", printerName, ex.Message);
-                    }
+                    Log.Information("Successfully released printer {PrinterName}", printerName);
                 }
-
-                // Fallback на XML
-                ReleasePrinterInXml(printerName);
+                else
+                {
+                    Log.Debug("Printer {PrinterName} was not reserved or already released", printerName);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error releasing printer {PrinterName}: {Message}", printerName, ex.Message);
             }
         }
 
         /// <summary>
-        /// Получить список принтеров в порядке приоритета
+        /// Очищает зависшие блокировки принтеров.
         /// </summary>
-        public static List<PrinterControl> GetPrinters()
+        public static int CleanupExpiredReservations()
+        {
+            try
+            {
+                int cleanedCount = GetPrinterService().CleanupExpiredReservations();
+
+                if (cleanedCount > 0)
+                {
+                    Log.Information("Cleaned up {Count} expired printer reservations", cleanedCount);
+                }
+
+                return cleanedCount;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error cleaning up expired reservations: {Message}", ex.Message);
+                return 0;
+            }
+        }
+
+        /// <summary>
+        /// Получает список всех доступных контроллеров принтеров в порядке приоритета.
+        /// </summary>
+        private static List<PrinterControl> GetAvailablePrinterControls()
         {
             return
             [
@@ -266,142 +203,5 @@ namespace RevitBIMTool.Utils.ExportPDF
                 new InternalPrinter(),
             ];
         }
-
-        /// <summary>
-        /// Проверяет доступность принтера (XML метод)
-        /// </summary>
-        public static bool IsPrinterAvailable(PrinterControl printer)
-        {
-            if (!printer.IsPrinterInstalled())
-            {
-                return false;
-            }
-
-            try
-            {
-                PrinterStateData states = LoadXmlState();
-                PrinterInfo printerInfo = EnsurePrinterExists(states, printer.PrinterName);
-                return printerInfo.IsAvailable;
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "XML availability check failed for {PrinterName}: {Message}", printer.PrinterName, ex.Message);
-                return false;
-            }
-        }
-
-        #region XML Fallback Methods (существующая логика)
-
-        private static readonly string docsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-        private static readonly string appDataFolder = Path.Combine(docsPath, "RevitBIMTool");
-        private static readonly string stateFilePath = Path.Combine(appDataFolder, "PrinterState.xml");
-
-        private static void ReservePrinterInXml(string printerName)
-        {
-            if (SetAvailabilityInXml(printerName, false))
-            {
-                Log.Debug("XML: Reserved printer {PrinterName}", printerName);
-            }
-        }
-
-        private static void ReleasePrinterInXml(string printerName)
-        {
-            if (SetAvailabilityInXml(printerName, true))
-            {
-                Log.Debug("XML: Released printer {PrinterName}", printerName);
-            }
-        }
-
-        private static bool SetAvailabilityInXml(string printerName, bool isAvailable)
-        {
-            try
-            {
-                PrinterStateData states = LoadXmlState();
-                PrinterInfo printerInfo = EnsurePrinterExists(states, printerName);
-                printerInfo.IsAvailable = isAvailable;
-
-                return XmlHelper.SaveToXml(states, stateFilePath);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "XML state update failed for {PrinterName}: {Message}", printerName, ex.Message);
-                return false;
-            }
-        }
-
-        private static PrinterStateData LoadXmlState()
-        {
-            EnsureXmlStateFileExists();
-            return XmlHelper.LoadFromXml<PrinterStateData>(stateFilePath) ?? CreateDefaultXmlState();
-        }
-
-        private static void EnsureXmlStateFileExists()
-        {
-            PathHelper.EnsureDirectory(appDataFolder);
-
-            if (!File.Exists(stateFilePath))
-            {
-                PrinterStateData initialState = CreateDefaultXmlState();
-                XmlHelper.SaveToXml(initialState, stateFilePath);
-            }
-        }
-
-        private static PrinterStateData CreateDefaultXmlState()
-        {
-            PrinterStateData initialState = new PrinterStateData
-            {
-                LastUpdate = DateTime.Now,
-                Printers = new List<PrinterInfo>()
-            };
-
-            foreach (PrinterControl printer in GetPrinters())
-            {
-                initialState.Printers.Add(new PrinterInfo(printer.PrinterName, true));
-            }
-
-            return initialState;
-        }
-
-        private static PrinterInfo EnsurePrinterExists(PrinterStateData states, string printerName, bool isAvailable = true)
-        {
-            PrinterInfo printerInfo = states.Printers?.Find(p => p.PrinterName == printerName);
-
-            if (printerInfo == null)
-            {
-                printerInfo = new PrinterInfo(printerName, isAvailable);
-                states.Printers.Add(printerInfo);
-
-                if (!XmlHelper.SaveToXml(states, stateFilePath))
-                {
-                    throw new InvalidOperationException("Failed to save printer state");
-                }
-            }
-
-            return printerInfo;
-        }
-
-        #endregion
-
-        #region Database Cleanup
-
-        private static void CleanupExpiredReservationsInDatabase(SafePostgreSqlPrinterService dbService)
-        {
-            try
-            {
-                TimeSpan maxAge = TimeSpan.FromMinutes(_lockTimeoutMinutes);
-                int cleanedCount = dbService.CleanupExpiredReservations(maxAge);
-
-                if (cleanedCount > 0)
-                {
-                    Log.Information("Database: Cleaned up {Count} expired reservations", cleanedCount);
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Database cleanup failed: {Message}", ex.Message);
-            }
-        }
-
-        #endregion
     }
 }

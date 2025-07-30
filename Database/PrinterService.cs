@@ -1,5 +1,5 @@
 ﻿using Dapper;
-using Database.Models;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -12,15 +12,9 @@ using System.Threading;
 namespace Database
 {
     /// <summary>
-    /// Сервис управления принтерами для Revit приложений с использованием 
-    /// комбинированного подхода: embedded SQL ресурсы для сложных операций 
-    /// и простые string constants для CRUD операций.
-    /// 
-    /// Преимущества такого подхода:
-    /// - SQL синтаксис подсвечивается в отдельных .sql файлах
-    /// - Сложная логика базы данных версионируется отдельно от C# кода  
-    /// - Простые операции остаются читаемыми в коде
-    /// - Легко поддерживать и модифицировать SQL запросы
+    /// Единственный сервис управления принтерами для Revit приложений.
+    /// Использует ODBC подключение к PostgreSQL с уровнем изоляции SERIALIZABLE.
+    /// Обеспечивает thread-safe операции и автоматическую очистку зависших резервирований.
     /// </summary>
     public sealed class PrinterService : IDisposable
     {
@@ -28,103 +22,153 @@ namespace Database
         private readonly int _commandTimeout;
         private readonly int _maxRetryAttempts;
         private readonly int _baseRetryDelayMs;
+        private readonly int _lockTimeoutMinutes;
+        private static readonly object _initLock = new object();
+        private static volatile bool _schemaInitialized = false;
         private bool _disposed = false;
 
-        #region Простые CRUD операции как string constants
+        #region SQL Queries - все запросы в одном месте для простоты
 
-        // Простая вставка нового принтера - классическая CRUD операция
-        private const string InsertPrinter = @"
+        /// <summary>
+        /// Создание таблицы принтеров без индексов (согласно требованию).
+        /// Используется универсальный ODBC синтаксис для PostgreSQL.
+        /// </summary>
+        private const string CreateTableSql = @"
+            CREATE TABLE IF NOT EXISTS printer_states (
+                id SERIAL PRIMARY KEY,
+                printer_name VARCHAR(200) NOT NULL UNIQUE,
+                is_available BOOLEAN NOT NULL DEFAULT true,
+                reserved_by_file VARCHAR(500),
+                reserved_at TIMESTAMPTZ,
+                process_id INTEGER,
+                change_token UUID NOT NULL DEFAULT gen_random_uuid(),
+                created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+                
+                -- Constraint для логической целостности резервирования
+                CONSTRAINT chk_reservation_logic CHECK (
+                    (is_available = true AND reserved_by_file IS NULL AND reserved_at IS NULL AND process_id IS NULL) OR
+                    (is_available = false AND reserved_by_file IS NOT NULL AND reserved_at IS NOT NULL AND process_id IS NOT NULL)
+                )
+            );";
+
+        /// <summary>
+        /// Безопасная вставка принтера с защитой от дублирования.
+        /// </summary>
+        private const string InsertPrinterSql = @"
             INSERT INTO printer_states (printer_name, is_available, change_token)
             VALUES (@printerName, true, gen_random_uuid())
-            ON CONFLICT (printer_name) DO NOTHING";
+            ON CONFLICT (printer_name) DO NOTHING;";
 
-        // Простая выборка доступных принтеров для мониторинга
-        private const string SelectAvailablePrinters = @"
-            SELECT id, printer_name, is_available, reserved_by_file,
-                   reserved_at, process_id, change_token
+        /// <summary>
+        /// Получение доступных принтеров с блокировкой для предотвращения race conditions.
+        /// FOR UPDATE обеспечивает эксклюзивную блокировку до конца транзакции.
+        /// </summary>
+        private const string GetAvailablePrintersWithLockSql = @"
+            SELECT id, printer_name, is_available, reserved_by_file, reserved_at, process_id, change_token
             FROM printer_states
             WHERE is_available = true
-            ORDER BY printer_name";
+            ORDER BY printer_name
+            FOR UPDATE;";
 
-        // Простое освобождение принтера без проверки прав доступа
-        private const string ReleasePrinterSimple = @"
-            UPDATE printer_states SET
-                is_available = true,
-                reserved_by_file = NULL,
-                reserved_at = NULL,
-                process_id = NULL,
-                change_token = gen_random_uuid()
-            WHERE printer_name = @printerName";
-
-        // Освобождение принтера с проверкой прав доступа
-        private const string ReleasePrinterWithPermissionCheck = @"
-            UPDATE printer_states SET
-                is_available = true,
-                reserved_by_file = NULL,
-                reserved_at = NULL,
-                process_id = NULL,
-                change_token = gen_random_uuid()
-            WHERE printer_name = @printerName
-              AND (reserved_by_file = @revitFileName OR reserved_by_file IS NULL)";
-
-        // Чтение текущего состояния принтера для оптимистичного блокирования
-        private const string ReadPrinterStateForUpdate = @"
-            SELECT change_token, is_available
-            FROM printer_states
-            WHERE printer_name = @printerName
-            FOR UPDATE";
-
-        // Обновление состояния принтера с оптимистичным блокированием
-        private const string UpdatePrinterWithOptimisticLock = @"
+        /// <summary>
+        /// Резервирование принтера с оптимистичным блокированием через change_token.
+        /// </summary>
+        private const string ReservePrinterSql = @"
             UPDATE printer_states SET
                 is_available = false,
                 reserved_by_file = @revitFileName,
                 reserved_at = @reservedAt,
                 process_id = @processId,
-                change_token = @newToken
+                change_token = gen_random_uuid(),
+                updated_at = CURRENT_TIMESTAMP
             WHERE printer_name = @printerName
-              AND change_token = @expectedToken";
+              AND change_token = @expectedToken
+              AND is_available = true;";
+
+        /// <summary>
+        /// Освобождение принтера с проверкой прав доступа.
+        /// </summary>
+        private const string ReleasePrinterSql = @"
+            UPDATE printer_states SET
+                is_available = true,
+                reserved_by_file = NULL,
+                reserved_at = NULL,
+                process_id = NULL,
+                change_token = gen_random_uuid(),
+                updated_at = CURRENT_TIMESTAMP
+            WHERE printer_name = @printerName
+              AND (reserved_by_file = @revitFileName OR @revitFileName IS NULL);";
+
+        /// <summary>
+        /// Автоматическая очистка зависших резервирований по timeout.
+        /// </summary>
+        private const string CleanupExpiredReservationsSql = @"
+            UPDATE printer_states 
+            SET 
+                is_available = true,
+                reserved_by_file = NULL,
+                reserved_at = NULL,
+                process_id = NULL,
+                change_token = gen_random_uuid(),
+                updated_at = CURRENT_TIMESTAMP
+            WHERE 
+                is_available = false 
+                AND reserved_at < @cutoffTime
+                AND reserved_at IS NOT NULL;";
 
         #endregion
 
         public PrinterService(
             string connectionString,
             int commandTimeout = 30,
-            int maxRetryAttempts = 5,
-            int baseRetryDelayMs = 50)
+            int maxRetryAttempts = 3,
+            int baseRetryDelayMs = 100,
+            int lockTimeoutMinutes = 10)
         {
             _connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
+            _commandTimeout = commandTimeout;
             _maxRetryAttempts = maxRetryAttempts;
             _baseRetryDelayMs = baseRetryDelayMs;
-            _commandTimeout = commandTimeout;
+            _lockTimeoutMinutes = lockTimeoutMinutes;
 
-            InitializeDatabase();
+            EnsureSchemaInitialized();
+            Log.Information("PrinterService initialized with {TimeoutMinutes}min cleanup timeout", _lockTimeoutMinutes);
         }
 
         /// <summary>
-        /// Инициализирует базу данных, используя SQL из embedded ресурса.
-        /// Этот подход позволяет легко модифицировать структуру таблицы
-        /// без перекомпиляции основного кода сервиса.
+        /// Thread-safe инициализация схемы базы данных.
+        /// Выполняется один раз при первом создании сервиса.
         /// </summary>
-        private void InitializeDatabase()
+        private void EnsureSchemaInitialized()
         {
-            // Получаем сложный DDL запрос из embedded ресурса
-            string createTableSql = SqlResourceManager.CreatePrinterStatesTable;
-
-            _ = ExecuteWithSerializableRetry(conn =>
+            if (!_schemaInitialized)
             {
-                return conn.Execute(createTableSql, commandTimeout: _commandTimeout);
-            });
+                lock (_initLock)
+                {
+                    if (!_schemaInitialized)
+                    {
+                        ExecuteWithRetry(conn =>
+                        {
+                            conn.Execute(CreateTableSql, commandTimeout: _commandTimeout);
+                            Log.Debug("Database schema initialized successfully");
+                            return 0;
+                        });
+                        _schemaInitialized = true;
+                    }
+                }
+            }
         }
 
         /// <summary>
-        /// Инициализирует принтеры, используя простую CRUD операцию.
-        /// Поскольку это стандартная операция вставки, оставляем SQL в коде.
+        /// Инициализирует принтеры в системе.
+        /// Идемпотентная операция - безопасно вызывать многократно.
         /// </summary>
         public void InitializePrinters(params string[] printerNames)
         {
-            if (printerNames == null || printerNames.Length == 0)
+            if (printerNames?.Length == 0)
             {
+                Log.Warning("No printer names provided for initialization");
                 return;
             }
 
@@ -134,272 +178,302 @@ namespace Database
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .Select(name => new { printerName = name });
 
-            if (!validPrinters.Any())
+            int insertedCount = ExecuteWithRetry(conn =>
             {
-                return;
-            }
-
-            _ = ExecuteWithSerializableRetry(conn =>
-            {
-                return conn.Execute(InsertPrinter, validPrinters, commandTimeout: _commandTimeout);
+                return conn.Execute(InsertPrinterSql, validPrinters, commandTimeout: _commandTimeout);
             });
+
+            Log.Information("Initialized {Count} printers in database", insertedCount);
         }
 
         /// <summary>
-        /// Резервирует любой доступный принтер, используя комбинацию 
-        /// embedded SQL для сложной логики блокировки и простого SQL для обновления.
+        /// Пытается зарезервировать любой доступный принтер из предпочтительного списка.
+        /// Использует SERIALIZABLE изоляцию для предотвращения race conditions.
         /// </summary>
         public string TryReserveAnyAvailablePrinter(string revitFilePath, params string[] preferredPrinters)
         {
             if (string.IsNullOrWhiteSpace(revitFilePath))
             {
-                throw new ArgumentException("Путь к файлу Revit не может быть пустым", nameof(revitFilePath));
+                throw new ArgumentException("Revit file path cannot be empty", nameof(revitFilePath));
             }
 
-            string revitFileName = Path.GetFileName(revitFilePath);
+            // Автоматическая очистка перед резервированием
+            CleanupExpiredReservations();
 
-            return ExecuteWithSerializableRetry(conn =>
+            string revitFileName = Path.GetFileName(revitFilePath);
+            int processId = Process.GetCurrentProcess().Id;
+
+            return ExecuteWithRetry(conn =>
             {
-                using IDbTransaction transaction = conn.BeginTransaction(IsolationLevel.Serializable);
+                using var transaction = conn.BeginTransaction(IsolationLevel.Serializable);
                 try
                 {
-                    // Используем embedded SQL для сложной операции получения принтеров с блокировкой
-                    string getAvailablePrintersQuery = SqlResourceManager.GetAvailablePrintersWithLock;
-
-                    List<PrinterState> availablePrinters = conn.Query<PrinterState>(
-                        getAvailablePrintersQuery,
+                    // Получаем доступные принтеры с блокировкой
+                    var availablePrinters = conn.Query<PrinterState>(
+                        GetAvailablePrintersWithLockSql,
                         transaction: transaction,
                         commandTimeout: _commandTimeout).ToList();
 
                     if (!availablePrinters.Any())
                     {
+                        Log.Debug("No available printers found for reservation");
+                        transaction.Rollback();
                         return null;
                     }
 
-                    IEnumerable<PrinterState> orderedPrinters = OrderPrintersByPreference(availablePrinters, preferredPrinters);
+                    // Сортируем принтеры по предпочтениям
+                    var orderedPrinters = OrderByPreference(availablePrinters, preferredPrinters);
 
-                    foreach (PrinterState printer in orderedPrinters)
+                    // Пытаемся зарезервировать первый доступный
+                    foreach (var printer in orderedPrinters)
                     {
-                        if (ReservePrinterInternal(conn, transaction, printer.PrinterName, revitFileName))
+                        int affected = conn.Execute(
+                            ReservePrinterSql,
+                            new
+                            {
+                                printerName = printer.PrinterName,
+                                revitFileName,
+                                reservedAt = DateTime.UtcNow,
+                                processId,
+                                expectedToken = printer.ChangeToken
+                            },
+                            transaction,
+                            _commandTimeout);
+
+                        if (affected > 0)
                         {
                             transaction.Commit();
+                            Log.Information("Successfully reserved printer {PrinterName} for {FileName}",
+                                printer.PrinterName, revitFileName);
                             return printer.PrinterName;
                         }
                     }
 
                     transaction.Rollback();
+                    Log.Warning("Failed to reserve any printer for {FileName}", revitFileName);
                     return null;
                 }
-                catch
+                catch (Exception ex)
                 {
                     transaction.Rollback();
+                    Log.Error(ex, "Error during printer reservation for {FileName}", revitFileName);
                     throw;
                 }
             });
         }
 
         /// <summary>
-        /// Резервирует конкретный принтер, используя простые CRUD операции
-        /// для чтения и обновления состояния.
+        /// Резервирует конкретный принтер.
         /// </summary>
         public bool TryReserveSpecificPrinter(string printerName, string revitFilePath)
         {
             if (string.IsNullOrWhiteSpace(printerName))
             {
-                throw new ArgumentException("Имя принтера не может быть пустым", nameof(printerName));
+                throw new ArgumentException("Printer name cannot be empty", nameof(printerName));
             }
 
             if (string.IsNullOrWhiteSpace(revitFilePath))
             {
-                throw new ArgumentException("Путь к файлу Revit не может быть пустым", nameof(revitFilePath));
+                throw new ArgumentException("Revit file path cannot be empty", nameof(revitFilePath));
             }
 
             string revitFileName = Path.GetFileName(revitFilePath);
+            int processId = Process.GetCurrentProcess().Id;
 
-            return ExecuteWithSerializableRetry(conn =>
+            return ExecuteWithRetry(conn =>
             {
-                using IDbTransaction transaction = conn.BeginTransaction(IsolationLevel.Serializable);
+                using var transaction = conn.BeginTransaction(IsolationLevel.Serializable);
                 try
                 {
-                    bool success = ReservePrinterInternal(conn, transaction, printerName, revitFileName);
+                    // Получаем состояние конкретного принтера с блокировкой
+                    var printer = conn.QuerySingleOrDefault<PrinterState>(
+                        "SELECT * FROM printer_states WHERE printer_name = @printerName FOR UPDATE",
+                        new { printerName = printerName.Trim() },
+                        transaction,
+                        _commandTimeout);
 
-                    if (success)
-                    {
-                        transaction.Commit();
-                    }
-                    else
+                    if (printer == null || !printer.IsAvailable)
                     {
                         transaction.Rollback();
+                        Log.Debug("Printer {PrinterName} is not available for reservation", printerName);
+                        return false;
                     }
 
-                    return success;
+                    int affected = conn.Execute(
+                        ReservePrinterSql,
+                        new
+                        {
+                            printerName = printer.PrinterName,
+                            revitFileName,
+                            reservedAt = DateTime.UtcNow,
+                            processId,
+                            expectedToken = printer.ChangeToken
+                        },
+                        transaction,
+                        _commandTimeout);
+
+                    if (affected > 0)
+                    {
+                        transaction.Commit();
+                        Log.Information("Successfully reserved specific printer {PrinterName} for {FileName}",
+                            printerName, revitFileName);
+                        return true;
+                    }
+
+                    transaction.Rollback();
+                    return false;
                 }
-                catch
+                catch (Exception ex)
                 {
                     transaction.Rollback();
+                    Log.Error(ex, "Error reserving specific printer {PrinterName}", printerName);
                     throw;
                 }
             });
         }
 
         /// <summary>
-        /// Освобождает принтер, используя простые CRUD операции.
-        /// Демонстрирует выбор между двумя вариантами запроса в зависимости от параметров.
+        /// Освобождает принтер. Если revitFileName указан, проверяет права доступа.
         /// </summary>
-        public bool ReleasePrinter(string printerName, string revitFilePath = null)
+        public bool ReleasePrinter(string printerName, string revitFileName = null)
         {
-            return string.IsNullOrWhiteSpace(printerName)
-                ? throw new ArgumentException("Имя принтера не может быть пустым", nameof(printerName))
-                : ExecuteWithSerializableRetry(conn =>
+            if (string.IsNullOrWhiteSpace(printerName))
+            {
+                throw new ArgumentException("Printer name cannot be empty", nameof(printerName));
+            }
+
+            return ExecuteWithRetry(conn =>
+            {
+                int affected = conn.Execute(
+                    ReleasePrinterSql,
+                    new { printerName = printerName.Trim(), revitFileName },
+                    commandTimeout: _commandTimeout);
+
+                if (affected > 0)
                 {
-                    if (!string.IsNullOrWhiteSpace(revitFilePath))
-                    {
-                        // Освобождение с проверкой прав доступа
-                        string revitFileName = Path.GetFileName(revitFilePath);
-                        int affectedRows = conn.Execute(
-                            ReleasePrinterWithPermissionCheck,
-                            new { printerName = printerName.Trim(), revitFileName },
-                            commandTimeout: _commandTimeout);
+                    Log.Information("Successfully released printer {PrinterName}", printerName);
+                    return true;
+                }
 
-                        return affectedRows > 0;
-                    }
-                    else
-                    {
-                        // Административное освобождение без проверки прав
-                        int affectedRows = conn.Execute(
-                            ReleasePrinterSimple,
-                            new { printerName = printerName.Trim() },
-                            commandTimeout: _commandTimeout);
-
-                        return affectedRows > 0;
-                    }
-                });
+                Log.Debug("No printer {PrinterName} was released (may not be reserved by this file)", printerName);
+                return false;
+            });
         }
 
         /// <summary>
-        /// Получает доступные принтеры, используя простую CRUD операцию.
-        /// Такие запросы идеально подходят для размещения прямо в коде.
+        /// Автоматически очищает зависшие резервирования.
+        /// Вызывается автоматически перед каждым резервированием.
+        /// </summary>
+        public int CleanupExpiredReservations()
+        {
+            DateTime cutoffTime = DateTime.UtcNow.AddMinutes(-_lockTimeoutMinutes);
+
+            return ExecuteWithRetry(conn =>
+            {
+                int cleaned = conn.Execute(
+                    CleanupExpiredReservationsSql,
+                    new { cutoffTime },
+                    commandTimeout: _commandTimeout);
+
+                if (cleaned > 0)
+                {
+                    Log.Information("Cleaned up {Count} expired printer reservations", cleaned);
+                }
+
+                return cleaned;
+            });
+        }
+
+        /// <summary>
+        /// Получает список всех доступных принтеров.
         /// </summary>
         public IEnumerable<PrinterState> GetAvailablePrinters()
         {
-            return ExecuteWithSerializableRetry(conn =>
+            const string sql = @"
+                SELECT id, printer_name, is_available, reserved_by_file, reserved_at, process_id, change_token
+                FROM printer_states
+                WHERE is_available = true
+                ORDER BY printer_name";
+
+            return ExecuteWithRetry(conn =>
             {
-                return conn.Query<PrinterState>(SelectAvailablePrinters, commandTimeout: _commandTimeout).ToList();
+                return conn.Query<PrinterState>(sql, commandTimeout: _commandTimeout).ToList();
             });
         }
+
+        #region Private Methods
 
         /// <summary>
-        /// Очищает зависшие резервирования, используя embedded SQL ресурс.
-        /// Поскольку это относительно сложная операция с бизнес-логикой,
-        /// выносим ее в отдельный SQL файл для лучшей читаемости.
+        /// Создает ODBC подключение к PostgreSQL.
         /// </summary>
-        public int CleanupExpiredReservations(TimeSpan maxAge)
-        {
-            DateTime cutoffTime = DateTime.UtcNow.Subtract(maxAge);
-
-            // Получаем SQL из embedded ресурса
-            string cleanupQuery = SqlResourceManager.CleanupExpiredReservations;
-
-            return ExecuteWithSerializableRetry(conn =>
-            {
-                return conn.Execute(cleanupQuery, new { cutoffTime }, commandTimeout: _commandTimeout);
-            });
-        }
-
-        #region Внутренние методы
-
         private OdbcConnection CreateConnection()
         {
-            OdbcConnection connection = new OdbcConnection(_connectionString);
+            var connection = new OdbcConnection(_connectionString);
             connection.Open();
             return connection;
         }
 
         /// <summary>
-        /// Внутренняя реализация резервирования, использующая простые CRUD операции
-        /// для чтения текущего состояния и оптимистичного обновления.
+        /// Сортирует принтеры по предпочтениям пользователя.
         /// </summary>
-        private bool ReservePrinterInternal(
-            IDbConnection conn,
-            IDbTransaction transaction,
-            string printerName,
-            string revitFileName)
-        {
-            // Читаем текущее состояние принтера с блокировкой
-            (Guid changeToken, bool isAvailable) = conn.QuerySingleOrDefault<(Guid changeToken, bool isAvailable)>(
-                ReadPrinterStateForUpdate,
-                new { printerName = printerName.Trim() },
-                transaction,
-                _commandTimeout);
-
-            if (changeToken == Guid.Empty || !isAvailable)
-            {
-                return false;
-            }
-
-            // Обновляем состояние принтера с оптимистичным блокированием
-            Process currentProcess = Process.GetCurrentProcess();
-            int affectedRows = conn.Execute(
-                UpdatePrinterWithOptimisticLock,
-                new
-                {
-                    printerName = printerName.Trim(),
-                    revitFileName,
-                    reservedAt = DateTime.UtcNow,
-                    processId = currentProcess.Id,
-                    newToken = Guid.NewGuid(),
-                    expectedToken = changeToken
-                },
-                transaction,
-                _commandTimeout);
-
-            return affectedRows > 0;
-        }
-
-        private static IEnumerable<PrinterState> OrderPrintersByPreference(IEnumerable<PrinterState> printers, string[] preferredPrinters)
+        private static List<PrinterState> OrderByPreference(
+            IEnumerable<PrinterState> printers,
+            string[] preferredPrinters)
         {
             if (preferredPrinters?.Length > 0)
             {
-                HashSet<string> preferredSet = new HashSet<string>(preferredPrinters
-                        .Where(p => !string.IsNullOrWhiteSpace(p))
-                        .Select(p => p.Trim()),
+                var preferredSet = new HashSet<string>(
+                    preferredPrinters.Where(p => !string.IsNullOrWhiteSpace(p)),
                     StringComparer.OrdinalIgnoreCase);
 
                 return printers
                     .OrderBy(p => preferredSet.Contains(p.PrinterName) ? 0 : 1)
-                    .ThenBy(p => p.PrinterName);
+                    .ThenBy(p => p.PrinterName)
+                    .ToList();
             }
 
-            return printers.OrderBy(p => p.PrinterName);
+            return printers.OrderBy(p => p.PrinterName).ToList();
         }
 
-        private T ExecuteWithSerializableRetry<T>(Func<OdbcConnection, T> operation)
+        /// <summary>
+        /// Выполняет операцию с retry логикой для обработки сбоев сериализации.
+        /// Использует exponential backoff для снижения нагрузки при конкурентном доступе.
+        /// </summary>
+        private T ExecuteWithRetry<T>(Func<OdbcConnection, T> operation)
         {
-            int attempt = 0;
-
-            while (attempt < _maxRetryAttempts)
+            for (int attempt = 1; attempt <= _maxRetryAttempts; attempt++)
             {
                 try
                 {
-                    using OdbcConnection connection = CreateConnection();
+                    using var connection = CreateConnection();
                     return operation(connection);
                 }
-                catch (OdbcException ex) when (IsSerializationFailure(ex) && attempt < _maxRetryAttempts - 1)
+                catch (OdbcException ex) when (IsSerializationFailure(ex) && attempt < _maxRetryAttempts)
                 {
-                    attempt++;
-                    int delay = (_baseRetryDelayMs * (int)Math.Pow(2, attempt)) + new Random().Next(0, 50);
+                    int delay = _baseRetryDelayMs * (int)Math.Pow(2, attempt - 1);
                     Thread.Sleep(delay);
+                    Log.Debug("Serialization failure on attempt {Attempt}, retrying in {Delay}ms", attempt, delay);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Database operation failed on attempt {Attempt}", attempt);
+                    throw;
                 }
             }
 
-            using OdbcConnection connection = CreateConnection();
-            return operation(connection);
+            // Финальная попытка без retry
+            using var finalConnection = CreateConnection();
+            return operation(finalConnection);
         }
 
+        /// <summary>
+        /// Определяет, является ли исключение ошибкой сериализации, которую можно повторить.
+        /// </summary>
         private static bool IsSerializationFailure(OdbcException ex)
         {
-            string[] serializationErrorCodes = { "40001", "40P01" };
-            return serializationErrorCodes.Any(code => ex.Message.Contains(code));
+            // PostgreSQL коды ошибок сериализации
+            string[] serializationErrorCodes = { "40001", "40P01", "25P02" };
+            return serializationErrorCodes.Any(code => ex.Message.Contains(code, StringComparison.OrdinalIgnoreCase));
         }
 
         #endregion
@@ -408,11 +482,9 @@ namespace Database
         {
             if (!_disposed)
             {
+                Log.Debug("PrinterService disposed");
                 _disposed = true;
             }
         }
-
-
-
     }
 }
