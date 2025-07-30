@@ -15,6 +15,7 @@ namespace RevitBIMTool.Utils.ExportPDF
         private static readonly int _lockTimeoutMinutes;
         private static readonly string _connectionString;
         private static readonly object _lockObject = new();
+        internal static string[] PrinterNames { get; set; }
 
         static PrinterStateManager()
         {
@@ -46,14 +47,18 @@ namespace RevitBIMTool.Utils.ExportPDF
                             lockTimeoutMinutes: _lockTimeoutMinutes);
 
                         // Инициализируем известные принтеры
-                        List<PrinterControl> availablePrinters = GetAvailablePrinterControls();
-                        string[] printerNames = [.. availablePrinters.Select(p => p.PrinterName)];
-                        _printerService.InitializePrinters(printerNames);
+                        List<PrinterControl> printerControls = GetPrinterControllers();
+                        PrinterNames = [.. printerControls.Where(p => p.IsPrinterInstalled()).Select(p => p.PrinterName)];
+                        Log.Information("PrinterStateManager initialized with {Count} printers", PrinterNames?.Length);
 
-                        Log.Information("PrinterStateManager initialized with {Count} printers", printerNames.Length);
+                        if (PrinterNames?.Length == 0)
+                        {
+                            Log.Warning("No installed printers");
+                        }
                     }
                 }
             }
+
             return _printerService;
         }
 
@@ -66,11 +71,10 @@ namespace RevitBIMTool.Utils.ExportPDF
 
             try
             {
-                List<PrinterControl> printerControls = GetAvailablePrinterControls();
-                string[] preferredPrinters = printerControls
+                List<PrinterControl> printerControls = GetPrinterControllers();
+                string[] preferredPrinters = [.. printerControls
                     .Where(p => p.IsPrinterInstalled())
-                    .Select(p => p.PrinterName)
-                    .ToArray();
+                    .Select(p => p.PrinterName)];
 
                 if (preferredPrinters.Length == 0)
                 {
@@ -192,7 +196,7 @@ namespace RevitBIMTool.Utils.ExportPDF
         /// <summary>
         /// Получает список всех доступных контроллеров принтеров в порядке приоритета.
         /// </summary>
-        private static List<PrinterControl> GetAvailablePrinterControls()
+        private static List<PrinterControl> GetPrinterControllers()
         {
             return
             [
