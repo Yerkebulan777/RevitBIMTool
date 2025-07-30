@@ -23,7 +23,7 @@ namespace Database
         private readonly int _lockTimeoutMinutes;
         private readonly ILogger _logger;
         private static readonly object _initLock = new object();
-        private static volatile bool _schemaInitialized = false;
+        private volatile bool _schemaInitialized = false;
         private bool _disposed = false;
 
         public PrinterService(
@@ -60,9 +60,9 @@ namespace Database
                     {
                         _logger.Information("Initializing database schema");
 
-                        ExecuteWithRetry(conn =>
+                        _ = ExecuteWithRetry(conn =>
                         {
-                            conn.Execute(PrinterSqlStore.CreatePrinterStatesTable, commandTimeout: _commandTimeout);
+                            _ = conn.Execute(PrinterSqlStore.CreatePrinterStatesTable, commandTimeout: _commandTimeout);
                             _logger.Information("Database schema initialized successfully");
                             return 0;
                         });
@@ -107,7 +107,9 @@ namespace Database
         public string TryReserveAnyAvailablePrinter(string revitFilePath, params string[] preferredPrinters)
         {
             if (string.IsNullOrWhiteSpace(revitFilePath))
+            {
                 throw new ArgumentException("Revit file path cannot be empty", nameof(revitFilePath));
+            }
 
             string revitFileName = Path.GetFileName(revitFilePath);
             _logger.Information($"Attempting to reserve printer for file: {revitFileName}");
@@ -123,10 +125,10 @@ namespace Database
 
             return ExecuteWithRetry(conn =>
             {
-                using var transaction = conn.BeginTransaction(IsolationLevel.Serializable);
+                using OdbcTransaction transaction = conn.BeginTransaction(IsolationLevel.Serializable);
                 try
                 {
-                    var availablePrinters = conn.Query<PrinterState>(
+                    List<PrinterState> availablePrinters = conn.Query<PrinterState>(
                         PrinterSqlStore.GetAvailablePrintersWithLock,
                         transaction: transaction,
                         commandTimeout: _commandTimeout).ToList();
@@ -140,9 +142,9 @@ namespace Database
 
                     _logger.Debug($"Found {availablePrinters.Count} available printers");
 
-                    var orderedPrinters = OrderByPreference(availablePrinters, preferredPrinters);
+                    List<PrinterState> orderedPrinters = OrderByPreference(availablePrinters, preferredPrinters);
 
-                    foreach (var printer in orderedPrinters)
+                    foreach (PrinterState printer in orderedPrinters)
                     {
                         _logger.Debug($"Attempting to reserve printer: {printer.PrinterName}");
 
@@ -190,7 +192,9 @@ namespace Database
         public bool TryReserveSpecificPrinter(string printerName, string revitFilePath)
         {
             if (string.IsNullOrWhiteSpace(printerName))
+            {
                 throw new ArgumentException("Printer name cannot be empty", nameof(printerName));
+            }
 
             string revitFileName = Path.GetFileName(revitFilePath);
             _logger.Information($"Attempting to reserve specific printer {printerName} for {revitFileName}");
@@ -199,10 +203,10 @@ namespace Database
 
             return ExecuteWithRetry(conn =>
             {
-                using var transaction = conn.BeginTransaction(IsolationLevel.Serializable);
+                using OdbcTransaction transaction = conn.BeginTransaction(IsolationLevel.Serializable);
                 try
                 {
-                    var printer = conn.QuerySingleOrDefault<PrinterState>(
+                    PrinterState printer = conn.QuerySingleOrDefault<PrinterState>(
                         "SELECT * FROM printer_states WHERE printer_name = @printerName FOR UPDATE",
                         new { printerName = printerName.Trim() },
                         transaction,
@@ -261,7 +265,9 @@ namespace Database
         public bool ReleasePrinter(string printerName, string revitFileName = null)
         {
             if (string.IsNullOrWhiteSpace(printerName))
+            {
                 throw new ArgumentException("Printer name cannot be empty", nameof(printerName));
+            }
 
             string fileInfo = revitFileName != null ? $" for file {revitFileName}" : " (administrative release)";
             _logger.Information($"Releasing printer {printerName}{fileInfo}");
@@ -321,17 +327,15 @@ namespace Database
 
             return ExecuteWithRetry(conn =>
             {
-                var printers = conn.Query<PrinterState>(PrinterSqlStore.GetAvailablePrinters, commandTimeout: _commandTimeout).ToList();
+                List<PrinterState> printers = conn.Query<PrinterState>(PrinterSqlStore.GetAvailablePrinters, commandTimeout: _commandTimeout).ToList();
                 _logger.Debug($"Found {printers.Count} available printers");
                 return printers;
             });
         }
 
-        #region Private Methods
-
         private OdbcConnection CreateConnection()
         {
-            var connection = new OdbcConnection(_connectionString);
+            OdbcConnection connection = new OdbcConnection(_connectionString);
             connection.Open();
             return connection;
         }
@@ -340,7 +344,7 @@ namespace Database
         {
             if (preferredPrinters?.Length > 0)
             {
-                var preferredSet = new HashSet<string>(
+                HashSet<string> preferredSet = new HashSet<string>(
                     preferredPrinters.Where(p => !string.IsNullOrWhiteSpace(p)),
                     StringComparer.OrdinalIgnoreCase);
 
@@ -359,7 +363,7 @@ namespace Database
             {
                 try
                 {
-                    using var connection = CreateConnection();
+                    using OdbcConnection connection = CreateConnection();
                     return operation(connection);
                 }
                 catch (OdbcException ex) when (IsSerializationFailure(ex) && attempt < _maxRetryAttempts)
@@ -375,19 +379,16 @@ namespace Database
                 }
             }
 
-            // Финальная попытка без retry
-            using var finalConnection = CreateConnection();
+            using OdbcConnection finalConnection = CreateConnection();
             return operation(finalConnection);
         }
 
         private static bool IsSerializationFailure(OdbcException ex)
         {
             string[] serializationErrorCodes = { "40001", "40P01", "25P02" };
-            return serializationErrorCodes.Any(code =>
-                ex.Message.IndexOf(code, StringComparison.OrdinalIgnoreCase) >= 0);
+            return serializationErrorCodes.Any(code => ex.Message.Contains(code));
         }
 
-        #endregion
 
         public void Dispose()
         {
@@ -397,5 +398,8 @@ namespace Database
                 _disposed = true;
             }
         }
+
+
+
     }
 }

@@ -28,7 +28,7 @@ namespace RevitBIMTool.Commands
                 }
 
                 // Проверка состояния БД
-                using DatabaseMonitor healthChecker = new(connectionString, connectionTimeout: 15);
+                using DatabaseMonitor healthChecker = new(connectionString);
                 string healthReport = healthChecker.CheckDatabaseHealth();
 
                 // Дополнительная проверка схемы через SchemaManager
