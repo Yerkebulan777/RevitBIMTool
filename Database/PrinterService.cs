@@ -62,7 +62,7 @@ namespace Database
 
                         _ = ExecuteWithRetry(conn =>
                         {
-                            _ = conn.Execute(PrinterSqlStore.CreatePrinterStatesTable, commandTimeout: _commandTimeout);
+                            conn.Execute(PrinterSqlStore.CreatePrinterStatesTable, commandTimeout: _commandTimeout);
                             _logger.Information("Database schema initialized successfully");
                             return 0;
                         });
