@@ -45,5 +45,6 @@ namespace Database.Models
         /// Предотвращает конфликты при одновременном доступе к принтеру
         /// </summary>
         public Guid ChangeToken { get; set; }
+
     }
 }
