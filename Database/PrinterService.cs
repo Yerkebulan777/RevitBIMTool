@@ -39,8 +39,8 @@ namespace Database
             _baseRetryDelayMs = baseRetryDelayMs;
             _lockTimeoutMinutes = lockTimeoutMinutes;
 
-            SimpleLoggerFactory.Initialize(LoggerLevel.Information);
-            _logger = SimpleLoggerFactory.CreateLogger<PrinterService>();
+            LoggerFactory.Initialize(LoggerLevel.Information);
+            _logger = LoggerFactory.CreateLogger<PrinterService>();
 
             _logger.Information($"PrinterService initialized with {lockTimeoutMinutes}min timeout");
 

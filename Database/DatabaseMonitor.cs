@@ -1,6 +1,5 @@
 ﻿using Dapper;
 using System;
-using System.Collections.Generic;
 using System.Data.Odbc;
 using System.Text;
 
@@ -13,17 +12,15 @@ namespace Database
     public sealed class DatabaseMonitor : IDisposable
     {
         private readonly string _connectionString;
-        private readonly int _connectionTimeout;
         private readonly ILogger _logger;
         private bool _disposed = false;
 
-        public DatabaseMonitor(string connectionString, int connectionTimeout = 10)
+        public DatabaseMonitor(string connectionString)
         {
             _connectionString = connectionString;
-            _connectionTimeout = connectionTimeout;
-            SimpleLoggerFactory.Initialize(LoggerLevel.Debug);
-            _logger = SimpleLoggerFactory.CreateLogger<DatabaseMonitor>();
-            _logger.Information($"DatabaseMonitor created with timeout {connectionTimeout}s");
+            LoggerFactory.Initialize(LoggerLevel.Debug);
+            _logger = LoggerFactory.CreateLogger<DatabaseMonitor>();
+            _logger.Information($"DatabaseMonitor created successfully");
         }
 
         /// <summary>
@@ -31,19 +28,21 @@ namespace Database
         /// </summary>
         public string CheckDatabaseHealth()
         {
-            var report = new StringBuilder();
+            StringBuilder report = new StringBuilder();
+
             bool isHealthy = true;
 
             _logger.Information("Starting database health check");
 
             try
             {
-                report.AppendLine("=== ПРОВЕРКА СОСТОЯНИЯ БАЗЫ ДАННЫХ ===\n");
+                _ = report.AppendLine("=== ПРОВЕРКА СОСТОЯНИЯ БАЗЫ ДАННЫХ ===\n");
 
-                using var connection = CreateConnection();
+                using OdbcConnection connection = CreateConnection();
 
                 // 1. Проверка базового соединения
                 bool connectionOk = TestBasicConnection(connection, report);
+
                 isHealthy &= connectionOk;
 
                 if (!connectionOk)
@@ -55,6 +54,7 @@ namespace Database
 
                 // 2. Проверка структуры таблиц
                 bool schemaOk = ValidateTableStructure(connection, report);
+
                 isHealthy &= schemaOk;
 
                 // 3. Получение статистики (только если схема в порядке)
@@ -65,23 +65,23 @@ namespace Database
 
                 // 4. Проверка производительности
                 double responseTime = MeasureResponseTime(connection);
-                report.AppendLine($"\n✓ Время отклика БД: {responseTime:F1} мс");
+                _ = report.AppendLine($"\n✓ Время отклика БД: {responseTime:F1} мс");
 
                 if (responseTime > 1000)
                 {
-                    report.AppendLine("⚠️  Медленный отклик базы данных (>1000 мс)");
+                    _ = report.AppendLine("⚠️  Медленный отклик базы данных (>1000 мс)");
                     _logger.Warning($"Slow database response: {responseTime:F1} ms");
                 }
 
                 // Итоговый статус
                 if (isHealthy)
                 {
-                    report.AppendLine("\n🎉 БАЗА ДАННЫХ РАБОТАЕТ КОРРЕКТНО");
+                    _ = report.AppendLine("\n🎉 БАЗА ДАННЫХ РАБОТАЕТ КОРРЕКТНО");
                     _logger.Information("Database health check completed successfully");
                 }
                 else
                 {
-                    report.AppendLine("\n⚠️  ОБНАРУЖЕНЫ ПРОБЛЕМЫ В РАБОТЕ БД");
+                    _ = report.AppendLine("\n⚠️  ОБНАРУЖЕНЫ ПРОБЛЕМЫ В РАБОТЕ БД");
                     _logger.Warning("Database health check found issues");
                 }
 
@@ -90,12 +90,12 @@ namespace Database
             catch (Exception ex)
             {
                 _logger.Error("Critical error during health check", ex);
-                report.AppendLine($"\n💥 КРИТИЧЕСКАЯ ОШИБКА");
-                report.AppendLine($"Исключение: {ex.Message}");
+                _ = report.AppendLine($"\n💥 КРИТИЧЕСКАЯ ОШИБКА");
+                _ = report.AppendLine($"Исключение: {ex.Message}");
 
                 if (ex.InnerException != null)
                 {
-                    report.AppendLine($"Внутренняя ошибка: {ex.InnerException.Message}");
+                    _ = report.AppendLine($"Внутренняя ошибка: {ex.InnerException.Message}");
                 }
 
                 return report.ToString();
@@ -109,8 +109,8 @@ namespace Database
         {
             try
             {
-                using var connection = CreateConnection();
-                var testResult = connection.QuerySingle<int>(PrinterSqlStore.TestConnection);
+                using OdbcConnection connection = CreateConnection();
+                int testResult = connection.QuerySingle<int>(PrinterSqlStore.TestConnection);
                 bool isAvailable = testResult == 1;
 
                 _logger.Debug($"Connection availability check: {isAvailable}");
@@ -126,7 +126,7 @@ namespace Database
         private OdbcConnection CreateConnection()
         {
             _logger.Debug("Creating database connection");
-            var connection = new OdbcConnection(_connectionString);
+            OdbcConnection connection = new OdbcConnection(_connectionString);
             connection.Open();
             return connection;
         }
@@ -137,26 +137,26 @@ namespace Database
             {
                 _logger.Debug("Testing basic connection");
 
-                var testResult = connection.QuerySingle<int>(PrinterSqlStore.TestConnection);
-                var dbVersion = connection.QuerySingleOrDefault<string>(PrinterSqlStore.GetDatabaseVersion);
+                int testResult = connection.QuerySingle<int>(PrinterSqlStore.TestConnection);
+                string dbVersion = connection.QuerySingleOrDefault<string>(PrinterSqlStore.GetDatabaseVersion);
 
-                report.AppendLine("✓ Соединение с БД установлено успешно");
-                report.AppendLine($"✓ Версия БД: {dbVersion ?? "Неизвестно"}");
+                _ = report.AppendLine("✓ Соединение с БД установлено успешно");
+                _ = report.AppendLine($"✓ Версия БД: {dbVersion ?? "Неизвестно"}");
 
                 // Получаем информацию о подключении
                 try
                 {
-                    var connectionInfo = GetConnectionInfo(connection);
+                    ConnectionInfo connectionInfo = GetConnectionInfo(connection);
                     if (connectionInfo != null)
                     {
-                        report.AppendLine($"✓ База данных: {connectionInfo.DatabaseName ?? "N/A"}");
-                        report.AppendLine($"✓ Пользователь: {connectionInfo.UserName ?? "N/A"}");
+                        _ = report.AppendLine($"✓ База данных: {connectionInfo.DatabaseName ?? "N/A"}");
+                        _ = report.AppendLine($"✓ Пользователь: {connectionInfo.UserName ?? "N/A"}");
                     }
                 }
                 catch (Exception ex)
                 {
                     _logger.Warning($"Failed to get connection info: {ex.Message}");
-                    report.AppendLine("⚠️  Не удалось получить детали подключения");
+                    _ = report.AppendLine("⚠️  Не удалось получить детали подключения");
                 }
 
                 _logger.Information("Basic connection test passed");
@@ -165,7 +165,7 @@ namespace Database
             catch (Exception ex)
             {
                 _logger.Error("Basic connection test failed", ex);
-                report.AppendLine($"✗ Ошибка соединения: {ex.Message}");
+                _ = report.AppendLine($"✗ Ошибка соединения: {ex.Message}");
                 return false;
             }
         }
@@ -176,32 +176,32 @@ namespace Database
             {
                 _logger.Debug("Validating table structure");
 
-                var tableExists = connection.QuerySingle<int>(PrinterSqlStore.CheckTableExists);
+                int tableExists = connection.QuerySingle<int>(PrinterSqlStore.CheckTableExists);
 
                 if (tableExists == 0)
                 {
                     _logger.Error("Table printer_states not found");
-                    report.AppendLine("✗ Таблица printer_states не найдена");
+                    _ = report.AppendLine("✗ Таблица printer_states не найдена");
                     return false;
                 }
 
-                var columnCount = connection.QuerySingle<int>(PrinterSqlStore.ValidateTableStructure);
+                int columnCount = connection.QuerySingle<int>(PrinterSqlStore.ValidateTableStructure);
 
                 if (columnCount < 6)
                 {
                     _logger.Error($"Incomplete table structure: {columnCount}/6 columns found");
-                    report.AppendLine($"✗ Неполная структура таблицы (найдено {columnCount} из 6 столбцов)");
+                    _ = report.AppendLine($"✗ Неполная структура таблицы (найдено {columnCount} из 6 столбцов)");
                     return false;
                 }
 
                 _logger.Information("Table structure validation passed");
-                report.AppendLine("✓ Структура таблицы принтеров корректна");
+                _ = report.AppendLine("✓ Структура таблицы принтеров корректна");
                 return true;
             }
             catch (Exception ex)
             {
                 _logger.Error("Table structure validation failed", ex);
-                report.AppendLine($"✗ Ошибка валидации схемы: {ex.Message}");
+                _ = report.AppendLine($"✗ Ошибка валидации схемы: {ex.Message}");
                 return false;
             }
         }
@@ -212,31 +212,31 @@ namespace Database
             {
                 _logger.Debug("Collecting database statistics");
 
-                var stats = GetPrinterStatistics(connection);
+                PrinterStats stats = GetPrinterStatistics(connection);
 
                 if (stats != null)
                 {
-                    report.AppendLine("\n=== СТАТИСТИКА ПРИНТЕРОВ ===");
-                    report.AppendLine($"✓ Всего принтеров: {stats.TotalPrinters}");
-                    report.AppendLine($"✓ Доступно: {stats.AvailablePrinters}");
-                    report.AppendLine($"✓ Зарезервировано: {stats.ReservedPrinters}");
+                    _ = report.AppendLine("\n=== СТАТИСТИКА ПРИНТЕРОВ ===");
+                    _ = report.AppendLine($"✓ Всего принтеров: {stats.TotalPrinters}");
+                    _ = report.AppendLine($"✓ Доступно: {stats.AvailablePrinters}");
+                    _ = report.AppendLine($"✓ Зарезервировано: {stats.ReservedPrinters}");
 
                     if (stats.AvgReservationTimeMinutes > 0)
                     {
-                        report.AppendLine($"✓ Среднее время резервирования: {stats.AvgReservationTimeMinutes:F1} мин");
+                        _ = report.AppendLine($"✓ Среднее время резервирования: {stats.AvgReservationTimeMinutes:F1} мин");
                     }
 
                     _logger.Information("Database statistics collected successfully");
                 }
                 else
                 {
-                    report.AppendLine("⚠️  Статистика недоступна");
+                    _ = report.AppendLine("⚠️  Статистика недоступна");
                 }
             }
             catch (Exception ex)
             {
                 _logger.Warning($"Failed to collect database statistics: {ex.Message}");
-                report.AppendLine($"⚠️  Не удалось получить статистику: {ex.Message}");
+                _ = report.AppendLine($"⚠️  Не удалось получить статистику: {ex.Message}");
             }
         }
 
@@ -244,8 +244,8 @@ namespace Database
         {
             _logger.Debug("Measuring database response time");
 
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            connection.QuerySingle<int>(PrinterSqlStore.TestConnection);
+            System.Diagnostics.Stopwatch stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            _ = connection.QuerySingle<int>(PrinterSqlStore.TestConnection);
             stopwatch.Stop();
 
             double responseTime = stopwatch.Elapsed.TotalMilliseconds;
@@ -259,8 +259,8 @@ namespace Database
         {
             try
             {
-                var dbName = connection.QuerySingleOrDefault<string>("SELECT current_database()");
-                var userName = connection.QuerySingleOrDefault<string>("SELECT current_user");
+                string dbName = connection.QuerySingleOrDefault<string>("SELECT current_database()");
+                string userName = connection.QuerySingleOrDefault<string>("SELECT current_user");
 
                 return new ConnectionInfo
                 {
@@ -284,14 +284,14 @@ namespace Database
             try
             {
                 // Простые отдельные запросы вместо сложного объединения
-                var totalPrinters = connection.QuerySingle<int>("SELECT COUNT(*) FROM printer_states");
-                var availablePrinters = connection.QuerySingle<int>("SELECT COUNT(*) FROM printer_states WHERE is_available = true");
-                var reservedPrinters = connection.QuerySingle<int>("SELECT COUNT(*) FROM printer_states WHERE is_available = false");
+                int totalPrinters = connection.QuerySingle<int>("SELECT COUNT(*) FROM printer_states");
+                int availablePrinters = connection.QuerySingle<int>("SELECT COUNT(*) FROM printer_states WHERE is_available = true");
+                int reservedPrinters = connection.QuerySingle<int>("SELECT COUNT(*) FROM printer_states WHERE is_available = false");
 
                 double avgTime = 0;
                 try
                 {
-                    var avgTimeResult = connection.QuerySingleOrDefault<double?>(
+                    double? avgTimeResult = connection.QuerySingleOrDefault<double?>(
                         @"SELECT AVG(EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - reserved_at))/60) 
                           FROM printer_states 
                           WHERE reserved_at IS NOT NULL");

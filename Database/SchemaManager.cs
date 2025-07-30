@@ -120,7 +120,7 @@ namespace Database
 
             foreach (string constraint in constraints)
             {
-                _ = connection.Execute(constraint, transaction: transaction, commandTimeout: _commandTimeout);
+                connection.Execute(constraint, transaction: transaction, commandTimeout: _commandTimeout);
             }
         }
 

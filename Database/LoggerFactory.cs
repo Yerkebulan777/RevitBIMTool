@@ -5,7 +5,7 @@ namespace Database
     /// <summary>
     /// Фабрика для создания простых логгеров.
     /// </summary>
-    public static class SimpleLoggerFactory
+    public static class LoggerFactory
     {
         private static LoggerLevel _defaultLevel = LoggerLevel.Information;
 
