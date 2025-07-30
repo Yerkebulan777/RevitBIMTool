@@ -44,7 +44,7 @@ namespace Database.Models
         /// Токен изменения для оптимистичного блокирования
         /// Предотвращает конфликты при одновременном доступе к принтеру
         /// </summary>
-        public Guid ChangeToken { get; set; }
+        public Guid VersionToken { get; set; }
 
     }
 }

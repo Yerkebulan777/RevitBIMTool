@@ -158,7 +158,7 @@ namespace Database
                                 revitFileName,
                                 reservedAt = DateTime.UtcNow,
                                 processId,
-                                expectedToken = printer.ChangeToken
+                                expectedToken = printer.VersionToken
                             },
                             transaction,
                             _commandTimeout);
@@ -237,7 +237,7 @@ namespace Database
                             revitFileName,
                             reservedAt = DateTime.UtcNow,
                             processId,
-                            expectedToken = printer.ChangeToken
+                            expectedToken = printer.VersionToken
                         },
                         transaction,
                         _commandTimeout);
