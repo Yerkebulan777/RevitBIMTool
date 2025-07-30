@@ -89,7 +89,7 @@ namespace Database
                     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
                 );";
 
-            _ = connection.Execute(createTableSql, transaction: transaction, commandTimeout: _commandTimeout);
+            connection.Execute(createTableSql, transaction: transaction, commandTimeout: _commandTimeout);
 
             // Добавляем ограничения отдельными командами для лучшей читаемости
             AddTableConstraints(connection, transaction);
