@@ -11,6 +11,7 @@ namespace RevitBIMTool.Commands
     [Transaction(TransactionMode.Manual)]
     public class DatabaseTestCommand : IExternalCommand, IExternalCommandAvailability
     {
+
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
             Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;

@@ -48,7 +48,7 @@ namespace Database
                 if (!connectionOk)
                 {
                     _logger.Error("Database connection failed");
-                    report.AppendLine("\n❌ СОЕДИНЕНИЕ С БАЗОЙ ДАННЫХ НЕДОСТУПНО");
+                    _ = report.AppendLine("\n❌ СОЕДИНЕНИЕ С БАЗОЙ ДАННЫХ НЕДОСТУПНО");
                     return report.ToString();
                 }
 
@@ -245,7 +245,7 @@ namespace Database
             _logger.Debug("Measuring database response time");
 
             System.Diagnostics.Stopwatch stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            connection.QuerySingle<int>(PrinterSqlStore.TestConnection);
+            _ = connection.QuerySingle<int>(PrinterSqlStore.TestConnection);
             stopwatch.Stop();
 
             double responseTime = stopwatch.Elapsed.TotalMilliseconds;
@@ -288,6 +288,7 @@ namespace Database
                 int reservedPrinters = connection.QuerySingle<int>("SELECT COUNT(*) FROM printer_states WHERE is_available = false");
 
                 double avgTime = 0;
+
                 try
                 {
                     double? avgTimeResult = connection.QuerySingleOrDefault<double?>(
