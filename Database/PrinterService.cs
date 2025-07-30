@@ -126,10 +126,12 @@ namespace Database
             return ExecuteWithRetry(conn =>
             {
                 using OdbcTransaction transaction = conn.BeginTransaction(IsolationLevel.Serializable);
+
                 try
                 {
+                    string sql = PrinterSqlStore.GetAvailablePrintersWithLock;
                     List<PrinterState> availablePrinters = conn.Query<PrinterState>(
-                        PrinterSqlStore.GetAvailablePrintersWithLock,
+                        sql: sql,
                         transaction: transaction,
                         commandTimeout: _commandTimeout).ToList();
 
@@ -183,6 +185,7 @@ namespace Database
                     _logger.Error($"Error during printer reservation for {revitFileName}", ex);
                     throw;
                 }
+
             });
         }
 
@@ -368,7 +371,7 @@ namespace Database
                 }
                 catch (OdbcException ex) when (IsSerializationFailure(ex) && attempt < _maxRetryAttempts)
                 {
-                    int delay = _baseRetryDelayMs * (int)Math.Pow(2, attempt - 1);
+                    int delay = _baseRetryDelayMs * (int)Math.Pow(2, attempt);
                     _logger.Warning($"Serialization failure on attempt {attempt}, retrying in {delay}ms");
                     Thread.Sleep(delay);
                 }
@@ -379,9 +382,10 @@ namespace Database
                 }
             }
 
-            using OdbcConnection finalConnection = CreateConnection();
-            return operation(finalConnection);
+            throw new InvalidOperationException("Maximum retry attempts exceeded for database operation");
+
         }
+
 
         private static bool IsSerializationFailure(OdbcException ex)
         {
