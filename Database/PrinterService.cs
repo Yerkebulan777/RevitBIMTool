@@ -356,14 +356,11 @@ namespace Database
             return affectedRows > 0;
         }
 
-        private static IEnumerable<PrinterState> OrderPrintersByPreference(
-            IEnumerable<PrinterState> printers,
-            string[] preferredPrinters)
+        private static IEnumerable<PrinterState> OrderPrintersByPreference(IEnumerable<PrinterState> printers, string[] preferredPrinters)
         {
             if (preferredPrinters?.Length > 0)
             {
-                HashSet<string> preferredSet = new HashSet<string>(
-                    preferredPrinters
+                HashSet<string> preferredSet = new HashSet<string>(preferredPrinters
                         .Where(p => !string.IsNullOrWhiteSpace(p))
                         .Select(p => p.Trim()),
                     StringComparer.OrdinalIgnoreCase);
