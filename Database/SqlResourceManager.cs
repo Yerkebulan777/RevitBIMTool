@@ -28,7 +28,7 @@ namespace Database
         /// для хранения состояний принтеров. Выполняется один раз при инициализации
         /// сервиса и использует универсальный SQL синтаксис для максимальной совместимости.
         /// </summary>
-        public static string CreatePrinterStatesTable => SqlQueries.CreatePrinterStatesTable;
+        public static string CreatePrinterStatesTable => PrinterSqlStore.CreatePrinterStatesTable;
 
         /// <summary>
         /// Получает SQL запрос для выборки доступных принтеров с блокировкой.
@@ -42,7 +42,7 @@ namespace Database
         /// выбирает место, оно временно блокируется для других покупателей, пока первый
         /// не завершит покупку или не отменит бронирование.
         /// </summary>
-        public static string GetAvailablePrintersWithLock => SqlQueries.GetAvailablePrintersWithLock;
+        public static string GetAvailablePrintersWithLock => PrinterSqlStore.GetAvailablePrintersWithLock;
 
         /// <summary>
         /// Получает SQL запрос для очистки зависших резервирований.
@@ -56,7 +56,7 @@ namespace Database
         /// Это похоже на то, как работают парковочные счетчики - если время истекло,
         /// место автоматически становится доступным для других водителей.
         /// </summary>
-        public static string CleanupExpiredReservations => SqlQueries.CleanupExpiredReservations;
+        public static string CleanupExpiredReservations => PrinterSqlStore.CleanupExpiredReservations;
 
         /// <summary>
         /// Универсальный метод для получения SQL запроса по логическому имени.
@@ -76,14 +76,14 @@ namespace Database
             // Это обеспечивает плавный переход от embedded resources к константам
             return resourcePath switch
             {
-                "Tables.CreatePrinterStatesTable" => SqlQueries.CreatePrinterStatesTable,
-                "Queries.GetAvailablePrintersWithLock" => SqlQueries.GetAvailablePrintersWithLock,
-                "Queries.CleanupExpiredReservations" => SqlQueries.CleanupExpiredReservations,
+                "Tables.CreatePrinterStatesTable" => PrinterSqlStore.CreatePrinterStatesTable,
+                "Queries.GetAvailablePrintersWithLock" => PrinterSqlStore.GetAvailablePrintersWithLock,
+                "Queries.CleanupExpiredReservations" => PrinterSqlStore.CleanupExpiredReservations,
 
                 // Добавляем поддержку дополнительных запросов для расширяемости
-                "Queries.SelectAvailablePrinters" => SqlQueries.SelectAvailablePrinters,
-                "Queries.ReadPrinterStateForUpdate" => SqlQueries.ReadPrinterStateForUpdate,
-                "DDL.CreatePerformanceIndexes" => SqlQueries.CreatePerformanceIndexes,
+                "Queries.SelectAvailablePrinters" => PrinterSqlStore.SelectAvailablePrinters,
+                "Queries.ReadPrinterStateForUpdate" => PrinterSqlStore.ReadPrinterStateForUpdate,
+                "DDL.CreatePerformanceIndexes" => PrinterSqlStore.CreatePerformanceIndexes,
 
                 // Для неизвестных ресурсов возвращаем понятную ошибку
                 _ => throw new ArgumentException($"SQL ресурс '{resourcePath}' не найден. " +

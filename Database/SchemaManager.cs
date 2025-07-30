@@ -40,16 +40,11 @@ namespace Database
             connection.Open();
 
             using OdbcTransaction transaction = connection.BeginTransaction();
+
             try
             {
                 // Создаем основную таблицу принтеров
                 CreatePrinterStatesTable(connection, transaction);
-
-                // Создаем индексы для оптимизации производительности
-                CreatePerformanceIndexes(connection, transaction);
-
-                // Настраиваем права доступа (если требуется)
-                ConfigureTablePermissions(connection, transaction);
 
                 transaction.Commit();
 

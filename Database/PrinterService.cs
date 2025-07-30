@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using Database.Models;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -133,7 +134,7 @@ namespace Database
             _lockTimeoutMinutes = lockTimeoutMinutes;
 
             EnsureSchemaInitialized();
-            Log.Information("PrinterService initialized with {TimeoutMinutes}min cleanup timeout", _lockTimeoutMinutes);
+            Log.Information("printerService initialized with {TimeoutMinutes}min cleanup timeout", _lockTimeoutMinutes);
         }
 
         /// <summary>
@@ -482,7 +483,7 @@ namespace Database
         {
             if (!_disposed)
             {
-                Log.Debug("PrinterService disposed");
+                Log.Debug("printerService disposed");
                 _disposed = true;
             }
         }

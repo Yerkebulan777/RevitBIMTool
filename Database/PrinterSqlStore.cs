@@ -5,7 +5,7 @@ namespace Database
     /// <summary>
     /// Хранилище всех SQL запросов для системы управления принтерами.
     /// </summary>
-    public static class SqlQueries
+    public static class PrinterSqlStore
     {
         #region DDL операции - создание структуры базы данных
 

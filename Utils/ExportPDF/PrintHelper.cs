@@ -48,6 +48,7 @@ internal static class PrintHelper
                     {
                         IsColorEnabled = сolorEnabled
                     };
+
                     model.SetSheetName(doc, revitFileName, "pdf");
                 }
 
