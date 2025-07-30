@@ -327,18 +327,21 @@ namespace Database
         }
 
         // Вспомогательные классы
-        private class ConnectionInfo
+        private sealed class ConnectionInfo
         {
             public string DatabaseName { get; set; }
             public string UserName { get; set; }
         }
 
-        private class PrinterStats
+        private sealed class PrinterStats
         {
             public int TotalPrinters { get; set; }
             public int AvailablePrinters { get; set; }
             public int ReservedPrinters { get; set; }
             public double AvgReservationTimeMinutes { get; set; }
         }
+
+
+
     }
 }
