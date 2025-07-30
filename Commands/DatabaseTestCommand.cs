@@ -72,6 +72,7 @@ namespace RevitBIMTool.Commands
             }
         }
 
+
         private static void ShowResult(string reportText, bool isSuccess)
         {
             string title = isSuccess ? "База данных принтеров - ОК ✓" : "База данных принтеров - ПРОБЛЕМЫ ⚠️";
@@ -89,11 +90,11 @@ namespace RevitBIMTool.Commands
             Clipboard.SetText(reportText);
         }
 
+
         public bool IsCommandAvailable(UIApplication applicationData, CategorySet selectedCategories)
         {
             return true; // Команда всегда доступна для административных целей
         }
-
 
 
     }
