@@ -123,6 +123,9 @@ namespace Database
             }
         }
 
+        /// <summary>
+        /// Создает новое подключение к базе данных.
+        /// </summary>
         private OdbcConnection CreateConnection()
         {
             _logger.Debug("Creating database connection");
@@ -130,6 +133,7 @@ namespace Database
             connection.Open();
             return connection;
         }
+
 
         private bool TestBasicConnection(OdbcConnection connection, StringBuilder report)
         {
