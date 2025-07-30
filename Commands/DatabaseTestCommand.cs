@@ -35,9 +35,8 @@ namespace RevitBIMTool.Commands
                 {
                     // Дополнительная проверка схемы через SchemaManager
                     using SchemaManager schemaManager = new(connectionString);
-                    bool isSchemaValid = schemaManager.ValidateSchema();
 
-                    if (isSchemaValid)
+                    if (schemaManager.ValidateSchema())
                     {
                         healthReport += "\n✓ Дополнительная валидация схемы пройдена успешно";
                     }
@@ -55,6 +54,7 @@ namespace RevitBIMTool.Commands
                 bool isSuccess = healthReport.Contains("РАБОТАЕТ КОРРЕКТНО");
 
                 ShowResult(healthReport, isSuccess);
+
                 return isSuccess ? Result.Succeeded : Result.Failed;
             }
             catch (Exception ex)
