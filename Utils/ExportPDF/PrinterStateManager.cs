@@ -1,20 +1,15 @@
-﻿
-using Database;
-using RevitBIMTool.Utils.Common;
+﻿using RevitBIMTool.Utils.Common;
 using RevitBIMTool.Utils.ExportPDF.Printers;
 using RevitBIMTool.Utils.SystemHelpers;
 using Serilog;
-using System;
-using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
-using System.Linq;
 
 namespace RevitBIMTool.Utils.ExportPDF
 {
     internal static class PrinterStateManager
     {
-        private static readonly object _lockObject = new object();
+        private static readonly object _lockObject = new();
         private static SafePostgreSqlPrinterService _printerService;
         private static readonly string _connectionString;
         private static readonly int _lockTimeoutMinutes;
@@ -49,7 +44,9 @@ namespace RevitBIMTool.Utils.ExportPDF
         private static SafePostgreSqlPrinterService GetDatabaseService()
         {
             if (!_useDatabaseProvider)
+            {
                 return null;
+            }
 
             if (_printerService == null)
             {
@@ -84,7 +81,6 @@ namespace RevitBIMTool.Utils.ExportPDF
         /// </summary>
         public static bool TryGetPrinter(string revitFilePath, out PrinterControl availablePrinter)
         {
-            availablePrinter = null;
 
             // Сначала пробуем БД, если настроена
             if (_useDatabaseProvider && TryGetPrinterFromDatabase(revitFilePath, out availablePrinter))
@@ -107,7 +103,9 @@ namespace RevitBIMTool.Utils.ExportPDF
             {
                 SafePostgreSqlPrinterService dbService = GetDatabaseService();
                 if (dbService == null)
+                {
                     return false;
+                }
 
                 // Очищаем зависшие блокировки
                 CleanupExpiredReservationsInDatabase(dbService);
@@ -259,15 +257,14 @@ namespace RevitBIMTool.Utils.ExportPDF
         /// </summary>
         public static List<PrinterControl> GetPrinters()
         {
-            return new List<PrinterControl>
-            {
-                new BioPdfPrinter(),
+            return
+            [
                 new Pdf24Printer(),
+                new BioPdfPrinter(),
                 new CreatorPrinter(),
                 new ClawPdfPrinter(),
-                new AdobePdfPrinter(),
                 new InternalPrinter(),
-            };
+            ];
         }
 
         /// <summary>
@@ -276,7 +273,9 @@ namespace RevitBIMTool.Utils.ExportPDF
         public static bool IsPrinterAvailable(PrinterControl printer)
         {
             if (!printer.IsPrinterInstalled())
+            {
                 return false;
+            }
 
             try
             {
