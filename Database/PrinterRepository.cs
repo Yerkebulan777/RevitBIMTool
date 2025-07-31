@@ -21,11 +21,13 @@ namespace Database
         public IEnumerable<PrinterInfo> GetActivePrinters()
         {
             using IDbConnection connection = new OdbcConnection(_connectionString);
+
             connection.Open();
 
             using IDbCommand command = CreateCommand(PrinterSqlStore.GetActivePrinters, connection);
 
             List<PrinterInfo> printers = [];
+
             using (IDataReader reader = command.ExecuteReader())
             {
                 while (reader.Read())
@@ -41,6 +43,7 @@ namespace Database
         public void UpdatePrinterStatus(int printerId, PrinterInfo state)
         {
             using IDbConnection connection = new OdbcConnection(_connectionString);
+
             connection.Open();
 
             using IDbTransaction transaction = connection.BeginTransaction();
@@ -49,7 +52,7 @@ namespace Database
                 using IDbCommand command = CreateCommand(PrinterSqlStore.UpdatePrinterStatus, connection);
                 command.Transaction = transaction;
                 AddParameter(command, 1, printerId);
-                _ = command.ExecuteNonQuery();
+                command.ExecuteNonQuery();
                 transaction.Commit();
             }
             catch
@@ -98,5 +101,7 @@ namespace Database
             printer.LastUpdate = reader.GetDateTime(3);
             printer.JobCount = reader.GetInt32(4);
         }
+
+
     }
 }
