@@ -22,13 +22,13 @@ namespace Database.Services
         private bool _disposed = false;
 
         public PrinterService(
-            string connectionString,
+            string connection,
             int commandTimeout = 30,
             int maxRetryAttempts = 3,
             int baseRetryDelayMs = 100,
             int lockTimeoutMinutes = 30)
         {
-            _connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
+            _connectionString = connection;
             _commandTimeout = commandTimeout;
             _maxRetryAttempts = maxRetryAttempts;
             _baseRetryDelayMs = baseRetryDelayMs;
@@ -44,13 +44,12 @@ namespace Database.Services
         /// Пытается зарезервировать любой доступный принтер из списка.
         /// Использует оптимистичное блокирование для предотвращения race conditions.
         /// </summary>
-        /// <param name="revitFileName">Имя файла Revit для отслеживания</param>
-        /// <param name="availablePrinterNames">Массив имен доступных принтеров</param>
-        /// <returns>Имя зарезервированного принтера или null если все заняты</returns>
         public string TryReserveAvailablePrinter(string revitFileName, string[] availablePrinterNames)
         {
             if (string.IsNullOrEmpty(revitFileName))
+            {
                 throw new ArgumentException("Revit file name cannot be null or empty", nameof(revitFileName));
+            }
 
             if (availablePrinterNames?.Length == 0)
             {
@@ -62,8 +61,8 @@ namespace Database.Services
 
             return ExecuteWithRetry(() =>
             {
-                using var connection = CreateConnection();
-                using var transaction = BeginSerializableTransaction(connection);
+                using OdbcConnection connection = CreateConnection();
+                using OdbcTransaction transaction = BeginSerializableTransaction(connection);
 
                 try
                 {
@@ -71,7 +70,7 @@ namespace Database.Services
                     InitializePrintersIfNeeded(connection, transaction, availablePrinterNames);
 
                     // Получаем доступные принтеры с блокировкой
-                    var availablePrinters = GetAvailablePrintersWithLock(connection, transaction, availablePrinterNames);
+                    IEnumerable<PrinterInfo> availablePrinters = GetAvailablePrintersWithLock(connection, transaction, availablePrinterNames);
 
                     if (!availablePrinters.Any())
                     {
@@ -81,7 +80,7 @@ namespace Database.Services
                     }
 
                     // Резервируем первый доступный принтер
-                    var selectedPrinter = availablePrinters.First();
+                    PrinterInfo selectedPrinter = availablePrinters.First();
 
                     if (ReservePrinterInternal(connection, transaction, selectedPrinter.PrinterName,
                         revitFileName, selectedPrinter.VersionToken))
@@ -111,17 +110,21 @@ namespace Database.Services
         public bool TryReserveSpecificPrinter(string printerName, string revitFileName)
         {
             if (string.IsNullOrEmpty(printerName))
+            {
                 throw new ArgumentException("Printer name cannot be null or empty", nameof(printerName));
+            }
 
             if (string.IsNullOrEmpty(revitFileName))
+            {
                 throw new ArgumentException("Revit file name cannot be null or empty", nameof(revitFileName));
+            }
 
             _logger.Information($"Attempting to reserve specific printer {printerName} for file: {revitFileName}");
 
             return ExecuteWithRetry(() =>
             {
-                using var connection = CreateConnection();
-                using var transaction = BeginSerializableTransaction(connection);
+                using OdbcConnection connection = CreateConnection();
+                using OdbcTransaction transaction = BeginSerializableTransaction(connection);
 
                 try
                 {
@@ -129,7 +132,7 @@ namespace Database.Services
                     InitializePrintersIfNeeded(connection, transaction, new[] { printerName });
 
                     // Получаем информацию о принтере с блокировкой
-                    var printerInfo = GetPrinterInfoWithLock(connection, transaction, printerName);
+                    PrinterInfo printerInfo = GetPrinterInfoWithLock(connection, transaction, printerName);
 
                     if (printerInfo == null)
                     {
@@ -174,15 +177,17 @@ namespace Database.Services
         public bool TryReleasePrinter(string printerName, string revitFileName = null)
         {
             if (string.IsNullOrEmpty(printerName))
+            {
                 throw new ArgumentException("Printer name cannot be null or empty", nameof(printerName));
+            }
 
             _logger.Information($"Attempting to release printer {printerName}" +
                 (revitFileName != null ? $" for file: {revitFileName}" : " (forced)"));
 
             return ExecuteWithRetry(() =>
             {
-                using var connection = CreateConnection();
-                using var transaction = BeginSerializableTransaction(connection);
+                using OdbcConnection connection = CreateConnection();
+                using OdbcTransaction transaction = BeginSerializableTransaction(connection);
 
                 try
                 {
@@ -224,8 +229,8 @@ namespace Database.Services
 
             return ExecuteWithRetry(() =>
             {
-                using var connection = CreateConnection();
-                using var transaction = BeginSerializableTransaction(connection);
+                using OdbcConnection connection = CreateConnection();
+                using OdbcTransaction transaction = BeginSerializableTransaction(connection);
 
                 try
                 {
@@ -265,7 +270,7 @@ namespace Database.Services
             {
                 try
                 {
-                    connection.Execute(
+                    _ = connection.Execute(
                         PrinterSqlStore.InitializePrinter,
                         new { printerName },
                         transaction,
@@ -288,7 +293,7 @@ namespace Database.Services
             string inClause = string.Join(",", printerNames.Select((_, i) => $"@p{i}"));
             string sql = PrinterSqlStore.GetAvailablePrintersWithLock.Replace("ORDER BY printer_name", $"AND printer_name IN ({inClause}) ORDER BY printer_name");
 
-            var parameters = new DynamicParameters();
+            DynamicParameters parameters = new();
             for (int i = 0; i < printerNames.Length; i++)
             {
                 parameters.Add($"@p{i}", printerNames[i]);
@@ -379,7 +384,7 @@ namespace Database.Services
         /// </summary>
         private OdbcConnection CreateConnection()
         {
-            var connection = new OdbcConnection(_connectionString);
+            OdbcConnection connection = new(_connectionString);
             connection.Open();
             return connection;
         }

@@ -65,7 +65,7 @@ namespace Database
                 command.Transaction = transaction;
                 AddParameter(command, 1, (int)state.State);
                 AddParameter(command, 2, printerId);
-                command.ExecuteNonQuery();
+                _ = command.ExecuteNonQuery();
                 transaction.Commit();
             }
             catch

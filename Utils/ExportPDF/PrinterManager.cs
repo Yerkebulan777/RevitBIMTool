@@ -13,25 +13,26 @@ namespace RevitBIMTool.Utils.ExportPDF
         private static readonly string сonnectionString;
         private static readonly List<PrinterControl> printerControllers;
         private static readonly Lazy<PrinterService> printerServiceInstance;
-        public static string[] PrinterNames { get; set; }
 
         static PrinterManager()
         {
             сonnectionString = ConfigurationManager.ConnectionStrings["PrinterDatabase"]?.ConnectionString;
 
-            Log.Warning("Connection string: {ConnectionString}", сonnectionString);
-
-            if (!string.IsNullOrEmpty(сonnectionString))
+            if (string.IsNullOrWhiteSpace(сonnectionString))
             {
-                CleanupExpiredReservations();
-
-                printerControllers = GetPrinterControllers();
-
-                printerServiceInstance = new Lazy<PrinterService>(InitializePrinterService, true);
+                throw new ArgumentNullException(nameof(сonnectionString));
             }
+
+            CleanupExpiredReservations();
+
+            printerControllers = GetPrinterControllers();
+
+            printerServiceInstance = new Lazy<PrinterService>(InitializePrinterService, true);
         }
 
-
+        /// <summary>
+        /// Инициализирует сервис принтеров.
+        /// </summary>
         private static PrinterService InitializePrinterService()
         {
             int commandTimeout = GetConfigInt("DatabaseCommandTimeout", 60);
@@ -40,11 +41,11 @@ namespace RevitBIMTool.Utils.ExportPDF
             int retryDelay = GetConfigInt("PrinterReservationRetryDelayMs", 100);
 
             return new PrinterService(
-                    connectionString: сonnectionString,
-                    commandTimeout: commandTimeout,
-                    maxRetryAttempts: maxRetries,
-                    baseRetryDelayMs: retryDelay,
-                    lockTimeoutMinutes: lockTimeoutMin);
+                connection: сonnectionString,
+                commandTimeout: commandTimeout,
+                maxRetryAttempts: maxRetries,
+                baseRetryDelayMs: retryDelay,
+                lockTimeoutMinutes: lockTimeoutMin);
         }
 
         /// <summary>
@@ -52,15 +53,7 @@ namespace RevitBIMTool.Utils.ExportPDF
         /// </summary>
         private static PrinterService GetPrinterService()
         {
-            PrinterNames = [.. printerControllers.Where(p => p.IsPrinterInstalled()).Select(p => p.PrinterName)];
-            Log.Information("Total printers found: {Count}", PrinterNames?.Length ?? 0);
-
-            if (PrinterNames.Length == 0)
-            {
-                Log.Warning("No installed printerControllers");
-            }
-
-            // Value обеспечивает потокобезопасную инициализацию
+            // Обеспечивает потокобезопасную инициализацию
             return printerServiceInstance.Value;
         }
 
@@ -75,9 +68,13 @@ namespace RevitBIMTool.Utils.ExportPDF
             {
                 PrinterService printerService = GetPrinterService();
 
-                string reservedPrinterName = printerService.TryReserveAvailablePrinter(revitFilePath, PrinterNames);
+                string[] printerNames = [.. printerControllers.Where(p => p.IsPrinterInstalled()).Select(p => p.PrinterName)];
 
-                if (!string.IsNullOrEmpty(reservedPrinterName))
+                string reservedPrinterName = printerService.TryReserveAvailablePrinter(revitFilePath, printerNames);
+
+                Log.Information("Total printers found: {Count}", printerNames?.Length ?? 0);
+
+                if (!string.IsNullOrWhiteSpace(reservedPrinterName))
                 {
                     availablePrinter = printerControllers.FirstOrDefault(p => string.Equals(p.PrinterName, reservedPrinterName));
 
@@ -155,7 +152,7 @@ namespace RevitBIMTool.Utils.ExportPDF
         /// <summary>
         /// Очищает зависшие блокировки принтеров.
         /// </summary>
-        public static int CleanupExpiredReservations()
+        public static void CleanupExpiredReservations()
         {
             try
             {
@@ -167,13 +164,10 @@ namespace RevitBIMTool.Utils.ExportPDF
                 {
                     Log.Information("Cleaned up {Count} expired printer reservations", cleanedCount);
                 }
-
-                return cleanedCount;
             }
             catch (Exception ex)
             {
                 Log.Error(ex, "Error cleaning up expired reservations: {Message}", ex.Message);
-                return 0;
             }
         }
 
@@ -195,9 +189,6 @@ namespace RevitBIMTool.Utils.ExportPDF
         /// <summary>
         /// Вспомогательный метод для безопасного чтения целочисленных настроек из конфига.
         /// </summary>
-        /// <param name="key">Ключ настройки</param>
-        /// <param name="defaultValue">Значение по умолчанию</param>
-        /// <returns>Значение из конфига или значение по умолчанию</returns>
         private static int GetConfigInt(string key, int defaultValue)
         {
             if (int.TryParse(ConfigurationManager.AppSettings[key], out int value))
@@ -206,7 +197,7 @@ namespace RevitBIMTool.Utils.ExportPDF
                 return value;
             }
 
-            Log.Debug("Config setting {Key} not found or invalid, using default: {Default}", key, defaultValue);
+            Log.Debug("Using default: {Key} = {Value}", key, defaultValue);
             return defaultValue;
         }
 
