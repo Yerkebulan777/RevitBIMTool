@@ -14,7 +14,7 @@ internal sealed class Pdf24Printer : PrinterControl
 
     public override void InitializePrinter()
     {
-        PrinterStateManager.TryReservePrinter(PrinterName);
+        PrinterManager.TryReservePrinter(PrinterName);
 
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveOpenDir", 0);
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "Handler", "autoSave");
@@ -28,7 +28,7 @@ internal sealed class Pdf24Printer : PrinterControl
 
     public override void ReleasePrinterSettings()
     {
-        PrinterStateManager.ReleasePrinter(PrinterName);
+        PrinterManager.ReleasePrinter(PrinterName);
 
         string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveDir", desktop);

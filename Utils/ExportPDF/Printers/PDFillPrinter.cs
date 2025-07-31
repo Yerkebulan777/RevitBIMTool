@@ -27,7 +27,7 @@ internal sealed class PDFillPrinter : PrinterControl
     /// </summary>
     public override void InitializePrinter()
     {
-        PrinterStateManager.TryReservePrinter(PrinterName);
+        PrinterManager.TryReservePrinter(PrinterName);
 
         // Настройки вывода
         RegistryHelper.SetValue(Registry.CurrentUser, OutputOptionsPath, "EXIST_PDF", 1);
@@ -57,7 +57,7 @@ internal sealed class PDFillPrinter : PrinterControl
         RegistryHelper.SetValue(Registry.CurrentUser, OutputOptionsPath, "HIDE_DIALOG", 0);
 
         // Освобождение принтера для других процессов
-        PrinterStateManager.ReleasePrinter(PrinterName);
+        PrinterManager.ReleasePrinter(PrinterName);
     }
 
     /// <summary>

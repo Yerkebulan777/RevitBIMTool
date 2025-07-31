@@ -15,7 +15,7 @@ internal sealed class CreatorPrinter : PrinterControl
 
     public override void InitializePrinter()
     {
-        PrinterStateManager.TryReservePrinter(PrinterName);
+        PrinterManager.TryReservePrinter(PrinterName);
 
         string autoSave = Path.Combine(RegistryPath, "AutoSave");
         string openViewerKey = Path.Combine(RegistryPath, "OpenViewer");
@@ -39,7 +39,7 @@ internal sealed class CreatorPrinter : PrinterControl
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "TargetDirectory", "<Desktop>");
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<Title>");
 
-        PrinterStateManager.ReleasePrinter(PrinterName);
+        PrinterManager.ReleasePrinter(PrinterName);
     }
 
 

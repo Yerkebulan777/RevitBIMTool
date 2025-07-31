@@ -19,7 +19,7 @@ internal sealed class BioPdfPrinter : PrinterControl
 
     public override void InitializePrinter()
     {
-        PrinterStateManager.TryReservePrinter(PrinterName);
+        PrinterManager.TryReservePrinter(PrinterName);
 
         const string BioPdfPrinterPath = @"PDF Writer\PDF Writer - bioPDF";
 
@@ -38,7 +38,7 @@ internal sealed class BioPdfPrinter : PrinterControl
 
     public override void ReleasePrinterSettings()
     {
-        PrinterStateManager.ReleasePrinter(PrinterName);
+        PrinterManager.ReleasePrinter(PrinterName);
     }
 
 

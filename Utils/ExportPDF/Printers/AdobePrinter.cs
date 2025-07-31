@@ -16,7 +16,7 @@ internal sealed class AdobePdfPrinter : PrinterControl
 
     public override void InitializePrinter()
     {
-        PrinterStateManager.TryReservePrinter(PrinterName);
+        PrinterManager.TryReservePrinter(PrinterName);
 
         if (!RegistryHelper.IsKeyExists(Registry.CurrentUser, RegistryPath))
         {
@@ -27,7 +27,7 @@ internal sealed class AdobePdfPrinter : PrinterControl
 
     public override void ReleasePrinterSettings()
     {
-        PrinterStateManager.ReleasePrinter(PrinterName);
+        PrinterManager.ReleasePrinter(PrinterName);
 
         _ = RegistryHelper.DeleteRegistryValues(Registry.CurrentUser, RegistryPath);
     }

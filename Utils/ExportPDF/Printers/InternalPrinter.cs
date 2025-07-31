@@ -27,13 +27,13 @@ internal sealed class InternalPrinter : PrinterControl
 
     public override void InitializePrinter()
     {
-        PrinterStateManager.ReleasePrinter(PrinterName);
+        PrinterManager.ReleasePrinter(PrinterName);
     }
 
 
     public override void ReleasePrinterSettings()
     {
-        PrinterStateManager.ReleasePrinter(PrinterName);
+        PrinterManager.ReleasePrinter(PrinterName);
     }
 
 

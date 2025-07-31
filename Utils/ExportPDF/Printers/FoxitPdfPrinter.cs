@@ -14,7 +14,7 @@ internal sealed class FoxitPdfPrinter : PrinterControl
 
     public override void InitializePrinter()
     {
-        PrinterStateManager.TryReservePrinter(PrinterName);
+        PrinterManager.TryReservePrinter(PrinterName);
 
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSave", "1");
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoOverwrite", "1");
@@ -28,7 +28,7 @@ internal sealed class FoxitPdfPrinter : PrinterControl
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowSaveDialog", "1");
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowPrintProgress", "1");
 
-        PrinterStateManager.ReleasePrinter(PrinterName);
+        PrinterManager.ReleasePrinter(PrinterName);
     }
 
 

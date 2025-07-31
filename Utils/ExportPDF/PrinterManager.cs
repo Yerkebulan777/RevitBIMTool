@@ -9,41 +9,39 @@ namespace RevitBIMTool.Utils.ExportPDF
     /// Упрощенный менеджер состояния принтеров.
     /// Использует только базу данных без XML fallback согласно требованиям.
     /// </summary>
-    internal static class PrinterStateManager
+    internal static class PrinterManager
     {
-        private static readonly int lockTimeoutMin;
         private static readonly string сonnectionString;
         private static readonly List<PrinterControl> printerControllers;
         private static readonly Lazy<PrinterService> printerServiceInstance;
         internal static string[] PrinterNames { get; set; }
 
-        static PrinterStateManager()
+        static PrinterManager()
         {
-            lockTimeoutMin = int.TryParse(ConfigurationManager.AppSettings["PrinterLockTimeoutMinutes"], out int timeout) ? timeout : 5;
+            int maxRetries = GetConfigInt("PrinterReservationMaxRetries", 5);
+            int commandTimeout = GetConfigInt("DatabaseCommandTimeout", 60);
+            int lockTimeoutMin = GetConfigInt("PrinterLockTimeoutMinutes", 60);
+            int retryDelay = GetConfigInt("PrinterReservationRetryDelayMs", 100);
+
             сonnectionString = ConfigurationManager.ConnectionStrings["PrinterDatabase"]?.ConnectionString;
-            printerServiceInstance = new Lazy<PrinterService>(CreatePrinterService, isThreadSafe: true);
 
-            Log.Information("Initializing lock timeout {Timeout} minutes", lockTimeoutMin);
+            Log.Warning("Connection string: {ConnectionString}", сonnectionString);
 
-            printerControllers = GetPrinterControllers();
-
-            if (string.IsNullOrEmpty(сonnectionString))
+            if (!string.IsNullOrEmpty(сonnectionString))
             {
-                Log.Error("PrinterDatabase connection string is not configured");
-            }
-        }
+                CleanupExpiredReservations();
 
-        /// <summary>
-        /// Создает экземпляр сервиса принтеров.
-        /// </summary>
-        private static PrinterService CreatePrinterService()
-        {
-            return new PrinterService(
-                    сonnectionString,
-                    commandTimeout: 30,
-                    maxRetryAttempts: 3,
-                    baseRetryDelayMs: 100,
-                    lockTimeoutMinutes: lockTimeoutMin);
+                printerControllers = GetPrinterControllers();
+
+                printerServiceInstance = new Lazy<PrinterService>(() =>
+                    new PrinterService(
+                        сonnectionString,
+                        commandTimeout: commandTimeout,
+                        maxRetryAttempts: maxRetries,
+                        baseRetryDelayMs: retryDelay,
+                        lockTimeoutMinutes: lockTimeoutMin),
+                        isThreadSafe: true);
+            }
         }
 
         /// <summary>
@@ -191,7 +189,24 @@ namespace RevitBIMTool.Utils.ExportPDF
             ];
         }
 
+        /// <summary>
+        /// Вспомогательный метод для безопасного чтения целочисленных настроек из конфига.
+        /// </summary>
+        /// <param name="key">Ключ настройки</param>
+        /// <param name="defaultValue">Значение по умолчанию</param>
+        /// <returns>Значение из конфига или значение по умолчанию</returns>
+        private static int GetConfigInt(string key, int defaultValue)
+        {
+            if (int.TryParse(ConfigurationManager.AppSettings[key], out int value))
+            {
+                Log.Debug("Config setting {Key} = {Value}", key, value);
+                return value;
+            }
+
+            Log.Debug("Config setting {Key} not found or invalid, using default: {Default}", key, defaultValue);
+            return defaultValue;
+        }
+
+
     }
-
-
 }

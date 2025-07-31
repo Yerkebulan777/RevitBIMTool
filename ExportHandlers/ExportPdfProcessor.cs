@@ -22,7 +22,7 @@ internal static class ExportPdfProcessor
         Log.Information("Temp directory path: {TempDirectory}", tempDirectory);
         Log.Information("Export folder path: {ExportDirectory}", exportDirectory);
 
-        if (!PrinterStateManager.TryGetPrinter(revitFilePath, out PrinterControl printer))
+        if (!PrinterManager.TryGetPrinter(revitFilePath, out PrinterControl printer))
         {
             Log.Fatal("No available printer found!");
             RevitFileHelper.CloseRevitApplication();
