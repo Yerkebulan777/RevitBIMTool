@@ -15,14 +15,17 @@ namespace RevitBIMTool.Utils.ExportPDF
         private static PrinterService printerService;
         private static readonly string сonnectionString;
         private static readonly object lockObject = new();
-        private static readonly List<PrinterControl> printers;
+
         private static string[] PrinterNames { get; set; }
+        private static List<PrinterControl> printers { get; set; }
 
         static PrinterStateManager()
         {
             printers = GetPrinterControllers();
             lockTimeoutMin = int.TryParse(ConfigurationManager.AppSettings["PrinterLockTimeoutMinutes"], out int timeout) ? timeout : 5;
             сonnectionString = ConfigurationManager.ConnectionStrings["PrinterDatabase"]?.ConnectionString;
+
+            Log.Information("Initializing lock timeout {Timeout} minutes", lockTimeoutMin);
 
             if (string.IsNullOrEmpty(сonnectionString))
             {
