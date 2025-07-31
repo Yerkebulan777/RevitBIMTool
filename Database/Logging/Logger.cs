@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 
@@ -36,7 +35,7 @@ namespace Database.Logging
         private readonly string _categoryName;
         private readonly string _logFilePath;
         private readonly LoggerLevel _minimumLevel;
-        private readonly object _lockObject = new object();
+        private readonly object _lockObject = new();
 
         private static string _logDirectory;
         private static bool _isInitialized = false;
@@ -55,7 +54,10 @@ namespace Database.Logging
         /// </summary>
         public static void Initialize(string logDirectory = null)
         {
-            if (_isInitialized) return;
+            if (_isInitialized)
+            {
+                return;
+            }
 
             if (string.IsNullOrEmpty(logDirectory))
             {
@@ -94,7 +96,10 @@ namespace Database.Logging
             [CallerMemberName] string memberName = "",
             [CallerLineNumber] int lineNumber = 0)
         {
-            if (level < _minimumLevel) return;
+            if (level < _minimumLevel)
+            {
+                return;
+            }
 
             string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
             string logEntry = $"[{timestamp}] [{level}] {_categoryName}.{memberName}:{lineNumber} - {message}";
@@ -108,7 +113,10 @@ namespace Database.Logging
 
         private void WriteToFile(string logEntry)
         {
-            if (string.IsNullOrEmpty(_logFilePath)) return;
+            if (string.IsNullOrEmpty(_logFilePath))
+            {
+                return;
+            }
 
             try
             {
@@ -138,7 +146,7 @@ namespace Database.Logging
             {
                 try
                 {
-                    Directory.CreateDirectory(directoryPath);
+                    _ = Directory.CreateDirectory(directoryPath);
                 }
                 catch (Exception ex)
                 {
