@@ -2,7 +2,6 @@
 {
     /// <summary>
     /// Централизованное хранилище всех SQL запросов для системы управления принтеров.
-    /// Все запросы используют PostgreSQL синтаксис через ODBC без dynamic объектов.
     /// </summary>
     public static class PrinterSqlStore
     {
@@ -16,18 +15,22 @@
                 id SERIAL PRIMARY KEY,
                 printer_name VARCHAR(200) NOT NULL UNIQUE,
                 is_available BOOLEAN NOT NULL DEFAULT true,
-                reserved_by_file VARCHAR(500),
+                reserved_file_name VARCHAR(500),
                 reserved_at TIMESTAMPTZ,
                 process_id INTEGER,
-                change_token UUID NOT NULL DEFAULT gen_random_uuid(),
+                version_token UUID NOT NULL DEFAULT gen_random_uuid(),
+                job_count INTEGER NOT NULL DEFAULT 0,
+                state INTEGER NOT NULL DEFAULT 0,
                 created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+                last_update TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
                 
                 CONSTRAINT chk_printer_name_valid CHECK (LENGTH(TRIM(printer_name)) > 0),
-                CONSTRAINT chk_file_path_valid CHECK (reserved_by_file IS NULL OR LENGTH(TRIM(reserved_by_file)) > 0),
+                CONSTRAINT chk_file_name_valid CHECK (reserved_file_name IS NULL OR LENGTH(TRIM(reserved_file_name)) > 0),
+                CONSTRAINT chk_state_valid CHECK (state >= 0 AND state <= 3),
+                CONSTRAINT chk_job_count_valid CHECK (job_count >= 0),
                 CONSTRAINT chk_reservation_logic CHECK (
-                    (is_available = true AND reserved_by_file IS NULL AND reserved_at IS NULL AND process_id IS NULL) OR
-                    (is_available = false AND reserved_by_file IS NOT NULL AND reserved_at IS NOT NULL AND process_id IS NOT NULL)
+                    (is_available = true AND reserved_file_name IS NULL AND reserved_at IS NULL AND process_id IS NULL) OR
+                    (is_available = false AND reserved_file_name IS NOT NULL AND reserved_at IS NOT NULL AND process_id IS NOT NULL)
                 )
             );";
 
@@ -37,10 +40,12 @@
         public static readonly string[] TableConstraints = {
             "ALTER TABLE printer_states ADD CONSTRAINT uk_printer_name UNIQUE (printer_name);",
             "ALTER TABLE printer_states ADD CONSTRAINT chk_printer_name_valid CHECK (LENGTH(TRIM(printer_name)) > 0);",
-            "ALTER TABLE printer_states ADD CONSTRAINT chk_file_path_valid CHECK (reserved_by_file IS NULL OR LENGTH(TRIM(reserved_by_file)) > 0);",
+            "ALTER TABLE printer_states ADD CONSTRAINT chk_file_name_valid CHECK (reserved_file_name IS NULL OR LENGTH(TRIM(reserved_file_name)) > 0);",
+            "ALTER TABLE printer_states ADD CONSTRAINT chk_state_valid CHECK (state >= 0 AND state <= 3);",
+            "ALTER TABLE printer_states ADD CONSTRAINT chk_job_count_valid CHECK (job_count >= 0);",
             @"ALTER TABLE printer_states ADD CONSTRAINT chk_reservation_logic CHECK (
-                (is_available = true AND reserved_by_file IS NULL AND reserved_at IS NULL AND process_id IS NULL) OR
-                (is_available = false AND reserved_by_file IS NOT NULL AND reserved_at IS NOT NULL AND process_id IS NOT NULL)
+                (is_available = true AND reserved_file_name IS NULL AND reserved_at IS NULL AND process_id IS NULL) OR
+                (is_available = false AND reserved_file_name IS NOT NULL AND reserved_at IS NOT NULL AND process_id IS NOT NULL)
             );"
         };
 
@@ -59,16 +64,16 @@
             SELECT COUNT(*) 
             FROM information_schema.columns 
             WHERE table_name = 'printer_states' 
-            AND column_name IN ('id', 'printer_name', 'is_available', 'change_token', 'reserved_at', 'process_id');";
+            AND column_name IN ('id', 'printer_name', 'is_available', 'version_token', 'reserved_at', 'process_id', 'job_count', 'state');";
 
         /// <summary>
-        /// Валидация схемы - проверка столбцов.
+        /// Валидация схемы - проверка основных столбцов.
         /// </summary>
         public const string ValidateSchemaColumns = @"
             SELECT COUNT(*) 
             FROM information_schema.columns 
             WHERE table_name = 'printer_states' 
-            AND column_name IN ('id', 'printer_name', 'is_available', 'change_token');";
+            AND column_name IN ('id', 'printer_name', 'is_available', 'version_token');";
 
         #endregion
 
@@ -78,15 +83,18 @@
         /// Безопасная инициализация принтера с защитой от дублирования.
         /// </summary>
         public const string InitializePrinter = @"
-            INSERT INTO printer_states (printer_name, is_available, change_token)
-            VALUES (@printerName, true, gen_random_uuid())
+            INSERT INTO printer_states (printer_name, is_available, version_token, job_count, state, last_update)
+            VALUES (@printerName, true, gen_random_uuid(), 0, 0, CURRENT_TIMESTAMP)
             ON CONFLICT (printer_name) DO NOTHING;";
 
         /// <summary>
         /// Получение доступных принтеров с блокировкой для предотвращения race conditions.
         /// </summary>
         public const string GetAvailablePrintersWithLock = @"
-            SELECT id, printer_name, is_available, reserved_by_file, reserved_at, process_id, change_token
+            SELECT id, printer_name as PrinterName, is_available as IsAvailable, 
+                   reserved_file_name as ReservedFileName, reserved_at, process_id as ProcessId, 
+                   version_token as VersionToken, job_count as JobCount, state as State,
+                   COALESCE(last_update, created_at) as LastUpdate
             FROM printer_states
             WHERE is_available = true
             ORDER BY printer_name
@@ -98,13 +106,14 @@
         public const string ReservePrinter = @"
             UPDATE printer_states SET
                 is_available = false,
-                reserved_by_file = @revitFileName,
+                reserved_file_name = @revitFileName,
                 reserved_at = @reservedAt,
                 process_id = @processId,
-                change_token = gen_random_uuid(),
-                updated_at = CURRENT_TIMESTAMP
+                version_token = gen_random_uuid(),
+                state = 1,
+                last_update = CURRENT_TIMESTAMP
             WHERE printer_name = @printerName
-              AND change_token = @expectedToken
+              AND version_token = @expectedToken
               AND is_available = true;";
 
         /// <summary>
@@ -113,13 +122,14 @@
         public const string ReleasePrinter = @"
             UPDATE printer_states SET
                 is_available = true,
-                reserved_by_file = NULL,
+                reserved_file_name = NULL,
                 reserved_at = NULL,
                 process_id = NULL,
-                change_token = gen_random_uuid(),
-                updated_at = CURRENT_TIMESTAMP
+                version_token = gen_random_uuid(),
+                state = 0,
+                last_update = CURRENT_TIMESTAMP
             WHERE printer_name = @printerName
-              AND (reserved_by_file = @revitFileName OR @revitFileName IS NULL);";
+              AND (reserved_file_name = @revitFileName OR @revitFileName IS NULL);";
 
         /// <summary>
         /// Автоматическая очистка зависших резервирований.
@@ -128,11 +138,12 @@
             UPDATE printer_states 
             SET 
                 is_available = true,
-                reserved_by_file = NULL,
+                reserved_file_name = NULL,
                 reserved_at = NULL,
                 process_id = NULL,
-                change_token = gen_random_uuid(),
-                updated_at = CURRENT_TIMESTAMP
+                version_token = gen_random_uuid(),
+                state = 0,
+                last_update = CURRENT_TIMESTAMP
             WHERE 
                 is_available = false 
                 AND reserved_at < @cutoffTime
@@ -146,7 +157,10 @@
         /// Получение всех доступных принтеров.
         /// </summary>
         public const string GetAvailablePrinters = @"
-            SELECT id, printer_name, is_available, reserved_by_file, reserved_at, process_id, change_token
+            SELECT id, printer_name as PrinterName, is_available as IsAvailable, 
+                   reserved_file_name as ReservedFileName, reserved_at, process_id as ProcessId, 
+                   version_token as VersionToken, job_count as JobCount, state as State,
+                   COALESCE(last_update, created_at) as LastUpdate
             FROM printer_states
             WHERE is_available = true
             ORDER BY printer_name;";
@@ -199,20 +213,19 @@
         /// Получение активных принтеров для совместимости с PrinterRepository.
         /// </summary>
         public const string GetActivePrinters = @"
-            SELECT id, printer_name as name, 
-                   CASE WHEN is_available = true THEN 0 ELSE 1 END as state,
-                   COALESCE(updated_at, created_at) as last_update,
-                   0 as job_count
+            SELECT id, printer_name, state, 
+                   COALESCE(last_update, created_at) as last_update,
+                   job_count
             FROM printer_states 
             WHERE is_available IN (true, false) 
-            ORDER BY COALESCE(updated_at, created_at) ASC;";
+            ORDER BY COALESCE(last_update, created_at) ASC;";
 
         /// <summary>
         /// Обновление статуса принтера для совместимости.
         /// </summary>
         public const string UpdatePrinterStatus = @"
             UPDATE printer_states 
-            SET updated_at = CURRENT_TIMESTAMP 
+            SET last_update = CURRENT_TIMESTAMP 
             WHERE id = @printerId;";
 
         /// <summary>
@@ -221,9 +234,11 @@
         public const string TryAcquirePrinterLock = @"
             UPDATE printer_states 
             SET is_available = false, 
-                reserved_by_file = @lockedBy,
+                reserved_file_name = @lockedBy,
                 reserved_at = CURRENT_TIMESTAMP,
-                change_token = gen_random_uuid()
+                version_token = gen_random_uuid(),
+                state = 1,
+                last_update = CURRENT_TIMESTAMP
             WHERE id = @printerId AND is_available = true;";
 
         /// <summary>
@@ -232,9 +247,11 @@
         public const string ReleasePrinterLock = @"
             UPDATE printer_states 
             SET is_available = true,
-                reserved_by_file = NULL,
+                reserved_file_name = NULL,
                 reserved_at = NULL,
-                change_token = gen_random_uuid()
+                version_token = gen_random_uuid(),
+                state = 0,
+                last_update = CURRENT_TIMESTAMP
             WHERE id = @printerId;";
 
         #endregion
@@ -253,4 +270,7 @@
 
         #endregion
     }
+
+
+
 }
