@@ -2,7 +2,7 @@
 using System;
 using System.Data.Odbc;
 
-namespace Database
+namespace Database.Schema
 {
     /// <summary>
     /// Менеджер схемы базы данных, отвечающий исключительно за создание и поддержание
