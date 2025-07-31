@@ -6,39 +6,11 @@ using System.Data.Odbc;
 
 namespace Database
 {
-    public interface IPrinterRepository
+    public class PrinterRepository(string connectionString)
     {
-        IEnumerable<PrinterInfo> GetActivePrinters();
-        PrinterInfo GetPrinterById(int printerId);
-        IEnumerable<PrinterInfo> GetStuckPrinters(TimeSpan threshold);
+        private readonly string _connectionString = connectionString;
 
-        void UpdatePrinterStatus(int printerId, PrinterInfo state);
-        void ResetPrinter(int printerId);
-        void LogError(int printerId, string errorMessage);
-
-        bool TryAcquirePrinterLock(int printerId);
-        void ReleasePrinterLock(int printerId);
-
-        IDbConnection CreateConnection();
-        IDbCommand CreateCommand(string sql, IDbConnection connection);
-    }
-
-
-    public class PrinterRepository : IPrinterRepository
-    {
-        private readonly string _connectionString;
-
-        public PrinterRepository(string connectionString)
-        {
-            _connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
-        }
-
-        public IDbConnection CreateConnection()
-        {
-            return new OdbcConnection(_connectionString);
-        }
-
-        public IDbCommand CreateCommand(string sql, IDbConnection connection)
+        public static IDbCommand CreateCommand(string sql, IDbConnection connection)
         {
             IDbCommand command = connection.CreateCommand();
             command.CommandText = sql;
@@ -53,7 +25,7 @@ namespace Database
             WHERE state IN (?, ?, ?) 
             ORDER BY last_update ASC";
 
-            using IDbConnection connection = CreateConnection();
+            using IDbConnection connection = new OdbcConnection(_connectionString);
             connection.Open();
 
             using IDbCommand command = CreateCommand(sql, connection);
@@ -61,7 +33,7 @@ namespace Database
             AddParameter(command, 2, (int)PrinterState.Printing);
             AddParameter(command, 3, (int)PrinterState.Paused);
 
-            List<PrinterInfo> printers = new();
+            List<PrinterInfo> printers = [];
             using (IDataReader reader = command.ExecuteReader())
             {
                 while (reader.Read())
@@ -81,7 +53,7 @@ namespace Database
             SET state = ?, last_update = CURRENT_TIMESTAMP 
             WHERE id = ?";
 
-            using IDbConnection connection = CreateConnection();
+            using IDbConnection connection = new OdbcConnection(_connectionString);
             connection.Open();
 
             using IDbTransaction transaction = connection.BeginTransaction();
@@ -109,7 +81,7 @@ namespace Database
             SET locked = TRUE, locked_by = ?, locked_at = CURRENT_TIMESTAMP 
             WHERE id = ? AND locked = FALSE";
 
-            using IDbConnection connection = CreateConnection();
+            using IDbConnection connection = new OdbcConnection(_connectionString);
             connection.Open();
 
             using IDbCommand command = CreateCommand(sql, connection);
@@ -127,7 +99,7 @@ namespace Database
             SET locked = FALSE, locked_by = NULL, locked_at = NULL 
             WHERE id = ?";
 
-            using IDbConnection connection = CreateConnection();
+            using IDbConnection connection = new OdbcConnection(_connectionString);
             connection.Open();
 
             using IDbCommand command = CreateCommand(sql, connection);
@@ -143,9 +115,8 @@ namespace Database
             _ = command.Parameters.Add(parameter);
         }
 
-        private void SetPrinterStateProperties(PrinterInfo printer, IDataReader reader)
+        private static void SetPrinterStateProperties(PrinterInfo printer, IDataReader reader)
         {
-            // Используем индексы вместо имен столбцов
             printer.Id = reader.GetInt32(0);           // id
             printer.PrinterName = reader.GetString(1); // name
             printer.State = (PrinterState)reader.GetInt32(2); // state
@@ -153,27 +124,7 @@ namespace Database
             printer.JobCount = reader.GetInt32(4);     // job_count
         }
 
-        // Остальные методы...
-        public PrinterInfo GetPrinterById(int printerId)
-        {
-            throw new NotImplementedException();
-        }
 
-        public IEnumerable<PrinterInfo> GetStuckPrinters(TimeSpan threshold)
-        {
-            throw new NotImplementedException();
-        }
 
-        public void ResetPrinter(int printerId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void LogError(int printerId, string errorMessage)
-        {
-            throw new NotImplementedException();
-        }
     }
-
-
 }
