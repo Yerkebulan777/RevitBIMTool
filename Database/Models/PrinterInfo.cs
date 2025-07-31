@@ -65,4 +65,7 @@ namespace Database.Models
         public PrinterState State { get; set; }
 
     }
+
+
+
 }
