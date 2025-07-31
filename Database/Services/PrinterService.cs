@@ -57,7 +57,7 @@ namespace Database.Services
                 {
                     InitializePrinters(connection, transaction, availablePrinterNames);
 
-                    PrinterInfo selectedPrinter = GetSingleAvailablePrinterWithLock(connection, transaction, availablePrinterNames);
+                    PrinterInfo selectedPrinter = GetAvailablePrinter(connection, transaction, availablePrinterNames);
 
                     if (selectedPrinter is null)
                     {
@@ -250,7 +250,7 @@ namespace Database.Services
         /// <summary>
         /// Получает первый доступный принтер с блокировкой.
         /// </summary>
-        private PrinterInfo GetSingleAvailablePrinterWithLock(OdbcConnection connection, OdbcTransaction transaction, string[] printerNames)
+        private PrinterInfo GetAvailablePrinter(OdbcConnection connection, OdbcTransaction transaction, string[] printerNames)
         {
             return connection.QueryFirstOrDefault<PrinterInfo>(
                 PrinterSqlStore.GetSingleAvailablePrinterWithLock,
