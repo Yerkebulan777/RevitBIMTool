@@ -2,7 +2,15 @@
 
 namespace Database.Models
 {
-    public sealed class PrinterState
+    public enum PrinterState
+    {
+        Ready = 0,
+        Printing = 1,
+        Paused = 2,
+        Error = 3
+    }
+
+    public sealed class PrinterInfo
     {
         /// <summary>
         /// Уникальный идентификатор записи в базе данных
@@ -21,17 +29,17 @@ namespace Database.Models
         public bool IsAvailable { get; set; }
 
         /// <summary>
-        /// Имя файла Revit, который зарезервировал этот принтер
+        /// Имя файла, который зарезервировал этот принтер
         /// NULL если принтер свободен
         /// </summary>
-        public string ReservedByFile { get; set; }
+        public string ReservedFileName { get; set; }
 
         /// <summary>
         /// Время резервирования принтера
         /// Используется для автоматической очистки зависших блокировок
         /// NULL если принтер свободен
         /// </summary>
-        public DateTime? ReservedAt { get; set; }
+        public DateTime LastUpdate { get; set; }
 
         /// <summary>
         /// ID процесса Revit, который зарезервировал принтер
@@ -46,6 +54,15 @@ namespace Database.Models
         /// </summary>
         public Guid VersionToken { get; set; }
 
+        /// <summary>
+        /// Количество заданий в очереди на печать для этого принтера
+        /// </summary>
+        public int JobCount { get; set; }
+
+        /// <summary>
+        /// Cостояние принтера
+        /// </summary>
+        public PrinterState State { get; set; }
 
     }
 }

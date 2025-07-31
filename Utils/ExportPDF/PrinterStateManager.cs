@@ -135,7 +135,7 @@ namespace RevitBIMTool.Utils.ExportPDF
             {
                 PrinterService printerService = GetPrinterService();
 
-                if (printerService.ReleasePrinter(printerName))
+                if (printerService.TryReleasePrinter(printerName))
                 {
                     Log.Information("Successfully released printer {PrinterName}", printerName);
                 }
