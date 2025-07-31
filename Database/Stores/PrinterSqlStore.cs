@@ -101,6 +101,20 @@
             FOR UPDATE;";
 
         /// <summary>
+        /// Получение одного доступного принтера с блокировкой для резервирования.
+        /// </summary>
+        public const string GetSingleAvailablePrinterWithLock = @"
+            SELECT id, printer_name as PrinterName, is_available as IsAvailable, 
+                   reserved_file_name as ReservedFileName, reserved_at, process_id as ProcessId, 
+                   version_token as VersionToken, job_count as JobCount, state as State,
+                   COALESCE(last_update, created_at) as LastUpdate
+            FROM printer_states
+            WHERE is_available = true AND printer_name = ANY(@printerNames)
+            ORDER BY printer_name
+            FOR UPDATE
+            LIMIT 1;";
+
+        /// <summary>
         /// Резервирование принтера с оптимистичным блокированием.
         /// </summary>
         public const string ReservePrinter = @"

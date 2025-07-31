@@ -42,8 +42,7 @@ namespace Database.Services
         }
 
         /// <summary>
-        /// Пытается зарезервировать любой доступный принтер из списка.
-        /// Использует оптимистичное блокирование для предотвращения race conditions.
+        /// Пытается зарезервировать доступный принтер.
         /// </summary>
         public string TryReserveAvailablePrinter(string revitFileName, string[] availablePrinterNames)
         {
@@ -58,7 +57,7 @@ namespace Database.Services
                 {
                     InitializePrinters(connection, transaction, availablePrinterNames);
 
-                    PrinterInfo selectedPrinter = GetAvailablePrintersWithLock(connection, transaction, availablePrinterNames).FirstOrDefault();
+                    PrinterInfo selectedPrinter = GetSingleAvailablePrinterWithLock(connection, transaction, availablePrinterNames);
 
                     if (selectedPrinter is null)
                     {
@@ -249,22 +248,15 @@ namespace Database.Services
         }
 
         /// <summary>
-        /// Получает доступные принтеры с блокировкой для обновления.
+        /// Получает первый доступный принтер с блокировкой.
         /// </summary>
-        private IEnumerable<PrinterInfo> GetAvailablePrintersWithLock(OdbcConnection connection, OdbcTransaction transaction, string[] printerNames)
+        private PrinterInfo GetSingleAvailablePrinterWithLock(OdbcConnection connection, OdbcTransaction transaction, string[] printerNames)
         {
-            string inClause = string.Join(",", printerNames.Select((_, i) => $"@p{i}"));
-
-            string sql = PrinterSqlStore.GetAvailablePrintersWithLock.Replace("ORDER BY printer_name", $"AND printer_name IN ({inClause}) ORDER BY printer_name");
-
-            DynamicParameters parameters = new();
-
-            for (int i = 0; i < printerNames.Length; i++)
-            {
-                parameters.Add($"@p{i}", printerNames[i]);
-            }
-
-            return connection.Query<PrinterInfo>(sql, parameters, transaction, commandTimeout: _commandTimeout);
+            return connection.QueryFirstOrDefault<PrinterInfo>(
+                PrinterSqlStore.GetSingleAvailablePrinterWithLock,
+                new { printerNames },
+                transaction,
+                commandTimeout: _commandTimeout);
         }
 
         /// <summary>
