@@ -7,19 +7,16 @@ namespace RevitBIMTool.Utils.ExportPDF
 {
     /// <summary>
     /// Упрощенный менеджер состояния принтеров.
-    /// Использует только базу данных без XML fallback согласно требованиям.
     /// </summary>
     internal static class PrinterManager
     {
         private static readonly string сonnectionString;
         private static readonly List<PrinterControl> printerControllers;
         private static readonly Lazy<PrinterService> printerServiceInstance;
-        internal static string[] PrinterNames { get; set; }
+        public static string[] PrinterNames { get; set; }
 
         static PrinterManager()
         {
-
-
             сonnectionString = ConfigurationManager.ConnectionStrings["PrinterDatabase"]?.ConnectionString;
 
             Log.Warning("Connection string: {ConnectionString}", сonnectionString);
