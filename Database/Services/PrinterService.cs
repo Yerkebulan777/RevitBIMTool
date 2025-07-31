@@ -56,24 +56,18 @@ namespace Database.Services
 
                 try
                 {
-                    // Инициализируем принтеры если их нет
-                    InitializePrintersIfNeeded(connection, transaction, availablePrinterNames);
+                    InitializePrinters(connection, transaction, availablePrinterNames);
 
-                    // Получаем доступные принтеры с блокировкой
-                    IEnumerable<PrinterInfo> availablePrinters = GetAvailablePrintersWithLock(connection, transaction, availablePrinterNames);
+                    PrinterInfo selectedPrinter = GetAvailablePrintersWithLock(connection, transaction, availablePrinterNames).FirstOrDefault();
 
-                    if (!availablePrinters.Any())
+                    if (selectedPrinter is null)
                     {
                         _logger.Debug("No available printers found");
                         transaction.Rollback();
                         return null;
                     }
 
-                    // Резервируем первый доступный принтер
-                    PrinterInfo selectedPrinter = availablePrinters.First();
-
-                    if (ReservePrinterInternal(connection, transaction, selectedPrinter.PrinterName,
-                        revitFileName, selectedPrinter.VersionToken))
+                    if (ReservePrinterInternal(connection, transaction, selectedPrinter.PrinterName, revitFileName, selectedPrinter.VersionToken))
                     {
                         transaction.Commit();
                         _logger.Information($"Successfully reserved printer {selectedPrinter.PrinterName} for {revitFileName}");
@@ -94,21 +88,8 @@ namespace Database.Services
         /// <summary>
         /// Пытается зарезервировать конкретный принтер.
         /// </summary>
-        /// <param name="printerName">Имя принтера для резервирования</param>
-        /// <param name="revitFileName">Имя файла Revit</param>
-        /// <returns>True если принтер успешно зарезервирован</returns>
         public bool TryReserveSpecificPrinter(string printerName, string revitFileName)
         {
-            if (string.IsNullOrEmpty(printerName))
-            {
-                throw new ArgumentException("Printer name cannot be null or empty", nameof(printerName));
-            }
-
-            if (string.IsNullOrEmpty(revitFileName))
-            {
-                throw new ArgumentException("Revit file name cannot be null or empty", nameof(revitFileName));
-            }
-
             _logger.Information($"Attempting to reserve specific printer {printerName} for file: {revitFileName}");
 
             return ExecuteWithRetry(() =>
@@ -118,9 +99,6 @@ namespace Database.Services
 
                 try
                 {
-                    // Инициализируем принтер если его нет
-                    InitializePrintersIfNeeded(connection, transaction, new[] { printerName });
-
                     // Получаем информацию о принтере с блокировкой
                     PrinterInfo printerInfo = GetPrinterInfoWithLock(connection, transaction, printerName);
 
@@ -139,8 +117,7 @@ namespace Database.Services
                     }
 
                     // Резервируем принтер
-                    if (ReservePrinterInternal(connection, transaction, printerName,
-                        revitFileName, printerInfo.VersionToken))
+                    if (ReservePrinterInternal(connection, transaction, printerName, revitFileName, printerInfo.VersionToken))
                     {
                         transaction.Commit();
                         _logger.Information($"Successfully reserved printer {printerName} for {revitFileName}");
@@ -254,17 +231,13 @@ namespace Database.Services
         /// <summary>
         /// Инициализирует принтеры в базе данных если они отсутствуют.
         /// </summary>
-        private void InitializePrintersIfNeeded(OdbcConnection connection, OdbcTransaction transaction, string[] printerNames)
+        private void InitializePrinters(OdbcConnection connection, OdbcTransaction transaction, string[] printerNames)
         {
             foreach (string printerName in printerNames)
             {
                 try
                 {
-                    _ = connection.Execute(
-                        PrinterSqlStore.InitializePrinter,
-                        new { printerName },
-                        transaction,
-                        _commandTimeout);
+                    connection.Execute(PrinterSqlStore.InitializePrinter, new { printerName }, transaction, _commandTimeout);
 
                     _logger.Debug($"Initialized printer: {printerName}");
                 }
@@ -281,9 +254,11 @@ namespace Database.Services
         private IEnumerable<PrinterInfo> GetAvailablePrintersWithLock(OdbcConnection connection, OdbcTransaction transaction, string[] printerNames)
         {
             string inClause = string.Join(",", printerNames.Select((_, i) => $"@p{i}"));
+
             string sql = PrinterSqlStore.GetAvailablePrintersWithLock.Replace("ORDER BY printer_name", $"AND printer_name IN ({inClause}) ORDER BY printer_name");
 
             DynamicParameters parameters = new();
+
             for (int i = 0; i < printerNames.Length; i++)
             {
                 parameters.Add($"@p{i}", printerNames[i]);
@@ -331,6 +306,8 @@ namespace Database.Services
         /// </summary>
         private T ExecuteWithRetry<T>(Func<T> operation)
         {
+            int delay = 1000;
+
             Exception lastException = null;
 
             for (int attempt = 1; attempt <= _maxRetryAttempts; attempt++)
@@ -342,15 +319,19 @@ namespace Database.Services
                 catch (OdbcException ex) when (IsRetryableException(ex) && attempt < _maxRetryAttempts)
                 {
                     lastException = ex;
-                    int delay = _baseRetryDelayMs * (int)Math.Pow(2, attempt - 1); // Exponential backoff
 
-                    _logger.Warning($"Database conflict on attempt {attempt}, retrying in {delay}ms: {ex.Message}");
-                    System.Threading.Thread.Sleep(delay);
+                    delay = _baseRetryDelayMs * (int)Math.Pow(2, attempt - 1); // Exponential backoff
+
+                    _logger.Warning($"Retrying in {delay} ms: {ex.Message}");
                 }
                 catch (Exception ex)
                 {
                     _logger.Error($"Non-retryable exception on attempt {attempt}: {ex.Message}", ex);
-                    throw;
+                }
+                finally
+                {
+                    _logger.Debug($"Attempt {attempt} completed");
+                    System.Threading.Thread.Sleep(delay);
                 }
             }
 
