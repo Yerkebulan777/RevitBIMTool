@@ -1,4 +1,5 @@
 ﻿using Database.Models;
+using Database.Stores;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -19,20 +20,10 @@ namespace Database
 
         public IEnumerable<PrinterInfo> GetActivePrinters()
         {
-            const string sql = @"
-            SELECT id, name, state, last_update, job_count 
-            FROM printer 
-            WHERE state IN (?, ?, ?) 
-            ORDER BY last_update ASC";
-
             using IDbConnection connection = new OdbcConnection(_connectionString);
             connection.Open();
 
-            using IDbCommand command = CreateCommand(sql, connection);
-
-            AddParameter(command, 0, (int)PrinterState.Ready);
-            AddParameter(command, 1, (int)PrinterState.Printing);
-            AddParameter(command, 2, (int)PrinterState.Paused);
+            using IDbCommand command = CreateCommand(PrinterSqlStore.GetActivePrinters, connection);
 
             List<PrinterInfo> printers = [];
             using (IDataReader reader = command.ExecuteReader())
@@ -49,22 +40,15 @@ namespace Database
 
         public void UpdatePrinterStatus(int printerId, PrinterInfo state)
         {
-            const string sql = @"
-            UPDATE printer 
-            SET state = ?, last_update = CURRENT_TIMESTAMP 
-            WHERE id = ?";
-
             using IDbConnection connection = new OdbcConnection(_connectionString);
-
             connection.Open();
 
             using IDbTransaction transaction = connection.BeginTransaction();
             try
             {
-                using IDbCommand command = CreateCommand(sql, connection);
+                using IDbCommand command = CreateCommand(PrinterSqlStore.UpdatePrinterStatus, connection);
                 command.Transaction = transaction;
-                AddParameter(command, 1, (int)state.State);
-                AddParameter(command, 2, printerId);
+                AddParameter(command, 1, printerId);
                 _ = command.ExecuteNonQuery();
                 transaction.Commit();
             }
@@ -77,15 +61,10 @@ namespace Database
 
         public bool TryAcquirePrinterLock(int printerId)
         {
-            const string sql = @"
-            UPDATE printer 
-            SET locked = TRUE, locked_by = ?, locked_at = CURRENT_TIMESTAMP 
-            WHERE id = ? AND locked = FALSE";
-
             using IDbConnection connection = new OdbcConnection(_connectionString);
             connection.Open();
 
-            using IDbCommand command = CreateCommand(sql, connection);
+            using IDbCommand command = CreateCommand(PrinterSqlStore.TryAcquirePrinterLock, connection);
             AddParameter(command, 1, Environment.MachineName);
             AddParameter(command, 2, printerId);
 
@@ -95,15 +74,10 @@ namespace Database
 
         public void ReleasePrinterLock(int printerId)
         {
-            const string sql = @"
-            UPDATE printer 
-            SET locked = FALSE, locked_by = NULL, locked_at = NULL 
-            WHERE id = ?";
-
             using IDbConnection connection = new OdbcConnection(_connectionString);
             connection.Open();
 
-            using IDbCommand command = CreateCommand(sql, connection);
+            using IDbCommand command = CreateCommand(PrinterSqlStore.ReleasePrinterLock, connection);
             AddParameter(command, 1, printerId);
             _ = command.ExecuteNonQuery();
         }
@@ -118,14 +92,11 @@ namespace Database
 
         private static void SetPrinterStateProperties(PrinterInfo printer, IDataReader reader)
         {
-            printer.Id = reader.GetInt32(0);           // id
-            printer.PrinterName = reader.GetString(1); // name
-            printer.State = (PrinterState)reader.GetInt32(2); // state
-            printer.LastUpdate = reader.GetDateTime(3); // last_update
-            printer.JobCount = reader.GetInt32(4);     // job_count
+            printer.Id = reader.GetInt32(0);
+            printer.PrinterName = reader.GetString(1);
+            printer.State = (PrinterState)reader.GetInt32(2);
+            printer.LastUpdate = reader.GetDateTime(3);
+            printer.JobCount = reader.GetInt32(4);
         }
-
-
-
     }
 }

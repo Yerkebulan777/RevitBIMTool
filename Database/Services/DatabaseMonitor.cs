@@ -7,10 +7,6 @@ using System.Text;
 
 namespace Database.Services
 {
-    /// <summary>
-    /// Сервис для проверки доступа и состояния базы данных принтеров.
-    /// Использует простой собственный логгер без dynamic объектов.
-    /// </summary>
     public sealed class DatabaseMonitor : IDisposable
     {
         private readonly string _connectionString;
@@ -25,13 +21,9 @@ namespace Database.Services
             _logger.Information($"DatabaseMonitor created successfully");
         }
 
-        /// <summary>
-        /// Выполняет полную проверку состояния базы данных и возвращает текстовый отчет.
-        /// </summary>
         public string CheckDatabaseHealth()
         {
             StringBuilder report = new StringBuilder();
-
             bool isHealthy = true;
 
             _logger.Information("Starting database health check");
@@ -42,9 +34,7 @@ namespace Database.Services
 
                 using OdbcConnection connection = CreateConnection();
 
-                // 1. Проверка базового соединения
                 bool connectionOk = TestBasicConnection(connection, report);
-
                 isHealthy &= connectionOk;
 
                 if (!connectionOk)
@@ -54,18 +44,14 @@ namespace Database.Services
                     return report.ToString();
                 }
 
-                // 2. Проверка структуры таблиц
                 bool schemaOk = ValidateTableStructure(connection, report);
-
                 isHealthy &= schemaOk;
 
-                // 3. Получение статистики (только если схема в порядке)
                 if (schemaOk)
                 {
                     GetDatabaseStatistics(connection, report);
                 }
 
-                // 4. Проверка производительности
                 double responseTime = MeasureResponseTime(connection);
                 _ = report.AppendLine($"\n✓ Время отклика БД: {responseTime:F1} мс");
 
@@ -75,7 +61,6 @@ namespace Database.Services
                     _logger.Warning($"Slow database response: {responseTime:F1} ms");
                 }
 
-                // Итоговый статус
                 if (isHealthy)
                 {
                     _ = report.AppendLine("\n🎉 БАЗА ДАННЫХ РАБОТАЕТ КОРРЕКТНО");
@@ -104,9 +89,6 @@ namespace Database.Services
             }
         }
 
-        /// <summary>
-        /// Быстрая проверка доступности БД (только соединение).
-        /// </summary>
         public bool IsConnectionAvailable()
         {
             try
@@ -125,9 +107,6 @@ namespace Database.Services
             }
         }
 
-        /// <summary>
-        /// Создает новое подключение к базе данных.
-        /// </summary>
         private OdbcConnection CreateConnection()
         {
             _logger.Debug("Creating database connection");
@@ -135,7 +114,6 @@ namespace Database.Services
             connection.Open();
             return connection;
         }
-
 
         private bool TestBasicConnection(OdbcConnection connection, StringBuilder report)
         {
@@ -149,7 +127,6 @@ namespace Database.Services
                 _ = report.AppendLine("✓ Соединение с БД установлено успешно");
                 _ = report.AppendLine($"✓ Версия БД: {dbVersion ?? "Неизвестно"}");
 
-                // Получаем информацию о подключении
                 try
                 {
                     ConnectionInfo connectionInfo = GetConnectionInfo(connection);
@@ -264,8 +241,8 @@ namespace Database.Services
         {
             try
             {
-                string dbName = connection.QuerySingleOrDefault<string>("SELECT current_database()");
-                string userName = connection.QuerySingleOrDefault<string>("SELECT current_user");
+                string dbName = connection.QuerySingleOrDefault<string>(PrinterSqlStore.GetCurrentDatabase);
+                string userName = connection.QuerySingleOrDefault<string>(PrinterSqlStore.GetCurrentUser);
 
                 return new ConnectionInfo
                 {
@@ -288,20 +265,15 @@ namespace Database.Services
         {
             try
             {
-                // Простые отдельные запросы вместо сложного объединения
-                int totalPrinters = connection.QuerySingle<int>("SELECT COUNT(*) FROM printer_states");
-                int availablePrinters = connection.QuerySingle<int>("SELECT COUNT(*) FROM printer_states WHERE is_available = true");
-                int reservedPrinters = connection.QuerySingle<int>("SELECT COUNT(*) FROM printer_states WHERE is_available = false");
+                int totalPrinters = connection.QuerySingle<int>(PrinterSqlStore.GetPrinterStatistics);
+                int availablePrinters = connection.QuerySingle<int>(PrinterSqlStore.GetAvailablePrintersCount);
+                int reservedPrinters = connection.QuerySingle<int>(PrinterSqlStore.GetReservedPrintersCount);
 
                 double avgTime = 0;
 
                 try
                 {
-                    double? avgTimeResult = connection.QuerySingleOrDefault<double?>(
-                        @"SELECT AVG(EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - reserved_at))/60) 
-                          FROM printer_states 
-                          WHERE reserved_at IS NOT NULL");
-
+                    double? avgTimeResult = connection.QuerySingleOrDefault<double?>(PrinterSqlStore.GetAverageReservationTime);
                     avgTime = avgTimeResult ?? 0;
                 }
                 catch (Exception ex)
@@ -333,7 +305,6 @@ namespace Database.Services
             }
         }
 
-        // Вспомогательные классы
         private sealed class ConnectionInfo
         {
             public string DatabaseName { get; set; }
@@ -347,8 +318,5 @@ namespace Database.Services
             public int ReservedPrinters { get; set; }
             public double AvgReservationTimeMinutes { get; set; }
         }
-
-
-
     }
 }
