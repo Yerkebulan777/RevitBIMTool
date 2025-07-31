@@ -22,7 +22,7 @@ namespace Database
         private readonly int _baseRetryDelayMs;
         private readonly int _lockTimeoutMinutes;
         private readonly ILogger _logger;
-        private static readonly object _initLock = new object();
+        private static readonly object _initLock = new();
         private volatile bool _schemaInitialized = false;
         private bool _disposed = false;
 
@@ -116,7 +116,7 @@ namespace Database
                 _logger.Information($"Cleaned up {cleanedCount} expired reservations before new reservation");
             }
 
-            var  process  = Process.GetCurrentProcess();
+            Process process = Process.GetCurrentProcess();
 
             return ExecuteWithRetry(conn =>
             {
@@ -333,7 +333,7 @@ namespace Database
 
         private OdbcConnection CreateConnection()
         {
-            OdbcConnection connection = new OdbcConnection(_connectionString);
+            OdbcConnection connection = new(_connectionString);
             connection.Open();
             return connection;
         }
@@ -342,7 +342,7 @@ namespace Database
         {
             if (preferredPrinters?.Length > 0)
             {
-                HashSet<string> preferredSet = new HashSet<string>(
+                HashSet<string> preferredSet = new(
                     preferredPrinters.Where(p => !string.IsNullOrWhiteSpace(p)),
                     StringComparer.OrdinalIgnoreCase);
 
@@ -383,7 +383,7 @@ namespace Database
         private static bool IsSerializationFailure(OdbcException ex)
         {
             string[] serializationErrorCodes = { "40001", "40P01", "25P02" };
-            return serializationErrorCodes.Any(code => ex.Message.Contains(code));
+            return serializationErrorCodes.Any(ex.Message.Contains);
         }
 
 
