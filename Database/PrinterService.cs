@@ -78,12 +78,6 @@ namespace Database
         /// </summary>
         public void InitializePrinters(params string[] printerNames)
         {
-            if (printerNames?.Length == 0)
-            {
-                _logger.Warning("No printer names provided for initialization");
-                return;
-            }
-
             _logger.Information($"Initializing {printerNames.Length} printerControllers");
 
             var validPrinters = printerNames
