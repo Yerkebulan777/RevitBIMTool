@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using Database.Logging;
+using Database.Models;
 using Database.Stores;
 using System;
 using System.Collections.Generic;
@@ -282,12 +283,10 @@ namespace Database.Services
         /// <summary>
         /// Получает доступные принтеры с блокировкой для обновления.
         /// </summary>
-        private IEnumerable<PrinterInfo> GetAvailablePrintersWithLock(OdbcConnection connection,
-            OdbcTransaction transaction, string[] printerNames)
+        private IEnumerable<PrinterInfo> GetAvailablePrintersWithLock(OdbcConnection connection, OdbcTransaction transaction, string[] printerNames)
         {
             string inClause = string.Join(",", printerNames.Select((_, i) => $"@p{i}"));
-            string sql = PrinterSqlStore.GetAvailablePrintersWithLock.Replace("ORDER BY printer_name",
-                $"AND printer_name IN ({inClause}) ORDER BY printer_name");
+            string sql = PrinterSqlStore.GetAvailablePrintersWithLock.Replace("ORDER BY printer_name", $"AND printer_name IN ({inClause}) ORDER BY printer_name");
 
             var parameters = new DynamicParameters();
             for (int i = 0; i < printerNames.Length; i++)
