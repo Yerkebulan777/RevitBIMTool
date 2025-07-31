@@ -35,7 +35,7 @@ namespace RevitBIMTool.Utils.ExportPDF
 
                 printerServiceInstance = new Lazy<PrinterService>(() =>
                     new PrinterService(
-                        сonnectionString,
+                        connectionString: сonnectionString,
                         commandTimeout: commandTimeout,
                         maxRetryAttempts: maxRetries,
                         baseRetryDelayMs: retryDelay,
