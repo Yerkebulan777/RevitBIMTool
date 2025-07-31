@@ -409,17 +409,4 @@ namespace Database.Services
         }
     }
 
-    /// <summary>
-    /// Модель данных принтера для работы с базой данных.
-    /// </summary>
-    internal class PrinterInfo
-    {
-        public int Id { get; set; }
-        public string PrinterName { get; set; }
-        public bool IsAvailable { get; set; }
-        public string ReservedByFile { get; set; }
-        public DateTime? ReservedAt { get; set; }
-        public int? ProcessId { get; set; }
-        public Guid VersionToken { get; set; }
-    }
 }

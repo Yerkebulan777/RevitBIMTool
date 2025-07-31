@@ -23,7 +23,6 @@ namespace Database.Services
             return printer.State == PrinterState.Printing && printer.LastUpdate < DateTime.UtcNow.Subtract(StuckThreshold);
         }
 
-
         /// <summary>
         /// Проверяет, нужно ли обновить статус принтера
         /// </summary>
@@ -31,6 +30,7 @@ namespace Database.Services
         {
             return printer.LastUpdate < DateTime.UtcNow.AddMinutes(-5);
         }
+
 
     }
 }
