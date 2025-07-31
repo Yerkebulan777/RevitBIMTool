@@ -35,9 +35,10 @@ namespace Database.Services
             _lockTimeoutMinutes = lockTimeoutMinutes;
 
             LoggerFactory.Initialize(LoggerLevel.Debug);
+
             _logger = LoggerFactory.CreateLogger<PrinterService>();
 
-            _logger.Information($"PrinterService initialized with timeout {commandTimeout}s, max retries {maxRetryAttempts}");
+            _logger.Information($"Initialized with timeout {commandTimeout}s, max retries {maxRetryAttempts}");
         }
 
         /// <summary>
