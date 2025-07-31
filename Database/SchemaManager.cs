@@ -89,7 +89,7 @@ namespace Database
                     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
                 );";
 
-            connection.Execute(createTableSql, transaction: transaction, commandTimeout: _commandTimeout);
+            _ = connection.Execute(createTableSql, transaction: transaction, commandTimeout: _commandTimeout);
 
             // Добавляем ограничения отдельными командами для лучшей читаемости
             AddTableConstraints(connection, transaction);
@@ -120,7 +120,7 @@ namespace Database
 
             foreach (string constraint in constraints)
             {
-                connection.Execute(constraint, transaction: transaction, commandTimeout: _commandTimeout);
+                _ = connection.Execute(constraint, transaction: transaction, commandTimeout: _commandTimeout);
             }
         }
 
@@ -182,4 +182,6 @@ namespace Database
             }
         }
     }
+
+
 }

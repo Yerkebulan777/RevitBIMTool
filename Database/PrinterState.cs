@@ -46,5 +46,6 @@ namespace Database.Models
         /// </summary>
         public Guid VersionToken { get; set; }
 
+
     }
 }
