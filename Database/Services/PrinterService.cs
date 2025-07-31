@@ -304,18 +304,13 @@ namespace Database.Services
         {
             string sql = PrinterSqlStore.GetAvailablePrintersWithLock + " AND printer_name = @printerName";
 
-            return connection.QueryFirstOrDefault<PrinterInfo>(
-                sql,
-                new { printerName },
-                transaction,
-                _commandTimeout);
+            return connection.QueryFirstOrDefault<PrinterInfo>(sql, new { printerName }, transaction, _commandTimeout);
         }
 
         /// <summary>
         /// Внутренний метод для резервирования принтера с optimistic locking.
         /// </summary>
-        private bool ReservePrinterInternal(OdbcConnection connection, OdbcTransaction transaction,
-            string printerName, string revitFileName, Guid expectedToken)
+        private bool ReservePrinterInternal(OdbcConnection connection, OdbcTransaction transaction, string printerName, string revitFileName, Guid expectedToken)
         {
             int processId = Process.GetCurrentProcess().Id;
             DateTime reservedAt = DateTime.UtcNow;
