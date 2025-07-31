@@ -18,10 +18,7 @@ namespace RevitBIMTool.Utils.ExportPDF
 
         static PrinterManager()
         {
-            int maxRetries = GetConfigInt("PrinterReservationMaxRetries", 5);
-            int commandTimeout = GetConfigInt("DatabaseCommandTimeout", 60);
-            int lockTimeoutMin = GetConfigInt("PrinterLockTimeoutMinutes", 60);
-            int retryDelay = GetConfigInt("PrinterReservationRetryDelayMs", 100);
+
 
             сonnectionString = ConfigurationManager.ConnectionStrings["PrinterDatabase"]?.ConnectionString;
 
@@ -33,15 +30,24 @@ namespace RevitBIMTool.Utils.ExportPDF
 
                 printerControllers = GetPrinterControllers();
 
-                printerServiceInstance = new Lazy<PrinterService>(() =>
-                    new PrinterService(
-                        connectionString: сonnectionString,
-                        commandTimeout: commandTimeout,
-                        maxRetryAttempts: maxRetries,
-                        baseRetryDelayMs: retryDelay,
-                        lockTimeoutMinutes: lockTimeoutMin),
-                        isThreadSafe: true);
+                printerServiceInstance = new Lazy<PrinterService>(InitializePrinterService, true);
             }
+        }
+
+
+        private static PrinterService InitializePrinterService()
+        {
+            int commandTimeout = GetConfigInt("DatabaseCommandTimeout", 60);
+            int maxRetries = GetConfigInt("PrinterReservationMaxRetries", 5);
+            int lockTimeoutMin = GetConfigInt("PrinterLockTimeoutMinutes", 60);
+            int retryDelay = GetConfigInt("PrinterReservationRetryDelayMs", 100);
+
+            return new PrinterService(
+                    connectionString: сonnectionString,
+                    commandTimeout: commandTimeout,
+                    maxRetryAttempts: maxRetries,
+                    baseRetryDelayMs: retryDelay,
+                    lockTimeoutMinutes: lockTimeoutMin);
         }
 
         /// <summary>
