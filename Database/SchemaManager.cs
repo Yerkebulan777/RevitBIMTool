@@ -174,6 +174,7 @@ namespace Database
             }
         }
 
+
         public void Dispose()
         {
             if (!_disposed)
@@ -181,7 +182,7 @@ namespace Database
                 _disposed = true;
             }
         }
+
+
     }
-
-
 }
