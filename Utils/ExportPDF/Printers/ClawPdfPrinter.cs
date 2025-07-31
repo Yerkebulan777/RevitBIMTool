@@ -16,7 +16,7 @@ internal sealed class ClawPdfPrinter : PrinterControl
 
     public override void InitializePrinter()
     {
-        PrinterStateManager.ReservePrinter(PrinterName);
+        PrinterStateManager.TryReservePrinter(PrinterName);
 
         string autoSaveKey = Path.Combine(RegistryPath, "AutoSave");
         RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "Enabled", "True");

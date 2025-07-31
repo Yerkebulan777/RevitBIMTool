@@ -84,7 +84,7 @@ namespace Database
                 return;
             }
 
-            _logger.Information($"Initializing {printerNames.Length} printers");
+            _logger.Information($"Initializing {printerNames.Length} printerControllers");
 
             var validPrinters = printerNames
                 .Where(name => !string.IsNullOrWhiteSpace(name))
@@ -98,30 +98,25 @@ namespace Database
                 return conn.Execute(PrinterSqlStore.InitializePrinter, validPrinters, commandTimeout: _commandTimeout);
             });
 
-            _logger.Information($"Initialized {insertedCount} printers in database");
+            _logger.Information($"Initialized {insertedCount} printerControllers in database");
         }
 
         /// <summary>
         /// Резервирует любой доступный принтер из списка предпочтений.
         /// </summary>
-        public string TryReserveAnyAvailablePrinter(string revitFilePath, params string[] preferredPrinters)
+        public string TryReserveAvailablePrinter(string revitFilePath, params string[] preferredPrinters)
         {
-            if (string.IsNullOrWhiteSpace(revitFilePath))
-            {
-                throw new ArgumentException("Revit file path cannot be empty", nameof(revitFilePath));
-            }
-
-            string revitFileName = Path.GetFileName(revitFilePath);
-            _logger.Information($"Attempting to reserve printer for file: {revitFileName}");
+            string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
 
             // Автоматическая очистка перед резервированием
             int cleanedCount = CleanupExpiredReservations();
+
             if (cleanedCount > 0)
             {
                 _logger.Information($"Cleaned up {cleanedCount} expired reservations before new reservation");
             }
 
-            int processId = Process.GetCurrentProcess().Id;
+            var  process  = Process.GetCurrentProcess();
 
             return ExecuteWithRetry(conn =>
             {
@@ -137,12 +132,12 @@ namespace Database
 
                     if (!availablePrinters.Any())
                     {
-                        _logger.Warning($"No available printers found for {revitFileName}");
+                        _logger.Warning($"No available printerControllers found for {revitFileName}");
                         transaction.Rollback();
                         return null;
                     }
 
-                    _logger.Debug($"Found {availablePrinters.Count} available printers");
+                    _logger.Debug($"Found {availablePrinters.Count} available printerControllers");
 
                     List<PrinterState> orderedPrinters = OrderByPreference(availablePrinters, preferredPrinters);
 
@@ -157,7 +152,7 @@ namespace Database
                                 printerName = printer.PrinterName,
                                 revitFileName,
                                 reservedAt = DateTime.UtcNow,
-                                processId,
+                                processId = process.Id,
                                 expectedToken = printer.VersionToken
                             },
                             transaction,
@@ -326,12 +321,12 @@ namespace Database
         /// </summary>
         public IEnumerable<PrinterState> GetAvailablePrinters()
         {
-            _logger.Debug("Retrieving available printers");
+            _logger.Debug("Retrieving available printerControllers");
 
             return ExecuteWithRetry(conn =>
             {
                 List<PrinterState> printers = conn.Query<PrinterState>(PrinterSqlStore.GetAvailablePrinters, commandTimeout: _commandTimeout).ToList();
-                _logger.Debug($"Found {printers.Count} available printers");
+                _logger.Debug($"Found {printers.Count} available printerControllers");
                 return printers;
             });
         }
@@ -372,7 +367,7 @@ namespace Database
                 catch (OdbcException ex) when (IsSerializationFailure(ex) && attempt < _maxRetryAttempts)
                 {
                     int delay = _baseRetryDelayMs * (int)Math.Pow(2, attempt);
-                    _logger.Warning($"Serialization failure on attempt {attempt}, retrying in {delay}ms");
+                    _logger.Warning($"Serialization failure on attempt {attempt}, retrying in {delay} ms");
                     Thread.Sleep(delay);
                 }
                 catch (Exception ex)
@@ -383,9 +378,7 @@ namespace Database
             }
 
             throw new InvalidOperationException("Maximum retry attempts exceeded for database operation");
-
         }
-
 
         private static bool IsSerializationFailure(OdbcException ex)
         {

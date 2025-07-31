@@ -12,20 +12,20 @@ namespace RevitBIMTool.Utils.ExportPDF
     internal static class PrinterStateManager
     {
         private static readonly int lockTimeoutMin;
-        private static PrinterService printerService;
         private static readonly string сonnectionString;
-        private static readonly object lockObject = new();
-
-        private static string[] PrinterNames { get; set; }
-        private static List<PrinterControl> printers { get; set; }
+        private static readonly List<PrinterControl> printerControllers;
+        private static readonly Lazy<PrinterService> printerServiceInstance;
+        internal static string[] PrinterNames { get; set; }
 
         static PrinterStateManager()
         {
-            printers = GetPrinterControllers();
             lockTimeoutMin = int.TryParse(ConfigurationManager.AppSettings["PrinterLockTimeoutMinutes"], out int timeout) ? timeout : 5;
             сonnectionString = ConfigurationManager.ConnectionStrings["PrinterDatabase"]?.ConnectionString;
+            printerServiceInstance = new Lazy<PrinterService>(CreatePrinterService, isThreadSafe: true);
 
             Log.Information("Initializing lock timeout {Timeout} minutes", lockTimeoutMin);
+
+            printerControllers = GetPrinterControllers();
 
             if (string.IsNullOrEmpty(сonnectionString))
             {
@@ -34,32 +34,33 @@ namespace RevitBIMTool.Utils.ExportPDF
         }
 
         /// <summary>
+        /// Создает экземпляр сервиса принтеров.
+        /// </summary>
+        private static PrinterService CreatePrinterService()
+        {
+            return new PrinterService(
+                    сonnectionString,
+                    commandTimeout: 30,
+                    maxRetryAttempts: 3,
+                    baseRetryDelayMs: 100,
+                    lockTimeoutMinutes: lockTimeoutMin);
+        }
+
+        /// <summary>
         /// Thread-safe получение сервиса принтеров (singleton pattern).
         /// </summary>
         private static PrinterService GetPrinterService()
         {
-            if (printerService is null)
+            PrinterNames = [.. printerControllers.Where(p => p.IsPrinterInstalled()).Select(p => p.PrinterName)];
+            Log.Information("Total printers found: {Count}", PrinterNames?.Length ?? 0);
+
+            if (PrinterNames.Length == 0)
             {
-                lock (lockObject)
-                {
-                    printerService = new PrinterService(
-                                        сonnectionString,
-                                        commandTimeout: 30,
-                                        maxRetryAttempts: 3,
-                                        baseRetryDelayMs: 100,
-                                        lockTimeoutMinutes: lockTimeoutMin);
-
-                    PrinterNames = [.. printers.Where(p => p.IsPrinterInstalled()).Select(p => p.PrinterName)];
-                    Log.Information("PrinterStateManager initialized with {Count} printers", PrinterNames?.Length);
-
-                    if (PrinterNames?.Length == 0)
-                    {
-                        Log.Warning("No installed printers");
-                    }
-                }
+                Log.Warning("No installed printerControllers");
             }
 
-            return printerService;
+            // Value обеспечивает потокобезопасную инициализацию
+            return printerServiceInstance.Value;
         }
 
         /// <summary>
@@ -71,13 +72,13 @@ namespace RevitBIMTool.Utils.ExportPDF
 
             try
             {
-                printerService = GetPrinterService();
+                PrinterService printerService = GetPrinterService();
 
-                string reservedPrinterName = printerService.TryReserveAnyAvailablePrinter(revitFilePath, PrinterNames);
+                string reservedPrinterName = printerService.TryReserveAvailablePrinter(revitFilePath, PrinterNames);
 
                 if (!string.IsNullOrEmpty(reservedPrinterName))
                 {
-                    availablePrinter = printers.FirstOrDefault(p => string.Equals(p.PrinterName, reservedPrinterName, StringComparison.OrdinalIgnoreCase));
+                    availablePrinter = printerControllers.FirstOrDefault(p => string.Equals(p.PrinterName, reservedPrinterName));
 
                     if (availablePrinter is not null)
                     {
@@ -88,7 +89,7 @@ namespace RevitBIMTool.Utils.ExportPDF
                     }
                 }
 
-                Log.Warning("No available printers to reserve for file {FileName}", System.IO.Path.GetFileName(revitFilePath));
+                Log.Warning("No available printerControllers to reserve for file {FileName}", System.IO.Path.GetFileName(revitFilePath));
             }
             catch (Exception ex)
             {
@@ -101,28 +102,28 @@ namespace RevitBIMTool.Utils.ExportPDF
         /// <summary>
         /// Резервирует конкретный принтер.
         /// </summary>
-        public static void ReservePrinter(string printerName)
+        public static bool TryReservePrinter(string printerName)
         {
             try
             {
-                printerService = GetPrinterService();
+                PrinterService printerService = GetPrinterService();
 
                 string dummyFilePath = $"Reservation_{DateTime.Now:yyyyMMdd_HHmmss}";
 
                 if (printerService.TryReserveSpecificPrinter(printerName, dummyFilePath))
                 {
                     Log.Information("Successfully reserved printer {PrinterName} manually", printerName);
-                }
-                else
-                {
-                    Log.Warning("Failed to reserve printer {PrinterName} (may be already in use)", printerName);
+                    return true;
                 }
             }
             catch (Exception ex)
             {
                 Log.Error(ex, "Error reserving printer {PrinterName}: {Message}", printerName, ex.Message);
-                throw;
             }
+
+            Log.Warning("Failed to reserve printer {PrinterName}", printerName);
+
+            return false;
         }
 
         /// <summary>
@@ -130,27 +131,23 @@ namespace RevitBIMTool.Utils.ExportPDF
         /// </summary>
         public static void ReleasePrinter(string printerName)
         {
-            if (string.IsNullOrWhiteSpace(printerName))
-            {
-                return;
-            }
-
             try
             {
-                bool success = GetPrinterService().ReleasePrinter(printerName);
+                PrinterService printerService = GetPrinterService();
 
-                if (success)
+                if (printerService.ReleasePrinter(printerName))
                 {
                     Log.Information("Successfully released printer {PrinterName}", printerName);
                 }
                 else
                 {
-                    Log.Debug("Printer {PrinterName} was not reserved or already released", printerName);
+                    throw new InvalidOperationException($"Failed to release printer {printerName}!");
                 }
             }
             catch (Exception ex)
             {
                 Log.Error(ex, "Error releasing printer {PrinterName}: {Message}", printerName, ex.Message);
+                throw new InvalidOperationException($"Error releasing printer {printerName}: {ex.Message}");
             }
         }
 
@@ -161,7 +158,9 @@ namespace RevitBIMTool.Utils.ExportPDF
         {
             try
             {
-                int cleanedCount = GetPrinterService().CleanupExpiredReservations();
+                PrinterService printerService = GetPrinterService();
+
+                int cleanedCount = printerService.CleanupExpiredReservations();
 
                 if (cleanedCount > 0)
                 {

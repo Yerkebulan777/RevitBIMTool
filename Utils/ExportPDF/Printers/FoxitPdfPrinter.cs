@@ -14,7 +14,7 @@ internal sealed class FoxitPdfPrinter : PrinterControl
 
     public override void InitializePrinter()
     {
-        PrinterStateManager.ReservePrinter(PrinterName);
+        PrinterStateManager.TryReservePrinter(PrinterName);
 
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSave", "1");
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoOverwrite", "1");

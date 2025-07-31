@@ -15,7 +15,7 @@ internal sealed class CreatorPrinter : PrinterControl
 
     public override void InitializePrinter()
     {
-        PrinterStateManager.ReservePrinter(PrinterName);
+        PrinterStateManager.TryReservePrinter(PrinterName);
 
         string autoSave = Path.Combine(RegistryPath, "AutoSave");
         string openViewerKey = Path.Combine(RegistryPath, "OpenViewer");

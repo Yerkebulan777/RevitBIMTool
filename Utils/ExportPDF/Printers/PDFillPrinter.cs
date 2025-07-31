@@ -27,7 +27,7 @@ internal sealed class PDFillPrinter : PrinterControl
     /// </summary>
     public override void InitializePrinter()
     {
-        PrinterStateManager.ReservePrinter(PrinterName);
+        PrinterStateManager.TryReservePrinter(PrinterName);
 
         // Настройки вывода
         RegistryHelper.SetValue(Registry.CurrentUser, OutputOptionsPath, "EXIST_PDF", 1);

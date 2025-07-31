@@ -14,7 +14,7 @@ internal sealed class Pdf24Printer : PrinterControl
 
     public override void InitializePrinter()
     {
-        PrinterStateManager.ReservePrinter(PrinterName);
+        PrinterStateManager.TryReservePrinter(PrinterName);
 
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveOpenDir", 0);
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "Handler", "autoSave");
