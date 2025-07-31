@@ -47,17 +47,6 @@ namespace Database.Services
         /// </summary>
         public string TryReserveAvailablePrinter(string revitFileName, string[] availablePrinterNames)
         {
-            if (string.IsNullOrEmpty(revitFileName))
-            {
-                throw new ArgumentException("Revit file name cannot be null or empty", nameof(revitFileName));
-            }
-
-            if (availablePrinterNames?.Length == 0)
-            {
-                _logger.Warning("No printer names provided for reservation");
-                return null;
-            }
-
             _logger.Information($"Attempting to reserve any available printer for file: {revitFileName}");
 
             return ExecuteWithRetry(() =>
