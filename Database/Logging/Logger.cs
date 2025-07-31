@@ -6,6 +6,28 @@ using System.Runtime.CompilerServices;
 namespace Database
 {
     /// <summary>
+    /// Уровни логирования.
+    /// </summary>
+    public enum LoggerLevel
+    {
+        Debug = 0,
+        Information = 1,
+        Warning = 2,
+        Error = 3
+    }
+
+    /// <summary>
+    /// Простой интерфейс логгера для проекта Database.
+    /// </summary>
+    public interface ILogger
+    {
+        void Debug(string message);
+        void Information(string message);
+        void Warning(string message);
+        void Error(string message, Exception exception = null);
+    }
+
+    /// <summary>
     /// Простая реализация логгера для проекта Database.
     /// Пишет в Debug Output и в файл.
     /// </summary>

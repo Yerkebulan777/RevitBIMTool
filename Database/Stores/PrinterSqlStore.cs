@@ -1,4 +1,4 @@
-﻿namespace Database
+﻿namespace Database.Stores
 {
     /// <summary>
     /// Централизованное хранилище всех SQL запросов для системы управления принтеров.
