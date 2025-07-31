@@ -29,9 +29,10 @@ namespace Database
             connection.Open();
 
             using IDbCommand command = CreateCommand(sql, connection);
-            AddParameter(command, 1, (int)PrinterState.Ready);
-            AddParameter(command, 2, (int)PrinterState.Printing);
-            AddParameter(command, 3, (int)PrinterState.Paused);
+
+            AddParameter(command, 0, (int)PrinterState.Ready);
+            AddParameter(command, 1, (int)PrinterState.Printing);
+            AddParameter(command, 2, (int)PrinterState.Paused);
 
             List<PrinterInfo> printers = [];
             using (IDataReader reader = command.ExecuteReader())
@@ -54,6 +55,7 @@ namespace Database
             WHERE id = ?";
 
             using IDbConnection connection = new OdbcConnection(_connectionString);
+
             connection.Open();
 
             using IDbTransaction transaction = connection.BeginTransaction();
@@ -63,8 +65,7 @@ namespace Database
                 command.Transaction = transaction;
                 AddParameter(command, 1, (int)state.State);
                 AddParameter(command, 2, printerId);
-
-                _ = command.ExecuteNonQuery();
+                command.ExecuteNonQuery();
                 transaction.Commit();
             }
             catch
