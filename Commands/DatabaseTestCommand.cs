@@ -1,7 +1,6 @@
 ﻿using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using Database;
 using Database.Schema;
 using Database.Services;
 using System.Configuration;
