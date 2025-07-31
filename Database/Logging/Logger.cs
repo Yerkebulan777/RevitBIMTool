@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 
-namespace Database
+namespace Database.Logging
 {
     /// <summary>
     /// Уровни логирования.

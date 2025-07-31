@@ -1,9 +1,11 @@
 ﻿using Dapper;
+using Database.Logging;
+using Database.Stores;
 using System;
 using System.Data.Odbc;
 using System.Text;
 
-namespace Database
+namespace Database.Services
 {
     /// <summary>
     /// Сервис для проверки доступа и состояния базы данных принтеров.

@@ -1,5 +1,7 @@
 ﻿using Dapper;
+using Database.Logging;
 using Database.Models;
+using Database.Stores;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -9,7 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 
-namespace Database
+namespace Database.Services
 {
     /// <summary>
     /// Сервис управления принтерами с простым собственным логгером.

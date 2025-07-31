@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Database
+namespace Database.Logging
 {
     /// <summary>
     /// Фабрика для создания простых логгеров.
