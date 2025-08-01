@@ -153,8 +153,8 @@ namespace Database.Services
 
                         if (rowsAffected > 0)
                         {
-                            transaction.Commit();
                             _logger.Information($"Successfully released printer {printerName}");
+                            transaction.Commit();
                             return true;
                         }
 
