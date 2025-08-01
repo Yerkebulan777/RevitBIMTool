@@ -3,11 +3,9 @@ using Database.Logging;
 using Database.Models;
 using Database.Stores;
 using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.Odbc;
 using System.Diagnostics;
-using System.Linq;
 
 namespace Database.Services
 {
@@ -115,7 +113,6 @@ namespace Database.Services
                         return false;
                     }
 
-                    // Резервируем принтер
                     if (ReservePrinterInternal(connection, transaction, printerName, revitFileName, printerInfo.VersionToken))
                     {
                         transaction.Commit();
@@ -236,7 +233,7 @@ namespace Database.Services
             {
                 try
                 {
-                    connection.Execute(PrinterSqlStore.InitializePrinter, new { printerName }, transaction, _commandTimeout);
+                    _ = connection.Execute(PrinterSqlStore.InitializePrinter, new { printerName }, transaction, _commandTimeout);
 
                     _logger.Debug($"Initialized printer: {printerName}");
                 }
