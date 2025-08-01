@@ -36,7 +36,7 @@ namespace RevitBIMTool.Utils.ExportPDF
         private static PrinterService InitializePrinterService()
         {
             int commandTimeout = GetConfigInt("DatabaseCommandTimeout", 60);
-            int maxRetries = GetConfigInt("PrinterReservationMaxRetries", 5);
+            int maxRetries = GetConfigInt("PrinterReservationMaxRetries", 10);
             int lockTimeoutMin = GetConfigInt("PrinterLockTimeoutMinutes", 60);
             int retryDelay = GetConfigInt("PrinterReservationRetryDelayMs", 100);
 
