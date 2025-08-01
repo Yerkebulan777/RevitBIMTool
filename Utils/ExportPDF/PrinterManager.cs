@@ -34,10 +34,7 @@ namespace RevitBIMTool.Utils.ExportPDF
         /// </summary>
         private static PrinterServiceOld InitializePrinterService()
         {
-            int commandTimeout = GetConfigInt("DatabaseCommandTimeout", 60);
-            int maxRetries = GetConfigInt("PrinterReservationMaxRetries", 10);
-            int lockTimeoutMin = GetConfigInt("PrinterLockTimeoutMinutes", 60);
-            int retryDelay = GetConfigInt("PrinterReservationRetryDelayMs", 100);
+
 
             return new PrinterService(
                 connection: сonnectionString,
@@ -166,20 +163,7 @@ namespace RevitBIMTool.Utils.ExportPDF
             ];
         }
 
-        /// <summary>
-        /// Вспомогательный метод для безопасного чтения целочисленных настроек из конфига.
-        /// </summary>
-        private static int GetConfigInt(string key, int defaultValue)
-        {
-            if (int.TryParse(ConfigurationManager.AppSettings[key], out int value))
-            {
-                Log.Debug("Config setting {Key} = {Value}", key, value);
-                return value;
-            }
 
-            Log.Debug("Using default: {Key} = {Value}", key, defaultValue);
-            return defaultValue;
-        }
 
 
     }

@@ -3,6 +3,7 @@ using Database.Logging;
 using Database.Models;
 using Database.Stores;
 using System;
+using System.Configuration;
 using System.Data;
 using System.Data.Odbc;
 using System.Diagnostics;
@@ -426,6 +427,21 @@ namespace Database.Services
             return message.Contains("serialization", StringComparison.OrdinalIgnoreCase) ||
                    message.Contains("deadlock", StringComparison.OrdinalIgnoreCase) ||
                    message.Contains("lock", StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// Метод для безопасного чтения целочисленных настроек из конфига.
+        /// </summary>
+        private int GetConfigInt(string key, int defaultValue)
+        {
+            if (int.TryParse(ConfigurationManager.AppSettings[key], out int value))
+            {
+                _logger.Debug($"Config setting {key} = {value}");
+                return value;
+            }
+
+            _logger.Debug($"Using default: {key} = {defaultValue}");
+            return defaultValue;
         }
 
 
