@@ -97,21 +97,14 @@ namespace RevitBIMTool.Utils.ExportPDF
         /// <summary>
         /// Резервирует конкретный принтер.
         /// </summary>
-        public static bool TryReservePrinter(string printerName, string revitFileName)
+        public static bool TryReservePrinter(string printerName, string revitFilePath)
         {
-            try
-            {
-                PrinterService printerService = GetPrinterService();
+            PrinterService printerService = GetPrinterService();
 
-                if (printerService.TryReserveSpecificPrinter(printerName, revitFileName))
-                {
-                    Log.Information("Successfully reserved printer {PrinterName} manually", printerName);
-                    return true;
-                }
-            }
-            catch (Exception ex)
+            if (printerService.TryReserveSpecificPrinter(printerName, revitFilePath))
             {
-                Log.Error(ex, "Error reserving printer {PrinterName}: {Message}", printerName, ex.Message);
+                Log.Information("Reserved printer {PrinterName}", printerName);
+                return true;
             }
 
             Log.Warning("Failed to reserve printer {PrinterName}", printerName);
@@ -124,23 +117,15 @@ namespace RevitBIMTool.Utils.ExportPDF
         /// </summary>
         public static void ReleasePrinter(string printerName)
         {
-            try
-            {
-                PrinterService printerService = GetPrinterService();
+            PrinterService printerService = GetPrinterService();
 
-                if (printerService.TryReleasePrinter(printerName))
-                {
-                    Log.Information("Successfully released printer {PrinterName}", printerName);
-                }
-                else
-                {
-                    throw new InvalidOperationException($"Failed to release printer {printerName}!");
-                }
-            }
-            catch (Exception ex)
+            if (printerService.TryReleasePrinter(printerName))
             {
-                Log.Error(ex, "Error releasing printer {PrinterName}: {Message}", printerName, ex.Message);
-                throw new InvalidOperationException($"Error releasing printer {printerName}: {ex.Message}");
+                Log.Information("Successfully released printer {PrinterName}", printerName);
+            }
+            else
+            {
+                throw new InvalidOperationException($"Failed to release printer {printerName}!");
             }
         }
 

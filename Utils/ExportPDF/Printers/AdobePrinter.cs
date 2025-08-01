@@ -12,15 +12,13 @@ internal sealed class AdobePdfPrinter : PrinterControl
     public override string RegistryPath => @"SOFTWARE\Adobe\Acrobat Distiller\PrinterJobControl";
     public override string PrinterName => "Adobe PDF";
     public override bool IsInternalPrinter => false;
-
+    public override string RevitFilePath { get; set; }
 
     public override void InitializePrinter()
     {
-        PrinterManager.TryReservePrinter(PrinterName);
-
-        if (!RegistryHelper.IsKeyExists(Registry.CurrentUser, RegistryPath))
+        if (PrinterManager.TryReservePrinter(PrinterName, RevitFilePath))
         {
-            Log.Warning("PrinterJobControl not found");
+            Log.Information("Adobe PDF printer initialized");
         }
     }
 

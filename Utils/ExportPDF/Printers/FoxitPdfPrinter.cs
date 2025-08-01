@@ -10,16 +10,18 @@ internal sealed class FoxitPdfPrinter : PrinterControl
     public override string RegistryPath => @"SOFTWARE\Foxit Software\Printer\Foxit Reader PDF Printer";
     public override string PrinterName => "Foxit PDF Editor Printer";
     public override bool IsInternalPrinter => false;
+    public override string RevitFilePath { get; set; }
 
 
     public override void InitializePrinter()
     {
-        PrinterManager.TryReservePrinter(PrinterName);
-
-        RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSave", "1");
-        RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoOverwrite", "1");
-        RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowSaveDialog", "0");
-        RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowPrintProgress", "0");
+        if (PrinterManager.TryReservePrinter(PrinterName, RevitFilePath))
+        {
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSave", "1");
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoOverwrite", "1");
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowSaveDialog", "0");
+            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowPrintProgress", "0");
+        }
     }
 
 

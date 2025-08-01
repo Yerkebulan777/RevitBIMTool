@@ -105,7 +105,7 @@ namespace Database.Services
         {
             StringBuilder logBuilder = new();
 
-            _ = logBuilder.AppendLine($"Starting specific printer reservation: {printerName}");
+            logBuilder.AppendLine($"Starting specific printer reservation: {printerName}");
 
             return ExecuteWithRetry(() =>
             {

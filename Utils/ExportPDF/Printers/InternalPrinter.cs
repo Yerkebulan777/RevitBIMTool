@@ -9,7 +9,17 @@ internal sealed class InternalPrinter : PrinterControl
     public override string RegistryPath => "Undefined registry path";
     public override string PrinterName => "Internal Printer";
     public override bool IsInternalPrinter => true;
+    public override string RevitFilePath { get; set; }
 
+    public override void InitializePrinter()
+    {
+        PrinterManager.ReleasePrinter(PrinterName);
+    }
+
+    public override void ReleasePrinterSettings()
+    {
+        PrinterManager.ReleasePrinter(PrinterName);
+    }
 
     public override bool DoPrint(Document doc, SheetModel model, string folder)
     {
@@ -23,19 +33,6 @@ internal sealed class InternalPrinter : PrinterControl
             throw new InvalidOperationException(model.SheetName, ex);
         }
     }
-
-
-    public override void InitializePrinter()
-    {
-        PrinterManager.ReleasePrinter(PrinterName);
-    }
-
-
-    public override void ReleasePrinterSettings()
-    {
-        PrinterManager.ReleasePrinter(PrinterName);
-    }
-
 
 
 }
