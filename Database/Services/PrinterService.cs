@@ -147,7 +147,7 @@ namespace Database.Services
 
                     try
                     {
-                        var sql =  PrinterSqlStore.ReleasePrinter;
+                        string sql = PrinterSqlStore.ReleasePrinter;
 
                         int rowsAffected = connection.Execute(sql, new { printerName, revitFileName }, transaction, _commandTimeout);
 
@@ -177,12 +177,12 @@ namespace Database.Services
         /// Очищает зависшие резервирования принтеров.
         /// Освобождает принтеры, зарезервированные более указанного времени назад.
         /// </summary>
-        /// <returns>Количество освобожденных принтеров</returns>
         public int CleanupExpiredReservations()
         {
             _logger.Information("Starting cleanup of expired printer reservations");
 
-            DateTime cutoffTime = DateTime.UtcNow.AddMinutes(-_lockTimeoutMinutes);
+            TimeSpan lockTimeoutSpan = TimeSpan.FromMinutes(_lockTimeoutMinutes);
+            DateTime cutoffTime = DateTime.UtcNow.Subtract(lockTimeoutSpan);
 
             return ExecuteWithRetry(() =>
             {
