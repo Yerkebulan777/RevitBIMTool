@@ -12,7 +12,7 @@ namespace RevitBIMTool.Utils.ExportPDF
     {
         private static readonly string сonnectionString = InitializeConnectionString();
         private static readonly List<PrinterControl> printerControllers = GetPrinterControllers();
-        private static readonly Lazy<PrinterService> printerServiceInstance = new(InitializePrinterService, true);
+        private static readonly Lazy<PrinterServiceOld> printerServiceInstance = new(InitializePrinterService, true);
 
         /// <summary>
         /// Инициализирует строку подключения.
@@ -32,7 +32,7 @@ namespace RevitBIMTool.Utils.ExportPDF
         /// <summary>
         /// Инициализирует сервис принтеров.
         /// </summary>
-        private static PrinterService InitializePrinterService()
+        private static PrinterServiceOld InitializePrinterService()
         {
             int commandTimeout = GetConfigInt("DatabaseCommandTimeout", 60);
             int maxRetries = GetConfigInt("PrinterReservationMaxRetries", 10);
@@ -50,7 +50,7 @@ namespace RevitBIMTool.Utils.ExportPDF
         /// <summary>
         /// Thread-safe получение сервиса принтеров (singleton pattern).
         /// </summary>
-        private static PrinterService GetPrinterService()
+        private static PrinterServiceOld GetPrinterService()
         {
             // Обеспечивает потокобезопасную инициализацию
             return printerServiceInstance.Value;
@@ -65,7 +65,7 @@ namespace RevitBIMTool.Utils.ExportPDF
 
             try
             {
-                PrinterService printerService = GetPrinterService();
+                PrinterServiceOld printerService = GetPrinterService();
 
                 string[] printerNames = [.. printerControllers.Where(p => p.IsPrinterInstalled()).Select(p => p.PrinterName)];
 
@@ -99,7 +99,7 @@ namespace RevitBIMTool.Utils.ExportPDF
         /// </summary>
         public static bool TryReservePrinter(string printerName, string revitFilePath)
         {
-            PrinterService printerService = GetPrinterService();
+            PrinterServiceOld printerService = GetPrinterService();
 
             if (printerService.TryReserveSpecificPrinter(printerName, revitFilePath))
             {
@@ -117,7 +117,7 @@ namespace RevitBIMTool.Utils.ExportPDF
         /// </summary>
         public static void ReleasePrinter(string printerName)
         {
-            PrinterService printerService = GetPrinterService();
+            PrinterServiceOld printerService = GetPrinterService();
 
             if (printerService.TryReleasePrinter(printerName))
             {
@@ -136,7 +136,7 @@ namespace RevitBIMTool.Utils.ExportPDF
         {
             try
             {
-                PrinterService printerService = GetPrinterService();
+                PrinterServiceOld printerService = GetPrinterService();
 
                 int cleanedCount = printerService.CleanupExpiredReservations();
 

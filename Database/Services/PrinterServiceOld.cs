@@ -12,7 +12,7 @@ namespace Database.Services
 {
     public sealed class PrinterServiceOld : IDisposable
     {
-        internal readonly string _connectionString;
+        private readonly string _connectionString;
         private readonly int _commandTimeout;
         private readonly int _maxRetryAttempts;
         private readonly int _baseRetryDelayMs;
@@ -371,7 +371,7 @@ namespace Database.Services
             {
                 try
                 {
-
+                    _ = logBuilder.AppendLine($"Attempt {attempt} of {_maxRetryAttempts}");
 
                     T result = operation();
 
@@ -380,7 +380,7 @@ namespace Database.Services
                     _ = logBuilder.AppendLine($"Operation succeeded on attempt {attempt}");
                     _ = logBuilder.AppendLine($"Total duration: {totalTimer.ElapsedMilliseconds}ms");
 
-
+                    _logger.Debug(logBuilder.ToString());
 
                     return result;
                 }
