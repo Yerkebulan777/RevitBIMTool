@@ -10,24 +10,23 @@ namespace RevitBIMTool.Utils.ExportPDF
     /// </summary>
     internal static class PrinterManager
     {
-        private static readonly string сonnectionString;
-        private static readonly List<PrinterControl> printerControllers;
-        private static readonly Lazy<PrinterService> printerServiceInstance;
+        private static readonly string сonnectionString = InitializeConnectionString();
+        private static readonly List<PrinterControl> printerControllers = GetPrinterControllers();
+        private static readonly Lazy<PrinterService> printerServiceInstance = new(InitializePrinterService, true);
 
-        static PrinterManager()
+        /// <summary>
+        /// Инициализирует строку подключения.
+        /// </summary>
+        private static string InitializeConnectionString()
         {
-            сonnectionString = ConfigurationManager.ConnectionStrings["PrinterDatabase"]?.ConnectionString;
+            string dbConnectionString = ConfigurationManager.ConnectionStrings["PrinterDatabase"]?.ConnectionString;
 
-            if (string.IsNullOrWhiteSpace(сonnectionString))
+            if (string.IsNullOrWhiteSpace(dbConnectionString))
             {
-                throw new ArgumentNullException(nameof(сonnectionString));
+                Log.Error("Database connection string is not configured or is empty.");
             }
 
-            CleanupExpiredReservations();
-
-            printerControllers = GetPrinterControllers();
-
-            printerServiceInstance = new Lazy<PrinterService>(InitializePrinterService, true);
+            return dbConnectionString;
         }
 
         /// <summary>
