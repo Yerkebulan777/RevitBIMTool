@@ -134,49 +134,43 @@ namespace Database.Services
         /// <summary>
         /// Освобождает принтер от резервирования.
         /// </summary>
-        /// <param name="printerName">Имя принтера для освобождения</param>
-        /// <param name="revitFileName">Имя файла (для проверки прав), может быть null для принудительного освобождения</param>
-        /// <returns>True если принтер успешно освобожден</returns>
         public bool TryReleasePrinter(string printerName, string revitFileName = null)
         {
-            if (string.IsNullOrEmpty(printerName))
+            if (!string.IsNullOrEmpty(printerName))
             {
-                throw new ArgumentException("Printer name cannot be null or empty", nameof(printerName));
+                _logger.Information($"Attempting to release printer {printerName}");
+
+                return ExecuteWithRetry(() =>
+                {
+                    using OdbcConnection connection = CreateConnection();
+                    using OdbcTransaction transaction = BeginSerializableTransaction(connection);
+
+                    try
+                    {
+                        var sql =  PrinterSqlStore.ReleasePrinter;
+
+                        int rowsAffected = connection.Execute(sql, new { printerName, revitFileName }, transaction, _commandTimeout);
+
+                        if (rowsAffected > 0)
+                        {
+                            transaction.Commit();
+                            _logger.Information($"Successfully released printer {printerName}");
+                            return true;
+                        }
+
+                        _logger.Warning($"Failed to release printer {printerName} - either not found or access denied");
+                        transaction.Rollback();
+                        return false;
+                    }
+                    catch
+                    {
+                        transaction.Rollback();
+                        throw;
+                    }
+                });
             }
 
-            _logger.Information($"Attempting to release printer {printerName}" +
-                (revitFileName != null ? $" for file: {revitFileName}" : " (forced)"));
-
-            return ExecuteWithRetry(() =>
-            {
-                using OdbcConnection connection = CreateConnection();
-                using OdbcTransaction transaction = BeginSerializableTransaction(connection);
-
-                try
-                {
-                    int rowsAffected = connection.Execute(
-                        PrinterSqlStore.ReleasePrinter,
-                        new { printerName, revitFileName },
-                        transaction,
-                        _commandTimeout);
-
-                    if (rowsAffected > 0)
-                    {
-                        transaction.Commit();
-                        _logger.Information($"Successfully released printer {printerName}");
-                        return true;
-                    }
-
-                    _logger.Warning($"Failed to release printer {printerName} - either not found or access denied");
-                    transaction.Rollback();
-                    return false;
-                }
-                catch
-                {
-                    transaction.Rollback();
-                    throw;
-                }
-            });
+            return false;
         }
 
         /// <summary>
