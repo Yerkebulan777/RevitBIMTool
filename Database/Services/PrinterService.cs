@@ -191,11 +191,7 @@ namespace Database.Services
 
                 try
                 {
-                    int cleanedCount = connection.Execute(
-                        PrinterSqlStore.CleanupExpiredReservations,
-                        new { cutoffTime },
-                        transaction,
-                        _commandTimeout);
+                    int cleanedCount = connection.Execute(PrinterSqlStore.CleanupExpiredReservations, new { cutoffTime }, transaction, _commandTimeout);
 
                     transaction.Commit();
 
