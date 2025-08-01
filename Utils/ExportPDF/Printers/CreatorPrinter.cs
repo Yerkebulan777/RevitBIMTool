@@ -14,7 +14,7 @@ internal sealed class CreatorPrinter : PrinterControl
     public override string RevitFilePath { get; set; }
 
 
-    public override void InitializePrinter()
+    public override bool InitializePrinter()
     {
         if (PrinterManager.TryReservePrinter(PrinterName, RevitFilePath))
         {
@@ -32,7 +32,11 @@ internal sealed class CreatorPrinter : PrinterControl
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "SkipPrintDialog", "True");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "Name", "<DefaultProfile>");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowProgress", "False");
+
+            return true;
         }
+
+        return false;
     }
 
 

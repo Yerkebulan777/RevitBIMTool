@@ -17,7 +17,7 @@ internal sealed class BioPdfPrinter : PrinterControl
     private string GlobalIniPath { get; set; }
 
 
-    public override void InitializePrinter()
+    public override bool InitializePrinter()
     {
         if (PrinterManager.TryReservePrinter(PrinterName, RevitFilePath))
         {
@@ -33,7 +33,11 @@ internal sealed class BioPdfPrinter : PrinterControl
             GlobalIniPath = Path.Combine(globalSettingsDir, "global.ini");
 
             ConfigureGhostscriptOptimization();
+
+            return true;
         }
+
+        return false;
     }
 
 
@@ -123,7 +127,6 @@ internal sealed class BioPdfPrinter : PrinterControl
 
 
     }
-
 
 
 }

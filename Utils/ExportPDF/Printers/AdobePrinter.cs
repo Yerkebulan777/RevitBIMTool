@@ -14,12 +14,10 @@ internal sealed class AdobePdfPrinter : PrinterControl
     public override bool IsInternalPrinter => false;
     public override string RevitFilePath { get; set; }
 
-    public override void InitializePrinter()
+
+    public override bool InitializePrinter()
     {
-        if (PrinterManager.TryReservePrinter(PrinterName, RevitFilePath))
-        {
-            Log.Information("Adobe PDF printer initialized");
-        }
+        return PrinterManager.TryReservePrinter(PrinterName, RevitFilePath);
     }
 
 

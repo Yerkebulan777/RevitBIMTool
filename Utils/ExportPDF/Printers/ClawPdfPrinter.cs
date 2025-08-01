@@ -14,7 +14,7 @@ internal sealed class ClawPdfPrinter : PrinterControl
     public override bool IsInternalPrinter => false;
     public override string RevitFilePath { get; set; }
 
-    public override void InitializePrinter()
+    public override bool InitializePrinter()
     {
         if (PrinterManager.TryReservePrinter(PrinterName, RevitFilePath))
         {
@@ -25,7 +25,11 @@ internal sealed class ClawPdfPrinter : PrinterControl
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "SkipPrintDialog", "True");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<InputFilename>");
             RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", "<InputFilePath>");
+
+            return true;
         }
+
+        return false;
     }
 
 

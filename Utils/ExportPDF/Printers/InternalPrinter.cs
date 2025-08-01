@@ -12,10 +12,10 @@ internal sealed class InternalPrinter : PrinterControl
     public override string RevitFilePath { get; set; }
 
 
-    public override void InitializePrinter()
+    public override bool InitializePrinter()
     {
-        // Не требует инициализации!
         // Его нет в базе данных принтеров!
+        return true;
     }
 
 
@@ -38,7 +38,6 @@ internal sealed class InternalPrinter : PrinterControl
             throw new InvalidOperationException(model.SheetName, ex);
         }
     }
-
 
 
 }

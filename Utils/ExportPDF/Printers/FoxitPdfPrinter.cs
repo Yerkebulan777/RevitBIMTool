@@ -13,7 +13,7 @@ internal sealed class FoxitPdfPrinter : PrinterControl
     public override string RevitFilePath { get; set; }
 
 
-    public override void InitializePrinter()
+    public override bool InitializePrinter()
     {
         if (PrinterManager.TryReservePrinter(PrinterName, RevitFilePath))
         {
@@ -21,7 +21,11 @@ internal sealed class FoxitPdfPrinter : PrinterControl
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoOverwrite", "1");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowSaveDialog", "0");
             RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowPrintProgress", "0");
+
+            return true;
         }
+
+        return false;
     }
 
 
