@@ -92,7 +92,7 @@
         /// </summary>
         public const string GetAvailablePrintersWithLock = @"
             SELECT id, printer_name as PrinterName, is_available as IsAvailable, 
-                   reserved_file_name as ReservedFileName, reserved_at, process_id as ProcessId, 
+                   reserved_file_name as RevitFileName, reserved_at, process_id as ProcessId, 
                    version_token as VersionToken, job_count as JobCount, state as State,
                    COALESCE(last_update, created_at) as LastUpdate
             FROM printer_states
@@ -105,7 +105,7 @@
         /// </summary>
         public const string GetSingleAvailablePrinterWithLock = @"
             SELECT id, printer_name as PrinterName, is_available as IsAvailable, 
-                   reserved_file_name as ReservedFileName, reserved_at, process_id as ProcessId, 
+                   reserved_file_name as RevitFileName, reserved_at, process_id as ProcessId, 
                    version_token as VersionToken, job_count as JobCount, state as State,
                    COALESCE(last_update, created_at) as LastUpdate
             FROM printer_states
@@ -172,7 +172,7 @@
         /// </summary>
         public const string GetAvailablePrinters = @"
             SELECT id, printer_name as PrinterName, is_available as IsAvailable, 
-                   reserved_file_name as ReservedFileName, reserved_at, process_id as ProcessId, 
+                   reserved_file_name as RevitFileName, reserved_at, process_id as ProcessId, 
                    version_token as VersionToken, job_count as JobCount, state as State,
                    COALESCE(last_update, created_at) as LastUpdate
             FROM printer_states

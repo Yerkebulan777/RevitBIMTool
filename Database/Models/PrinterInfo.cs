@@ -32,7 +32,7 @@ namespace Database.Models
         /// Имя файла, который зарезервировал этот принтер
         /// NULL если принтер свободен
         /// </summary>
-        public string ReservedFileName { get; set; }
+        public string RevitFileName { get; set; }
 
         /// <summary>
         /// Время резервирования принтера

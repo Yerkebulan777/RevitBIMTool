@@ -69,13 +69,11 @@ namespace RevitBIMTool.Utils.ExportPDF
 
                 string[] printerNames = [.. printerControllers.Where(p => p.IsPrinterInstalled()).Select(p => p.PrinterName)];
 
-                string reservedPrinterName = printerService.TryReserveAvailablePrinter(revitFilePath, printerNames);
-
-                Log.Information("Total printers found: {Count}", printerNames?.Length ?? 0);
-
-                if (!string.IsNullOrWhiteSpace(reservedPrinterName))
+                if (printerService.TryReserveAvailablePrinter(revitFilePath, printerNames, out string reservedPrinterName))
                 {
                     availablePrinter = printerControllers.FirstOrDefault(p => string.Equals(p.PrinterName, reservedPrinterName));
+
+                    Log.Information("Total printers: {Count}", printerNames?.Length ?? 0);
 
                     if (availablePrinter is not null)
                     {

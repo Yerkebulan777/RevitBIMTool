@@ -43,13 +43,17 @@ namespace Database.Services
         /// <summary>
         /// Пытается зарезервировать доступный принтер.
         /// </summary>
-        public string TryReserveAvailablePrinter(string revitFileName, string[] availablePrinterNames)
+        public bool TryReserveAvailablePrinter(string revitFileName, string[] availablePrinterNames, out string reservedPrinterName)
         {
+            reservedPrinterName = null;
             StringBuilder logBuilder = new();
+
             _ = logBuilder.AppendLine($"Starting reservation attempt for file: {revitFileName}");
             _ = logBuilder.AppendLine($"Available printers: [{string.Join(", ", availablePrinterNames)}]");
 
-            return ExecuteWithRetry(() =>
+            string localReservedPrinterName = null;
+
+            bool success = ExecuteWithRetry(() =>
             {
                 using OdbcConnection connection = CreateConnection();
                 using OdbcTransaction transaction = BeginSerializableTransaction(connection);
@@ -63,40 +67,35 @@ namespace Database.Services
                     if (selectedPrinter is null)
                     {
                         transaction.Rollback();
-
                         _logger.Debug(logBuilder.ToString());
-
-                        return null;
+                        return false;
                     }
 
                     if (ReservePrinterInternal(connection, transaction, selectedPrinter, revitFileName))
                     {
                         transaction.Commit();
+                        localReservedPrinterName = selectedPrinter.PrinterName;
 
                         _ = logBuilder.AppendLine($"Successfully reserved printer {selectedPrinter.PrinterName}");
-
                         _logger.Information(logBuilder.ToString());
-
-                        return selectedPrinter.PrinterName;
+                        return true;
                     }
 
                     transaction.Rollback();
-
                     _ = logBuilder.AppendLine($"Failed to reserve printer {selectedPrinter.PrinterName}");
-
                     _logger.Warning(logBuilder.ToString());
-
-                    return null;
+                    return false;
                 }
                 catch
                 {
                     transaction.Rollback();
-
                     _logger.Error(logBuilder.ToString());
-
                     throw;
                 }
             });
+
+            reservedPrinterName = localReservedPrinterName;
+            return success;
         }
 
         /// <summary>
@@ -200,7 +199,7 @@ namespace Database.Services
                     PrinterInfo releaseParams = new()
                     {
                         PrinterName = printerName,
-                        ReservedFileName = revitFileName
+                        RevitFileName = revitFileName
                     };
 
                     int rowsAffected = connection.Execute(sql, releaseParams, transaction, _commandTimeout);
@@ -341,7 +340,7 @@ namespace Database.Services
             PrinterInfo reservationParams = new()
             {
                 PrinterName = printerInfo.PrinterName,
-                ReservedFileName = revitFileName,
+                RevitFileName = revitFileName,
                 ProcessId = processId,
                 VersionToken = printerInfo.VersionToken
             };
@@ -350,7 +349,7 @@ namespace Database.Services
             var parameters = new
             {
                 printerName = reservationParams.PrinterName,
-                revitFileName = reservationParams.ReservedFileName,
+                revitFileName = reservationParams.RevitFileName,
                 reservedAt,
                 processId = reservationParams.ProcessId,
                 expectedToken = reservationParams.VersionToken
