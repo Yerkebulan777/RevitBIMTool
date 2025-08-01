@@ -11,15 +11,20 @@ internal sealed class InternalPrinter : PrinterControl
     public override bool IsInternalPrinter => true;
     public override string RevitFilePath { get; set; }
 
+
     public override void InitializePrinter()
     {
-        PrinterManager.ReleasePrinter(PrinterName);
+        // Не требует инициализации!
+        // Его нет в базе данных принтеров!
     }
+
 
     public override void ReleasePrinterSettings()
     {
-        PrinterManager.ReleasePrinter(PrinterName);
+        // Не требует освобождения настроек!
+        // Его нет в базе данных принтеров!
     }
+
 
     public override bool DoPrint(Document doc, SheetModel model, string folder)
     {
