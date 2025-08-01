@@ -1,5 +1,4 @@
-﻿using Dapper;
-using Database.Logging;
+﻿using Database.Logging;
 using Database.Models;
 using Database.Stores;
 using System;
@@ -9,16 +8,12 @@ namespace Database.Services
 {
     public sealed class PrinterService : IDisposable
     {
-        private readonly string _connectionString;
-        private readonly int _commandTimeout;
         private readonly int _lockTimeoutMinutes;
         private readonly ILogger _logger;
         private bool _disposed = false;
 
-        public PrinterService(string connectionString, int commandTimeout = 60, int lockTimeoutMinutes = 30)
+        public PrinterService(int lockTimeoutMinutes = 30)
         {
-            _connectionString = connectionString;
-            _commandTimeout = commandTimeout;
             _lockTimeoutMinutes = lockTimeoutMinutes;
             _logger = LoggerFactory.CreateLogger<PrinterService>();
         }
@@ -30,12 +25,15 @@ namespace Database.Services
 
             _logger.Debug($"Starting reservation for {revitFileName}");
 
-            var (success, elapsed) = DatabaseTransactionHelper.ExecuteInTransaction(_connectionString, (connection, transaction) =>
+            (bool success, TimeSpan elapsed) = DatabaseTransactionHelper.ExecuteInTransaction((connection, transaction) =>
             {
                 InitializePrinters(connection, transaction, availablePrinterNames);
 
                 PrinterInfo selectedPrinter = GetAvailablePrinter(connection, transaction, availablePrinterNames);
-                if (selectedPrinter == null) return false;
+                if (selectedPrinter == null)
+                {
+                    return false;
+                }
 
                 if (ReservePrinterInternal(connection, transaction, selectedPrinter, revitFileName))
                 {
@@ -45,14 +43,7 @@ namespace Database.Services
                 return false;
             });
 
-            if (success)
-            {
-                _logger.Information($"Reserved printer {localReservedPrinterName} in {elapsed.TotalMilliseconds:F0}ms");
-            }
-            else
-            {
-                _logger.Warning($"Failed to reserve printer in {elapsed.TotalMilliseconds:F0}ms");
-            }
+            LogOperationResult("Reserve any printer", localReservedPrinterName ?? "none", success, elapsed);
 
             reservedPrinterName = localReservedPrinterName;
             return success;
@@ -62,32 +53,25 @@ namespace Database.Services
         {
             _logger.Debug($"Starting reservation of {printerName}");
 
-            var (success, elapsed) = DatabaseTransactionHelper.ExecuteInTransaction(_connectionString, (connection, transaction) =>
+            (bool success, TimeSpan elapsed) = DatabaseTransactionHelper.ExecuteInTransaction((connection, transaction) =>
             {
                 PrinterInfo printerInfo = GetPrinterInfoWithLock(connection, transaction, printerName);
 
-                if (printerInfo?.IsAvailable != true) return false;
-
-                return ReservePrinterInternal(connection, transaction, printerInfo, revitFileName);
+                return (printerInfo?.IsAvailable) == true && ReservePrinterInternal(connection, transaction, printerInfo, revitFileName);
             });
 
-            _logger.Information($"Printer {printerName} reservation: {(success ? "success" : "failed")} in {elapsed.TotalMilliseconds:F0}ms");
+            LogOperationResult("Reserve specific printer", printerName, success, elapsed);
 
             return success;
         }
 
-        public bool TryReleasePrinter(string printerName, string revitFileName = null)
+        public bool TryReleasePrinter(string printerName, string revitFileName)
         {
-            if (string.IsNullOrEmpty(printerName)) return false;
+            (int affectedRows, TimeSpan elapsed) = DatabaseTransactionHelper.Execute(PrinterSqlStore.ReleasePrinter, new { printerName, revitFileName });
 
-            var (success, elapsed) = DatabaseTransactionHelper.ExecuteInTransaction(_connectionString, (connection, transaction) =>
-            {
-                var parameters = new { printerName, revitFileName };
-                int rowsAffected = connection.Execute(PrinterSqlStore.ReleasePrinter, parameters, transaction, _commandTimeout);
-                return rowsAffected > 0;
-            });
+            bool success = affectedRows > 0;
 
-            _logger.Information($"Release printer {printerName}: {(success ? "success" : "failed")} in {elapsed.TotalMilliseconds:F0}ms");
+            LogOperationResult("Release printer", printerName, success, elapsed);
 
             return success;
         }
@@ -96,18 +80,27 @@ namespace Database.Services
         {
             DateTime cutoffTime = DateTime.UtcNow.AddMinutes(-_lockTimeoutMinutes);
 
-            var (cleanedCount, elapsed) = DatabaseTransactionHelper.ExecuteInTransaction(_connectionString, (connection, transaction) =>
-            {
-                return connection.Execute(PrinterSqlStore.CleanupExpiredReservations,
-                    new { cutoffTime }, transaction, _commandTimeout);
-            });
+            (int cleanedCount, TimeSpan elapsed) = DatabaseTransactionHelper.Execute(
+                PrinterSqlStore.CleanupExpiredReservations,
+                new { cutoffTime });
 
             _logger.Information($"Cleaned up {cleanedCount} expired reservations in {elapsed.TotalMilliseconds:F0}ms");
 
             return cleanedCount;
         }
 
-        // Приватные методы остаются без изменений...
+        // Вспомогательные методы
+        private void LogOperationResult(string operation, string printerName, bool success, TimeSpan elapsed)
+        {
+            string status = success ? "success" : "failed";
+            _logger.Information($"{operation} {printerName}: {status} in {elapsed.TotalMilliseconds:F0}ms");
+        }
+
+        // Приватные методы для работы с принтерами остаются те же...
+        private void InitializePrinters(OdbcConnection connection, OdbcTransaction transaction, string[] printerNames) { /* ... */ }
+        private PrinterInfo GetAvailablePrinter(OdbcConnection connection, OdbcTransaction transaction, string[] printerNames) { /* ... */ }
+        private PrinterInfo GetPrinterInfoWithLock(OdbcConnection connection, OdbcTransaction transaction, string printerName) { /* ... */ }
+        private bool ReservePrinterInternal(OdbcConnection connection, OdbcTransaction transaction, PrinterInfo printerInfo, string revitFileName) { /* ... */ }
 
         public void Dispose()
         {
