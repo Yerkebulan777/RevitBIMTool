@@ -55,8 +55,8 @@ namespace Database.Services
 
             bool success = ExecuteWithRetry(() =>
             {
-                using OdbcConnection connection = CreateConnection();
-                using OdbcTransaction transaction = BeginSerializableTransaction(connection);
+                using OdbcConnection connection = new OdbcConnection(_connectionString);
+                using OdbcTransaction transaction = connection.BeginTransaction(IsolationLevel.Serializable);
 
                 try
                 {
@@ -104,15 +104,15 @@ namespace Database.Services
         public bool TryReserveSpecificPrinter(string printerName, string revitFileName)
         {
             StringBuilder logBuilder = new();
+
             _ = logBuilder.AppendLine($"Starting specific printer reservation: {printerName}");
-            _ = logBuilder.AppendLine($"File: {revitFileName}");
 
             return ExecuteWithRetry(() =>
             {
                 Stopwatch transactionTimer = Stopwatch.StartNew();
 
-                using OdbcConnection connection = CreateConnection();
-                using OdbcTransaction transaction = BeginSerializableTransaction(connection);
+                using OdbcConnection connection = new OdbcConnection(_connectionString);
+                using OdbcTransaction transaction = connection.BeginTransaction(IsolationLevel.Serializable);
 
                 try
                 {
@@ -189,8 +189,8 @@ namespace Database.Services
             {
                 Stopwatch transactionTimer = Stopwatch.StartNew();
 
-                using OdbcConnection connection = CreateConnection();
-                using OdbcTransaction transaction = BeginSerializableTransaction(connection);
+                using OdbcConnection connection = new OdbcConnection(_connectionString);
+                using OdbcTransaction transaction = connection.BeginTransaction(IsolationLevel.Serializable);
 
                 try
                 {
@@ -238,17 +238,16 @@ namespace Database.Services
         public int CleanupExpiredReservations()
         {
             StringBuilder logBuilder = new();
-            _ = logBuilder.AppendLine("Starting cleanup of expired printer reservations");
 
             DateTime cutoffTime = DateTime.UtcNow.AddMinutes(-_lockTimeoutMinutes);
+
+            _ = logBuilder.AppendLine("Starting cleanup of expired printer reservations");
             _ = logBuilder.AppendLine($"Cutoff time: {cutoffTime:yyyy-MM-dd HH:mm:ss} UTC");
 
             return ExecuteWithRetry(() =>
             {
-                Stopwatch transactionTimer = Stopwatch.StartNew();
-
-                using OdbcConnection connection = CreateConnection();
-                using OdbcTransaction transaction = BeginSerializableTransaction(connection);
+                using OdbcConnection connection = new OdbcConnection(_connectionString);
+                using OdbcTransaction transaction = connection.BeginTransaction(IsolationLevel.Serializable);
 
                 try
                 {
@@ -257,13 +256,9 @@ namespace Database.Services
                     int cleanedCount = connection.Execute(sql, new { cutoffTime }, transaction, _commandTimeout);
 
                     transaction.Commit();
-                    transactionTimer.Stop();
 
-                    _ = cleanedCount > 0
-                        ? logBuilder.AppendLine($"Cleaned up {cleanedCount} expired printer reservations")
-                        : logBuilder.AppendLine("No expired reservations found");
+                    logBuilder.AppendLine($"Cleaned up {cleanedCount} expired printer reservations");
 
-                    _ = logBuilder.AppendLine($"Transaction completed in {transactionTimer.ElapsedMilliseconds}ms (committed)");
                     _logger.Information(logBuilder.ToString());
 
                     return cleanedCount;
@@ -271,8 +266,6 @@ namespace Database.Services
                 catch
                 {
                     transaction.Rollback();
-                    transactionTimer.Stop();
-                    _ = logBuilder.AppendLine($"Transaction failed and rolled back in {transactionTimer.ElapsedMilliseconds}ms");
                     _logger.Error(logBuilder.ToString());
                     throw;
                 }
@@ -308,11 +301,7 @@ namespace Database.Services
         {
             string sql = PrinterSqlStore.GetSingleAvailablePrinterWithLock;
 
-            return connection.QueryFirstOrDefault<PrinterInfo>(
-                sql,
-                new { printerNames },
-                transaction,
-                commandTimeout: _commandTimeout);
+            return connection.QueryFirstOrDefault<PrinterInfo>(sql, new { printerNames }, transaction, commandTimeout: _commandTimeout);
         }
 
         /// <summary>
@@ -439,23 +428,6 @@ namespace Database.Services
                    message.Contains("lock", StringComparison.OrdinalIgnoreCase);
         }
 
-        /// <summary>
-        /// Создает подключение к базе данных.
-        /// </summary>
-        private OdbcConnection CreateConnection()
-        {
-            OdbcConnection connection = new(_connectionString);
-            connection.Open();
-            return connection;
-        }
-
-        /// <summary>
-        /// Начинает транзакцию с уровнем изоляции SERIALIZABLE.
-        /// </summary>
-        private static OdbcTransaction BeginSerializableTransaction(OdbcConnection connection)
-        {
-            return connection.BeginTransaction(IsolationLevel.Serializable);
-        }
 
         public void Dispose()
         {

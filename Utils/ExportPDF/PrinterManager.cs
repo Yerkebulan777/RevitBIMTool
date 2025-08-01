@@ -97,15 +97,13 @@ namespace RevitBIMTool.Utils.ExportPDF
         /// <summary>
         /// Резервирует конкретный принтер.
         /// </summary>
-        public static bool TryReservePrinter(string printerName)
+        public static bool TryReservePrinter(string printerName, string revitFileName)
         {
             try
             {
                 PrinterService printerService = GetPrinterService();
 
-                string dummyFilePath = $"Reservation_{DateTime.Now:yyyyMMdd_HHmmss}";
-
-                if (printerService.TryReserveSpecificPrinter(printerName, dummyFilePath))
+                if (printerService.TryReserveSpecificPrinter(printerName, revitFileName))
                 {
                     Log.Information("Successfully reserved printer {PrinterName} manually", printerName);
                     return true;
