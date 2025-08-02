@@ -19,6 +19,7 @@ namespace RevitBIMTool.Utils.ExportPDF
             return printerServiceInstance.Value;
         }
 
+
         public static bool TryGetPrinter(string revitFilePath, out PrinterControl availablePrinter)
         {
             availablePrinter = null;
@@ -54,6 +55,7 @@ namespace RevitBIMTool.Utils.ExportPDF
             return false;
         }
 
+
         public static bool TryReservePrinter(string printerName, string revitFilePath)
         {
             PrinterService printerService = GetPrinterService();
@@ -67,6 +69,7 @@ namespace RevitBIMTool.Utils.ExportPDF
             Log.Warning("Failed to reserve printer {PrinterName}", printerName);
             return false;
         }
+
 
         public static void ReleasePrinter(string printerName)
         {
@@ -82,6 +85,7 @@ namespace RevitBIMTool.Utils.ExportPDF
                 throw new InvalidOperationException($"Failed to release printer {printerName}!");
             }
         }
+
 
         public static void CleanupExpiredReservations()
         {
@@ -102,6 +106,7 @@ namespace RevitBIMTool.Utils.ExportPDF
             }
         }
 
+
         private static List<PrinterControl> GetPrinterControllers()
         {
             return
@@ -113,5 +118,7 @@ namespace RevitBIMTool.Utils.ExportPDF
                 new InternalPrinter(),
             ];
         }
+
+
     }
 }
