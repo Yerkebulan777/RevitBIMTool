@@ -76,13 +76,6 @@ namespace Database.Services
         }
 
         // Универсальные методы для работы с БД
-        public static (T result, TimeSpan elapsed) QuerySingle<T>(string sql, object parameters = null)
-        {
-            return RunInTransaction((connection, transaction) =>
-            {
-                return connection.QuerySingle<T>(sql, parameters, transaction, CommandTimeout);
-            });
-        }
 
         public static (T result, TimeSpan elapsed) QuerySingleOrDefault<T>(string sql, object parameters = null)
         {

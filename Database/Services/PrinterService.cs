@@ -6,17 +6,11 @@ using System.Data.Odbc;
 
 namespace Database.Services
 {
-    public sealed class PrinterService : IDisposable
+    public sealed class PrinterService(int lockTimeoutMinutes = 30) : IDisposable
     {
-        private readonly int _lockTimeoutMinutes;
-        private readonly ILogger _logger;
+        private readonly int _lockTimeoutMinutes = lockTimeoutMinutes;
+        private readonly ILogger _logger = LoggerFactory.CreateLogger<PrinterService>();
         private bool _disposed = false;
-
-        public PrinterService(int lockTimeoutMinutes = 30)
-        {
-            _lockTimeoutMinutes = lockTimeoutMinutes;
-            _logger = LoggerFactory.CreateLogger<PrinterService>();
-        }
 
         public bool TryReserveAvailablePrinter(string revitFileName, string[] availablePrinterNames, out string reservedPrinterName)
         {
