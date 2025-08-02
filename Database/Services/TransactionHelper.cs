@@ -119,5 +119,8 @@ namespace Database.Services
                    message.Contains("deadlock", StringComparison.OrdinalIgnoreCase) ||
                    message.Contains("lock", StringComparison.OrdinalIgnoreCase);
         }
+
+
+
     }
 }

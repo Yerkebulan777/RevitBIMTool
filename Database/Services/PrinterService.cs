@@ -13,6 +13,7 @@ namespace Database.Services
         private readonly ILogger _logger = LoggerFactory.CreateLogger<PrinterService>();
         private bool _disposed = false;
 
+
         public bool TryReserveAvailablePrinter(string revitFileName, string[] availablePrinterNames, out string reservedPrinterName)
         {
             reservedPrinterName = null;
@@ -26,16 +27,17 @@ namespace Database.Services
 
                 PrinterInfo selectedPrinter = GetAvailablePrinter(connection, transaction, availablePrinterNames);
 
-                if (selectedPrinter == null)
+                if (selectedPrinter != null)
                 {
-                    return false;
+                    _logger.Information($"Selected printer: {selectedPrinter.PrinterName}");
+
+                    if (ReservePrinter(connection, transaction, selectedPrinter, revitFileName))
+                    {
+                        localReservedPrinterName = selectedPrinter.PrinterName;
+                        return true;
+                    }
                 }
 
-                if (ReservePrinter(connection, transaction, selectedPrinter, revitFileName))
-                {
-                    localReservedPrinterName = selectedPrinter.PrinterName;
-                    return true;
-                }
                 return false;
             });
 
@@ -44,6 +46,7 @@ namespace Database.Services
             reservedPrinterName = localReservedPrinterName;
             return success;
         }
+
 
         public bool TryReserveSpecificPrinter(string printerName, string revitFileName)
         {
@@ -65,6 +68,7 @@ namespace Database.Services
             return success;
         }
 
+
         public bool TryReleasePrinter(string printerName, string revitFileName = null)
         {
             (int affectedRows, TimeSpan elapsed) = TransactionHelper.Execute(
@@ -75,6 +79,7 @@ namespace Database.Services
             LogOperationResult("Release printer", printerName, success, elapsed);
             return success;
         }
+
 
         public int CleanupExpiredReservations()
         {
@@ -87,6 +92,7 @@ namespace Database.Services
             _logger.Information($"Cleaned up {cleanedCount} expired reservations in {elapsed.TotalMilliseconds:F0}ms");
             return cleanedCount;
         }
+
 
         private void InitializePrinters(OdbcConnection connection, OdbcTransaction transaction, string[] printerNames)
         {
@@ -103,6 +109,7 @@ namespace Database.Services
                 }
             }
         }
+
 
         private PrinterInfo GetAvailablePrinter(OdbcConnection connection, OdbcTransaction transaction, string[] printerNames)
         {
@@ -121,6 +128,7 @@ namespace Database.Services
             }
         }
 
+
         private PrinterInfo GetPrinterInfoWithLock(OdbcConnection connection, OdbcTransaction transaction, string printerName)
         {
             try
@@ -137,6 +145,7 @@ namespace Database.Services
                 return null;
             }
         }
+
 
         private bool ReservePrinter(OdbcConnection connection, OdbcTransaction transaction, PrinterInfo printerInfo, string revitFileName)
         {
@@ -174,11 +183,13 @@ namespace Database.Services
             }
         }
 
+
         private void LogOperationResult(string operation, string printerName, bool success, TimeSpan elapsed)
         {
             string status = success ? "success" : "failed";
             _logger.Information($"{operation} {printerName}: {status} in {elapsed.TotalMilliseconds:F0}ms");
         }
+
 
         public void Dispose()
         {
