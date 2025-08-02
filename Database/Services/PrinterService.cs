@@ -24,6 +24,7 @@ namespace Database.Services
                 InitializePrinters(connection, transaction, availablePrinterNames);
 
                 PrinterInfo selectedPrinter = GetAvailablePrinter(connection, transaction, availablePrinterNames);
+
                 if (selectedPrinter == null)
                 {
                     return false;
@@ -37,7 +38,7 @@ namespace Database.Services
                 return false;
             });
 
-            LogOperationResult("Reserve any printer", localReservedPrinterName ?? "none", success, elapsed);
+            LogOperationResult("Reserve printer", localReservedPrinterName ?? "none", success, elapsed);
 
             reservedPrinterName = localReservedPrinterName;
             return success;

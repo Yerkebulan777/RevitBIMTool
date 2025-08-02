@@ -23,9 +23,7 @@ namespace Database.Services
 
         public static (T result, TimeSpan elapsed) RunInTransaction<T>(Func<OdbcConnection, OdbcTransaction, T> operation)
         {
-            return string.IsNullOrWhiteSpace(ConnectionString)
-            ? throw new InvalidOperationException("Connection string is not initialized")
-            : ExecuteWithRetry(() =>
+            return ExecuteWithRetry(() =>
             {
                 Stopwatch timer = Stopwatch.StartNew();
 
@@ -75,7 +73,6 @@ namespace Database.Services
             throw new InvalidOperationException("Database operation failed after retries", lastException);
         }
 
-        // Универсальные методы для работы с БД
 
         public static (T result, TimeSpan elapsed) QuerySingleOrDefault<T>(string sql, object parameters = null)
         {
@@ -106,7 +103,7 @@ namespace Database.Services
             string connectionString = ConfigurationManager.ConnectionStrings["PrinterDatabase"]?.ConnectionString;
 
             return string.IsNullOrWhiteSpace(connectionString)
-                ? throw new InvalidOperationException("Database connection string 'PrinterDatabase' not found in configuration")
+                ? throw new InvalidOperationException("Connection string 'PrinterDatabase' not found in configuration")
                 : connectionString;
         }
 
