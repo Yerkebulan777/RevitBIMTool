@@ -1,14 +1,14 @@
 ﻿namespace Database.Stores
 {
     /// <summary>
-    /// Централизованное хранилище всех SQL запросов для системы управления принтеров.
+    /// Оптимизированное хранилище SQL запросов для PostgreSQL через ODBC
     /// </summary>
     public static class PrinterSqlStore
     {
         #region Schema Management - DDL операции
 
         /// <summary>
-        /// Создает основную таблицу принтеров с ограничениями целостности.
+        /// Создает основную таблицу принтеров с оптимизацией для PostgreSQL
         /// </summary>
         public const string CreatePrinterStatesTable = @"
             CREATE TABLE IF NOT EXISTS printer_states (
@@ -32,76 +32,147 @@
                     (is_available = true AND reserved_file_name IS NULL AND reserved_at IS NULL AND process_id IS NULL) OR
                     (is_available = false AND reserved_file_name IS NOT NULL AND reserved_at IS NOT NULL AND process_id IS NOT NULL)
                 )
-            );";
+            );
+            
+            -- Индексы для оптимизации производительности
+            CREATE INDEX IF NOT EXISTS idx_printer_states_available 
+                ON printer_states (is_available, last_update) 
+                WHERE is_available = true;
+            
+            CREATE INDEX IF NOT EXISTS idx_printer_states_reserved_at 
+                ON printer_states (reserved_at) 
+                WHERE reserved_at IS NOT NULL;
+            
+            CREATE INDEX IF NOT EXISTS idx_printer_states_process_id 
+                ON printer_states (process_id) 
+                WHERE process_id IS NOT NULL;";
 
         /// <summary>
-        /// Добавляет ограничения целостности данных к таблице принтеров.
+        /// Дополнительные ограничения целостности
         /// </summary>
         public static readonly string[] TableConstraints = {
-            "ALTER TABLE printer_states ADD CONSTRAINT uk_printer_name UNIQUE (printer_name);",
-            "ALTER TABLE printer_states ADD CONSTRAINT chk_printer_name_valid CHECK (LENGTH(TRIM(printer_name)) > 0);",
-            "ALTER TABLE printer_states ADD CONSTRAINT chk_file_name_valid CHECK (reserved_file_name IS NULL OR LENGTH(TRIM(reserved_file_name)) > 0);",
-            "ALTER TABLE printer_states ADD CONSTRAINT chk_state_valid CHECK (state >= 0 AND state <= 3);",
-            "ALTER TABLE printer_states ADD CONSTRAINT chk_job_count_valid CHECK (job_count >= 0);",
-            @"ALTER TABLE printer_states ADD CONSTRAINT chk_reservation_logic CHECK (
+            @"CREATE UNIQUE INDEX IF NOT EXISTS uk_printer_name 
+              ON printer_states (LOWER(printer_name));",
+
+            @"ALTER TABLE printer_states 
+              ADD CONSTRAINT IF NOT EXISTS chk_printer_name_valid 
+              CHECK (LENGTH(TRIM(printer_name)) > 0);",
+
+            @"ALTER TABLE printer_states 
+              ADD CONSTRAINT IF NOT EXISTS chk_file_name_valid 
+              CHECK (reserved_file_name IS NULL OR LENGTH(TRIM(reserved_file_name)) > 0);",
+
+            @"ALTER TABLE printer_states 
+              ADD CONSTRAINT IF NOT EXISTS chk_state_valid 
+              CHECK (state >= 0 AND state <= 3);",
+
+            @"ALTER TABLE printer_states 
+              ADD CONSTRAINT IF NOT EXISTS chk_job_count_valid 
+              CHECK (job_count >= 0);",
+
+            @"ALTER TABLE printer_states 
+              ADD CONSTRAINT IF NOT EXISTS chk_reservation_logic 
+              CHECK (
                 (is_available = true AND reserved_file_name IS NULL AND reserved_at IS NULL AND process_id IS NULL) OR
                 (is_available = false AND reserved_file_name IS NOT NULL AND reserved_at IS NOT NULL AND process_id IS NOT NULL)
-            );"
+              );"
         };
 
         /// <summary>
-        /// Проверяет существование таблицы принтеров.
+        /// Проверка существования таблицы
         /// </summary>
         public const string CheckTableExists = @"
-            SELECT COUNT(*) 
+            SELECT COUNT(*)::INTEGER 
             FROM information_schema.tables 
-            WHERE table_name = 'printer_states' AND table_type = 'BASE TABLE';";
+            WHERE table_schema = 'public' 
+              AND table_name = 'printer_states' 
+              AND table_type = 'BASE TABLE';";
 
         /// <summary>
-        /// Проверяет наличие всех необходимых столбцов.
+        /// Валидация структуры таблицы
         /// </summary>
         public const string ValidateTableStructure = @"
-            SELECT COUNT(*) 
+            SELECT COUNT(*)::INTEGER 
             FROM information_schema.columns 
-            WHERE table_name = 'printer_states' 
-            AND column_name IN ('id', 'printer_name', 'is_available', 'version_token', 'reserved_at', 'process_id', 'job_count', 'state');";
+            WHERE table_schema = 'public' 
+              AND table_name = 'printer_states' 
+              AND column_name IN ('id', 'printer_name', 'is_available', 'version_token', 'reserved_at', 'process_id', 'job_count', 'state');";
 
         /// <summary>
-        /// Валидация схемы - проверка основных столбцов.
+        /// Валидация основных столбцов схемы
         /// </summary>
         public const string ValidateSchemaColumns = @"
-            SELECT COUNT(*) 
+            SELECT COUNT(*)::INTEGER 
             FROM information_schema.columns 
-            WHERE table_name = 'printer_states' 
-            AND column_name IN ('id', 'printer_name', 'is_available', 'version_token');";
+            WHERE table_schema = 'public' 
+              AND table_name = 'printer_states' 
+              AND column_name IN ('id', 'printer_name', 'is_available', 'version_token');";
 
         #endregion
 
-        #region Data Operations - DML операции
+        #region Connection Testing и System Info
 
         /// <summary>
-        /// Безопасная инициализация принтера с защитой от дублирования.
+        /// Простой тест соединения
+        /// </summary>
+        public const string TestConnection = "SELECT 1::INTEGER;";
+
+        /// <summary>
+        /// Расширенный тест соединения с метриками
+        /// </summary>
+        public const string TestConnectionWithMetrics = @"
+            SELECT 
+                1::INTEGER as connection_test,
+                current_database() as database_name,
+                current_user as user_name,
+                version() as pg_version,
+                NOW() as server_time,
+                current_setting('statement_timeout') as statement_timeout,
+                current_setting('lock_timeout') as lock_timeout;";
+
+        /// <summary>
+        /// Получение версии PostgreSQL
+        /// </summary>
+        public const string GetDatabaseVersion = "SELECT version();";
+
+        /// <summary>
+        /// Получение текущей базы данных
+        /// </summary>
+        public const string GetCurrentDatabase = "SELECT current_database();";
+
+        /// <summary>
+        /// Получение текущего пользователя
+        /// </summary>
+        public const string GetCurrentUser = "SELECT current_user;";
+
+        #endregion
+
+        #region Core Printer Operations - Оптимизированные запросы
+
+        /// <summary>
+        /// Batch-friendly инициализация принтера
         /// </summary>
         public const string InitializePrinter = @"
             INSERT INTO printer_states (printer_name, is_available, version_token, job_count, state, last_update)
             VALUES (@printerName, true, gen_random_uuid(), 0, 0, CURRENT_TIMESTAMP)
-            ON CONFLICT (printer_name) DO NOTHING;";
+            ON CONFLICT (printer_name) DO UPDATE SET
+                last_update = CURRENT_TIMESTAMP
+            WHERE printer_states.printer_name = EXCLUDED.printer_name;";
 
         /// <summary>
-        /// Получение доступных принтеров с блокировкой для предотвращения race conditions.
+        /// Получение конкретного принтера с блокировкой
         /// </summary>
-        public const string GetAvailablePrintersWithLock = @"
+        public const string GetSpecificPrinterWithLock = @"
             SELECT id, printer_name as PrinterName, is_available as IsAvailable, 
                    reserved_file_name as RevitFileName, reserved_at, process_id as ProcessId, 
                    version_token as VersionToken, job_count as JobCount, state as State,
                    COALESCE(last_update, created_at) as LastUpdate
             FROM printer_states
-            WHERE is_available = true
-            ORDER BY printer_name
-            FOR UPDATE;";
+            WHERE printer_name = @printerName
+            FOR UPDATE NOWAIT;";
 
         /// <summary>
-        /// Получение одного доступного принтера с блокировкой для резервирования.
+        /// Получение первого доступного принтера с высокой конкурентностью
         /// </summary>
         public const string GetSingleAvailablePrinterWithLock = @"
             SELECT id, printer_name as PrinterName, is_available as IsAvailable, 
@@ -109,13 +180,14 @@
                    version_token as VersionToken, job_count as JobCount, state as State,
                    COALESCE(last_update, created_at) as LastUpdate
             FROM printer_states
-            WHERE is_available = true AND printer_name = ANY(@printerNames)
-            ORDER BY printer_name
-            FOR UPDATE
+            WHERE is_available = true 
+              AND printer_name = ANY(@printerNames)
+            ORDER BY last_update ASC, printer_name ASC
+            FOR UPDATE SKIP LOCKED
             LIMIT 1;";
 
         /// <summary>
-        /// Резервирование принтера с оптимистичным блокированием.
+        /// Атомарное резервирование с оптимистичной блокировкой
         /// </summary>
         public const string ReservePrinter = @"
             UPDATE printer_states SET
@@ -131,7 +203,7 @@
               AND is_available = true;";
 
         /// <summary>
-        /// Освобождение принтера с проверкой прав доступа.
+        /// Освобождение принтера с проверкой владельца
         /// </summary>
         public const string ReleasePrinter = @"
             UPDATE printer_states SET
@@ -146,96 +218,91 @@
               AND (reserved_file_name = @revitFileName OR @revitFileName IS NULL);";
 
         /// <summary>
-        /// Автоматическая очистка зависших резервирований.
+        /// Улучшенная очистка истекших резервирований
         /// </summary>
         public const string CleanupExpiredReservations = @"
-            UPDATE printer_states 
-            SET 
-                is_available = true,
-                reserved_file_name = NULL,
-                reserved_at = NULL,
-                process_id = NULL,
-                version_token = gen_random_uuid(),
-                state = 0,
-                last_update = CURRENT_TIMESTAMP
-            WHERE 
-                is_available = false 
-                AND reserved_at < @cutoffTime
-                AND reserved_at IS NOT NULL;";
+            WITH expired_printers AS (
+                UPDATE printer_states 
+                SET 
+                    is_available = true,
+                    reserved_file_name = NULL,
+                    reserved_at = NULL,
+                    process_id = NULL,
+                    version_token = gen_random_uuid(),
+                    state = 0,
+                    last_update = CURRENT_TIMESTAMP
+                WHERE 
+                    is_available = false 
+                    AND reserved_at < @cutoffTime
+                    AND reserved_at IS NOT NULL
+                RETURNING printer_name, reserved_file_name, 
+                         EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - reserved_at))/60 as minutes_reserved
+            )
+            SELECT COUNT(*)::INTEGER as cleaned_count FROM expired_printers;";
 
         #endregion
 
-        #region Query Operations - Выборка данных
+        #region Statistics и Monitoring
 
         /// <summary>
-        /// Получение всех доступных принтеров.
-        /// </summary>
-        public const string GetAvailablePrinters = @"
-            SELECT id, printer_name as PrinterName, is_available as IsAvailable, 
-                   reserved_file_name as RevitFileName, reserved_at, process_id as ProcessId, 
-                   version_token as VersionToken, job_count as JobCount, state as State,
-                   COALESCE(last_update, created_at) as LastUpdate
-            FROM printer_states
-            WHERE is_available = true
-            ORDER BY printer_name;";
-
-        #endregion
-
-        #region Statistics and Monitoring
-
-        /// <summary>
-        /// Получение общей статистики принтеров.
+        /// Общая статистика принтеров
         /// </summary>
         public const string GetPrinterStatistics = @"
-            SELECT COUNT(*) as total_printers FROM printer_states;";
+            SELECT COUNT(*)::INTEGER as total_printers FROM printer_states;";
 
         /// <summary>
-        /// Получение количества доступных принтеров.
+        /// Количество доступных принтеров
         /// </summary>
         public const string GetAvailablePrintersCount = @"
-            SELECT COUNT(*) FROM printer_states WHERE is_available = true;";
+            SELECT COUNT(*)::INTEGER FROM printer_states WHERE is_available = true;";
 
         /// <summary>
-        /// Получение количества зарезервированных принтеров.
+        /// Количество зарезервированных принтеров
         /// </summary>
         public const string GetReservedPrintersCount = @"
-            SELECT COUNT(*) FROM printer_states WHERE is_available = false;";
+            SELECT COUNT(*)::INTEGER FROM printer_states WHERE is_available = false;";
 
         /// <summary>
-        /// Получение среднего времени резервирования в минутах.
+        /// Среднее время резервирования в минутах
         /// </summary>
         public const string GetAverageReservationTime = @"
-            SELECT AVG(EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - reserved_at))/60) 
+            SELECT COALESCE(AVG(EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - reserved_at))/60), 0)::DOUBLE PRECISION
             FROM printer_states 
             WHERE reserved_at IS NOT NULL;";
 
         /// <summary>
-        /// Получение информации о подключении к базе данных.
+        /// Расширенная статистика производительности
         /// </summary>
-        public const string GetCurrentDatabase = "SELECT current_database();";
-
-        /// <summary>
-        /// Получение текущего пользователя.
-        /// </summary>
-        public const string GetCurrentUser = "SELECT current_user;";
+        public const string GetPrinterPerformanceStats = @"
+            SELECT 
+                COUNT(*)::INTEGER as total_printers,
+                COUNT(*) FILTER (WHERE is_available = true)::INTEGER as available_count,
+                COUNT(*) FILTER (WHERE is_available = false)::INTEGER as reserved_count,
+                COALESCE(AVG(EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - reserved_at))/60) 
+                    FILTER (WHERE reserved_at IS NOT NULL), 0)::DOUBLE PRECISION as avg_reservation_minutes,
+                COALESCE(MAX(EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - reserved_at))/60) 
+                    FILTER (WHERE reserved_at IS NOT NULL), 0)::DOUBLE PRECISION as max_reservation_minutes,
+                COUNT(*) FILTER (WHERE state = 1)::INTEGER as printing_count,
+                COUNT(*) FILTER (WHERE process_id IS NOT NULL)::INTEGER as active_processes
+            FROM printer_states;";
 
         #endregion
 
-        #region Legacy Repository Support
+        #region Legacy Support для PrinterRepository
 
         /// <summary>
-        /// Получение активных принтеров для совместимости с PrinterRepository.
+        /// Получение активных принтеров (совместимость с PrinterRepository)
         /// </summary>
         public const string GetActivePrinters = @"
-            SELECT id, printer_name, state, 
+            SELECT id, printer_name, state::INTEGER, 
                    COALESCE(last_update, created_at) as last_update,
-                   job_count
+                   job_count::INTEGER
             FROM printer_states 
             WHERE is_available IN (true, false) 
             ORDER BY COALESCE(last_update, created_at) ASC;";
 
         /// <summary>
-        /// Обновление статуса принтера для совместимости.
+        /// Обновление статуса принтера (совместимость)
         /// </summary>
         public const string UpdatePrinterStatus = @"
             UPDATE printer_states 
@@ -243,7 +310,7 @@
             WHERE id = @printerId;";
 
         /// <summary>
-        /// Попытка захвата блокировки принтера.
+        /// Попытка захвата блокировки принтера (legacy)
         /// </summary>
         public const string TryAcquirePrinterLock = @"
             UPDATE printer_states 
@@ -256,7 +323,7 @@
             WHERE id = @printerId AND is_available = true;";
 
         /// <summary>
-        /// Освобождение блокировки принтера.
+        /// Освобождение блокировки принтера (legacy)
         /// </summary>
         public const string ReleasePrinterLock = @"
             UPDATE printer_states 
@@ -270,21 +337,63 @@
 
         #endregion
 
-        #region Connection Testing - Проверка соединения
+        #region Utility Queries
 
         /// <summary>
-        /// Простой запрос для проверки соединения с БД.
+        /// Получение доступных принтеров без блокировки (для мониторинга)
         /// </summary>
-        public const string TestConnection = "SELECT 1;";
+        public const string GetAvailablePrinters = @"
+            SELECT id, printer_name as PrinterName, is_available as IsAvailable, 
+                   reserved_file_name as RevitFileName, reserved_at, process_id as ProcessId, 
+                   version_token as VersionToken, job_count as JobCount, state as State,
+                   COALESCE(last_update, created_at) as LastUpdate
+            FROM printer_states
+            WHERE is_available = true
+            ORDER BY last_update ASC, printer_name ASC;";
 
         /// <summary>
-        /// Проверка версии PostgreSQL.
+        /// Принудительная очистка зависших процессов
         /// </summary>
-        public const string GetDatabaseVersion = "SELECT version();";
+        public const string CleanupStuckProcesses = @"
+            UPDATE printer_states 
+            SET 
+                is_available = true,
+                reserved_file_name = NULL,
+                reserved_at = NULL,
+                process_id = NULL,
+                version_token = gen_random_uuid(),
+                state = 0,
+                last_update = CURRENT_TIMESTAMP
+            WHERE 
+                is_available = false 
+                AND process_id = @processId
+                AND reserved_at IS NOT NULL;";
+
+        /// <summary>
+        /// Получение информации о принтере по имени (без блокировки)
+        /// </summary>
+        public const string GetPrinterInfo = @"
+            SELECT id, printer_name as PrinterName, is_available as IsAvailable, 
+                   reserved_file_name as RevitFileName, reserved_at, process_id as ProcessId, 
+                   version_token as VersionToken, job_count as JobCount, state as State,
+                   COALESCE(last_update, created_at) as LastUpdate
+            FROM printer_states
+            WHERE printer_name = @printerName;";
+
+        /// <summary>
+        /// Проверка здоровья системы принтеров
+        /// </summary>
+        public const string GetSystemHealthMetrics = @"
+            SELECT 
+                COUNT(*)::INTEGER as total_printers,
+                COUNT(*) FILTER (WHERE is_available = true)::INTEGER as available_printers,
+                COUNT(*) FILTER (WHERE is_available = false)::INTEGER as reserved_printers,
+                COUNT(*) FILTER (WHERE reserved_at < NOW() - INTERVAL '1 hour')::INTEGER as stuck_reservations,
+                COUNT(*) FILTER (WHERE last_update < NOW() - INTERVAL '24 hours')::INTEGER as stale_printers,
+                COALESCE(AVG(job_count), 0)::DOUBLE PRECISION as avg_job_count,
+                COUNT(DISTINCT process_id) FILTER (WHERE process_id IS NOT NULL)::INTEGER as active_processes
+            FROM printer_states;";
 
         #endregion
     }
-
-
-
 }
