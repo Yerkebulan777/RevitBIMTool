@@ -14,22 +14,16 @@ namespace Database.Services
         private readonly ILogger _logger = LoggerFactory.CreateLogger<PrinterService>();
         private bool _disposed = false;
 
-        public bool TryGetAvailablePrinter(string revitFileName, string[] availablePrinterNames, out string reservedPrinterName)
+        public bool TryGetAvailablePrinter(string revitFileName, string printerName)
         {
-            _logger.Debug($"Starting reservation search for {revitFileName} among {availablePrinterNames.Length} printers");
+            _logger.Debug($"Trying to reserve printer {printerName} for file {revitFileName}");
 
-            reservedPrinterName = TransactionHelper.RunInTransaction((connection, transaction) =>
+            string reservedPrinterName = TransactionHelper.RunInTransaction((connection, transaction) =>
             {
-                InitializePrinters(connection, transaction, availablePrinterNames);
-
-                PrinterInfo selectedPrinter = GetAvailablePrinter(connection, transaction, availablePrinterNames);
-
-                PrinterInfo printerInfo = GetSpecificPrinter(connection, transaction, selectedPrinter.PrinterName);
-
-                return printerInfo?.PrinterName;
+                return GetSpecificPrinter(connection, transaction, printerName)?.PrinterName;
             });
 
-            return !string.IsNullOrEmpty(reservedPrinterName);
+            return !string.IsNullOrWhiteSpace(reservedPrinterName);
         }
 
 

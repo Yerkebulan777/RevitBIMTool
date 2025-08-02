@@ -11,48 +11,45 @@ namespace RevitBIMTool.Utils.ExportPDF
         private static readonly Lazy<PrinterService> printerServiceInstance = new(InitializePrinterService, true);
 
 
-        public static bool TryGetPrinter(string revitFilePath, out PrinterControl reservedPrinter)
+        public static bool TryGetPrinter(string revitFilePath, out PrinterControl availablePrinter)
         {
-            reservedPrinter = null;
+            StringBuilder logMessage = new();
 
             PrinterService printerService = GetPrinterServiceInstance();
 
-            foreach (var control in printerControllers)
+            string[] printerNames = [.. printerControllers.Where(p => p.IsPrinterInstalled()).Select(p => p.PrinterName)];
+
+            foreach (PrinterControl control in printerControllers)
             {
                 if (control.IsPrinterInstalled())
                 {
                     try
                     {
+                        availablePrinter = null;
 
-                        string[] printerNames = [.. printerControllers.Where(p => p.IsPrinterInstalled()).Select(p => p.PrinterName)];
-
-                        if (printerService.TryGetAvailablePrinter(revitFilePath, printerNames, out string reservedPrinterName))
+                        if (printerService.TryGetAvailablePrinter(revitFilePath, control.PrinterName))
                         {
-                            reservedPrinter = printerControllers.FirstOrDefault(p => string.Equals(p.PrinterName, reservedPrinterName));
+                            _ = logMessage.AppendLine($"Printer reserved: {control.PrinterName}");
+                            _ = logMessage.AppendLine($"Total printers: {printerNames?.Length ?? 0}");
 
-                            if (reservedPrinter is not null)
+                            if (printerService.TryReservePrinter(control.PrinterName, revitFilePath))
                             {
-                                StringBuilder logMessage = new();
-                                reservedPrinter.RevitFilePath = revitFilePath;
-                                _ = logMessage.AppendLine($"Printer reserved: {reservedPrinter.PrinterName}");
-                                _ = logMessage.AppendLine($"Total printers: {printerNames?.Length ?? 0}");
+                                control.InitializePrinter(revitFilePath);
                                 Log.Information(logMessage.ToString());
-
-                                return printerService.TryReservePrinter(reservedPrinterName, revitFilePath);
+                                availablePrinter = control;
+                                return true;
                             }
                         }
-
-                        Log.Warning("No available printers found for file: {RevitFilePath}", revitFilePath);
-
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "Error while trying to get printer: {Message}", ex.Message);
+                        Log.Error(ex, "Error while trying to get available printer: {Message}", ex.Message);
                     }
                 }
-
             }
 
+            Log.Warning("No available printers found for file: {RevitFilePath}", revitFilePath);
+            availablePrinter = null;
             return false;
         }
 
@@ -67,13 +64,13 @@ namespace RevitBIMTool.Utils.ExportPDF
 
                 if (0 < printerService.CleanupExpiredReservations())
                 {
-                    Log.Information("Cleaned up expired printer reservations");
+                    Log.Information("Cleaned up expired availablePrinter reservations");
                 }
             }
             else
             {
-                Log.Error("Failed to release printer {PrinterName}", printerName);
-                throw new InvalidOperationException($"Failed to release printer {printerName}!");
+                Log.Error("Failed to release availablePrinter {PrinterName}", printerName);
+                throw new InvalidOperationException($"Failed to release availablePrinter {printerName}!");
             }
         }
 
