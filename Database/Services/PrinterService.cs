@@ -140,11 +140,11 @@ namespace Database.Services
                 TransactionHelper.CommandTimeout);
         }
 
-        // Batch initialization to reduce transaction overhead
+        // Пакетная инициализация для снижения накладных расходов на транзакции
         private void InitializePrintersBatch(OdbcConnection connection, OdbcTransaction transaction, string[] printerNames)
         {
-            var batchSql = new StringBuilder();
-            var parameters = new DynamicParameters();
+            StringBuilder batchSql = new();
+            DynamicParameters parameters = new();
 
             for (int i = 0; i < printerNames.Length; i++)
             {
@@ -154,7 +154,7 @@ namespace Database.Services
 
             try
             {
-                connection.Execute(batchSql.ToString(), parameters, transaction, TransactionHelper.CommandTimeout);
+                _ = connection.Execute(batchSql.ToString(), parameters, transaction, TransactionHelper.CommandTimeout);
             }
             catch (Exception ex)
             {
@@ -170,7 +170,7 @@ namespace Database.Services
             {
                 try
                 {
-                    connection.Execute(
+                    _ = connection.Execute(
                         PrinterSqlStore.InitializePrinter,
                         new { printerName },
                         transaction,

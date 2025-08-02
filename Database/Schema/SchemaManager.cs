@@ -27,7 +27,8 @@ namespace Database.Schema
 
             try
             {
-                CreatePrinterStatesTable(connection, transaction);
+                _ = connection.Execute(PrinterSqlStore.CreatePrinterStatesTable, transaction: transaction, commandTimeout: _commandTimeout);
+                AddTableConstraints(connection, transaction);
                 transaction.Commit();
                 Console.WriteLine("✓ Схема базы данных для управления принтерами успешно создана");
             }
@@ -38,11 +39,6 @@ namespace Database.Schema
             }
         }
 
-        private void CreatePrinterStatesTable(OdbcConnection connection, OdbcTransaction transaction)
-        {
-            _ = connection.Execute(PrinterSqlStore.CreatePrinterStatesTable, transaction: transaction, commandTimeout: _commandTimeout);
-            AddTableConstraints(connection, transaction);
-        }
 
         private void AddTableConstraints(OdbcConnection connection, OdbcTransaction transaction)
         {
@@ -59,6 +55,7 @@ namespace Database.Schema
                 }
             }
         }
+
 
         public bool ValidateSchema()
         {
