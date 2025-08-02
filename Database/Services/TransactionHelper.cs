@@ -55,9 +55,9 @@ namespace Database.Services
                 }
                 catch (OdbcException ex) when (IsRetryableError(ex) && attempt < MaxRetryAttempts)
                 {
-                    lastException = ex;
                     TimeSpan delay = GetRetryDelay(attempt, BaseRetryDelayMs);
                     LogRetryAttempt(attempt, ex.Message, delay);
+                    lastException = ex;
                     Thread.Sleep(delay);
                 }
             }
