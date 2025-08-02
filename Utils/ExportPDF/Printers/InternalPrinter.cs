@@ -14,6 +14,7 @@ internal sealed class InternalPrinter : PrinterControl
 
     public override void InitializePrinter()
     {
+        Log.Information("Printer {Printer} initialized!", PrinterName);
     }
 
 

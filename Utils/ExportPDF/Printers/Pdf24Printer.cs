@@ -2,6 +2,7 @@
 using Microsoft.Win32;
 using RevitBIMTool.Models;
 using RevitBIMTool.Utils.SystemHelpers;
+using Serilog;
 
 namespace RevitBIMTool.Utils.ExportPDF.Printers;
 
@@ -22,6 +23,8 @@ internal sealed class Pdf24Printer : PrinterControl
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveUseFileChooser", 0);
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveFilename", "$fileName");
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveProfile", "default/medium");
+
+        Log.Information("Printer {Printer} initialized!", PrinterName);
     }
 
 

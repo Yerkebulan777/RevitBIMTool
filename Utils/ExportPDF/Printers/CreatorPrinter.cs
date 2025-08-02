@@ -2,6 +2,7 @@
 using Microsoft.Win32;
 using RevitBIMTool.Models;
 using RevitBIMTool.Utils.SystemHelpers;
+using Serilog;
 using System.IO;
 
 namespace RevitBIMTool.Utils.ExportPDF.Printers;
@@ -30,6 +31,8 @@ internal sealed class CreatorPrinter : PrinterControl
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "SkipPrintDialog", "True");
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "Name", "<DefaultProfile>");
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowProgress", "False");
+
+        Log.Information("Printer {Printer} initialized!", PrinterName);
     }
 
 

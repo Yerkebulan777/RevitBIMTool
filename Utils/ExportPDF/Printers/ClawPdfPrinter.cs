@@ -2,6 +2,7 @@
 using Microsoft.Win32;
 using RevitBIMTool.Models;
 using RevitBIMTool.Utils.SystemHelpers;
+using Serilog;
 using System.IO;
 
 
@@ -24,6 +25,8 @@ internal sealed class ClawPdfPrinter : PrinterControl
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "SkipPrintDialog", "True");
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<InputFilename>");
         RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", "<InputFilePath>");
+
+        Log.Information("Printer {Printer} initialized!", PrinterName);
     }
 
 

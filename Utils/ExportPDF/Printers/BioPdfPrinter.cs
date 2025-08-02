@@ -30,6 +30,8 @@ internal sealed class BioPdfPrinter : PrinterControl
         RunonceIniPath = Path.Combine(localSettingsDir, "runonce.ini");
         GlobalIniPath = Path.Combine(globalSettingsDir, "global.ini");
 
+        Log.Information("Printer {Printer} initialized!", PrinterName);
+
         ConfigureGhostscriptOptimization();
     }
 

@@ -17,7 +17,7 @@ internal sealed class AdobePdfPrinter : PrinterControl
 
     public override void InitializePrinter()
     {
-
+        Log.Information("Printer {Printer} initialized!", PrinterName);
     }
 
 

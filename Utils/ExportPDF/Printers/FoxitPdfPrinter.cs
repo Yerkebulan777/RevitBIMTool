@@ -2,6 +2,7 @@
 using Microsoft.Win32;
 using RevitBIMTool.Models;
 using RevitBIMTool.Utils.SystemHelpers;
+using Serilog;
 
 namespace RevitBIMTool.Utils.ExportPDF.Printers;
 
@@ -19,6 +20,8 @@ internal sealed class FoxitPdfPrinter : PrinterControl
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoOverwrite", "1");
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowSaveDialog", "0");
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowPrintProgress", "0");
+
+        Log.Information("Printer {Printer} initialized!", PrinterName);
     }
 
 
