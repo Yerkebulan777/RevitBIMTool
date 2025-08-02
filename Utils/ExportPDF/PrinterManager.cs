@@ -1,7 +1,6 @@
 ﻿using Database.Services;
 using RevitBIMTool.Utils.ExportPDF.Printers;
 using Serilog;
-using System.Configuration;
 
 namespace RevitBIMTool.Utils.ExportPDF
 {
@@ -10,44 +9,21 @@ namespace RevitBIMTool.Utils.ExportPDF
     /// </summary>
     internal static class PrinterManager
     {
-        private static readonly string сonnectionString = InitializeConnectionString();
         private static readonly List<PrinterControl> printerControllers = GetPrinterControllers();
-        private static readonly Lazy<PrinterServiceOld> printerServiceInstance = new(InitializePrinterService, true);
-
-        /// <summary>
-        /// Инициализирует строку подключения.
-        /// </summary>
-        private static string InitializeConnectionString()
-        {
-            string dbConnectionString = ConfigurationManager.ConnectionStrings["PrinterDatabase"]?.ConnectionString;
-
-            if (string.IsNullOrWhiteSpace(dbConnectionString))
-            {
-                Log.Error("Database connection string is not configured or is empty.");
-            }
-
-            return dbConnectionString;
-        }
+        private static readonly Lazy<PrinterService> printerServiceInstance = new(InitializePrinterService, true);
 
         /// <summary>
         /// Инициализирует сервис принтеров.
         /// </summary>
-        private static PrinterServiceOld InitializePrinterService()
+        private static PrinterService InitializePrinterService()
         {
-
-
-            return new PrinterService(
-                connection: сonnectionString,
-                commandTimeout: commandTimeout,
-                maxRetryAttempts: maxRetries,
-                baseRetryDelayMs: retryDelay,
-                lockTimeoutMinutes: lockTimeoutMin);
+            return new PrinterService(lockTimeoutMinutes: 30);
         }
 
         /// <summary>
         /// Thread-safe получение сервиса принтеров (singleton pattern).
         /// </summary>
-        private static PrinterServiceOld GetPrinterService()
+        private static PrinterService GetPrinterService()
         {
             // Обеспечивает потокобезопасную инициализацию
             return printerServiceInstance.Value;
@@ -62,7 +38,7 @@ namespace RevitBIMTool.Utils.ExportPDF
 
             try
             {
-                PrinterServiceOld printerService = GetPrinterService();
+                PrinterService printerService = GetPrinterService();
 
                 string[] printerNames = [.. printerControllers.Where(p => p.IsPrinterInstalled()).Select(p => p.PrinterName)];
 
@@ -96,7 +72,7 @@ namespace RevitBIMTool.Utils.ExportPDF
         /// </summary>
         public static bool TryReservePrinter(string printerName, string revitFilePath)
         {
-            PrinterServiceOld printerService = GetPrinterService();
+            PrinterService printerService = GetPrinterService();
 
             if (printerService.TryReserveSpecificPrinter(printerName, revitFilePath))
             {
@@ -114,7 +90,7 @@ namespace RevitBIMTool.Utils.ExportPDF
         /// </summary>
         public static void ReleasePrinter(string printerName)
         {
-            PrinterServiceOld printerService = GetPrinterService();
+            PrinterService printerService = GetPrinterService();
 
             if (printerService.TryReleasePrinter(printerName))
             {
@@ -133,7 +109,7 @@ namespace RevitBIMTool.Utils.ExportPDF
         {
             try
             {
-                PrinterServiceOld printerService = GetPrinterService();
+                PrinterService printerService = GetPrinterService();
 
                 int cleanedCount = printerService.CleanupExpiredReservations();
 
