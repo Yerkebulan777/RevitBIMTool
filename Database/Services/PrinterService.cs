@@ -4,8 +4,8 @@ using Database.Models;
 using Database.Stores;
 using System;
 using System.Data.Odbc;
-using System.Text;
 using System.Threading;
+using static Dapper.SqlMapper;
 
 namespace Database.Services
 {
@@ -30,19 +30,15 @@ namespace Database.Services
                 return GetAvailablePrinterWithLock(connection, transaction, availablePrinterNames);
             });
 
-            if (selectedPrinter?.IsAvailable == true)
+            if (selectedPrinter?.IsAvailable == true && TryReserveSpecificPrinter(selectedPrinter.PrinterName, revitFileName))
             {
-                // Reserve the printer in a separate transaction to minimize lock time
-                bool reserved = TryReserveSpecificPrinter(selectedPrinter.PrinterName, revitFileName);
-                if (reserved)
-                {
-                    reservedPrinterName = selectedPrinter.PrinterName;
-                    LogOperationResult("Reserve available printer", selectedPrinter.PrinterName, true, elapsed);
-                    return true;
-                }
+                reservedPrinterName = selectedPrinter.PrinterName;
+                LogOperationResult("Reserve available printer", selectedPrinter.PrinterName, true, elapsed);
+                return true;
             }
 
             LogOperationResult("Reserve available printer", "none found", false, elapsed);
+
             return false;
         }
 
@@ -142,43 +138,41 @@ namespace Database.Services
         }
 
 
-
-        // Пакетная инициализация для снижения накладных расходов на транзакции
+        // Инициализация для снижения накладных расходов на транзакции
         private void InitializePrinters(OdbcConnection connection, OdbcTransaction transaction, string[] printerNames)
         {
-            const int maxAttempts = 3;
-            const int delayMs = 1000;
-
             foreach (string printerName in printerNames)
             {
-                int attempts = 0;
+                int commandTimeout = TransactionHelper.CommandTimeout;
+                int maxAttempts = TransactionHelper.MaxRetryAttempts;
                 bool success = false;
+                int attempts = 0;
 
-                while (attempts < maxAttempts && !success)
+                while (!success)
                 {
                     try
                     {
                         attempts++;
-                        _ = connection.Execute(PrinterSqlStore.InitializePrinter, new { printerName }, transaction, TransactionHelper.CommandTimeout);
-                        success = true;
-                        _logger.Information($"Printer {printerName} initialized successfully on attempt {attempts}");
+                        string sql = PrinterSqlStore.InitializePrinter;
+                        if (0 < connection.Execute(sql, new { printerName }, transaction, commandTimeout))
+                        {
+                            _logger.Information($"Printer {printerName} initialized successfully");
+                            success = true;
+                        }
                     }
                     catch (Exception ex)
                     {
-                        _logger.Warning($"Attempt {attempts} failed for printer {printerName}: {ex.Message}");
-
-                        if (attempts < maxAttempts)
+                        Thread.Sleep(commandTimeout);
+                        if (attempts > maxAttempts)
                         {
-                            Thread.Sleep(delayMs);
-                        }
-                        else
-                        {
-                            _logger.Error($"Failed to initialize printer {printerName} after {maxAttempts} attempts: {ex.Message}");
+                            _logger.Error($"Failed to initialize printer {printerName}: {ex.Message}");
+                            success = true;
                         }
                     }
                 }
             }
         }
+
 
         private void LogOperationResult(string operation, string printerName, bool success, TimeSpan elapsed)
         {

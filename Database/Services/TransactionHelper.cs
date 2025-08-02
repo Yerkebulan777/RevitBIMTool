@@ -11,7 +11,7 @@ namespace Database.Services
     public static class TransactionHelper
     {
         private static readonly Lazy<string> _connectionString = new(InitializeConnectionString);
-        private static readonly Lazy<int> _commandTimeout = new(() => GetConfigInt("DatabaseCommandTimeout", 60));
+        private static readonly Lazy<int> _commandTimeout = new(() => GetConfigInt("DatabaseCommandTimeout", 30));
         private static readonly Lazy<int> _maxRetryAttempts = new(() => GetConfigInt("DatabaseMaxRetryAttempts", 5));
         private static readonly Lazy<int> _baseRetryDelayMs = new(() => GetConfigInt("DatabaseRetryDelayMs", 50));
 
