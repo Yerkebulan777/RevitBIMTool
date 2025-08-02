@@ -17,27 +17,20 @@ internal sealed class BioPdfPrinter : PrinterControl
     private string GlobalIniPath { get; set; }
 
 
-    public override bool InitializePrinter()
+    public override void InitializePrinter()
     {
-        if (PrinterManager.TryReservePrinter(PrinterName, RevitFilePath))
-        {
-            const string BioPdfSettingsPath = @"PDF Writer\PDF Writer - bioPDF";
+        const string BioPdfSettingsPath = @"PDF Writer\PDF Writer - bioPDF";
 
-            string localAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            string programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+        string localAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        string programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
 
-            string localSettingsDir = Path.Combine(localAppDataPath, BioPdfSettingsPath);
-            string globalSettingsDir = Path.Combine(programDataPath, BioPdfSettingsPath);
+        string localSettingsDir = Path.Combine(localAppDataPath, BioPdfSettingsPath);
+        string globalSettingsDir = Path.Combine(programDataPath, BioPdfSettingsPath);
 
-            RunonceIniPath = Path.Combine(localSettingsDir, "runonce.ini");
-            GlobalIniPath = Path.Combine(globalSettingsDir, "global.ini");
+        RunonceIniPath = Path.Combine(localSettingsDir, "runonce.ini");
+        GlobalIniPath = Path.Combine(globalSettingsDir, "global.ini");
 
-            ConfigureGhostscriptOptimization();
-
-            return true;
-        }
-
-        return false;
+        ConfigureGhostscriptOptimization();
     }
 
 

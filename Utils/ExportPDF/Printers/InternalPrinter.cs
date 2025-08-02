@@ -12,10 +12,8 @@ internal sealed class InternalPrinter : PrinterControl
     public override string RevitFilePath { get; set; }
 
 
-    public override bool InitializePrinter()
+    public override void InitializePrinter()
     {
-        // Его нет в базе данных принтеров!
-        return true;
     }
 
 

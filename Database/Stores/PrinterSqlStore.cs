@@ -174,7 +174,7 @@
         /// <summary>
         /// Получение первого доступного принтера с высокой конкурентностью
         /// </summary>
-        public const string GetSingleAvailablePrinterWithLock = @"
+        public const string GetAvailablePrinterWithLock = @"
             SELECT id, printer_name as PrinterName, is_available as IsAvailable, 
                    reserved_file_name as RevitFileName, reserved_at, process_id as ProcessId, 
                    version_token as VersionToken, job_count as JobCount, state as State,

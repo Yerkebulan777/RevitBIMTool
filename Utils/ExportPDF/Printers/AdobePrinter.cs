@@ -15,9 +15,9 @@ internal sealed class AdobePdfPrinter : PrinterControl
     public override string RevitFilePath { get; set; }
 
 
-    public override bool InitializePrinter()
+    public override void InitializePrinter()
     {
-        return PrinterManager.TryReservePrinter(PrinterName, RevitFilePath);
+
     }
 
 

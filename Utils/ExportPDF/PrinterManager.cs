@@ -57,21 +57,6 @@ namespace RevitBIMTool.Utils.ExportPDF
         }
 
 
-        public static bool TryReservePrinter(string printerName, string revitFilePath)
-        {
-            PrinterService printerService = GetPrinterService();
-
-            if (printerService.TryReserveSpecificPrinter(printerName, revitFilePath))
-            {
-                Log.Information("Reserved printer {PrinterName}", printerName);
-                return true;
-            }
-
-            Log.Warning("Failed to reserve printer {PrinterName}", printerName);
-            return false;
-        }
-
-
         public static void ReleasePrinter(string printerName)
         {
             PrinterService printerService = GetPrinterService();

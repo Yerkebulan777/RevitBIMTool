@@ -27,10 +27,10 @@ namespace Database.Services
                 InitializePrinters(connection, transaction, availablePrinterNames);
 
                 // Get and lock the first available printer
-                return GetSingleAvailablePrinter(connection, transaction, availablePrinterNames);
+                return GetAvailablePrinter(connection, transaction, availablePrinterNames);
             });
 
-            if (selectedPrinter?.IsAvailable == true && TryReserveSpecificPrinter(selectedPrinter.PrinterName, revitFileName))
+            if (TryReserveSpecificPrinter(selectedPrinter.PrinterName, revitFileName))
             {
                 reservedPrinterName = selectedPrinter.PrinterName;
                 LogOperationResult("Reserve available printer", selectedPrinter.PrinterName, true, elapsed);
@@ -48,15 +48,9 @@ namespace Database.Services
 
             (bool success, TimeSpan elapsed) = TransactionHelper.RunInTransaction((connection, transaction) =>
             {
-                // Initialize printer if it doesn't exist
-                int initialized = connection.Execute(
-                    PrinterSqlStore.InitializePrinter,
-                    new { printerName },
-                    transaction,
-                    TransactionHelper.CommandTimeout);
 
                 // Get printer info with row-level lock
-                PrinterInfo printerInfo = GetPrinterWithLock(connection, transaction, printerName);
+                PrinterInfo printerInfo = GetSpecificPrinter(connection, transaction, printerName);
 
                 if (printerInfo?.IsAvailable != true)
                 {
@@ -117,21 +111,21 @@ namespace Database.Services
             return cleanedCount;
         }
 
-        // Унифицированный метод получения принтера с блокировкой на уровне строки
-        private PrinterInfo GetPrinterWithLock(OdbcConnection connection, OdbcTransaction transaction, string printerName)
-        {
-            return connection.QuerySingleOrDefault<PrinterInfo>(
-                PrinterSqlStore.GetSpecificPrinterWithLock,
-                new { printerName },
-                transaction,
-                TransactionHelper.CommandTimeout);
-        }
 
-        // Optimized method for getting first available printer from array
-        private PrinterInfo GetSingleAvailablePrinter(OdbcConnection connection, OdbcTransaction transaction, string[] printerNames)
+        // Унифицированный метод получения принтера с блокировкой на уровне строки
+        private PrinterInfo GetSpecificPrinter(OdbcConnection connection, OdbcTransaction transaction, string printerName)
         {
             int commandTimeout = TransactionHelper.CommandTimeout;
-            string sql = PrinterSqlStore.GetSingleAvailablePrinterWithLock;
+            string sql = PrinterSqlStore.GetSpecificPrinterWithLock;
+            return connection.QuerySingleOrDefault<PrinterInfo>(sql, new { printerName }, transaction, commandTimeout);
+        }
+
+
+        // Оптимизированный метод получения первого доступного принтера из массива
+        private PrinterInfo GetAvailablePrinter(OdbcConnection connection, OdbcTransaction transaction, string[] printerNames)
+        {
+            int commandTimeout = TransactionHelper.CommandTimeout;
+            string sql = PrinterSqlStore.GetAvailablePrinterWithLock;
             return connection.QuerySingleOrDefault<PrinterInfo>(sql, new { printerNames }, transaction, commandTimeout);
         }
 

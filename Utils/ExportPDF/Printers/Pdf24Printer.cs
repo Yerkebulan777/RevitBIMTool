@@ -13,22 +13,15 @@ internal sealed class Pdf24Printer : PrinterControl
     public override string RevitFilePath { get; set; }
 
 
-    public override bool InitializePrinter()
+    public override void  InitializePrinter()
     {
-        if (PrinterManager.TryReservePrinter(PrinterName, RevitFilePath))
-        {
-            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveOpenDir", 0);
-            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "Handler", "autoSave");
-            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveShowProgress", 0);
-            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveOverwriteFile", 1);
-            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveUseFileChooser", 0);
-            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveFilename", "$fileName");
-            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveProfile", "default/medium");
-
-            return true;
-        }
-
-        return false;
+        RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveOpenDir", 0);
+        RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "Handler", "autoSave");
+        RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveShowProgress", 0);
+        RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveOverwriteFile", 1);
+        RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveUseFileChooser", 0);
+        RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveFilename", "$fileName");
+        RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveProfile", "default/medium");
     }
 
 

@@ -14,22 +14,16 @@ internal sealed class ClawPdfPrinter : PrinterControl
     public override bool IsInternalPrinter => false;
     public override string RevitFilePath { get; set; }
 
-    public override bool InitializePrinter()
+
+    public override void InitializePrinter()
     {
-        if (PrinterManager.TryReservePrinter(PrinterName, RevitFilePath))
-        {
-            string autoSaveKey = Path.Combine(RegistryPath, "AutoSave");
-            RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "Enabled", "True");
-            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "OpenViewer", "False");
-            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowProgress", "False");
-            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "SkipPrintDialog", "True");
-            RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<InputFilename>");
-            RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", "<InputFilePath>");
-
-            return true;
-        }
-
-        return false;
+        string autoSaveKey = Path.Combine(RegistryPath, "AutoSave");
+        RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "Enabled", "True");
+        RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "OpenViewer", "False");
+        RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowProgress", "False");
+        RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "SkipPrintDialog", "True");
+        RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<InputFilename>");
+        RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", "<InputFilePath>");
     }
 
 

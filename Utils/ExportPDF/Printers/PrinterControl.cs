@@ -20,7 +20,7 @@ internal abstract class PrinterControl
         : RegistryHelper.IsKeyExists(Registry.CurrentUser, RegistryPath);
     }
 
-    public abstract bool InitializePrinter();
+    public abstract void InitializePrinter();
 
     public abstract void ReleasePrinterSettings();
 
