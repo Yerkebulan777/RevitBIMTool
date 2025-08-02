@@ -65,13 +65,6 @@ namespace Database.Services
             throw new InvalidOperationException($"Transaction failed after {MaxRetryAttempts} attempts", lastException);
         }
 
-        public static T QuerySingle<T>(string sql, object parameters = null)
-        {
-            return RunInTransaction((connection, transaction) =>
-            {
-                return connection.QuerySingle<T>(sql, parameters, transaction, CommandTimeout);
-            });
-        }
 
         public static T QuerySingleOrDefault<T>(string sql, object parameters = null)
         {
@@ -80,6 +73,7 @@ namespace Database.Services
                 return connection.QuerySingleOrDefault<T>(sql, parameters, transaction, CommandTimeout);
             });
         }
+
 
         public static int Execute(string sql, object parameters = null)
         {
