@@ -1,6 +1,7 @@
 ﻿using Database.Services;
 using RevitBIMTool.Utils.ExportPDF.Printers;
 using Serilog;
+using System.Text;
 
 namespace RevitBIMTool.Utils.ExportPDF
 {
@@ -36,14 +37,16 @@ namespace RevitBIMTool.Utils.ExportPDF
 
                     if (reservedPrinter is not null)
                     {
+                        StringBuilder logMessage = new();
                         reservedPrinter.RevitFilePath = revitFilePath;
-                        Log.Information("Reserved {PrinterName}", reservedPrinterName);
-                        Log.Information("Total printers: {Count}", printerNames?.Length ?? 0);
+                        logMessage.AppendLine($"Printer reserved: {reservedPrinter.PrinterName}");
+                        logMessage.AppendLine($"Total printers: {printerNames?.Length ?? 0}");
+                        Log.Information(logMessage.ToString());
                         return true;
                     }
                 }
 
-                Log.Warning("No available printers to reserve for file {FileName}", System.IO.Path.GetFileName(revitFilePath));
+                Log.Warning("No printers available!!!");
             }
             catch (Exception ex)
             {
