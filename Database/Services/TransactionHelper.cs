@@ -1,54 +1,34 @@
 ﻿using Dapper;
 using System;
-using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.Odbc;
 using System.Diagnostics;
+using System.Threading;
 
 namespace Database.Services
 {
     public static class TransactionHelper
     {
-        private static readonly Lazy<int> _commandTimeout = new(() => GetConfigInt("DatabaseCommandTimeout", 30));
-        private static readonly Lazy<int> _baseRetryDelayMs = new(() => GetConfigInt("DatabaseRetryDelayMs", 100));
-        private static readonly Lazy<int> _maxRetryAttempts = new(() => GetConfigInt("DatabaseMaxRetryAttempts", 10));
         private static readonly Lazy<string> _connectionString = new(InitializeConnectionString);
+        private static readonly Lazy<int> _commandTimeout = new(() => GetConfigInt("DatabaseCommandTimeout", 60));
+        private static readonly Lazy<int> _maxRetryAttempts = new(() => GetConfigInt("DatabaseMaxRetryAttempts", 5));
+        private static readonly Lazy<int> _baseRetryDelayMs = new(() => GetConfigInt("DatabaseRetryDelayMs", 50));
 
+        public static string ConnectionString => _connectionString.Value;
         public static int CommandTimeout => _commandTimeout.Value;
         public static int MaxRetryAttempts => _maxRetryAttempts.Value;
-        public static int BaseRetryDelayMs => _baseRetryDelayMs.Value;
-        public static string ConnectionString => _connectionString.Value;
 
+        // Optimized retry delays for PostgreSQL serialization conflicts
+        private static readonly TimeSpan[] PostgreSQLRetryDelays = {
+            TimeSpan.Zero,                    // Immediate first retry
+            TimeSpan.FromMilliseconds(50),    // Quick retry for transient conflicts
+            TimeSpan.FromMilliseconds(100),
+            TimeSpan.FromMilliseconds(200),
+            TimeSpan.FromMilliseconds(400)
+        };
 
         public static (T result, TimeSpan elapsed) RunInTransaction<T>(Func<OdbcConnection, OdbcTransaction, T> operation)
-        {
-            return ExecuteWithRetry(() =>
-            {
-                Stopwatch timer = Stopwatch.StartNew();
-
-                using OdbcConnection connection = new(ConnectionString);
-                using OdbcTransaction transaction = connection.BeginTransaction(IsolationLevel.Serializable);
-
-                try
-                {
-                    T result = operation(connection, transaction);
-                    transaction.Commit();
-
-                    timer.Stop();
-                    return (result, timer.Elapsed);
-                }
-                catch
-                {
-                    transaction.Rollback();
-                    timer.Stop();
-                    throw;
-                }
-            });
-        }
-
-
-        public static (T result, TimeSpan elapsed) ExecuteWithRetry<T>(Func<(T result, TimeSpan elapsed)> operation)
         {
             Exception lastException = null;
             Stopwatch totalTimer = Stopwatch.StartNew();
@@ -57,36 +37,55 @@ namespace Database.Services
             {
                 try
                 {
-                    (T result, TimeSpan elapsed) = operation();
-                    totalTimer.Stop();
-                    return (result, totalTimer.Elapsed);
+                    Stopwatch attemptTimer = Stopwatch.StartNew();
+
+                    using OdbcConnection connection = new(ConnectionString);
+                    connection.Open();
+
+                    using OdbcTransaction transaction = connection.BeginTransaction(IsolationLevel.Serializable);
+                    try
+                    {
+                        T result = operation(connection, transaction);
+                        transaction.Commit();
+
+                        attemptTimer.Stop();
+                        totalTimer.Stop();
+
+                        LogPerformanceMetrics(attempt, attemptTimer.Elapsed, true);
+                        return (result, totalTimer.Elapsed);
+                    }
+                    catch
+                    {
+                        transaction.Rollback();
+                        throw;
+                    }
                 }
-                catch (OdbcException ex) when (IsRetryableException(ex) && attempt < MaxRetryAttempts)
+                catch (OdbcException ex) when (IsRetryableError(ex) && attempt < MaxRetryAttempts)
                 {
                     lastException = ex;
-                    int delay = BaseRetryDelayMs * attempt;
-                    System.Threading.Thread.Sleep(delay);
+                    TimeSpan delay = GetRetryDelay(attempt);
+                    LogRetryAttempt(attempt, ex.Message, delay);
+                    Thread.Sleep(delay);
                 }
             }
 
             totalTimer.Stop();
-            throw new InvalidOperationException("Database operation failed after retries", lastException);
+            throw new InvalidOperationException($"Transaction failed after {MaxRetryAttempts} attempts", lastException);
         }
 
+        public static (T result, TimeSpan elapsed) QuerySingle<T>(string sql, object parameters = null)
+        {
+            return RunInTransaction((connection, transaction) =>
+            {
+                return connection.QuerySingle<T>(sql, parameters, transaction, CommandTimeout);
+            });
+        }
 
         public static (T result, TimeSpan elapsed) QuerySingleOrDefault<T>(string sql, object parameters = null)
         {
             return RunInTransaction((connection, transaction) =>
             {
                 return connection.QuerySingleOrDefault<T>(sql, parameters, transaction, CommandTimeout);
-            });
-        }
-
-        public static (IEnumerable<T> result, TimeSpan elapsed) Query<T>(string sql, object parameters = null)
-        {
-            return RunInTransaction((connection, transaction) =>
-            {
-                return connection.Query<T>(sql, parameters, transaction, commandTimeout: CommandTimeout);
             });
         }
 
@@ -98,29 +97,69 @@ namespace Database.Services
             });
         }
 
+
+        private static bool IsRetryableError(OdbcException ex)
+        {
+            string message = ex.Message.ToLowerInvariant();
+            return message.Contains("could not serialize access") ||
+                    message.Contains("serialization failure") ||
+                    message.Contains("deadlock detected") ||
+                    message.Contains("connection reset") ||
+                    message.Contains("timeout expired");
+        }
+
+
+        private static TimeSpan GetRetryDelay(int attemptNumber)
+        {
+            if (attemptNumber <= PostgreSQLRetryDelays.Length)
+            {
+                return PostgreSQLRetryDelays[attemptNumber - 1];
+            }
+
+            Random _random = new();
+
+            // Экспоненциальный откат с джиттером для попыток, превышающих заданные задержки
+            TimeSpan baseDelay = TimeSpan.FromMilliseconds(_baseRetryDelayMs.Value * Math.Pow(2, attemptNumber - PostgreSQLRetryDelays.Length));
+            TimeSpan jitter = TimeSpan.FromMilliseconds(_random.Next(0, (int)(baseDelay.TotalMilliseconds * 0.1)));
+
+            return baseDelay + jitter;
+        }
+
         private static string InitializeConnectionString()
         {
             string connectionString = ConfigurationManager.ConnectionStrings["PrinterDatabase"]?.ConnectionString;
 
-            return string.IsNullOrWhiteSpace(connectionString)
-                ? throw new InvalidOperationException("Connection string 'PrinterDatabase' not found in configuration")
-                : connectionString;
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                throw new InvalidOperationException("Connection string 'PrinterDatabase' not found");
+            }
+
+            // Optimize for PostgreSQL via ODBC
+            if (!connectionString.Contains("ConnSettings"))
+            {
+                connectionString += ";ConnSettings=SET statement_timeout=30000;SET lock_timeout=5000;";
+            }
+
+            return connectionString;
         }
+
 
         private static int GetConfigInt(string key, int defaultValue)
         {
             return int.TryParse(ConfigurationManager.AppSettings[key], out int value) ? value : defaultValue;
         }
 
-        private static bool IsRetryableException(OdbcException ex)
+        private static void LogPerformanceMetrics(int attemptNumber, TimeSpan duration, bool success)
         {
-            string message = ex.Message;
-            return message.Contains("serialization", StringComparison.OrdinalIgnoreCase) ||
-                   message.Contains("deadlock", StringComparison.OrdinalIgnoreCase) ||
-                   message.Contains("lock", StringComparison.OrdinalIgnoreCase);
+            if (duration.TotalMilliseconds > 100) // Log slow operations
+            {
+                Debug.WriteLine($"Transaction attempt {attemptNumber}: {duration.TotalMilliseconds:F1}ms, Success: {success}");
+            }
         }
 
-
-
+        private static void LogRetryAttempt(int attempt, string errorMessage, TimeSpan delay)
+        {
+            Debug.WriteLine($"Retry attempt {attempt}, delay: {delay.TotalMilliseconds}ms, error: {errorMessage}");
+        }
     }
 }

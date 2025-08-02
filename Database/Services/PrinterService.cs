@@ -4,153 +4,69 @@ using Database.Models;
 using Database.Stores;
 using System;
 using System.Data.Odbc;
+using System.Text;
 
 namespace Database.Services
 {
     public sealed class PrinterService(int lockTimeoutMinutes = 30) : IDisposable
     {
-        private readonly ILogger _logger = LoggerFactory.CreateLogger<PrinterService>();
         private readonly int _lockTimeoutMinutes = lockTimeoutMinutes;
+        private readonly ILogger _logger = LoggerFactory.CreateLogger<PrinterService>();
         private bool _disposed = false;
-
 
         public bool TryReserveAvailablePrinter(string revitFileName, string[] availablePrinterNames, out string reservedPrinterName)
         {
             reservedPrinterName = null;
-            string localReservedPrinterName = null;
 
-            _logger.Debug($"Starting reservation for {revitFileName}");
+            _logger.Debug($"Starting reservation search for {revitFileName} among {availablePrinterNames.Length} printers");
 
-            (bool success, TimeSpan elapsed) = TransactionHelper.RunInTransaction((connection, transaction) =>
+            (PrinterInfo selectedPrinter, TimeSpan elapsed) = TransactionHelper.RunInTransaction((connection, transaction) =>
             {
-                InitializePrinters(connection, transaction, availablePrinterNames);
+                // Initialize all printers in a single batch operation
+                InitializePrintersBatch(connection, transaction, availablePrinterNames);
 
-                PrinterInfo selectedPrinter = GetAvailablePrinter(connection, transaction, availablePrinterNames);
-
-                if (selectedPrinter != null)
-                {
-                    _logger.Information($"Selected printer: {selectedPrinter.PrinterName}");
-
-                    if (ReservePrinter(connection, transaction, selectedPrinter, revitFileName))
-                    {
-                        localReservedPrinterName = selectedPrinter.PrinterName;
-                        return true;
-                    }
-                }
-
-                return false;
+                // Get and lock the first available printer
+                return GetAvailablePrinterWithLock(connection, transaction, availablePrinterNames);
             });
 
-            LogOperationResult("Reserve printer", localReservedPrinterName ?? "none", success, elapsed);
+            if (selectedPrinter?.IsAvailable == true)
+            {
+                // Reserve the printer in a separate transaction to minimize lock time
+                bool reserved = TryReserveSpecificPrinter(selectedPrinter.PrinterName, revitFileName);
+                if (reserved)
+                {
+                    reservedPrinterName = selectedPrinter.PrinterName;
+                    LogOperationResult("Reserve available printer", selectedPrinter.PrinterName, true, elapsed);
+                    return true;
+                }
+            }
 
-            reservedPrinterName = localReservedPrinterName;
-            return success;
+            LogOperationResult("Reserve available printer", "none found", false, elapsed);
+            return false;
         }
-
 
         public bool TryReserveSpecificPrinter(string printerName, string revitFileName)
         {
-            _logger.Debug($"Starting reservation of {printerName}");
+            _logger.Debug($"Attempting to reserve specific printer: {printerName}");
 
             (bool success, TimeSpan elapsed) = TransactionHelper.RunInTransaction((connection, transaction) =>
             {
-                // Инициализируем принтер если его нет
-                _ = connection.Execute(PrinterSqlStore.InitializePrinter,
-                    new { printerName }, transaction, TransactionHelper.CommandTimeout);
-
-                PrinterInfo printerInfo = GetPrinterInfoWithLock(connection, transaction, printerName);
-
-                return printerInfo?.IsAvailable == true &&
-                       ReservePrinter(connection, transaction, printerInfo, revitFileName);
-            });
-
-            LogOperationResult("Reserve specific printer", printerName, success, elapsed);
-            return success;
-        }
-
-
-        public bool TryReleasePrinter(string printerName, string revitFileName = null)
-        {
-            (int affectedRows, TimeSpan elapsed) = TransactionHelper.Execute(
-                PrinterSqlStore.ReleasePrinter,
-                new { printerName, revitFileName });
-
-            bool success = affectedRows > 0;
-            LogOperationResult("Release printer", printerName, success, elapsed);
-            return success;
-        }
-
-
-        public int CleanupExpiredReservations()
-        {
-            DateTime cutoffTime = DateTime.UtcNow.AddMinutes(-_lockTimeoutMinutes);
-
-            (int cleanedCount, TimeSpan elapsed) = TransactionHelper.Execute(
-                PrinterSqlStore.CleanupExpiredReservations,
-                new { cutoffTime });
-
-            _logger.Information($"Cleaned up {cleanedCount} expired reservations in {elapsed.TotalMilliseconds:F0}ms");
-            return cleanedCount;
-        }
-
-
-        private void InitializePrinters(OdbcConnection connection, OdbcTransaction transaction, string[] printerNames)
-        {
-            foreach (string printerName in printerNames)
-            {
-                try
-                {
-                    _ = connection.Execute(PrinterSqlStore.InitializePrinter,
-                        new { printerName }, transaction, TransactionHelper.CommandTimeout);
-                }
-                catch (Exception ex)
-                {
-                    _logger.Warning($"Failed to initialize printer {printerName}: {ex.Message}");
-                }
-            }
-        }
-
-
-        private PrinterInfo GetAvailablePrinter(OdbcConnection connection, OdbcTransaction transaction, string[] printerNames)
-        {
-            try
-            {
-                return connection.QuerySingleOrDefault<PrinterInfo>(
-                    PrinterSqlStore.GetSingleAvailablePrinterWithLock,
-                    new { printerNames },
+                // Initialize printer if it doesn't exist
+                int initialized = connection.Execute(
+                    PrinterSqlStore.InitializePrinter,
+                    new { printerName },
                     transaction,
                     TransactionHelper.CommandTimeout);
-            }
-            catch (Exception ex)
-            {
-                _logger.Error($"Error getting available printer: {ex.Message}", ex);
-                return null;
-            }
-        }
 
+                // Get printer info with row-level lock
+                PrinterInfo printerInfo = GetPrinterWithLock(connection, transaction, printerName);
 
-        private PrinterInfo GetPrinterInfoWithLock(OdbcConnection connection, OdbcTransaction transaction, string printerName)
-        {
-            try
-            {
-                return connection.QuerySingleOrDefault<PrinterInfo>(
-                    PrinterSqlStore.GetSingleAvailablePrinterWithLock,
-                    new { printerNames = new[] { printerName } },
-                    transaction,
-                    TransactionHelper.CommandTimeout);
-            }
-            catch (Exception ex)
-            {
-                _logger.Error($"Error getting printer info for {printerName}: {ex.Message}", ex);
-                return null;
-            }
-        }
+                if (printerInfo?.IsAvailable != true)
+                {
+                    return false;
+                }
 
-
-        private bool ReservePrinter(OdbcConnection connection, OdbcTransaction transaction, PrinterInfo printerInfo, string revitFileName)
-        {
-            try
-            {
+                // Perform atomic reservation with optimistic locking
                 DateTime reservedAt = DateTime.UtcNow;
                 int processId = System.Diagnostics.Process.GetCurrentProcess().Id;
 
@@ -167,29 +83,111 @@ namespace Database.Services
                     transaction,
                     TransactionHelper.CommandTimeout);
 
-                bool success = affectedRows > 0;
+                bool reservationSuccess = affectedRows > 0;
 
-                if (!success)
+                if (!reservationSuccess)
                 {
-                    _logger.Warning($"Failed to reserve printer {printerInfo.PrinterName} - likely concurrent access");
+                    _logger.Warning($"Failed to reserve {printerName} - concurrent access detected");
                 }
 
-                return success;
+                return reservationSuccess;
+            });
+
+            LogOperationResult("Reserve specific printer", printerName, success, elapsed);
+            return success;
+        }
+
+        public bool TryReleasePrinter(string printerName, string revitFileName = null)
+        {
+            (int affectedRows, TimeSpan elapsed) = TransactionHelper.Execute(
+                PrinterSqlStore.ReleasePrinter,
+                new { printerName, revitFileName });
+
+            bool success = affectedRows > 0;
+            LogOperationResult("Release printer", printerName, success, elapsed);
+            return success;
+        }
+
+        public int CleanupExpiredReservations()
+        {
+            DateTime cutoffTime = DateTime.UtcNow.AddMinutes(-_lockTimeoutMinutes);
+
+            (int cleanedCount, TimeSpan elapsed) = TransactionHelper.Execute(
+                PrinterSqlStore.CleanupExpiredReservations,
+                new { cutoffTime });
+
+            _logger.Information($"Cleaned up {cleanedCount} expired reservations in {elapsed.TotalMilliseconds:F0}ms");
+            return cleanedCount;
+        }
+
+        // Унифицированный метод получения принтера с блокировкой на уровне строки
+        private PrinterInfo GetPrinterWithLock(OdbcConnection connection, OdbcTransaction transaction, string printerName)
+        {
+            return connection.QuerySingleOrDefault<PrinterInfo>(
+                PrinterSqlStore.GetSpecificPrinterWithLock,
+                new { printerName },
+                transaction,
+                TransactionHelper.CommandTimeout);
+        }
+
+        // Optimized method for getting first available printer from array
+        private PrinterInfo GetAvailablePrinterWithLock(OdbcConnection connection, OdbcTransaction transaction, string[] printerNames)
+        {
+            return connection.QuerySingleOrDefault<PrinterInfo>(
+                PrinterSqlStore.GetSingleAvailablePrinterWithLock,
+                new { printerNames },
+                transaction,
+                TransactionHelper.CommandTimeout);
+        }
+
+        // Batch initialization to reduce transaction overhead
+        private void InitializePrintersBatch(OdbcConnection connection, OdbcTransaction transaction, string[] printerNames)
+        {
+            var batchSql = new StringBuilder();
+            var parameters = new DynamicParameters();
+
+            for (int i = 0; i < printerNames.Length; i++)
+            {
+                batchSql.AppendLine(PrinterSqlStore.InitializePrinter);
+                parameters.Add($"printerName{i}", printerNames[i]);
+            }
+
+            try
+            {
+                connection.Execute(batchSql.ToString(), parameters, transaction, TransactionHelper.CommandTimeout);
             }
             catch (Exception ex)
             {
-                _logger.Error($"Error reserving printer {printerInfo.PrinterName}: {ex.Message}", ex);
-                return false;
+                _logger.Warning($"Batch printer initialization partially failed: {ex.Message}");
+                // Continue with individual initialization if batch fails
+                FallbackIndividualInitialization(connection, transaction, printerNames);
             }
         }
 
+        private void FallbackIndividualInitialization(OdbcConnection connection, OdbcTransaction transaction, string[] printerNames)
+        {
+            foreach (string printerName in printerNames)
+            {
+                try
+                {
+                    connection.Execute(
+                        PrinterSqlStore.InitializePrinter,
+                        new { printerName },
+                        transaction,
+                        TransactionHelper.CommandTimeout);
+                }
+                catch (Exception ex)
+                {
+                    _logger.Warning($"Failed to initialize printer {printerName}: {ex.Message}");
+                }
+            }
+        }
 
         private void LogOperationResult(string operation, string printerName, bool success, TimeSpan elapsed)
         {
-            string status = success ? "success" : "failed";
-            _logger.Information($"{operation} {printerName}: {status} in {elapsed.TotalMilliseconds:F0}ms");
+            string status = success ? "SUCCESS" : "FAILED";
+            _logger.Information($"{operation} '{printerName}': {status} in {elapsed.TotalMilliseconds:F0}ms");
         }
-
 
         public void Dispose()
         {
