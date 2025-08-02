@@ -14,7 +14,7 @@ internal sealed class Pdf24Printer : PrinterControl
     public override string RevitFilePath { get; set; }
 
 
-    public override void  InitializePrinter()
+    public override void  InitializePrinter(string revitFilePath)
     {
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveOpenDir", 0);
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "Handler", "autoSave");
@@ -25,6 +25,8 @@ internal sealed class Pdf24Printer : PrinterControl
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveProfile", "default/medium");
 
         Log.Information("Printer {Printer} initialized!", PrinterName);
+
+        RevitFilePath = revitFilePath;
     }
 
 

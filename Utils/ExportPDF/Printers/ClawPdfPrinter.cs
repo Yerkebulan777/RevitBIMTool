@@ -16,7 +16,7 @@ internal sealed class ClawPdfPrinter : PrinterControl
     public override string RevitFilePath { get; set; }
 
 
-    public override void InitializePrinter()
+    public override void InitializePrinter(string revitFilePath)
     {
         string autoSaveKey = Path.Combine(RegistryPath, "AutoSave");
         RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "Enabled", "True");
@@ -27,6 +27,8 @@ internal sealed class ClawPdfPrinter : PrinterControl
         RegistryHelper.SetValue(Registry.CurrentUser, autoSaveKey, "TargetDirectory", "<InputFilePath>");
 
         Log.Information("Printer {Printer} initialized!", PrinterName);
+
+        RevitFilePath = revitFilePath;
     }
 
 

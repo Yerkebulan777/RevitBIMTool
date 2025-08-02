@@ -12,9 +12,11 @@ internal sealed class InternalPrinter : PrinterControl
     public override string RevitFilePath { get; set; }
 
 
-    public override void InitializePrinter()
+    public override void InitializePrinter(string revitFilePath)
     {
         Log.Information("Printer {Printer} initialized!", PrinterName);
+
+        RevitFilePath = revitFilePath;
     }
 
 

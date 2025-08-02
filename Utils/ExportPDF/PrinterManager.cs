@@ -13,24 +13,23 @@ namespace RevitBIMTool.Utils.ExportPDF
 
         public static bool TryGetPrinter(string revitFilePath, out PrinterControl availablePrinter)
         {
+            availablePrinter = null;
+
             StringBuilder logMessage = new();
 
             PrinterService printerService = GetPrinterServiceInstance();
 
-            string[] printerNames = [.. printerControllers.Where(p => p.IsPrinterInstalled()).Select(p => p.PrinterName)];
-
             foreach (PrinterControl control in printerControllers)
             {
+                availablePrinter = null;
+
                 if (control.IsPrinterInstalled())
                 {
                     try
                     {
-                        availablePrinter = null;
-
                         if (printerService.TryGetAvailablePrinter(revitFilePath, control.PrinterName))
                         {
                             _ = logMessage.AppendLine($"Printer reserved: {control.PrinterName}");
-                            _ = logMessage.AppendLine($"Total printers: {printerNames?.Length ?? 0}");
 
                             if (printerService.TryReservePrinter(control.PrinterName, revitFilePath))
                             {
@@ -48,8 +47,6 @@ namespace RevitBIMTool.Utils.ExportPDF
                 }
             }
 
-            Log.Warning("No available printers found for file: {RevitFilePath}", revitFilePath);
-            availablePrinter = null;
             return false;
         }
 

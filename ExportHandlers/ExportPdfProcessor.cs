@@ -36,8 +36,6 @@ internal static class ExportPdfProcessor
 
         if (sheetFormatGroups.Count > 0)
         {
-            printer.InitializePrinter();
-
             Log.Information("Start export PDF...");
 
             PathHelper.EnsureDirectory(tempDirectory);

@@ -20,6 +20,7 @@ namespace Database.Services
 
             string reservedPrinterName = TransactionHelper.RunInTransaction((connection, transaction) =>
             {
+                InitializePrinter(connection, transaction, printerName);
                 return GetSpecificPrinter(connection, transaction, printerName)?.PrinterName;
             });
 
@@ -60,54 +61,42 @@ namespace Database.Services
             return cleanedCount;
         }
 
-        // Унифицированный метод получения принтера с блокировкой на уровне строки
+
+        private static void InitializePrinter(OdbcConnection connection, OdbcTransaction transaction, string printerName)
+        {
+            int commandTimeout = TransactionHelper.CommandTimeout;
+            int maxAttempts = TransactionHelper.MaxRetryAttempts;
+            bool success = false;
+            int attempts = 0;
+
+            while (!success)
+            {
+                try
+                {
+                    attempts++;
+                    Thread.Sleep(commandTimeout * attempts);
+                    string sql = PrinterSqlStore.InitializePrinter;
+                    if (0 < connection.Execute(sql, new { printerName }, transaction, commandTimeout))
+                    {
+                        success = true;
+                    }
+                }
+                finally
+                {
+                    if (attempts > maxAttempts)
+                    {
+                        success = true;
+                    }
+                }
+            }
+        }
+
+
         private static PrinterInfo GetSpecificPrinter(OdbcConnection connection, OdbcTransaction transaction, string printerName)
         {
             int commandTimeout = TransactionHelper.CommandTimeout;
             string sql = PrinterSqlStore.GetSpecificPrinterWithLock;
             return connection.QuerySingleOrDefault<PrinterInfo>(sql, new { printerName }, transaction, commandTimeout);
-        }
-
-        // Оптимизированный метод получения первого доступного принтера из массива
-        private static PrinterInfo GetAvailablePrinter(OdbcConnection connection, OdbcTransaction transaction, string[] printerNames)
-        {
-            int commandTimeout = TransactionHelper.CommandTimeout;
-            string sql = PrinterSqlStore.GetAvailablePrinterWithLock;
-            return connection.QuerySingleOrDefault<PrinterInfo>(sql, new { printerNames }, transaction, commandTimeout);
-        }
-
-        // Инициализация для снижения накладных расходов на транзакции
-        private void InitializePrinters(OdbcConnection connection, OdbcTransaction transaction, string[] printerNames)
-        {
-            foreach (string printerName in printerNames)
-            {
-                int commandTimeout = TransactionHelper.CommandTimeout;
-                int maxAttempts = TransactionHelper.MaxRetryAttempts;
-                int attempts = 0;
-
-                while (true)
-                {
-                    try
-                    {
-                        attempts++;
-                        Thread.Sleep(commandTimeout * attempts);
-                        string sql = PrinterSqlStore.InitializePrinter;
-                        if (0 < connection.Execute(sql, new { printerName }, transaction, commandTimeout))
-                        {
-                            _logger.Information($"Printer {printerName} initialized successfully");
-                            break;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        if (attempts > maxAttempts)
-                        {
-                            _logger.Error($"Failed to initialize printer {printerName}: {ex.Message}");
-                            break;
-                        }
-                    }
-                }
-            }
         }
 
 

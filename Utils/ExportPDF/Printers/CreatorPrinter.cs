@@ -15,7 +15,7 @@ internal sealed class CreatorPrinter : PrinterControl
     public override string RevitFilePath { get; set; }
 
 
-    public override void InitializePrinter()
+    public override void InitializePrinter(string revitFilePath)
     {
         string autoSave = Path.Combine(RegistryPath, "AutoSave");
         string openViewerKey = Path.Combine(RegistryPath, "OpenViewer");
@@ -33,6 +33,8 @@ internal sealed class CreatorPrinter : PrinterControl
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowProgress", "False");
 
         Log.Information("Printer {Printer} initialized!", PrinterName);
+
+        RevitFilePath = revitFilePath;
     }
 
 
