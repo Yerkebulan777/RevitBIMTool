@@ -15,34 +15,42 @@ namespace RevitBIMTool.Utils.ExportPDF
         {
             reservedPrinter = null;
 
-            try
+            PrinterService printerService = GetPrinterServiceInstance();
+
+            foreach (var control in printerControllers)
             {
-                PrinterService printerService = GetPrinterServiceInstance();
-
-                string[] printerNames = [.. printerControllers.Where(p => p.IsPrinterInstalled()).Select(p => p.PrinterName)];
-
-                if (printerService.TryGetAvailablePrinter(revitFilePath, printerNames, out string reservedPrinterName))
+                if (control.IsPrinterInstalled())
                 {
-                    reservedPrinter = printerControllers.FirstOrDefault(p => string.Equals(p.PrinterName, reservedPrinterName));
-
-                    if (reservedPrinter is not null)
+                    try
                     {
-                        StringBuilder logMessage = new();
-                        reservedPrinter.RevitFilePath = revitFilePath;
-                        _ = logMessage.AppendLine($"Printer reserved: {reservedPrinter.PrinterName}");
-                        _ = logMessage.AppendLine($"Total printers: {printerNames?.Length ?? 0}");
-                        Log.Information(logMessage.ToString());
 
-                        return printerService.TryReservePrinter(reservedPrinterName, revitFilePath);
+                        string[] printerNames = [.. printerControllers.Where(p => p.IsPrinterInstalled()).Select(p => p.PrinterName)];
+
+                        if (printerService.TryGetAvailablePrinter(revitFilePath, printerNames, out string reservedPrinterName))
+                        {
+                            reservedPrinter = printerControllers.FirstOrDefault(p => string.Equals(p.PrinterName, reservedPrinterName));
+
+                            if (reservedPrinter is not null)
+                            {
+                                StringBuilder logMessage = new();
+                                reservedPrinter.RevitFilePath = revitFilePath;
+                                _ = logMessage.AppendLine($"Printer reserved: {reservedPrinter.PrinterName}");
+                                _ = logMessage.AppendLine($"Total printers: {printerNames?.Length ?? 0}");
+                                Log.Information(logMessage.ToString());
+
+                                return printerService.TryReservePrinter(reservedPrinterName, revitFilePath);
+                            }
+                        }
+
+                        Log.Warning("No available printers found for file: {RevitFilePath}", revitFilePath);
+
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, "Error while trying to get printer: {Message}", ex.Message);
                     }
                 }
 
-                Log.Warning("No available printers found for file: {RevitFilePath}", revitFilePath);
-
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Error while trying to get printer: {Message}", ex.Message);
             }
 
             return false;
