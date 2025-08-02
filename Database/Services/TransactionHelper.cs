@@ -21,7 +21,6 @@ namespace Database.Services
         public static string ConnectionString => _connectionString.Value;
 
 
-
         public static T RunInTransaction<T>(Func<OdbcConnection, OdbcTransaction, T> operation)
         {
             Exception lastException = null;
