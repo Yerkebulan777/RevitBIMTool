@@ -20,6 +20,7 @@ namespace Database.Schema
         public void CreatePrinterManagementSchema()
         {
             using OdbcConnection connection = new OdbcConnection(_connectionString);
+
             connection.Open();
 
             using OdbcTransaction transaction = connection.BeginTransaction();
