@@ -25,7 +25,7 @@ namespace Database.Services
 
             _logger.Debug($"Starting reservation for {revitFileName}");
 
-            (bool success, TimeSpan elapsed) = TransactionHelper.ExecuteInTransaction((connection, transaction) =>
+            (bool success, TimeSpan elapsed) = TransactionHelper.RunInTransaction((connection, transaction) =>
             {
                 InitializePrinters(connection, transaction, availablePrinterNames);
 
@@ -53,7 +53,7 @@ namespace Database.Services
         {
             _logger.Debug($"Starting reservation of {printerName}");
 
-            (bool success, TimeSpan elapsed) = TransactionHelper.ExecuteInTransaction((connection, transaction) =>
+            (bool success, TimeSpan elapsed) = TransactionHelper.RunInTransaction((connection, transaction) =>
             {
                 PrinterInfo printerInfo = GetPrinterInfoWithLock(connection, transaction, printerName);
 
