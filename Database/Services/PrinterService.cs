@@ -20,7 +20,7 @@ namespace Database.Services
 
             _logger.Debug($"Starting reservation for {revitFileName}");
 
-            (bool success, System.TimeSpan elapsed) = TransactionHelper.RunInTransaction((connection, transaction) =>
+            (bool success, TimeSpan elapsed) = TransactionHelper.RunInTransaction((connection, transaction) =>
             {
                 InitializePrinters(connection, transaction, availablePrinterNames);
 
