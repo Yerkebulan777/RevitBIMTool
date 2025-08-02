@@ -9,8 +9,8 @@ namespace Database.Services
 {
     public sealed class PrinterService(int lockTimeoutMinutes = 30) : IDisposable
     {
-        private readonly int _lockTimeoutMinutes = lockTimeoutMinutes;
         private readonly ILogger _logger = LoggerFactory.CreateLogger<PrinterService>();
+        private readonly int _lockTimeoutMinutes = lockTimeoutMinutes;
         private bool _disposed = false;
 
 
