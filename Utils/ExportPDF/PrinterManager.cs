@@ -29,15 +29,16 @@ namespace RevitBIMTool.Utils.ExportPDF
                     {
                         StringBuilder logMessage = new();
                         reservedPrinter.RevitFilePath = revitFilePath;
-                        logMessage.AppendLine($"Printer reserved: {reservedPrinter.PrinterName}");
-                        logMessage.AppendLine($"Total printers: {printerNames?.Length ?? 0}");
+                        _ = logMessage.AppendLine($"Printer reserved: {reservedPrinter.PrinterName}");
+                        _ = logMessage.AppendLine($"Total printers: {printerNames?.Length ?? 0}");
                         Log.Information(logMessage.ToString());
 
                         return printerService.TryReservePrinter(reservedPrinterName, revitFilePath);
                     }
                 }
 
-                Log.Warning("No printers available!!!");
+                Log.Warning("No available printers found for file: {RevitFilePath}", revitFilePath);
+
             }
             catch (Exception ex)
             {
