@@ -27,7 +27,7 @@ namespace Database.Services
                 InitializePrinters(connection, transaction, availablePrinterNames);
 
                 // Get and lock the first available printer
-                return GetAvailablePrinterWithLock(connection, transaction, availablePrinterNames);
+                return GetSingleAvailablePrinter(connection, transaction, availablePrinterNames);
             });
 
             if (selectedPrinter?.IsAvailable == true && TryReserveSpecificPrinter(selectedPrinter.PrinterName, revitFileName))
@@ -128,13 +128,11 @@ namespace Database.Services
         }
 
         // Optimized method for getting first available printer from array
-        private PrinterInfo GetAvailablePrinterWithLock(OdbcConnection connection, OdbcTransaction transaction, string[] printerNames)
+        private PrinterInfo GetSingleAvailablePrinter(OdbcConnection connection, OdbcTransaction transaction, string[] printerNames)
         {
-            return connection.QuerySingleOrDefault<PrinterInfo>(
-                PrinterSqlStore.GetSingleAvailablePrinterWithLock,
-                new { printerNames },
-                transaction,
-                TransactionHelper.CommandTimeout);
+            int commandTimeout = TransactionHelper.CommandTimeout;
+            string sql = PrinterSqlStore.GetSingleAvailablePrinterWithLock;
+            return connection.QuerySingleOrDefault<PrinterInfo>(sql, new { printerNames }, transaction, commandTimeout);
         }
 
 
@@ -145,28 +143,27 @@ namespace Database.Services
             {
                 int commandTimeout = TransactionHelper.CommandTimeout;
                 int maxAttempts = TransactionHelper.MaxRetryAttempts;
-                bool success = false;
                 int attempts = 0;
 
-                while (!success)
+                while (true)
                 {
                     try
                     {
                         attempts++;
+                        Thread.Sleep(commandTimeout * attempts);
                         string sql = PrinterSqlStore.InitializePrinter;
                         if (0 < connection.Execute(sql, new { printerName }, transaction, commandTimeout))
                         {
                             _logger.Information($"Printer {printerName} initialized successfully");
-                            success = true;
+                            break;
                         }
                     }
                     catch (Exception ex)
                     {
-                        Thread.Sleep(commandTimeout);
                         if (attempts > maxAttempts)
                         {
                             _logger.Error($"Failed to initialize printer {printerName}: {ex.Message}");
-                            success = true;
+                            break;
                         }
                     }
                 }
@@ -179,6 +176,7 @@ namespace Database.Services
             string status = success ? "SUCCESS" : "FAILED";
             _logger.Information($"{operation} '{printerName}': {status} in {elapsed.TotalMilliseconds:F0}ms");
         }
+
 
         public void Dispose()
         {

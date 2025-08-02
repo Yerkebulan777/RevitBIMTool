@@ -20,9 +20,9 @@ namespace RevitBIMTool.Utils.ExportPDF
         }
 
 
-        public static bool TryGetPrinter(string revitFilePath, out PrinterControl availablePrinter)
+        public static bool TryGetPrinter(string revitFilePath, out PrinterControl reservedPrinter)
         {
-            availablePrinter = null;
+            reservedPrinter = null;
 
             try
             {
@@ -32,15 +32,13 @@ namespace RevitBIMTool.Utils.ExportPDF
 
                 if (printerService.TryReserveAvailablePrinter(revitFilePath, printerNames, out string reservedPrinterName))
                 {
-                    availablePrinter = printerControllers.FirstOrDefault(p => string.Equals(p.PrinterName, reservedPrinterName));
+                    reservedPrinter = printerControllers.FirstOrDefault(p => string.Equals(p.PrinterName, reservedPrinterName));
 
-                    Log.Information("Total printers: {Count}", printerNames?.Length ?? 0);
-
-                    if (availablePrinter is not null)
+                    if (reservedPrinter is not null)
                     {
-                        availablePrinter.RevitFilePath = revitFilePath;
-                        string revitFileName = System.IO.Path.GetFileNameWithoutExtension(revitFilePath);
-                        Log.Information("Reserved {PrinterName} for file {FileName}", reservedPrinterName, revitFileName);
+                        reservedPrinter.RevitFilePath = revitFilePath;
+                        Log.Information("Reserved {PrinterName}", reservedPrinterName);
+                        Log.Information("Total printers: {Count}", printerNames?.Length ?? 0);
                         return true;
                     }
                 }
