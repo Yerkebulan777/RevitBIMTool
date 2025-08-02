@@ -5,7 +5,6 @@ using Database.Stores;
 using System;
 using System.Data.Odbc;
 using System.Threading;
-using static Dapper.SqlMapper;
 
 namespace Database.Services
 {
@@ -67,7 +66,6 @@ namespace Database.Services
             return cleanedCount;
         }
 
-
         // Унифицированный метод получения принтера с блокировкой на уровне строки
         private static PrinterInfo GetSpecificPrinter(OdbcConnection connection, OdbcTransaction transaction, string printerName)
         {
@@ -76,7 +74,6 @@ namespace Database.Services
             return connection.QuerySingleOrDefault<PrinterInfo>(sql, new { printerName }, transaction, commandTimeout);
         }
 
-
         // Оптимизированный метод получения первого доступного принтера из массива
         private static PrinterInfo GetAvailablePrinter(OdbcConnection connection, OdbcTransaction transaction, string[] printerNames)
         {
@@ -84,7 +81,6 @@ namespace Database.Services
             string sql = PrinterSqlStore.GetAvailablePrinterWithLock;
             return connection.QuerySingleOrDefault<PrinterInfo>(sql, new { printerNames }, transaction, commandTimeout);
         }
-
 
         // Инициализация для снижения накладных расходов на транзакции
         private void InitializePrinters(OdbcConnection connection, OdbcTransaction transaction, string[] printerNames)
