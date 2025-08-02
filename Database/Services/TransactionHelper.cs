@@ -12,8 +12,8 @@ namespace Database.Services
     {
         private static readonly Lazy<string> _connectionString = new(InitializeConnectionString);
         private static readonly Lazy<int> _commandTimeout = new(() => GetConfigInt("DatabaseCommandTimeout", 30));
-        private static readonly Lazy<int> _maxRetryAttempts = new(() => GetConfigInt("DatabaseMaxRetryAttempts", 5));
         private static readonly Lazy<int> _baseRetryDelayMs = new(() => GetConfigInt("DatabaseRetryDelayMs", 50));
+        private static readonly Lazy<int> _maxRetryAttempts = new(() => GetConfigInt("DatabaseMaxRetryAttempts", 5));
 
         public static int CommandTimeout => _commandTimeout.Value;
         public static int MaxRetryAttempts => _maxRetryAttempts.Value;
