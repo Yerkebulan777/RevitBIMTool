@@ -46,7 +46,7 @@ namespace Database.Services
 
             DateTime cutoffTime = DateTime.UtcNow.Subtract(TimeSpan.FromMinutes(_lockTimeoutMinutes));
 
-            TransactionHelper.Execute(PrinterSqlStore.CleanupExpiredReservations, new { cutoffTime });
+            _ = TransactionHelper.Execute(PrinterSqlStore.CleanupExpiredReservations, new { cutoffTime });
 
             int affectedRows = TransactionHelper.Execute(PrinterSqlStore.ReleasePrinter, new { printerName, revitFileName });
 
