@@ -25,7 +25,7 @@ namespace Database.Services
 
             _logger.Debug($"Starting reservation for {revitFileName}");
 
-            (bool success, TimeSpan elapsed) = DatabaseTransactionHelper.ExecuteInTransaction((connection, transaction) =>
+            (bool success, TimeSpan elapsed) = TransactionHelper.ExecuteInTransaction((connection, transaction) =>
             {
                 InitializePrinters(connection, transaction, availablePrinterNames);
 
@@ -53,7 +53,7 @@ namespace Database.Services
         {
             _logger.Debug($"Starting reservation of {printerName}");
 
-            (bool success, TimeSpan elapsed) = DatabaseTransactionHelper.ExecuteInTransaction((connection, transaction) =>
+            (bool success, TimeSpan elapsed) = TransactionHelper.ExecuteInTransaction((connection, transaction) =>
             {
                 PrinterInfo printerInfo = GetPrinterInfoWithLock(connection, transaction, printerName);
 
@@ -67,7 +67,7 @@ namespace Database.Services
 
         public bool TryReleasePrinter(string printerName, string revitFileName)
         {
-            (int affectedRows, TimeSpan elapsed) = DatabaseTransactionHelper.Execute(PrinterSqlStore.ReleasePrinter, new { printerName, revitFileName });
+            (int affectedRows, TimeSpan elapsed) = TransactionHelper.Execute(PrinterSqlStore.ReleasePrinter, new { printerName, revitFileName });
 
             bool success = affectedRows > 0;
 
@@ -80,7 +80,7 @@ namespace Database.Services
         {
             DateTime cutoffTime = DateTime.UtcNow.AddMinutes(-_lockTimeoutMinutes);
 
-            (int cleanedCount, TimeSpan elapsed) = DatabaseTransactionHelper.Execute(
+            (int cleanedCount, TimeSpan elapsed) = TransactionHelper.Execute(
                 PrinterSqlStore.CleanupExpiredReservations,
                 new { cutoffTime });
 

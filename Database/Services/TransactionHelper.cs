@@ -8,7 +8,7 @@ using System.Diagnostics;
 
 namespace Database.Services
 {
-    public static class DatabaseTransactionHelper
+    public static class TransactionHelper
     {
         private static readonly Lazy<string> _connectionString = new(InitializeConnectionString);
         private static readonly Lazy<int> _commandTimeout = new(() => GetConfigInt("DatabaseCommandTimeout", 60));
