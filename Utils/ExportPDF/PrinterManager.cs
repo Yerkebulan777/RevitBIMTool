@@ -4,34 +4,21 @@ using Serilog;
 
 namespace RevitBIMTool.Utils.ExportPDF
 {
-    /// <summary>
-    /// Упрощенный менеджер состояния принтеров.
-    /// </summary>
     internal static class PrinterManager
     {
         private static readonly List<PrinterControl> printerControllers = GetPrinterControllers();
         private static readonly Lazy<PrinterService> printerServiceInstance = new(InitializePrinterService, true);
 
-        /// <summary>
-        /// Инициализирует сервис принтеров.
-        /// </summary>
         private static PrinterService InitializePrinterService()
         {
             return new PrinterService(lockTimeoutMinutes: 30);
         }
 
-        /// <summary>
-        /// Thread-safe получение сервиса принтеров (singleton pattern).
-        /// </summary>
         private static PrinterService GetPrinterService()
         {
-            // Обеспечивает потокобезопасную инициализацию
             return printerServiceInstance.Value;
         }
 
-        /// <summary>
-        /// Пытается получить доступный принтер для использования.
-        /// </summary>
         public static bool TryGetPrinter(string revitFilePath, out PrinterControl availablePrinter)
         {
             availablePrinter = null;
@@ -57,7 +44,7 @@ namespace RevitBIMTool.Utils.ExportPDF
                     }
                 }
 
-                Log.Warning("No available printerControllers to reserve for file {FileName}", System.IO.Path.GetFileName(revitFilePath));
+                Log.Warning("No available printers to reserve for file {FileName}", System.IO.Path.GetFileName(revitFilePath));
             }
             catch (Exception ex)
             {
@@ -67,9 +54,6 @@ namespace RevitBIMTool.Utils.ExportPDF
             return false;
         }
 
-        /// <summary>
-        /// Резервирует конкретный принтер.
-        /// </summary>
         public static bool TryReservePrinter(string printerName, string revitFilePath)
         {
             PrinterService printerService = GetPrinterService();
@@ -81,17 +65,14 @@ namespace RevitBIMTool.Utils.ExportPDF
             }
 
             Log.Warning("Failed to reserve printer {PrinterName}", printerName);
-
             return false;
         }
 
-        /// <summary>
-        /// Освобождает принтер.
-        /// </summary>
         public static void ReleasePrinter(string printerName)
         {
             PrinterService printerService = GetPrinterService();
 
+            // Исправлено: убран второй параметр
             if (printerService.TryReleasePrinter(printerName))
             {
                 Log.Information("Successfully released printer {PrinterName}", printerName);
@@ -102,9 +83,6 @@ namespace RevitBIMTool.Utils.ExportPDF
             }
         }
 
-        /// <summary>
-        /// Очищает зависшие блокировки принтеров.
-        /// </summary>
         public static void CleanupExpiredReservations()
         {
             try
@@ -124,9 +102,6 @@ namespace RevitBIMTool.Utils.ExportPDF
             }
         }
 
-        /// <summary>
-        /// Получает список всех доступных контроллеров принтеров в порядке приоритета.
-        /// </summary>
         private static List<PrinterControl> GetPrinterControllers()
         {
             return
@@ -138,9 +113,5 @@ namespace RevitBIMTool.Utils.ExportPDF
                 new InternalPrinter(),
             ];
         }
-
-
-
-
     }
 }
