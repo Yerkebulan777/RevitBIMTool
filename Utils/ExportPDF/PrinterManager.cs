@@ -10,16 +10,6 @@ namespace RevitBIMTool.Utils.ExportPDF
         private static readonly List<PrinterControl> printerControllers = GetPrinterControllers();
         private static readonly Lazy<PrinterService> printerServiceInstance = new(InitializePrinterService, true);
 
-        private static PrinterService InitializePrinterService()
-        {
-            return new PrinterService(lockTimeoutMinutes: 30);
-        }
-
-        private static PrinterService GetPrinterService()
-        {
-            return printerServiceInstance.Value;
-        }
-
 
         public static bool TryGetPrinter(string revitFilePath, out PrinterControl reservedPrinter)
         {
@@ -27,11 +17,11 @@ namespace RevitBIMTool.Utils.ExportPDF
 
             try
             {
-                PrinterService printerService = GetPrinterService();
+                PrinterService printerService = GetPrinterServiceInstance();
 
                 string[] printerNames = [.. printerControllers.Where(p => p.IsPrinterInstalled()).Select(p => p.PrinterName)];
 
-                if (printerService.TryReserveAvailablePrinter(revitFilePath, printerNames, out string reservedPrinterName))
+                if (printerService.TryGetAvailablePrinter(revitFilePath, printerNames, out string reservedPrinterName))
                 {
                     reservedPrinter = printerControllers.FirstOrDefault(p => string.Equals(p.PrinterName, reservedPrinterName));
 
@@ -42,7 +32,8 @@ namespace RevitBIMTool.Utils.ExportPDF
                         logMessage.AppendLine($"Printer reserved: {reservedPrinter.PrinterName}");
                         logMessage.AppendLine($"Total printers: {printerNames?.Length ?? 0}");
                         Log.Information(logMessage.ToString());
-                        return true;
+
+                        return printerService.TryReservePrinter(reservedPrinterName, revitFilePath);
                     }
                 }
 
@@ -59,39 +50,34 @@ namespace RevitBIMTool.Utils.ExportPDF
 
         public static void ReleasePrinter(string printerName)
         {
-            PrinterService printerService = GetPrinterService();
+            PrinterService printerService = GetPrinterServiceInstance();
 
-            // Исправлено: убран второй параметр
             if (printerService.TryReleasePrinter(printerName))
             {
-                Log.Information("Successfully released printer {PrinterName}", printerName);
+                Log.Information("Released {PrinterName}", printerName);
+
+                if (0 < printerService.CleanupExpiredReservations())
+                {
+                    Log.Information("Cleaned up expired printer reservations");
+                }
             }
             else
             {
+                Log.Error("Failed to release printer {PrinterName}", printerName);
                 throw new InvalidOperationException($"Failed to release printer {printerName}!");
             }
         }
 
 
-        public static void CleanupExpiredReservations()
+        private static PrinterService InitializePrinterService()
         {
-            try
-            {
-                PrinterService printerService = GetPrinterService();
-
-                int cleanedCount = printerService.CleanupExpiredReservations();
-
-                if (cleanedCount > 0)
-                {
-                    Log.Information("Cleaned up {Count} expired printer reservations", cleanedCount);
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Error cleaning up expired reservations: {Message}", ex.Message);
-            }
+            return new PrinterService(lockTimeoutMinutes: 30);
         }
 
+        private static PrinterService GetPrinterServiceInstance()
+        {
+            return printerServiceInstance.Value;
+        }
 
         private static List<PrinterControl> GetPrinterControllers()
         {

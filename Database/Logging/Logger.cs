@@ -92,6 +92,14 @@ namespace Database.Logging
             WriteLog(LoggerLevel.Error, fullMessage);
         }
 
+
+        public void LogOperationResult(string operation, bool success, TimeSpan elapsed)
+        {
+            string status = success ? "SUCCESS" : "FAILED";
+            Information($"{operation} => {status} in {elapsed.TotalMilliseconds:F0}ms");
+        }
+
+
         private void WriteLog(LoggerLevel level, string message,
             [CallerMemberName] string memberName = "",
             [CallerLineNumber] int lineNumber = 0)

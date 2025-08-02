@@ -17,22 +17,14 @@ namespace Database.Services
 
         public static int CommandTimeout => _commandTimeout.Value;
         public static int MaxRetryAttempts => _maxRetryAttempts.Value;
+        private static int BaseRetryDelayMs => _baseRetryDelayMs.Value;
         public static string ConnectionString => _connectionString.Value;
 
-        // Optimized retry delays for PostgreSQL serialization conflicts
-        private static readonly TimeSpan[] PostgreSQLRetryDelays = {
-                                TimeSpan.Zero,
-                                TimeSpan.FromMilliseconds(50),
-                                TimeSpan.FromMilliseconds(100),
-                                TimeSpan.FromMilliseconds(200),
-                                TimeSpan.FromMilliseconds(400)
-                            };
 
 
-        public static (T result, TimeSpan elapsed) RunInTransaction<T>(Func<OdbcConnection, OdbcTransaction, T> operation)
+        public static T RunInTransaction<T>(Func<OdbcConnection, OdbcTransaction, T> operation)
         {
             Exception lastException = null;
-            Stopwatch totalTimer = Stopwatch.StartNew();
 
             for (int attempt = 1; attempt <= MaxRetryAttempts; attempt++)
             {
@@ -41,19 +33,20 @@ namespace Database.Services
                     Stopwatch attemptTimer = Stopwatch.StartNew();
 
                     using OdbcConnection connection = new(ConnectionString);
+
                     connection.Open();
 
                     using OdbcTransaction transaction = connection.BeginTransaction(IsolationLevel.Serializable);
+
                     try
                     {
                         T result = operation(connection, transaction);
+
                         transaction.Commit();
 
                         attemptTimer.Stop();
-                        totalTimer.Stop();
 
-                        LogPerformanceMetrics(attempt, attemptTimer.Elapsed, true);
-                        return (result, totalTimer.Elapsed);
+                        return result;
                     }
                     catch
                     {
@@ -64,17 +57,16 @@ namespace Database.Services
                 catch (OdbcException ex) when (IsRetryableError(ex) && attempt < MaxRetryAttempts)
                 {
                     lastException = ex;
-                    TimeSpan delay = GetRetryDelay(attempt);
+                    TimeSpan delay = GetRetryDelay(attempt, BaseRetryDelayMs);
                     LogRetryAttempt(attempt, ex.Message, delay);
                     Thread.Sleep(delay);
                 }
             }
 
-            totalTimer.Stop();
             throw new InvalidOperationException($"Transaction failed after {MaxRetryAttempts} attempts", lastException);
         }
 
-        public static (T result, TimeSpan elapsed) QuerySingle<T>(string sql, object parameters = null)
+        public static T QuerySingle<T>(string sql, object parameters = null)
         {
             return RunInTransaction((connection, transaction) =>
             {
@@ -82,7 +74,7 @@ namespace Database.Services
             });
         }
 
-        public static (T result, TimeSpan elapsed) QuerySingleOrDefault<T>(string sql, object parameters = null)
+        public static T QuerySingleOrDefault<T>(string sql, object parameters = null)
         {
             return RunInTransaction((connection, transaction) =>
             {
@@ -90,7 +82,7 @@ namespace Database.Services
             });
         }
 
-        public static (int result, TimeSpan elapsed) Execute(string sql, object parameters = null)
+        public static int Execute(string sql, object parameters = null)
         {
             return RunInTransaction((connection, transaction) =>
             {
@@ -109,22 +101,6 @@ namespace Database.Services
                     message.Contains("timeout expired");
         }
 
-
-        private static TimeSpan GetRetryDelay(int attemptNumber)
-        {
-            if (attemptNumber <= PostgreSQLRetryDelays.Length)
-            {
-                return PostgreSQLRetryDelays[attemptNumber - 1];
-            }
-
-            Random _random = new();
-
-            // Экспоненциальный откат с джиттером для попыток, превышающих заданные задержки
-            TimeSpan baseDelay = TimeSpan.FromMilliseconds(_baseRetryDelayMs.Value * Math.Pow(2, attemptNumber - PostgreSQLRetryDelays.Length));
-            TimeSpan jitter = TimeSpan.FromMilliseconds(_random.Next(0, (int)(baseDelay.TotalMilliseconds * 0.1)));
-
-            return baseDelay + jitter;
-        }
 
         private static string InitializeConnectionString()
         {
@@ -150,17 +126,22 @@ namespace Database.Services
             return int.TryParse(ConfigurationManager.AppSettings[key], out int value) ? value : defaultValue;
         }
 
-        private static void LogPerformanceMetrics(int attemptNumber, TimeSpan duration, bool success)
+
+        private static TimeSpan GetRetryDelay(int attemptNumber, int baseDelayMs)
         {
-            if (duration.TotalMilliseconds > 100) // Log slow operations
+            if (attemptNumber > 0)
             {
-                Debug.WriteLine($"Transaction attempt {attemptNumber}: {duration.TotalMilliseconds:F1}ms, Success: {success}");
+                baseDelayMs *= attemptNumber;
             }
+            return TimeSpan.FromMilliseconds(baseDelayMs);
         }
+
 
         private static void LogRetryAttempt(int attempt, string errorMessage, TimeSpan delay)
         {
             Debug.WriteLine($"Retry attempt {attempt}, delay: {delay.TotalMilliseconds}ms, error: {errorMessage}");
         }
+
+
     }
 }
