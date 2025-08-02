@@ -16,8 +16,7 @@ internal static class ExportPdfProcessor
         DirectoryInfo tempBase = Directory.GetParent(Path.GetTempPath());
         string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
         string tempDirectory = Path.Combine(tempBase.FullName, $"{revitFileName}");
-        string sectionName = PathHelper.GetSectionName(revitFilePath);
-        bool isColorEnabled = sectionName is not ("KJ" or "KR" or "KG");
+        string exportPath = Path.Combine(exportDirectory, $"{revitFileName}.pdf");
 
         Log.Information("Temp directory path: {TempDirectory}", tempDirectory);
         Log.Information("Export folder path: {ExportDirectory}", exportDirectory);
@@ -28,34 +27,31 @@ internal static class ExportPdfProcessor
             RevitFileHelper.CloseRevitApplication();
         }
 
+        PathHelper.EnsureDirectory(tempDirectory);
+        PathHelper.EnsureDirectory(exportDirectory);
+
+        string sectionName = PathHelper.GetSectionName(revitFilePath);
+        bool isColorEnabled = sectionName is not ("KJ" or "KR" or "KG");
+
         PrintSettingsManager.ResetPrinterSettings(uidoc.Document, printer);
 
         Log.Information("Available printer: {PrinterName}", printer.PrinterName);
 
         List<SheetFormatGroup> sheetFormatGroups = PrintHelper.GetData(uidoc.Document, printer, isColorEnabled);
 
-        if (sheetFormatGroups.Count > 0)
+        Log.Information("Total sheets: {TotalSheets}", sheetFormatGroups.Sum(group => group.SheetList.Count));
+
+        List<SheetModel> sheetModels = PrintHelper.PrintSheetData(uidoc.Document, printer, sheetFormatGroups, tempDirectory);
+
+        PrinterManager.ReleasePrinter(printer.PrinterName);
+
+        if (sheetModels.Count > 0)
         {
-            Log.Information("Start export PDF...");
-
-            PathHelper.EnsureDirectory(tempDirectory);
-            PathHelper.EnsureDirectory(exportDirectory);
-
-            Log.Information("Total sheets: {TotalSheets}", sheetFormatGroups.Sum(group => group.SheetList.Count));
-
-            List<SheetModel> sheetModels = PrintHelper.PrintSheetData(uidoc.Document, printer, sheetFormatGroups, tempDirectory);
-
-            string exportPath = Path.Combine(exportDirectory, $"{revitFileName}.pdf");
-
-            if (sheetModels.Count > 0)
-            {
-                MergeHandler.Combine(sheetModels, exportPath);
-                SystemFolderOpener.OpenFolder(exportDirectory);
-                PathHelper.DeleteDirectory(tempDirectory);
-            }
+            MergeHandler.Combine(sheetModels, exportPath);
+            SystemFolderOpener.OpenFolder(exportDirectory);
+            PathHelper.DeleteDirectory(tempDirectory);
         }
+
     }
-
-
 
 }

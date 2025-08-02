@@ -32,13 +32,11 @@ internal sealed class ClawPdfPrinter : PrinterControl
     }
 
 
-    public override void ReleasePrinterSettings()
+    public override void RestoreDefaultSettings()
     {
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "OpenViewer", "True");
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowProgress", "True");
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<Title>");
-
-        PrinterManager.ReleasePrinter(PrinterName);
     }
 
 

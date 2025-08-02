@@ -27,12 +27,10 @@ internal sealed class FoxitPdfPrinter : PrinterControl
     }
 
 
-    public override void ReleasePrinterSettings()
+    public override void RestoreDefaultSettings()
     {
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowSaveDialog", "1");
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "ShowPrintProgress", "1");
-
-        PrinterManager.ReleasePrinter(PrinterName);
     }
 
 

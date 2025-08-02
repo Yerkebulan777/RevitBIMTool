@@ -20,7 +20,7 @@ internal sealed class InternalPrinter : PrinterControl
     }
 
 
-    public override void ReleasePrinterSettings()
+    public override void RestoreDefaultSettings()
     {
         // Не требует освобождения настроек!
         // Его нет в базе данных принтеров!

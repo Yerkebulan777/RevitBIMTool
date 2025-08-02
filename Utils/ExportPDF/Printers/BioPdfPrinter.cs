@@ -35,9 +35,9 @@ internal sealed class BioPdfPrinter : PrinterControl
     }
 
 
-    public override void ReleasePrinterSettings()
+    public override void RestoreDefaultSettings()
     {
-        PrinterManager.ReleasePrinter(PrinterName);
+        CreateBioPdfRunonce("<document>", "<default>", string.Empty);
     }
 
 

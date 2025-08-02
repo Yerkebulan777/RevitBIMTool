@@ -38,12 +38,10 @@ internal sealed class CreatorPrinter : PrinterControl
     }
 
 
-    public override void ReleasePrinterSettings()
+    public override void RestoreDefaultSettings()
     {
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "TargetDirectory", "<Desktop>");
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "FileNameTemplate", "<Title>");
-
-        PrinterManager.ReleasePrinter(PrinterName);
     }
 
 

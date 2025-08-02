@@ -30,10 +30,8 @@ internal sealed class Pdf24Printer : PrinterControl
     }
 
 
-    public override void ReleasePrinterSettings()
+    public override void RestoreDefaultSettings()
     {
-        PrinterManager.ReleasePrinter(PrinterName);
-
         string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveDir", desktop);
         RegistryHelper.SetValue(Registry.CurrentUser, RegistryPath, "AutoSaveUseFileCmd", 0);

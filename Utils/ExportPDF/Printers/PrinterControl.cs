@@ -22,7 +22,7 @@ internal abstract class PrinterControl
 
     public abstract void InitializePrinter(string revitFilePath);
 
-    public abstract void ReleasePrinterSettings();
+    public abstract void RestoreDefaultSettings();
 
     public abstract bool DoPrint(Document doc, SheetModel model, string folder);
 

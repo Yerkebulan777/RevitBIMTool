@@ -138,7 +138,7 @@ internal static class PrintHelper
         }
         finally
         {
-            printer?.ReleasePrinterSettings();
+            printer.RestoreDefaultSettings();
         }
 
         return successfulSheets;
