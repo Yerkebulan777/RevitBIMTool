@@ -31,7 +31,7 @@ namespace Database.Services
                     return false;
                 }
 
-                if (ReservePrinterInternal(connection, transaction, selectedPrinter, revitFileName))
+                if (ReservePrinter(connection, transaction, selectedPrinter, revitFileName))
                 {
                     localReservedPrinterName = selectedPrinter.PrinterName;
                     return true;
@@ -58,7 +58,7 @@ namespace Database.Services
                 PrinterInfo printerInfo = GetPrinterInfoWithLock(connection, transaction, printerName);
 
                 return printerInfo?.IsAvailable == true &&
-                       ReservePrinterInternal(connection, transaction, printerInfo, revitFileName);
+                       ReservePrinter(connection, transaction, printerInfo, revitFileName);
             });
 
             LogOperationResult("Reserve specific printer", printerName, success, elapsed);
@@ -138,7 +138,7 @@ namespace Database.Services
             }
         }
 
-        private bool ReservePrinterInternal(OdbcConnection connection, OdbcTransaction transaction, PrinterInfo printerInfo, string revitFileName)
+        private bool ReservePrinter(OdbcConnection connection, OdbcTransaction transaction, PrinterInfo printerInfo, string revitFileName)
         {
             try
             {
