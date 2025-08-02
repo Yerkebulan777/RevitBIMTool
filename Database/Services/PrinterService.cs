@@ -5,6 +5,7 @@ using Database.Stores;
 using System;
 using System.Data.Odbc;
 using System.Text;
+using System.Threading;
 
 namespace Database.Services
 {
@@ -23,7 +24,7 @@ namespace Database.Services
             (PrinterInfo selectedPrinter, TimeSpan elapsed) = TransactionHelper.RunInTransaction((connection, transaction) =>
             {
                 // Initialize all printers in a single batch operation
-                InitializePrintersBatch(connection, transaction, availablePrinterNames);
+                InitializePrinters(connection, transaction, availablePrinterNames);
 
                 // Get and lock the first available printer
                 return GetAvailablePrinterWithLock(connection, transaction, availablePrinterNames);
@@ -140,45 +141,41 @@ namespace Database.Services
                 TransactionHelper.CommandTimeout);
         }
 
+
+
         // Пакетная инициализация для снижения накладных расходов на транзакции
-        private void InitializePrintersBatch(OdbcConnection connection, OdbcTransaction transaction, string[] printerNames)
+        private void InitializePrinters(OdbcConnection connection, OdbcTransaction transaction, string[] printerNames)
         {
-            StringBuilder batchSql = new();
-            DynamicParameters parameters = new();
+            const int maxAttempts = 3;
+            const int delayMs = 1000;
 
-            for (int i = 0; i < printerNames.Length; i++)
-            {
-                batchSql.AppendLine(PrinterSqlStore.InitializePrinter);
-                parameters.Add($"printerName{i}", printerNames[i]);
-            }
-
-            try
-            {
-                _ = connection.Execute(batchSql.ToString(), parameters, transaction, TransactionHelper.CommandTimeout);
-            }
-            catch (Exception ex)
-            {
-                _logger.Warning($"Batch printer initialization partially failed: {ex.Message}");
-                // Continue with individual initialization if batch fails
-                FallbackIndividualInitialization(connection, transaction, printerNames);
-            }
-        }
-
-        private void FallbackIndividualInitialization(OdbcConnection connection, OdbcTransaction transaction, string[] printerNames)
-        {
             foreach (string printerName in printerNames)
             {
-                try
+                int attempts = 0;
+                bool success = false;
+
+                while (attempts < maxAttempts && !success)
                 {
-                    _ = connection.Execute(
-                        PrinterSqlStore.InitializePrinter,
-                        new { printerName },
-                        transaction,
-                        TransactionHelper.CommandTimeout);
-                }
-                catch (Exception ex)
-                {
-                    _logger.Warning($"Failed to initialize printer {printerName}: {ex.Message}");
+                    try
+                    {
+                        attempts++;
+                        _ = connection.Execute(PrinterSqlStore.InitializePrinter, new { printerName }, transaction, TransactionHelper.CommandTimeout);
+                        success = true;
+                        _logger.Information($"Printer {printerName} initialized successfully on attempt {attempts}");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Warning($"Attempt {attempts} failed for printer {printerName}: {ex.Message}");
+
+                        if (attempts < maxAttempts)
+                        {
+                            Thread.Sleep(delayMs);
+                        }
+                        else
+                        {
+                            _logger.Error($"Failed to initialize printer {printerName} after {maxAttempts} attempts: {ex.Message}");
+                        }
+                    }
                 }
             }
         }

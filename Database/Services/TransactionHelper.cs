@@ -15,18 +15,19 @@ namespace Database.Services
         private static readonly Lazy<int> _maxRetryAttempts = new(() => GetConfigInt("DatabaseMaxRetryAttempts", 5));
         private static readonly Lazy<int> _baseRetryDelayMs = new(() => GetConfigInt("DatabaseRetryDelayMs", 50));
 
-        public static string ConnectionString => _connectionString.Value;
         public static int CommandTimeout => _commandTimeout.Value;
         public static int MaxRetryAttempts => _maxRetryAttempts.Value;
+        public static string ConnectionString => _connectionString.Value;
 
         // Optimized retry delays for PostgreSQL serialization conflicts
         private static readonly TimeSpan[] PostgreSQLRetryDelays = {
-            TimeSpan.Zero,                    // Immediate first retry
-            TimeSpan.FromMilliseconds(50),    // Quick retry for transient conflicts
-            TimeSpan.FromMilliseconds(100),
-            TimeSpan.FromMilliseconds(200),
-            TimeSpan.FromMilliseconds(400)
-        };
+                                TimeSpan.Zero,
+                                TimeSpan.FromMilliseconds(50),
+                                TimeSpan.FromMilliseconds(100),
+                                TimeSpan.FromMilliseconds(200),
+                                TimeSpan.FromMilliseconds(400)
+                            };
+
 
         public static (T result, TimeSpan elapsed) RunInTransaction<T>(Func<OdbcConnection, OdbcTransaction, T> operation)
         {
