@@ -8,7 +8,7 @@ using System.Threading;
 
 namespace Database.Services
 {
-    public sealed class PrinterService(int lockTimeoutMinutes = 30) : IDisposable
+    public sealed class PrinterService(int lockTimeoutMinutes = 100) : IDisposable
     {
         private readonly int _lockTimeoutMinutes = lockTimeoutMinutes;
         private readonly ILogger _logger = LoggerFactory.CreateLogger<PrinterService>();
@@ -44,21 +44,13 @@ namespace Database.Services
         {
             _logger.Debug($"Try release printer {printerName} for file {revitFileName}");
 
+            DateTime cutoffTime = DateTime.UtcNow.Subtract(TimeSpan.FromMinutes(_lockTimeoutMinutes));
+
+            TransactionHelper.Execute(PrinterSqlStore.CleanupExpiredReservations, new { cutoffTime });
+
             int affectedRows = TransactionHelper.Execute(PrinterSqlStore.ReleasePrinter, new { printerName, revitFileName });
 
-            bool success = affectedRows > 0;
-
-            return success;
-        }
-
-
-        public int CleanupExpiredReservations()
-        {
-            DateTime cutoffTime = DateTime.UtcNow.AddMinutes(-_lockTimeoutMinutes);
-
-            int cleanedCount = TransactionHelper.Execute(PrinterSqlStore.CleanupExpiredReservations, new { cutoffTime });
-
-            return cleanedCount;
+            return affectedRows > 0;
         }
 
 

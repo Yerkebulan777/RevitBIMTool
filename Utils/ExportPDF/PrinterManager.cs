@@ -58,11 +58,6 @@ namespace RevitBIMTool.Utils.ExportPDF
             if (printerService.TryReleasePrinter(printerName))
             {
                 Log.Information("Released {PrinterName}", printerName);
-
-                if (0 < printerService.CleanupExpiredReservations())
-                {
-                    Log.Information("Cleaned up expired availablePrinter reservations");
-                }
             }
             else
             {
