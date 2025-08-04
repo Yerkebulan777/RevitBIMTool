@@ -26,7 +26,8 @@ namespace RevitBIMTool.Utils.ExportPDF
 
                     if (!string.IsNullOrEmpty(connectionString))
                     {
-                        _cleanupService = new BackgroundCleanupService(connectionString, TimeSpan.FromMinutes(30));
+                        TimeSpan cleanupTimeout = TimeSpan.FromMinutes(30);
+                        _cleanupService = new BackgroundCleanupService(connectionString, cleanupTimeout);
                     }
                 }
             }

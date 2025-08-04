@@ -1,5 +1,7 @@
-﻿using Dapper;
-using Database.Logging;
+﻿using Database.Logging;
+using Database.Models;
+using Database.Stores;
+using Dapper;
 using System;
 using System.Collections.Generic;
 using System.Data.Odbc;
@@ -15,12 +17,14 @@ namespace Database.Services
         private readonly ILogger _logger;
         private readonly Timer _cleanupTimer;
         private readonly TimeSpan _stuckThreshold;
+        private readonly int _commandTimeout;
         private bool _disposed;
 
-        public BackgroundCleanupService(string connectionString, TimeSpan stuckThreshold)
+        public BackgroundCleanupService(string connectionString, TimeSpan stuckThreshold, int commandTimeout = 30)
         {
             _connectionString = connectionString;
             _stuckThreshold = stuckThreshold;
+            _commandTimeout = commandTimeout;
             _logger = LoggerFactory.CreateLogger<BackgroundCleanupService>();
 
             // Запуск очистки каждые 5 минут
@@ -29,102 +33,231 @@ namespace Database.Services
                 null,
                 TimeSpan.FromMinutes(1),
                 TimeSpan.FromMinutes(5));
+                
+            _logger.Information("BackgroundCleanupService initialized");
         }
 
+        /// <summary>
+        /// Основной метод очистки зависших резервации
+        /// </summary>
         private void CleanupStuckReservations(object state)
         {
             try
             {
-                _logger.Debug("Starting cleanup of stuck reservations");
+                _logger.Debug("=== НАЧАЛО ФОНОВОЙ ОЧИСТКИ ЗАВИСШИХ РЕЗЕРВАЦИИ ===");
 
-                using OdbcConnection connection = new(_connectionString);
-                connection.Open();
+                List<PrinterReservation> stuckReservations = FindStuckReservations();
 
-                // Находим зависшие резервации
-                const string findStuckSql = @"
-                    SELECT printer_name, process_id, reserved_at,
-                           EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - reserved_at))/60 as minutes_stuck
-                    FROM printer_states
-                    WHERE is_available = false
-                      AND reserved_at < @cutoffTime
-                      AND reserved_at IS NOT NULL;";
-
-                DateTime cutoffTime = DateTime.UtcNow.Subtract(_stuckThreshold);
-                // Замените обработку результата запроса на явное сопоставление с типом
-                IEnumerable<StuckPrinter> stuckPrinters = [.. connection.Query<StuckPrinter>(findStuckSql, new { cutoffTime })];
-
-                foreach (StuckPrinter stuck in stuckPrinters)
+                if (!stuckReservations.Any())
                 {
-                    string printerName = stuck.printer_name;
-                    int? processId = stuck.process_id;
-                    DateTime reservedAt = stuck.reserved_at;
-                    double minutesStuck = stuck.minutes_stuck;
-
-                    _logger.Warning($"Found stuck printer: {printerName}, " +
-                                    $"stuck for {minutesStuck:F1} minutes");
-
-                    // Проверяем, жив ли процесс
-                    if (IsProcessAlive(processId))
-                    {
-                        _logger.Information($"Process {processId} is still alive, skipping");
-                        continue;
-                    }
-
-                    // Освобождаем принтер
-                    ReleaseStuckPrinter(connection, printerName);
+                    _logger.Debug("Зависших резервации не найдено");
+                    return;
                 }
 
-                if (stuckPrinters.Any())
+                _logger.Warning($"Найдено {stuckReservations.Count} зависших резервации:");
+
+                foreach (PrinterReservation stuck in stuckReservations)
                 {
-                    _logger.Information($"Cleaned up {stuckPrinters.Count()} stuck reservations");
+                    _logger.Warning($"ЗАВИСШАЯ РЕЗЕРВАЦИЯ: " +
+                        $"Принтер='{stuck.PrinterName}', " +
+                        $"Файл='{stuck.RevitFileName}', " +
+                        $"Процесс={stuck.ProcessId}, " +
+                        $"Зависла {stuck.MinutesStuck:F1} мин, " +
+                        $"Статус={stuck.State}");
+
+                    // Проверяем жизнеспособность процесса
+                    bool processAlive = IsProcessAlive(stuck.ProcessId);
+                    _logger.Debug($"Процесс {stuck.ProcessId} активен: {processAlive}");
+
+                    if (!processAlive)
+                    {
+                        CompensateStuckReservation(stuck);
+                        _logger.Information($"✓ Освобожден зависший принтер: {stuck.PrinterName}");
+                    }
+                    else
+                    {
+                        _logger.Information($"→ Процесс {stuck.ProcessId} еще работает, пропускаем");
+                    }
+                }
+
+                _logger.Debug("=== КОНЕЦ ФОНОВОЙ ОЧИСТКИ ===");
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Критическая ошибка при фоновой очистке: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Поиск всех зависших резервации используя PrinterReservation
+        /// </summary>
+        private List<PrinterReservation> FindStuckReservations()
+        {
+            try
+            {
+                using var connection = new OdbcConnection(_connectionString);
+                connection.Open();
+
+                DateTime cutoffTime = DateTime.UtcNow.Subtract(_stuckThreshold);
+
+                _logger.Debug($"Поиск резервации старше: {cutoffTime:yyyy-MM-dd HH:mm:ss} UTC");
+
+                // Используем существующий SQL запрос из PrinterSqlStore
+                List<PrinterReservation> stuckReservations = connection
+                    .Query<PrinterReservation>(
+                        PrinterSqlStore.FindStuckReservations, 
+                        new { cutoffTime }, 
+                        commandTimeout: _commandTimeout)
+                    .ToList();
+
+                _logger.Debug($"SQL запрос вернул {stuckReservations.Count} потенциально зависших резервации");
+
+                // Дополнительная фильтрация по пороговому времени
+                var filteredReservations = stuckReservations
+                    .Where(r => r.IsStuck(_stuckThreshold))
+                    .ToList();
+
+                _logger.Debug($"После фильтрации осталось {filteredReservations.Count} зависших резервации");
+
+                return filteredReservations;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Ошибка при поиске зависших резервации: {ex.Message}", ex);
+                return new List<PrinterReservation>();
+            }
+        }
+
+        /// <summary>
+        /// Компенсация конкретной зависшей резервации
+        /// </summary>
+        private void CompensateStuckReservation(PrinterReservation reservation)
+        {
+            try
+            {
+                using var connection = new OdbcConnection(_connectionString);
+                connection.Open();
+
+                using var transaction = connection.BeginTransaction();
+                try
+                {
+                    _logger.Information($"Компенсируем зависшую резервацию: {reservation.PrinterName}");
+
+                    // Освобождаем принтер
+                    int printerReleased = connection.Execute(
+                        PrinterSqlStore.CompensateStuckReservation,
+                        new { reservation.PrinterName, reservation.SessionId },
+                        transaction,
+                        commandTimeout: _commandTimeout);
+
+                    if (printerReleased > 0)
+                    {
+                        // Логируем компенсацию для аудита
+                        string reason = $"Фоновая очистка: процесс {reservation.ProcessId} " +
+                                       $"не отвечает {reservation.MinutesStuck:F1} минут";
+
+                        int loggedCompensation = connection.Execute(
+                            PrinterSqlStore.LogCompensation,
+                            new
+                            {
+                                reservation.PrinterName,
+                                reservation.RevitFileName,
+                                reservation.SessionId,
+                                reason
+                            },
+                            transaction,
+                            commandTimeout: _commandTimeout);
+
+                        transaction.Commit();
+
+                        _logger.Information($"✓ Компенсация выполнена успешно для принтера '{reservation.PrinterName}'. " +
+                                          $"Обновлено записей: {printerReleased}, логов: {loggedCompensation}");
+                    }
+                    else
+                    {
+                        transaction.Rollback();
+                        _logger.Warning($"⚠️ Не удалось освободить принтер '{reservation.PrinterName}' - " +
+                                       "возможно, он уже был освобожден другим процессом");
+                    }
+                }
+                catch
+                {
+                    transaction.Rollback();
+                    throw;
                 }
             }
             catch (Exception ex)
             {
-                _logger.Error($"Compensation failed {ex.Message}", ex);
+                _logger.Error($"Ошибка при компенсации резервации принтера '{reservation.PrinterName}': {ex.Message}", ex);
             }
         }
 
+        /// <summary>
+        /// Проверка активности процесса
+        /// </summary>
         private bool IsProcessAlive(int? processId)
         {
             if (!processId.HasValue)
             {
+                _logger.Debug("ProcessId отсутствует - считаем процесс неактивным");
                 return false;
             }
 
             try
             {
-                Process process = Process.GetProcessById(processId.Value);
-                return !process.HasExited;
+                using Process process = Process.GetProcessById(processId.Value);
+                bool isAlive = !process.HasExited;
+                _logger.Debug($"Процесс {processId.Value}: alive={isAlive}, name='{process.ProcessName}'");
+                return isAlive;
             }
-            catch
+            catch (ArgumentException)
             {
+                _logger.Debug($"Процесс {processId.Value} не найден в системе");
                 return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning($"Ошибка при проверке процесса {processId.Value}: {ex.Message}");
+                return false; // В случае ошибки считаем процесс неактивным для безопасности
             }
         }
 
-        private void ReleaseStuckPrinter(OdbcConnection connection, string printerName)
+        /// <summary>
+        /// Получение статистики для мониторинга
+        /// </summary>
+        public CleanupStatistics GetStatistics()
         {
-            const string releaseSql = @"
-                UPDATE printer_states SET
-                    is_available = true,
-                    reserved_file_name = NULL,
-                    reserved_at = NULL,
-                    process_id = NULL,
-                    version_token = gen_random_uuid(),
-                    state = 0,
-                    last_update = CURRENT_TIMESTAMP
-                WHERE printer_name = @printerName;";
+            try
+            {
+                using var connection = new OdbcConnection(_connectionString);
+                connection.Open();
 
-            _ = connection.Execute(releaseSql, new { printerName });
+                var stats = new CleanupStatistics
+                {
+                    TotalPrinters = connection.QuerySingle<int>(
+                        PrinterSqlStore.GetPrinterStatistics, 
+                        commandTimeout: _commandTimeout),
+                        
+                    AvailablePrinters = connection.QuerySingle<int>(
+                        PrinterSqlStore.GetAvailablePrintersCount, 
+                        commandTimeout: _commandTimeout),
+                        
+                    ReservedPrinters = connection.QuerySingle<int>(
+                        PrinterSqlStore.GetReservedPrintersCount, 
+                        commandTimeout: _commandTimeout),
+                        
+                    AverageReservationTimeMinutes = connection.QuerySingle<double>(
+                        PrinterSqlStore.GetAverageReservationTime, 
+                        commandTimeout: _commandTimeout)
+                };
 
-            // Логирование для аудита
-            const string logSql = @"
-                INSERT INTO printer_cleanup_log 
-                (printer_name, cleaned_at, reason)
-                VALUES (@printerName, CURRENT_TIMESTAMP, 'Stuck reservation timeout');";
-
-            _ = connection.Execute(logSql, new { printerName });
+                return stats;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Ошибка при получении статистики: {ex.Message}", ex);
+                return new CleanupStatistics();
+            }
         }
 
         public void Dispose()
@@ -133,16 +266,25 @@ namespace Database.Services
             {
                 _cleanupTimer?.Dispose();
                 _disposed = true;
+                _logger.Information("BackgroundCleanupService disposed");
             }
         }
+    }
 
-        // Добавьте вспомогательный класс для сопоставления результатов запроса
-        private class StuckPrinter
+    /// <summary>
+    /// Статистика работы сервиса очистки
+    /// </summary>
+    public sealed class CleanupStatistics
+    {
+        public int TotalPrinters { get; set; }
+        public int AvailablePrinters { get; set; }
+        public int ReservedPrinters { get; set; }
+        public double AverageReservationTimeMinutes { get; set; }
+        
+        public override string ToString()
         {
-            public string printer_name { get; set; }
-            public int? process_id { get; set; }
-            public DateTime reserved_at { get; set; }
-            public double minutes_stuck { get; set; }
+            return $"Принтеров: {TotalPrinters} (свободно: {AvailablePrinters}, " +
+                   $"занято: {ReservedPrinters}), среднее время резервации: {AverageReservationTimeMinutes:F1} мин";
         }
     }
 }
