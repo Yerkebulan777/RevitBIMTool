@@ -7,51 +7,72 @@ using Serilog;
 using System.IO;
 using UIDocument = Autodesk.Revit.UI.UIDocument;
 
-namespace RevitBIMTool.ExportHandlers;
-
-internal static class ExportPdfProcessor
+namespace RevitBIMTool.ExportHandlers
 {
-    public static void Execute(UIDocument uidoc, string revitFilePath, string exportDirectory)
+    internal static class ExportPdfProcessor
     {
-        DirectoryInfo tempBase = Directory.GetParent(Path.GetTempPath());
-        string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
-        string tempDirectory = Path.Combine(tempBase.FullName, $"{revitFileName}");
-        string exportPath = Path.Combine(exportDirectory, $"{revitFileName}.pdf");
-
-        Log.Information("Temp directory path: {TempDirectory}", tempDirectory);
-        Log.Information("Export folder path: {ExportDirectory}", exportDirectory);
-
-        if (!PrinterManager.TryGetPrinter(revitFilePath, out PrinterControl printer))
+        public static void Execute(UIDocument uidoc, string revitFilePath, string exportDirectory)
         {
-            Log.Fatal("No available printer found!");
-            RevitFileHelper.CloseRevitApplication();
+            DirectoryInfo tempBase = Directory.GetParent(Path.GetTempPath());
+            string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
+            string tempDirectory = Path.Combine(tempBase.FullName, revitFileName);
+            string exportPath = Path.Combine(exportDirectory, $"{revitFileName}.pdf");
+
+            Log.Information("Starting safe PDF export");
+
+            PathHelper.EnsureDirectory(tempDirectory);
+            PathHelper.EnsureDirectory(exportDirectory);
+
+            try
+            {
+                bool success = SafePrintManager.ExecuteSafePrinting(
+                    printer => ProcessPrinting(uidoc, printer, revitFilePath, tempDirectory),
+                    revitFilePath,
+                    out List<SheetModel> sheetModels,
+                    out PrinterControl usedPrinter);
+
+                if (!success)
+                {
+                    Log.Fatal("Export failed");
+                    RevitFileHelper.CloseRevitApplication();
+                    return;
+                }
+
+                if (sheetModels?.Count > 0)
+                {
+                    MergeHandler.Combine(sheetModels, exportPath);
+                    SystemFolderOpener.OpenFolder(exportDirectory);
+                    PathHelper.DeleteDirectory(tempDirectory);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Fatal(ex, "Critical error in PDF export");
+                RevitFileHelper.CloseRevitApplication();
+            }
         }
 
-        PathHelper.EnsureDirectory(tempDirectory);
-        PathHelper.EnsureDirectory(exportDirectory);
-
-        string sectionName = PathHelper.GetSectionName(revitFilePath);
-        bool isColorEnabled = sectionName is not ("KJ" or "KR" or "KG");
-
-        PrintSettingsManager.ResetPrinterSettings(uidoc.Document, printer);
-
-        Log.Information("Available printer: {PrinterName}", printer.PrinterName);
-
-        List<SheetFormatGroup> sheetFormatGroups = PrintHelper.GetData(uidoc.Document, printer, isColorEnabled);
-
-        Log.Information("Total sheets count: {TotalSheets}", sheetFormatGroups.Sum(group => group.SheetList.Count));
-
-        List<SheetModel> sheetModels = PrintHelper.PrintSheetData(uidoc.Document, printer, sheetFormatGroups, tempDirectory);
-
-        PrinterManager.ReleasePrinter(printer.PrinterName);
-
-        if (sheetModels.Count > 0)
+        private static List<SheetModel> ProcessPrinting(
+            UIDocument uidoc,
+            PrinterControl printer,
+            string revitFilePath,
+            string tempDirectory)
         {
-            MergeHandler.Combine(sheetModels, exportPath);
-            SystemFolderOpener.OpenFolder(exportDirectory);
-            PathHelper.DeleteDirectory(tempDirectory);
+            string sectionName = PathHelper.GetSectionName(revitFilePath);
+            bool isColorEnabled = sectionName is not ("KJ" or "KR" or "KG");
+
+            PrintSettingsManager.ResetPrinterSettings(uidoc.Document, printer);
+
+            List<SheetFormatGroup> sheetFormatGroups = PrintHelper.GetData(
+                uidoc.Document, printer, isColorEnabled);
+
+            Log.Information("Total sheets: {TotalSheets}",
+                sheetFormatGroups.Sum(g => g.SheetList.Count));
+
+            return PrintHelper.PrintSheetData(
+                uidoc.Document, printer, sheetFormatGroups, tempDirectory);
         }
+
 
     }
-
 }
