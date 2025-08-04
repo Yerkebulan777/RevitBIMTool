@@ -12,10 +12,6 @@
 		<Version>$(RevitVersion)</Version>
 		<Platforms>AnyCPU</Platforms>
 
-		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
-		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-
     </PropertyGroup>
 
 	<PropertyGroup Condition="$(Configuration.Contains('Debug'))">

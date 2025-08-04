@@ -31,7 +31,7 @@ namespace RevitBIMTool.Utils.ExportPDF
                         control.InitializePrinter(revitFilePath);
                         control.Reservation = reservation;
 
-                        Log.Information($"Принтер зарезервирован: {control.PrinterName}");
+                        Log.Information("Принтер зарезервирован: {PrinterName}", control.PrinterName);
                         availablePrinter = control;
                         return true;
                     }
