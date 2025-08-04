@@ -1,4 +1,5 @@
 ﻿using Autodesk.Revit.DB;
+using Database.Models;
 using Microsoft.Win32;
 using RevitBIMTool.Models;
 using RevitBIMTool.Utils.SystemHelpers;
@@ -11,7 +12,7 @@ internal abstract class PrinterControl
     public abstract string PrinterName { get; }
     public abstract bool IsInternalPrinter { get; }
     public abstract string RevitFilePath { get; set; }
-
+    public PrinterReservation Reservation { get; set; }
 
     public virtual bool IsPrinterInstalled()
     {

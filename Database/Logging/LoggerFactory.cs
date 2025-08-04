@@ -1,53 +1,84 @@
-﻿using System;
+﻿using RevitBIMTool.Utils.Common;
+using Serilog;
+using System;
+using System.Collections.Concurrent;
+using System.IO;
 
 namespace Database.Logging
 {
-    /// <summary>
-    /// Фабрика для создания простых логгеров.
-    /// </summary>
     public static class LoggerFactory
     {
-        private static LogLevel _defaultLevel = LogLevel.Information;
+        private static readonly string documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        private static readonly ConcurrentDictionary<Type, ILogger> _loggers = new();
 
-        /// <summary>
-        /// Устанавливает уровень логирования по умолчанию.
-        /// </summary>
-        public static void SetDefaultLevel(LogLevel level)
+        public static void Initialize(string revitFileName)
         {
-            _defaultLevel = level;
+            if (Log.Logger != null)
+            {
+                Log.CloseAndFlush();
+            }
+
+            string logDir = Path.Combine(documents, "RevitBIMTool");
+            string logPath = Path.Combine(logDir, $"Database-{revitFileName}.txt");
+
+            PathHelper.DeleteExistsFile(logPath);
+            PathHelper.EnsureDirectory(logDir);
+
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .WriteTo.File(logPath)
+                .CreateLogger();
         }
 
-        /// <summary>
-        /// Создает логгер для указанного типа.
-        /// </summary>
         public static ILogger CreateLogger<T>()
         {
-            return new Logger(typeof(T).Name, _defaultLevel);
+            return _loggers.GetOrAdd(typeof(T), _ => new SerilogAdapter<T>());
+        }
+    }
+
+    internal class SerilogAdapter<T> : ILogger
+    {
+        private readonly Serilog.ILogger _logger = Serilog.Log.ForContext<T>();
+
+        public void Debug(string message)
+        {
+            _logger.Debug(message);
         }
 
-        /// <summary>
-        /// Создает логгер с указанным именем категории.
-        /// </summary>
-        public static ILogger CreateLogger(string categoryName)
+        public void Information(string message)
         {
-            return new Logger(categoryName, _defaultLevel);
+            _logger.Information(message);
         }
 
-        /// <summary>
-        /// Создает логгер для указанного типа.
-        /// </summary>
-        public static ILogger CreateLogger(Type type)
+        public void Warning(string message)
         {
-            return new Logger(type.Name, _defaultLevel);
+            _logger.Warning(message);
         }
 
-        /// <summary>
-        /// Инициализирует систему логирования.
-        /// </summary>
-        public static void Initialize(LogLevel minimumLevel = LogLevel.Information, string logDirectory = null)
+        public void Error(string message, Exception exception = null)
         {
-            _defaultLevel = minimumLevel;
-            Logger.Initialize(logDirectory);
+            _logger.Error(exception, message);
         }
+
+        public void Log(LogLevel level, string message, string memberName = null)
+        {
+            switch (level)
+            {
+                case LogLevel.Debug:
+                    _logger.Debug(message);
+                    break;
+                case LogLevel.Information:
+                    _logger.Information(message);
+                    break;
+                case LogLevel.Warning:
+                    _logger.Warning(message);
+                    break;
+                case LogLevel.Error:
+                    _logger.Error(message);
+                    break;
+            }
+        }
+
+
     }
 }

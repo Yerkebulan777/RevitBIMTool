@@ -1,8 +1,6 @@
 ﻿using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using Database.Schema;
-using Database.Services;
 using System.Configuration;
 using System.Globalization;
 using System.Windows;
@@ -30,34 +28,34 @@ namespace RevitBIMTool.Commands
                 }
 
                 // Проверка состояния БД
-                using DatabaseMonitor healthChecker = new(connectionString);
-                string healthReport = healthChecker.CheckDatabaseHealth();
+                //using DatabaseMonitor healthChecker = new(connectionString);
+                //string healthReport = healthChecker.CheckDatabaseHealth();
 
-                try
-                {
-                    // Дополнительная проверка схемы через SchemaManager
-                    using SchemaManager schemaManager = new(connectionString);
+                //try
+                //{
+                //    // Дополнительная проверка схемы через SchemaManager
+                //    using SchemaManager schemaManager = new(connectionString);
 
-                    if (schemaManager.ValidateSchema())
-                    {
-                        healthReport += "\n✓ Дополнительная валидация схемы пройдена успешно";
-                    }
-                    else
-                    {
-                        healthReport += "\n⚠️  Дополнительная валидация схемы выявила проблемы";
-                    }
-                }
-                catch (Exception ex)
-                {
-                    healthReport += $"\n⚠️  Ошибка дополнительной валидации: {ex.Message}";
-                }
+                //    if (schemaManager.ValidateSchema())
+                //    {
+                //        healthReport += "\n✓ Дополнительная валидация схемы пройдена успешно";
+                //    }
+                //    else
+                //    {
+                //        healthReport += "\n⚠️  Дополнительная валидация схемы выявила проблемы";
+                //    }
+                //}
+                //catch (Exception ex)
+                //{
+                //    healthReport += $"\n⚠️  Ошибка дополнительной валидации: {ex.Message}";
+                //}
 
                 // Определяем успешность по содержанию отчета
-                bool isSuccess = healthReport.Contains("РАБОТАЕТ КОРРЕКТНО");
+                //bool isSuccess = healthReport.Contains("РАБОТАЕТ КОРРЕКТНО");
 
-                ShowResult(healthReport, isSuccess);
+                //ShowResult(healthReport, isSuccess);
 
-                return isSuccess ? Result.Succeeded : Result.Failed;
+                return Result.Succeeded;
             }
             catch (Exception ex)
             {

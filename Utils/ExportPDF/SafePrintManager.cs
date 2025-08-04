@@ -3,7 +3,9 @@ using Database.Services;
 using RevitBIMTool.Models;
 using RevitBIMTool.Utils.ExportPDF.Printers;
 using Serilog;
+using System;
 using System.Configuration;
+using System.Linq;
 
 namespace RevitBIMTool.Utils.ExportPDF
 {
@@ -34,23 +36,13 @@ namespace RevitBIMTool.Utils.ExportPDF
         }
 
         public static bool ExecuteSafePrinting(
-            Func<PrinterControl, List<SheetModel>> printOperation,
+            Func<PrinterControl, List<SheetModel>> operation,
             string revitFilePath,
             out List<SheetModel> result,
             out PrinterControl usedPrinter)
         {
             result = null;
             usedPrinter = null;
-
-            string connectionString = ConfigurationManager
-                .ConnectionStrings["PrinterDatabase"]?.ConnectionString;
-
-            using IDisposable monitor = TransactionMonitor.Instance
-                .BeginMonitoring("PDF Export", revitFilePath);
-
-            using PrinterReservationService reservationService = new(connectionString);
-
-            PrinterReservation reservation = null;
 
             try
             {
@@ -62,23 +54,9 @@ namespace RevitBIMTool.Utils.ExportPDF
                 }
 
                 usedPrinter = printer;
-                reservation = reservationService.ReservePrinter(
-                    printer.PrinterName, revitFilePath);
 
-                if (reservation == null)
-                {
-                    Log.Error("Failed to reserve printer");
-                    return false;
-                }
-
-                // Шаг 2: Выполнение печати с периодическим обновлением статуса
-                reservationService.UpdateProgress(
-                    printer.PrinterName, ReservationState.InProgress);
-
-                result = printOperation(printer);
-
-                // Шаг 3: Освобождение принтера
-                reservationService.ReleasePrinter(printer.PrinterName, true);
+                // Шаг 2: Выполнение печати
+                result = operation(printer);
 
                 Log.Information("Printing completed successfully");
                 return true;
@@ -86,19 +64,15 @@ namespace RevitBIMTool.Utils.ExportPDF
             catch (Exception ex)
             {
                 Log.Error(ex, "Printing failed");
-
-                // Компенсация при ошибке
-                if (reservation != null)
-                {
-                    reservationService.CompensateFailedReservation(reservation);
-                }
-
                 return false;
             }
             finally
             {
-                // Восстановление настроек принтера
-                usedPrinter?.RestoreDefaultSettings();
+                // Освобождение принтера
+                if (usedPrinter != null)
+                {
+                    PrinterManager.ReleasePrinter(usedPrinter);
+                }
             }
         }
     }

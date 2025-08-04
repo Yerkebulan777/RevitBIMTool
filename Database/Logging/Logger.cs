@@ -4,34 +4,24 @@ using System.Runtime.CompilerServices;
 
 namespace Database.Logging
 {
-    /// <summary>
-    /// Уровни логирования.
-    /// </summary>
-    public enum LogLevel
-    {
-        Debug = 0,
-        Information = 1,
-        Warning = 2,
-        Error = 3
-    }
-
-    /// <summary>
-    /// Простой интерфейс логгера для проекта Database.
-    /// </summary>
     public interface ILogger
     {
         void Debug(string message);
         void Information(string message);
         void Warning(string message);
         void Error(string message, Exception exception = null);
-        void Log(LogLevel level, string message, string memberName);
-        void LogOperationResult(string operation, bool success, TimeSpan elapsed);
+        void Log(LogLevel level, string message, string memberName = null);
     }
 
-    /// <summary>
-    /// Простая реализация логгера для проекта Database.
-    /// Пишет в Debug Output и в файл.
-    /// </summary>
+    public enum LogLevel
+    {
+        Debug,
+        Information,
+        Warning,
+        Error
+    }
+
+
     public sealed class Logger : ILogger
     {
         private readonly string _categoryName;
