@@ -52,6 +52,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <Compile Remove="ExportHandlers\ExportPdfProcessorOld.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="iTextSharp" Version="5.5.13.4" />
         <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
 		<PackageReference Include="Revit_All_Main_Versions_API_x64" Version="$(RevitVersion).*-*" />
