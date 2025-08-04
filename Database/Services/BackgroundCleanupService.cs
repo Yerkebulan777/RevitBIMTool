@@ -37,7 +37,7 @@ namespace Database.Services
             {
                 _logger.Debug("Starting cleanup of stuck reservations");
 
-                using var connection = new OdbcConnection(_connectionString);
+                using OdbcConnection connection = new(_connectionString);
                 connection.Open();
 
                 // Находим зависшие резервации
@@ -49,10 +49,9 @@ namespace Database.Services
                       AND reserved_at < @cutoffTime
                       AND reserved_at IS NOT NULL;";
 
-                var cutoffTime = DateTime.UtcNow.Subtract(_stuckThreshold);
+                DateTime cutoffTime = DateTime.UtcNow.Subtract(_stuckThreshold);
                 // Замените обработку результата запроса на явное сопоставление с типом
-                IEnumerable<StuckPrinter> stuckPrinters = connection.Query<StuckPrinter>(findStuckSql, new { cutoffTime })
-                    .ToList();
+                IEnumerable<StuckPrinter> stuckPrinters = [.. connection.Query<StuckPrinter>(findStuckSql, new { cutoffTime })];
 
                 foreach (StuckPrinter stuck in stuckPrinters)
                 {
@@ -88,11 +87,14 @@ namespace Database.Services
 
         private bool IsProcessAlive(int? processId)
         {
-            if (!processId.HasValue) return false;
+            if (!processId.HasValue)
+            {
+                return false;
+            }
 
             try
             {
-                var process = Process.GetProcessById(processId.Value);
+                Process process = Process.GetProcessById(processId.Value);
                 return !process.HasExited;
             }
             catch
@@ -114,7 +116,7 @@ namespace Database.Services
                     last_update = CURRENT_TIMESTAMP
                 WHERE printer_name = @printerName;";
 
-            connection.Execute(releaseSql, new { printerName });
+            _ = connection.Execute(releaseSql, new { printerName });
 
             // Логирование для аудита
             const string logSql = @"
@@ -122,7 +124,7 @@ namespace Database.Services
                 (printer_name, cleaned_at, reason)
                 VALUES (@printerName, CURRENT_TIMESTAMP, 'Stuck reservation timeout');";
 
-            connection.Execute(logSql, new { printerName });
+            _ = connection.Execute(logSql, new { printerName });
         }
 
         public void Dispose()
