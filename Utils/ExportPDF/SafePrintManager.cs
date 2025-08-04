@@ -1,11 +1,8 @@
-﻿using Database.Models;
-using Database.Services;
+﻿using Database.Services;
 using RevitBIMTool.Models;
 using RevitBIMTool.Utils.ExportPDF.Printers;
 using Serilog;
-using System;
 using System.Configuration;
-using System.Linq;
 
 namespace RevitBIMTool.Utils.ExportPDF
 {
