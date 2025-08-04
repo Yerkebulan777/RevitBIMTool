@@ -21,7 +21,7 @@ namespace Database.Services
 
         public IDisposable BeginMonitoring(string operationName, string details = null)
         {
-            var metrics = new TransactionMetrics
+            TransactionMetrics metrics = new()
             {
                 Id = Guid.NewGuid(),
                 OperationName = operationName,
@@ -43,10 +43,10 @@ namespace Database.Services
             metrics.EndTime = DateTime.UtcNow;
             metrics.Success = success;
 
-            _activeTransactions.TryRemove(metrics.Id, out _);
+            _ = _activeTransactions.TryRemove(metrics.Id, out _);
 
-            var duration = metrics.Stopwatch.Elapsed;
-            var level = duration.TotalMinutes > 5 ? LogLevel.Warning : LogLevel.Information;
+            TimeSpan duration = metrics.Stopwatch.Elapsed;
+            LogLevel level = duration.TotalMinutes > 5 ? LogLevel.Warning : LogLevel.Information;
 
             _logger.Log(level,
                 $"Completed: {metrics.OperationName} [{metrics.Id:N}] " +
@@ -70,10 +70,11 @@ namespace Database.Services
 
         public void ReportActiveTransactions()
         {
-            foreach (var kvp in _activeTransactions)
+            System.Collections.Generic.ICollection<TransactionMetrics> activeMetrics = _activeTransactions.Values;
+
+            foreach (TransactionMetrics metrics in activeMetrics)
             {
-                var metrics = kvp.Value;
-                var duration = metrics.Stopwatch.Elapsed;
+                TimeSpan duration = metrics.Stopwatch.Elapsed;
 
                 _logger.Information(
                     $"Active: {metrics.OperationName} " +

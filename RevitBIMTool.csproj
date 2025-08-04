@@ -52,6 +52,13 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <Compile Remove="#Archive\**" />
+      <EmbeddedResource Remove="#Archive\**" />
+      <None Remove="#Archive\**" />
+      <Page Remove="#Archive\**" />
+    </ItemGroup>
+
+    <ItemGroup>
       <Compile Remove="ExportHandlers\ExportPdfProcessorOld.cs" />
     </ItemGroup>
 
