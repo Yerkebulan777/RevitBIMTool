@@ -39,7 +39,7 @@ internal static class ExportPdfProcessor
 
         List<SheetFormatGroup> sheetFormatGroups = PrintHelper.GetData(uidoc.Document, printer, isColorEnabled);
 
-        Log.Information("Total sheets: {TotalSheets}", sheetFormatGroups.Sum(group => group.SheetList.Count));
+        Log.Information("Total sheets count: {TotalSheets}", sheetFormatGroups.Sum(group => group.SheetList.Count));
 
         List<SheetModel> sheetModels = PrintHelper.PrintSheetData(uidoc.Document, printer, sheetFormatGroups, tempDirectory);
 
