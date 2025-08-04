@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using Database.Logging;
 using System;
+using System.Collections.Generic;
 using System.Data.Odbc;
 using System.Diagnostics;
 using System.Linq;
@@ -49,27 +50,34 @@ namespace Database.Services
                       AND reserved_at IS NOT NULL;";
 
                 var cutoffTime = DateTime.UtcNow.Subtract(_stuckThreshold);
-                var stuckPrinters = connection.Query(findStuckSql, new { cutoffTime }).ToList();
+                // Замените обработку результата запроса на явное сопоставление с типом
+                IEnumerable<StuckPrinter> stuckPrinters = connection.Query<StuckPrinter>(findStuckSql, new { cutoffTime })
+                    .ToList();
 
-                foreach (var stuck in stuckPrinters)
+                foreach (StuckPrinter stuck in stuckPrinters)
                 {
-                    _logger.Warning($"Found stuck printer: {stuck.printer_name}, " +
-                                  $"stuck for {stuck.minutes_stuck:F1} minutes");
+                    string printerName = stuck.printer_name;
+                    int? processId = stuck.process_id;
+                    DateTime reservedAt = stuck.reserved_at;
+                    double minutesStuck = stuck.minutes_stuck;
+
+                    _logger.Warning($"Found stuck printer: {printerName}, " +
+                                    $"stuck for {minutesStuck:F1} minutes");
 
                     // Проверяем, жив ли процесс
-                    if (IsProcessAlive(stuck.process_id))
+                    if (IsProcessAlive(processId))
                     {
-                        _logger.Information($"Process {stuck.process_id} is still alive, skipping");
+                        _logger.Information($"Process {processId} is still alive, skipping");
                         continue;
                     }
 
                     // Освобождаем принтер
-                    ReleaseStuckPrinter(connection, stuck.printer_name);
+                    ReleaseStuckPrinter(connection, printerName);
                 }
 
                 if (stuckPrinters.Any())
                 {
-                    _logger.Information($"Cleaned up {stuckPrinters.Count} stuck reservations");
+                    _logger.Information($"Cleaned up {stuckPrinters.Count()} stuck reservations");
                 }
             }
             catch (Exception ex)
@@ -124,6 +132,15 @@ namespace Database.Services
                 _cleanupTimer?.Dispose();
                 _disposed = true;
             }
+        }
+
+        // Добавьте вспомогательный класс для сопоставления результатов запроса
+        private class StuckPrinter
+        {
+            public string printer_name { get; set; }
+            public int? process_id { get; set; }
+            public DateTime reserved_at { get; set; }
+            public double minutes_stuck { get; set; }
         }
     }
 }
