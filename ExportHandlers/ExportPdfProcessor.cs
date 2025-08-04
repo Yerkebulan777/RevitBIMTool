@@ -52,25 +52,18 @@ namespace RevitBIMTool.ExportHandlers
             }
         }
 
-        private static List<SheetModel> ProcessPrinting(
-            UIDocument uidoc,
-            PrinterControl printer,
-            string revitFilePath,
-            string tempDirectory)
+        private static List<SheetModel> ProcessPrinting(UIDocument uidoc, PrinterControl printer, string revitFilePath, string tempDirectory)
         {
             string sectionName = PathHelper.GetSectionName(revitFilePath);
             bool isColorEnabled = sectionName is not ("KJ" or "KR" or "KG");
 
             PrintSettingsManager.ResetPrinterSettings(uidoc.Document, printer);
 
-            List<SheetFormatGroup> sheetFormatGroups = PrintHelper.GetData(
-                uidoc.Document, printer, isColorEnabled);
+            List<SheetFormatGroup> sheetFormatGroups = PrintHelper.GetData(uidoc.Document, printer, isColorEnabled);
 
-            Log.Information("Total sheets: {TotalSheets}",
-                sheetFormatGroups.Sum(g => g.SheetList.Count));
+            Log.Information("Total sheets: {TotalSheets}", sheetFormatGroups.Sum(g => g.SheetList.Count));
 
-            return PrintHelper.PrintSheetData(
-                uidoc.Document, printer, sheetFormatGroups, tempDirectory);
+            return PrintHelper.PrintSheetData(uidoc.Document, printer, sheetFormatGroups, tempDirectory);
         }
 
 
