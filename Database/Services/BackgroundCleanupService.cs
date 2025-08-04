@@ -74,7 +74,7 @@ namespace Database.Services
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "Cleanup failed");
+                _logger.Error($"Compensation failed {ex.Message}", ex);
             }
         }
 

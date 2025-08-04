@@ -50,7 +50,8 @@ namespace Database.Services
 
             _logger.Log(level,
                 $"Completed: {metrics.OperationName} [{metrics.Id:N}] " +
-                $"Duration: {duration:mm\\:ss\\.fff}, Success: {success}");
+                $"Duration: {duration:mm\\:ss\\.fff}, Success: {success}",
+                nameof(EndMonitoring));
 
             // Отправка метрик если превышен порог
             if (duration.TotalMinutes > 10)

@@ -7,12 +7,12 @@ namespace Database.Logging
     /// </summary>
     public static class LoggerFactory
     {
-        private static LoggerLevel _defaultLevel = LoggerLevel.Information;
+        private static LogLevel _defaultLevel = LogLevel.Information;
 
         /// <summary>
         /// Устанавливает уровень логирования по умолчанию.
         /// </summary>
-        public static void SetDefaultLevel(LoggerLevel level)
+        public static void SetDefaultLevel(LogLevel level)
         {
             _defaultLevel = level;
         }
@@ -44,7 +44,7 @@ namespace Database.Logging
         /// <summary>
         /// Инициализирует систему логирования.
         /// </summary>
-        public static void Initialize(LoggerLevel minimumLevel = LoggerLevel.Information, string logDirectory = null)
+        public static void Initialize(LogLevel minimumLevel = LogLevel.Information, string logDirectory = null)
         {
             _defaultLevel = minimumLevel;
             Logger.Initialize(logDirectory);

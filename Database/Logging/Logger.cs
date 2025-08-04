@@ -7,7 +7,7 @@ namespace Database.Logging
     /// <summary>
     /// Уровни логирования.
     /// </summary>
-    public enum LoggerLevel
+    public enum LogLevel
     {
         Debug = 0,
         Information = 1,
@@ -24,6 +24,8 @@ namespace Database.Logging
         void Information(string message);
         void Warning(string message);
         void Error(string message, Exception exception = null);
+        void Log(LogLevel level, string message, string memberName);
+        void LogOperationResult(string operation, bool success, TimeSpan elapsed);
     }
 
     /// <summary>
@@ -34,13 +36,13 @@ namespace Database.Logging
     {
         private readonly string _categoryName;
         private readonly string _logFilePath;
-        private readonly LoggerLevel _minimumLevel;
+        private readonly LogLevel _minimumLevel;
         private readonly object _lockObject = new();
 
         private static string _logDirectory;
         private static bool _isInitialized = false;
 
-        public Logger(string categoryName, LoggerLevel minimumLevel = LoggerLevel.Information)
+        public Logger(string categoryName, LogLevel minimumLevel = LogLevel.Information)
         {
             _categoryName = categoryName ?? throw new ArgumentNullException(nameof(categoryName));
             _minimumLevel = minimumLevel;
@@ -73,50 +75,44 @@ namespace Database.Logging
 
         public void Debug(string message)
         {
-            WriteLog(LoggerLevel.Debug, message);
+            Log(LogLevel.Debug, message);
         }
 
         public void Information(string message)
         {
-            WriteLog(LoggerLevel.Information, message);
+            Log(LogLevel.Information, message);
         }
 
         public void Warning(string message)
         {
-            WriteLog(LoggerLevel.Warning, message);
+            Log(LogLevel.Warning, message);
         }
 
         public void Error(string message, Exception exception = null)
         {
             string fullMessage = exception != null ? $"{message} | Exception: {exception}" : message;
-            WriteLog(LoggerLevel.Error, fullMessage);
+            Log(LogLevel.Error, fullMessage);
         }
 
+        public void Log(LogLevel level, string message, [CallerMemberName] string memberName = "")
+        {
+            if (level >= _minimumLevel)
+            {
+                string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+                string logEntry = $"[{timestamp}] [{level}] {_categoryName}.{memberName}: {message}";
+
+                // Вывод в Debug (видно в Visual Studio Output)
+                System.Diagnostics.Debug.WriteLine(logEntry);
+
+                // Запись в файл
+                WriteToFile(logEntry);
+            }
+        }
 
         public void LogOperationResult(string operation, bool success, TimeSpan elapsed)
         {
             string status = success ? "SUCCESS" : "FAILED";
             Information($"{operation} => {status} in {elapsed.TotalMilliseconds:F0}ms");
-        }
-
-
-        private void WriteLog(LoggerLevel level, string message,
-            [CallerMemberName] string memberName = "",
-            [CallerLineNumber] int lineNumber = 0)
-        {
-            if (level < _minimumLevel)
-            {
-                return;
-            }
-
-            string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
-            string logEntry = $"[{timestamp}] [{level}] {_categoryName}.{memberName}:{lineNumber} - {message}";
-
-            // Вывод в Debug (видно в Visual Studio Output)
-            System.Diagnostics.Debug.WriteLine(logEntry);
-
-            // Запись в файл
-            WriteToFile(logEntry);
         }
 
         private void WriteToFile(string logEntry)
@@ -162,5 +158,6 @@ namespace Database.Logging
                 }
             }
         }
+
     }
 }

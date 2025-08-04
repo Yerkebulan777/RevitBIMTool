@@ -16,7 +16,7 @@ namespace Database.Services
         public DatabaseMonitor(string connectionString)
         {
             _connectionString = connectionString;
-            LoggerFactory.Initialize(LoggerLevel.Debug);
+            LoggerFactory.Initialize(LogLevel.Debug);
             _logger = LoggerFactory.CreateLogger<DatabaseMonitor>();
             _logger.Information($"DatabaseMonitor created successfully");
         }
