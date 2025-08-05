@@ -1,7 +1,6 @@
 ﻿using Dapper;
-using Database.Logging;
 using Database.Models;
-using System;
+using Serilog;
 using System.Data.Odbc;
 using System.Diagnostics;
 
