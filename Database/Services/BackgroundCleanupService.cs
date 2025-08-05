@@ -19,7 +19,7 @@ namespace Database.Services
 
         public BackgroundCleanupService(string connectionString, TimeSpan stuckThreshold, int commandTimeout = 30)
         {
-            _logger = LoggerFactory.CreateLogger<BackgroundCleanupService>();
+            //_logger = LoggerFactory.CreateLogger<BackgroundCleanupService>();
             _connectionString = connectionString;
             _stuckThreshold = stuckThreshold;
             _commandTimeout = commandTimeout;

@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.IO;
 using System.Security;
 
 namespace CommonUtils
@@ -8,9 +7,9 @@ namespace CommonUtils
     {
         private static readonly string[] AllowedToolPaths =
         {
-            @"C:\Windows\System32\handle.exe",
-            @"C:\Windows\SysWOW64\handle.exe",
-            @"C:\Program Files\Microsoft\handle.exe"
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "System32", "handle.exe"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "SysWOW64", "handle.exe"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Microsoft", "handle.exe")
         };
 
         /// <summary>

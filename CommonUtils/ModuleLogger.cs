@@ -1,43 +1,98 @@
-﻿using Autodesk.Revit.DB;
-using Serilog;
+﻿using Serilog;
 using Serilog.Context;
+using System.Collections.Concurrent;
 
 namespace CommonUtils
 {
-    public sealed class ModuleLogger(ILogger logger, string moduleName) : IModuleLogger
+    public sealed class ModuleLogger : IModuleLogger
     {
-        private readonly ILogger _logger = logger.ForContext("Module", moduleName);
-        private readonly string _moduleName = moduleName;
-        public string LogFilePath { get; set; }
+        private static readonly ConcurrentDictionary<string, ILogger> _loggerCache = new();
+
+        private readonly ILogger _logger;
+
+        public string LogFilePath { get; }
+        public string RevitFileName { get; }
+        public string ProjectDirectory { get; }
+
+        private ModuleLogger(ILogger logger, string logFilePath, string revitFileName, string projectDirectory)
+        {
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _logger.Information("Start execution...");
+
+            LogFilePath = logFilePath;
+            RevitFileName = revitFileName;
+            ProjectDirectory = projectDirectory;  
+        }
 
         /// <summary>
-        /// Создает логгер для Revit команды
+        /// Создает логгер с явным указанием типа
         /// </summary>
-        public static IModuleLogger Create(Document document, Type callerType)
+        public static IModuleLogger Create<T>(string revitFilePath)
         {
-            string moduleName = callerType.Name.Replace("Command", string.Empty);
-            string projectDirectory = PathHelper.GetProjectDirectory(document, out string revitFilePath);
-            string revitFileName = Path.GetFileNameWithoutExtension(revitFilePath);
-            string logDirectory = Path.Combine(projectDirectory, "Log", moduleName);
-            string logFile = Path.Combine(logDirectory, $"{revitFileName}.log");
-
-            PathHelper.EnsureDirectory(logDirectory);
-            PathHelper.DeleteExistsFile(logFile);
-
-            Serilog.Core.Logger logger = new LoggerConfiguration()
-                .MinimumLevel.Debug()
-                .WriteTo.File(logFile, shared: true)
-                .Enrich.WithProperty("Module", moduleName)
-                .Enrich.WithProperty("Document", revitFileName)
-                .CreateLogger();
-
-            ModuleLogger moduleLogger = new(logger, moduleName)
+            if (!File.Exists(revitFilePath))
             {
-                LogFilePath = logFile
-            };
+                throw new FileNotFoundException(revitFilePath);
+            }
 
-            return moduleLogger;
+            string moduleName = ExtractModuleName(typeof(T));
+            return CreateInternal(moduleName, revitFilePath);
         }
+
+
+        private static IModuleLogger CreateInternal(string moduleName, string revitFilePath)
+        {
+            string projectDirectory = PathHelper.LocateDirectory(revitFilePath, "*PROJECT*");
+            string logDirectory = Path.Combine(projectDirectory, "RevitBoost", moduleName);
+            string documentName = Path.GetFileNameWithoutExtension(revitFilePath);
+            string logFilePath = Path.Combine(logDirectory, $"{documentName}.log");
+
+            string loggerKey = $"{moduleName} ({documentName})";
+
+            // Потокобезопасное получение или создание логгера
+            ILogger logger = _loggerCache.GetOrAdd(loggerKey, key =>
+            {
+                PathHelper.DeleteExistsFile(logFilePath);
+                PathHelper.EnsureDirectory(logDirectory);
+
+                TimeSpan interval = TimeSpan.FromSeconds(5);
+
+                return new LoggerConfiguration()
+                    .MinimumLevel.Debug()
+                    .WriteTo.File(logFilePath, shared: true, flushToDiskInterval: interval)
+                    .Enrich.WithProperty("Document", documentName)
+                    .Enrich.WithProperty("Module", moduleName)
+                    .CreateLogger();
+            });
+
+            return new ModuleLogger(logger, logFilePath, documentName, projectDirectory);
+        }
+
+
+        private static string ExtractModuleName(Type type)
+        {
+            string typeName = type.Name;
+
+            string[] suffixes = { "Command", "Handler", "Service", "Manager" };
+
+            string matchedSuffix = suffixes.FirstOrDefault(typeName.EndsWith);
+
+            return matchedSuffix != null ? typeName[..^matchedSuffix.Length] : typeName;
+        }
+
+
+        public static void ClearCache()
+        {
+            foreach (ILogger logger in _loggerCache.Values)
+            {
+                if (logger is IDisposable disposable)
+                {
+                    disposable.Dispose();
+                }
+            }
+            _loggerCache.Clear();
+            Log.CloseAndFlush();
+        }
+
 
         public void Debug(string message, params object[] args)
         {
@@ -64,18 +119,14 @@ namespace CommonUtils
             _logger.Fatal(exception, message, args);
         }
 
-        public IDisposable BeginScope(string name, params (string key, object value)[] properties)
+        public IDisposable BeginScope(string module)
         {
             List<IDisposable> disposables =
             [
-                LogContext.PushProperty("Scope", name),
-                LogContext.PushProperty("Module", _moduleName)
+                LogContext.PushProperty("Module", module),
+                LogContext.PushProperty("Document", RevitFileName),
+                LogContext.PushProperty("Directory", ProjectDirectory)
             ];
-
-            foreach ((string key, object value) in properties)
-            {
-                disposables.Add(LogContext.PushProperty(key, value));
-            }
 
             return new CompositeDisposable(disposables);
         }
@@ -84,6 +135,7 @@ namespace CommonUtils
         private sealed class CompositeDisposable(List<IDisposable> disposables) : IDisposable
         {
             private readonly List<IDisposable> _disposables = disposables;
+
             public void Dispose()
             {
                 foreach (IDisposable disposable in _disposables)
@@ -92,5 +144,7 @@ namespace CommonUtils
                 }
             }
         }
+
+
     }
 }
