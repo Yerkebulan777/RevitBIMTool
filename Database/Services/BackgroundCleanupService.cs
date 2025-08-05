@@ -1,13 +1,10 @@
-﻿using Database.Logging;
+﻿using CommonUtils;
+using Dapper;
 using Database.Models;
 using Database.Stores;
-using Dapper;
-using System;
-using System.Collections.Generic;
+using Serilog;
 using System.Data.Odbc;
 using System.Diagnostics;
-using System.Linq;
-using System.Threading;
 
 namespace Database.Services
 {
@@ -22,10 +19,10 @@ namespace Database.Services
 
         public BackgroundCleanupService(string connectionString, TimeSpan stuckThreshold, int commandTimeout = 30)
         {
+            _logger = LoggerFactory.CreateLogger<BackgroundCleanupService>();
             _connectionString = connectionString;
             _stuckThreshold = stuckThreshold;
             _commandTimeout = commandTimeout;
-            _logger = LoggerFactory.CreateLogger<BackgroundCleanupService>();
 
             // Запуск очистки каждые 5 минут
             _cleanupTimer = new Timer(
@@ -33,7 +30,7 @@ namespace Database.Services
                 null,
                 TimeSpan.FromMinutes(1),
                 TimeSpan.FromMinutes(5));
-                
+
             _logger.Information("BackgroundCleanupService initialized");
         }
 
@@ -105,8 +102,8 @@ namespace Database.Services
                 // Используем существующий SQL запрос из PrinterSqlStore
                 List<PrinterReservation> stuckReservations = connection
                     .Query<PrinterReservation>(
-                        PrinterSqlStore.FindStuckReservations, 
-                        new { cutoffTime }, 
+                        PrinterSqlStore.FindStuckReservations,
+                        new { cutoffTime },
                         commandTimeout: _commandTimeout)
                     .ToList();
 
@@ -235,19 +232,19 @@ namespace Database.Services
                 var stats = new CleanupStatistics
                 {
                     TotalPrinters = connection.QuerySingle<int>(
-                        PrinterSqlStore.GetPrinterStatistics, 
+                        PrinterSqlStore.GetPrinterStatistics,
                         commandTimeout: _commandTimeout),
-                        
+
                     AvailablePrinters = connection.QuerySingle<int>(
-                        PrinterSqlStore.GetAvailablePrintersCount, 
+                        PrinterSqlStore.GetAvailablePrintersCount,
                         commandTimeout: _commandTimeout),
-                        
+
                     ReservedPrinters = connection.QuerySingle<int>(
-                        PrinterSqlStore.GetReservedPrintersCount, 
+                        PrinterSqlStore.GetReservedPrintersCount,
                         commandTimeout: _commandTimeout),
-                        
+
                     AverageReservationTimeMinutes = connection.QuerySingle<double>(
-                        PrinterSqlStore.GetAverageReservationTime, 
+                        PrinterSqlStore.GetAverageReservationTime,
                         commandTimeout: _commandTimeout)
                 };
 
@@ -280,7 +277,7 @@ namespace Database.Services
         public int AvailablePrinters { get; set; }
         public int ReservedPrinters { get; set; }
         public double AverageReservationTimeMinutes { get; set; }
-        
+
         public override string ToString()
         {
             return $"Принтеров: {TotalPrinters} (свободно: {AvailablePrinters}, " +
