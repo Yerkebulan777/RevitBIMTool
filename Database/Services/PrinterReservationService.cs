@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using CommonUtils;
+using Dapper;
 using Database.Models;
 using Serilog;
 using System.Data.Odbc;
@@ -15,8 +16,8 @@ namespace Database.Services
 
         public PrinterReservationService(string connectionString)
         {
-            _connectionString = connectionString;
             _logger = LoggerFactory.CreateLogger<PrinterReservationService>();
+            _connectionString = connectionString;
             _sessionId = Guid.NewGuid();
         }
 

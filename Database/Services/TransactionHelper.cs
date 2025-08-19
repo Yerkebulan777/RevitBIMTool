@@ -1,10 +1,8 @@
 ﻿using Dapper;
-using System;
 using System.Configuration;
 using System.Data;
 using System.Data.Odbc;
 using System.Diagnostics;
-using System.Threading;
 
 namespace Database.Services
 {

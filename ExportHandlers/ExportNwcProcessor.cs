@@ -1,12 +1,9 @@
-﻿using Autodesk.Revit.DB;
-using Autodesk.Revit.UI;
-using RevitBIMTool.Utils;
+﻿using Autodesk.Revit.UI;
+using CommonUtils;
 using RevitBIMTool.Utils.Common;
 using RevitBIMTool.Utils.Performance;
 using RevitBIMTool.Utils.SystemHelpers;
 using Serilog;
-using System.IO;
-using System.Windows.Threading;
 
 
 namespace RevitBIMTool.ExportHandlers;
@@ -47,12 +44,12 @@ internal static class ExportNwcProcessor
         {
             List<Element> instansesToHide = [];
 
+            RevitViewHelper.OpenView(uidoc, view);
+
             const BuiltInCategory genCat = BuiltInCategory.OST_GenericModel;
             const BuiltInCategory ductCat = BuiltInCategory.OST_DuctAccessory;
             const BuiltInCategory sfrmCat = BuiltInCategory.OST_StructuralFraming;
             const BuiltInCategory mechCat = BuiltInCategory.OST_MechanicalEquipment;
-
-            Dispatcher.CurrentDispatcher.Invoke(() => RevitViewHelper.OpenView(uidoc, view));
 
             instansesToHide.AddRange(RevitSystemsHelper.FilterPipesAndFittingsByMaxDiameter(doc, 30));
             instansesToHide.AddRange(CollectorHelper.GetInstancesBySymbolName(doc, genCat, "(Отверстия)").ToElements());
@@ -114,7 +111,7 @@ internal static class ExportNwcProcessor
         {
             if (File.Exists(exportFullPath))
             {
-                SystemFolderOpener.OpenFolder(exportDirectory);
+                CommonUtils.SystemFolderOpener.OpenFolder(exportDirectory);
             }
         }
     }
