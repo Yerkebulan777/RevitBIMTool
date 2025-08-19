@@ -98,25 +98,30 @@ namespace CommonUtils
             _logger.Debug(message, args);
         }
 
+
         public void Information(string message, params object[] args)
         {
             _logger.Information(message, args);
         }
+
 
         public void Warning(string message, params object[] args)
         {
             _logger.Warning(message, args);
         }
 
+
         public void Error(Exception exception, string message, params object[] args)
         {
             _logger.Error(exception, message, args);
         }
 
+
         public void Fatal(Exception exception, string message, params object[] args)
         {
             _logger.Fatal(exception, message, args);
         }
+
 
         public IDisposable BeginScope(string module)
         {
