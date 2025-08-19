@@ -17,11 +17,10 @@ namespace CommonUtils
         private ModuleLogger(ILogger logger, string logFilePath, string revitFileName, string projectDirectory)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _logger.Information("Start execution...");
 
             LogFilePath = logFilePath;
             RevitFileName = revitFileName;
-            ProjectDirectory = projectDirectory;  
+            ProjectDirectory = projectDirectory;
         }
 
         /// <summary>
