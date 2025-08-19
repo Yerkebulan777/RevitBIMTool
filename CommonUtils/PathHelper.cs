@@ -22,6 +22,7 @@ namespace CommonUtils
             return DetermineDirectory(revitFilePath, folderName);
         }
 
+
         public static string GetRevitFilePath(Document document)
         {
             if (document.IsWorkshared && !document.IsDetached)
@@ -35,7 +36,7 @@ namespace CommonUtils
         /// <summary>
         /// Находит родительскую папку проекта по заданному пути
         /// </summary>
-        static string LocateDirectory(string filePath, string pattern)
+        public static string LocateDirectory(string filePath, string pattern)
         {
             SearchOption opt = SearchOption.TopDirectoryOnly;
             DirectoryInfo dirInfo = Directory.GetParent(filePath);
