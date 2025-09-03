@@ -68,4 +68,8 @@
         <Resource Include="Resources\Icons\RibbonIcon32.png" />
     </ItemGroup>
 
+    <ItemGroup Condition="'$(OS)' == 'Windows_NT'">
+        <Page Include="Windows\*.xaml" />
+    </ItemGroup>
+
 </Project>

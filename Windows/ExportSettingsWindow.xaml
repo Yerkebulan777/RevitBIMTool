@@ -1,0 +1,161 @@
+<Window x:Class="RevitBIMTool.Windows.ExportSettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Export Settings" 
+        Height="450" 
+        Width="600"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="CanResize">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,10">
+            <TextBlock Text="Export Settings" 
+                       FontSize="16" 
+                       FontWeight="Bold" 
+                       HorizontalAlignment="Center"/>
+            <Separator Margin="0,5,0,0"/>
+        </StackPanel>
+        
+        <!-- Main Content -->
+        <TabControl Grid.Row="1" Name="SettingsTabControl">
+            <!-- PDF Export Tab -->
+            <TabItem Header="PDF Export">
+                <StackPanel Margin="10">
+                    <GroupBox Header="PDF Settings" Margin="0,0,0,10">
+                        <StackPanel Margin="10">
+                            <CheckBox Name="chkIncludeSheets" 
+                                      Content="Include Sheets" 
+                                      IsChecked="True" 
+                                      Margin="0,5"/>
+                            <CheckBox Name="chkIncludeViews" 
+                                      Content="Include Views" 
+                                      IsChecked="False" 
+                                      Margin="0,5"/>
+                            <CheckBox Name="chkCombineFiles" 
+                                      Content="Combine into single PDF" 
+                                      IsChecked="True" 
+                                      Margin="0,5"/>
+                            
+                            <StackPanel Orientation="Horizontal" Margin="0,10,0,5">
+                                <TextBlock Text="Quality:" VerticalAlignment="Center" Width="80"/>
+                                <ComboBox Name="cmbPdfQuality" Width="120">
+                                    <ComboBoxItem Content="Low" />
+                                    <ComboBoxItem Content="Medium" IsSelected="True"/>
+                                    <ComboBoxItem Content="High" />
+                                </ComboBox>
+                            </StackPanel>
+                            
+                            <StackPanel Orientation="Horizontal" Margin="0,5">
+                                <TextBlock Text="Paper Size:" VerticalAlignment="Center" Width="80"/>
+                                <ComboBox Name="cmbPaperSize" Width="120">
+                                    <ComboBoxItem Content="A4" IsSelected="True"/>
+                                    <ComboBoxItem Content="A3" />
+                                    <ComboBoxItem Content="A2" />
+                                    <ComboBoxItem Content="A1" />
+                                    <ComboBoxItem Content="A0" />
+                                </ComboBox>
+                            </StackPanel>
+                        </StackPanel>
+                    </GroupBox>
+                </StackPanel>
+            </TabItem>
+            
+            <!-- DWG Export Tab -->
+            <TabItem Header="DWG Export">
+                <StackPanel Margin="10">
+                    <GroupBox Header="DWG Settings" Margin="0,0,0,10">
+                        <StackPanel Margin="10">
+                            <CheckBox Name="chkExportModels" 
+                                      Content="Export 3D Models" 
+                                      IsChecked="True" 
+                                      Margin="0,5"/>
+                            <CheckBox Name="chkExportSchedules" 
+                                      Content="Export Schedules" 
+                                      IsChecked="False" 
+                                      Margin="0,5"/>
+                            
+                            <StackPanel Orientation="Horizontal" Margin="0,10,0,5">
+                                <TextBlock Text="Version:" VerticalAlignment="Center" Width="80"/>
+                                <ComboBox Name="cmbDwgVersion" Width="120">
+                                    <ComboBoxItem Content="2018" />
+                                    <ComboBoxItem Content="2019" />
+                                    <ComboBoxItem Content="2020" IsSelected="True"/>
+                                    <ComboBoxItem Content="2021" />
+                                </ComboBox>
+                            </StackPanel>
+                            
+                            <StackPanel Orientation="Horizontal" Margin="0,5">
+                                <TextBlock Text="Units:" VerticalAlignment="Center" Width="80"/>
+                                <ComboBox Name="cmbUnits" Width="120">
+                                    <ComboBoxItem Content="Millimeters" IsSelected="True"/>
+                                    <ComboBoxItem Content="Centimeters" />
+                                    <ComboBoxItem Content="Meters" />
+                                    <ComboBoxItem Content="Inches" />
+                                    <ComboBoxItem Content="Feet" />
+                                </ComboBox>
+                            </StackPanel>
+                        </StackPanel>
+                    </GroupBox>
+                </StackPanel>
+            </TabItem>
+            
+            <!-- NWC Export Tab -->
+            <TabItem Header="NWC Export">
+                <StackPanel Margin="10">
+                    <GroupBox Header="NWC Settings" Margin="0,0,0,10">
+                        <StackPanel Margin="10">
+                            <CheckBox Name="chkIncludeGeometry" 
+                                      Content="Include Geometry" 
+                                      IsChecked="True" 
+                                      Margin="0,5"/>
+                            <CheckBox Name="chkIncludeProperties" 
+                                      Content="Include Properties" 
+                                      IsChecked="True" 
+                                      Margin="0,5"/>
+                            <CheckBox Name="chkIncludeTextures" 
+                                      Content="Include Textures" 
+                                      IsChecked="False" 
+                                      Margin="0,5"/>
+                            
+                            <StackPanel Orientation="Horizontal" Margin="0,10,0,5">
+                                <TextBlock Text="Conversion:" VerticalAlignment="Center" Width="80"/>
+                                <ComboBox Name="cmbConversionType" Width="120">
+                                    <ComboBoxItem Content="Full" IsSelected="True"/>
+                                    <ComboBoxItem Content="Geometry Only" />
+                                    <ComboBoxItem Content="Properties Only" />
+                                </ComboBox>
+                            </StackPanel>
+                        </StackPanel>
+                    </GroupBox>
+                </StackPanel>
+            </TabItem>
+        </TabControl>
+        
+        <!-- Footer Buttons -->
+        <StackPanel Grid.Row="2" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Right" 
+                    Margin="0,10,0,0">
+            <Button Name="btnExport" 
+                    Content="Export" 
+                    Width="80" 
+                    Height="30" 
+                    Margin="5,0" 
+                    IsDefault="True"
+                    Click="BtnExport_Click"/>
+            <Button Name="btnCancel" 
+                    Content="Cancel" 
+                    Width="80" 
+                    Height="30" 
+                    Margin="5,0" 
+                    IsCancel="True"
+                    Click="BtnCancel_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

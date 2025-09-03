@@ -2,6 +2,7 @@ using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
 using RevitBIMTool.Core;
 using RevitBIMTool.Utils.Common;
+using RevitBIMTool.Services;
 using Serilog;
 using ServiceLibrary.Models;
 
@@ -19,7 +20,19 @@ internal sealed class RevitBimToolApp : IExternalApplication
         {
             application = application ?? throw new ArgumentNullException(nameof(application));
             Version = application.ControlledApplication.VersionNumber;
+            
+            // Initialize AutoUpdater service
+            AutoUpdateService.Initialize();
+            
+            // Setup UI Panel
             SetupUIPanel.Initialize(application);
+            
+            // Check for updates automatically on startup (after a brief delay)
+            Task.Run(async () =>
+            {
+                await Task.Delay(5000); // Wait 5 seconds after startup
+                AutoUpdateService.CheckForUpdatesAutomatic();
+            });
         }
         catch (Exception ex)
         {

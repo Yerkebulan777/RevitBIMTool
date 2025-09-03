@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<item>
+    <version>1.0.1.0</version>
+    <url>https://github.com/Yerkebulan777/RevitBIMTool/releases/download/v1.0.1/RevitBIMTool.zip</url>
+    <changelog>https://github.com/Yerkebulan777/RevitBIMTool/releases/tag/v1.0.1</changelog>
+    <mandatory>false</mandatory>
+    <checksum algorithm="SHA256"><!-- Insert SHA256 hash of the download file here --></checksum>
+    <title>RevitBIMTool Update v1.0.1</title>
+    <description>
+        <![CDATA[
+        <h2>What's New in v1.0.1</h2>
+        <ul>
+            <li>Added WPF user interface for enhanced user experience</li>
+            <li>Integrated AutoUpdater.NET for automatic updates</li>
+            <li>Enhanced export settings dialog with tabbed interface</li>
+            <li>Improved error handling and logging</li>
+            <li>Better support for multiple Revit versions</li>
+        </ul>
+        
+        <h3>Features:</h3>
+        <ul>
+            <li>Enhanced Export Dialog with PDF, DWG, and NWC settings</li>
+            <li>Automatic update checking on startup</li>
+            <li>Improved user interface using WPF</li>
+            <li>Better integration with Revit ribbon</li>
+        </ul>
+        
+        <h3>Bug Fixes:</h3>
+        <ul>
+            <li>Fixed build issues with cross-platform compilation</li>
+            <li>Improved error handling in export processes</li>
+            <li>Better logging for troubleshooting</li>
+        </ul>
+        ]]>
+    </description>
+</item>

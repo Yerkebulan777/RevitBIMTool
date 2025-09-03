@@ -65,6 +65,23 @@ public static class SetupUIPanel
                 ribbonPanel.AddSeparator();
             }
 
+            if (ribbonPanel.CreatePushButton(typeof(EnhancedExportCommand), "Enhanced Export") is PushButton enhancedButton)
+            {
+                enhancedButton.AvailabilityClassName = typeof(EnhancedExportCommand).FullName;
+                enhancedButton.SetImage("/RevitBIMTool;component/Resources/Icons/RibbonIcon16.png");
+                enhancedButton.SetLargeImage("/RevitBIMTool;component/Resources/Icons/RibbonIcon32.png");
+                enhancedButton.ToolTip = "Enhanced export with WPF settings dialog";
+                ribbonPanel.AddSeparator();
+            }
+
+            if (ribbonPanel.CreatePushButton(typeof(CheckForUpdatesCommand), "Check Updates") is PushButton updateButton)
+            {
+                updateButton.AvailabilityClassName = typeof(CheckForUpdatesCommand).FullName;
+                updateButton.SetImage("/RevitBIMTool;component/Resources/Icons/RibbonIcon16.png");
+                updateButton.SetLargeImage("/RevitBIMTool;component/Resources/Icons/RibbonIcon32.png");
+                updateButton.ToolTip = "Check for application updates";
+            }
+
         }
 
     }
