@@ -1,8 +1,11 @@
 ﻿using Autodesk.Revit.UI;
 using Serilog;
-using ServiceLibrary;
+using ServiceLibrary.Models;
+
+#if WINDOWS
 using System.ServiceModel;
 using System.ServiceModel.Channels;
+#endif
 
 namespace RevitBIMTool.Core;
 

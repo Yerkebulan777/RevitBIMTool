@@ -2,7 +2,10 @@
 using RevitBIMTool.Commands;
 using RevitBIMTool.Utils.Common;
 using System.Diagnostics;
+
+#if WINDOWS
 using System.Windows.Media.Imaging;
+#endif
 
 
 namespace RevitBIMTool.Core;
@@ -69,13 +72,17 @@ public static class SetupUIPanel
 
     public static void SetImage(this RibbonButton button, string uri)
     {
+#if WINDOWS
         button.Image = new BitmapImage(new Uri(uri, UriKind.RelativeOrAbsolute));
+#endif
     }
 
 
     public static void SetLargeImage(this RibbonButton button, string uri)
     {
+#if WINDOWS
         button.LargeImage = new BitmapImage(new Uri(uri, UriKind.RelativeOrAbsolute));
+#endif
     }
 
 }

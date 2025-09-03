@@ -1,6 +1,10 @@
 ﻿using Autodesk.Revit.UI;
 using System.Reflection;
+
+#if WINDOWS
 using System.Windows.Media.Imaging;
+#endif
+
 using RibbonButton = Autodesk.Revit.UI.RibbonButton;
 
 
@@ -83,13 +87,17 @@ public static class RibbonExtensions
 
     public static void SetImage(this RibbonButton button, string uri)
     {
+#if WINDOWS
         button.Image = new BitmapImage(new Uri(uri, UriKind.RelativeOrAbsolute));
+#endif
     }
 
 
     public static void SetLargeImage(this RibbonButton button, string uri)
     {
+#if WINDOWS
         button.LargeImage = new BitmapImage(new Uri(uri, UriKind.RelativeOrAbsolute));
+#endif
     }
 
 
