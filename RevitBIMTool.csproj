@@ -4,8 +4,16 @@
 		<LangVersion>latest</LangVersion>
 		<PlatformTarget>x64</PlatformTarget>
 		<ImplicitUsings>true</ImplicitUsings>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
 		<Configurations>Debug R19;Debug R23;Debug R24;Debug R25</Configurations>
 		<Configurations>$(Configurations);Release R19;Release R23;Release R24;Release R25</Configurations>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
+		<UseWPF>true</UseWPF>
+		<UseWindowsForms>true</UseWindowsForms>
+		<DefineConstants>WINDOWS</DefineConstants>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="$(Configuration.Contains('R19'))">
@@ -39,14 +47,20 @@
 		<PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
 		<PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
 		<PackageReference Include="Dapper" Version="2.0.151" />
+		<PackageReference Include="Autoupdater.NET.Official" Version="1.8.4" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Reference Include="ServiceLibrary">
-        <HintPath>..\AutomationService\ServiceLibrary\bin\Debug\ServiceLibrary.dll</HintPath>
-      </Reference>
+    <ItemGroup Condition="'$(OS)' == 'Windows_NT'">
       <Reference Include="System.IO.Compression" />
       <Reference Include="System.ServiceModel" />
+      <Reference Include="PresentationCore" />
+      <Reference Include="PresentationFramework" />
+      <Reference Include="WindowsBase" />
+      <Reference Include="System.Xaml" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(OS)' != 'Windows_NT'">
+      <Reference Include="System.IO.Compression" />
     </ItemGroup>
 
     <ItemGroup>

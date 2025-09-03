@@ -26,7 +26,7 @@ namespace CommonUtils
         /// <summary>
         /// Получает существующий формат бумаги или создает новый при необходимости
         /// </summary>
-        public static bool GetOrCreatePaperSize(string printerName, double widthInMm, double heightInMm, out PaperSize paperSize, int threshold = 5)
+        public static bool GetOrCreatePaperSize(string printerName, double widthInMm, double heightInMm, out System.Drawing.Printing.PaperSize paperSize, int threshold = 5)
         {
             (double minSide, double maxSide) = NormalizeDimensions(widthInMm, heightInMm, threshold);
 
@@ -63,7 +63,7 @@ namespace CommonUtils
         /// <summary>
         /// Ищет существующий формат бумаги, соответствующий заданным размерам
         /// </summary>
-        private static PaperSize FindMatchingPaperSize(double minSideInMm, double maxSideInMm, int threshold = 5)
+        private static System.Drawing.Printing.PaperSize FindMatchingPaperSize(double minSideInMm, double maxSideInMm, int threshold = 5)
         {
             PrinterSettings prntSettings = new();
 
